@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Medical Advanced Supplies (MAS)
 
-## Getting Started
+App de almacén e inventario: login, inventario, proveedores, órdenes, movimientos y mantenimientos. El código vive en GitHub (`alejandrobotello64/appmovil`) y los datos en Postgres con la API de Supabase.
 
-First, run the development server:
+## Arranque local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local
+npm run db:local          # PostgreSQL + esquema y seed del repo
+npx postgrest ~/.local/mas/postgrest.conf &
+npm run dev:api &         # gateway en http://127.0.0.1:54321
+npm run dev               # http://127.0.0.1:43145
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Usuario inicial (seed): `alexbazz64@gmail.com` / `admin123`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Conectar el proyecto de Supabase en la nube
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El `project_id` del repo es `iqfareiwiadqsauejaaf`.
 
-## Learn More
+1. Abre [API settings](https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/settings/api).
+2. Copia `Project URL` y `anon public` a `.env.local`:
 
-To learn more about Next.js, take a look at the following resources:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://iqfareiwiadqsauejaaf.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Reinicia `npm run dev`. No hace falta PostgREST local.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Si el esquema de la nube está vacío: `npx supabase link --project-ref iqfareiwiadqsauejaaf` y `npm run db:push` / `npm run db:seed` (requiere un access token válido en [Account tokens](https://supabase.com/dashboard/account/tokens)).
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Script | Qué hace |
+| --- | --- |
+| `npm run dev` | Next.js en el puerto 43145 |
+| `npm run db:local` | Crea la base `mas`, aplica `supabase/migrations` y `seed.sql` |
+| `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
+| `npm run db:push` | Empuja migraciones al proyecto linkeado |
+| `npm run db:seed` | Seed en el proyecto linkeado |
