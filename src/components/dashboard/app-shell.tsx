@@ -18,7 +18,6 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -31,11 +30,9 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
 
   useEffect(() => {
     const media = window.matchMedia("(min-width: 1024px)");
-    setIsDesktop(media.matches);
     setSidebarOpen(media.matches);
 
     function handleChange(event: MediaQueryListEvent) {
-      setIsDesktop(event.matches);
       setSidebarOpen(event.matches);
     }
 
@@ -65,16 +62,15 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="safe-top sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border bg-background/95 px-3 py-2.5 backdrop-blur sm:gap-4 sm:px-4 sm:py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            {!isDesktop ? (
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
-                aria-label="Abrir menú"
-              >
-                <Menu className="size-5" />
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((current) => !current)}
+              className="touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
+              aria-label={sidebarOpen ? "Ocultar menú" : "Mostrar menú"}
+              aria-expanded={sidebarOpen}
+            >
+              <Menu className="size-5" />
+            </button>
             <div className="min-w-0">
               <p className="truncate text-[10px] tracking-wide text-muted-foreground uppercase sm:text-xs">
                 {subtitle ?? "Panel interno"}
