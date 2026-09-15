@@ -21,6 +21,8 @@ import {
   X,
 } from "lucide-react";
 import { WAREHOUSE_TABS } from "@/lib/warehouse/tabs";
+import { canViewModule, type WarehouseModule } from "@/lib/auth/permissions";
+import { getSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const TAB_ICONS = {
@@ -50,6 +52,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const activeTab = searchParams.get("tab");
   const inWarehouse = pathname.startsWith("/dashboard/almacen");
   const [warehouseOpen, setWarehouseOpen] = useState(inWarehouse);
+  const [role, setRole] = useState("administrador");
+
+  useEffect(() => {
+    setRole(getSession()?.role ?? "administrador");
+  }, []);
 
   useEffect(() => {
     if (inWarehouse) setWarehouseOpen(true);
@@ -144,7 +151,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
             {warehouseOpen ? (
               <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
-                {WAREHOUSE_TABS.map((tab) => {
+                {WAREHOUSE_TABS.filter((tab) =>
+                  canViewModule(role, tab.id as WarehouseModule)
+                ).map((tab) => {
                   const Icon = TAB_ICONS[tab.id];
                   const isActive =
                     inWarehouse &&

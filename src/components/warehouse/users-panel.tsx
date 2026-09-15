@@ -8,6 +8,9 @@ import {
 } from "@/components/ui/responsive-data-list";
 import { supabase } from "@/lib/supabase/client";
 import { ModulePlaceholder } from "@/components/warehouse/module-placeholder";
+import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
+import { APP_ROLES, roleLabel } from "@/lib/auth/permissions";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 type ListedUser = {
   id: string;
@@ -19,6 +22,7 @@ type ListedUser = {
 };
 
 export function UsersPanel() {
+  const { canWrite } = usePermissions("usuarios");
   const [users, setUsers] = useState<ListedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,7 +30,7 @@ export function UsersPanel() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("operador");
+  const [role, setRole] = useState("almacen");
   const [submitting, setSubmitting] = useState(false);
 
   async function loadUsers() {
@@ -61,7 +65,7 @@ export function UsersPanel() {
       setUsername("");
       setPassword("");
       setFullName("");
-      setRole("operador");
+      setRole("almacen");
       await loadUsers();
     } catch (err) {
       setError(
@@ -77,13 +81,18 @@ export function UsersPanel() {
       title="Usuarios del sistema interno"
       description="Administra accesos al panel de Medical Advanced Supplies."
     >
-      <div className="mb-4 flex justify-end">
-        <Button
-          onClick={() => setFormOpen(true)}
-          className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
-        >
-          Nuevo usuario
-        </Button>
+      <div className="mb-4 space-y-3">
+        <ReadOnlyBanner visible={!canWrite} />
+        {canWrite ? (
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setFormOpen(true)}
+              className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+            >
+              Nuevo usuario
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {error ? <p className="mb-3 text-sm text-destructive">{error}</p> : null}
@@ -100,7 +109,7 @@ export function UsersPanel() {
             subtitle: user.full_name || "Sin nombre",
             badge: (
               <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs capitalize">
-                {user.role}
+                {roleLabel(user.role)}
               </span>
             ),
             fields: [
@@ -132,7 +141,7 @@ export function UsersPanel() {
                 <tr key={user.id} className="border-t border-border/70">
                   <td className="px-3 py-2 font-medium">{user.username}</td>
                   <td className="px-3 py-2">{user.full_name || "—"}</td>
-                  <td className="px-3 py-2">{user.role}</td>
+                  <td className="px-3 py-2">{roleLabel(user.role)}</td>
                   <td className="px-3 py-2">
                     {user.is_active ? "Activo" : "Inactivo"}
                   </td>
@@ -147,7 +156,7 @@ export function UsersPanel() {
         </>
       )}
 
-      {formOpen ? (
+      {formOpen && canWrite ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <form
             onSubmit={handleCreate}
@@ -190,9 +199,11 @@ export function UsersPanel() {
                   onChange={(event) => setRole(event.target.value)}
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
                 >
-                  <option value="admin">Administrador</option>
-                  <option value="operador">Operador de almacén</option>
-                  <option value="lectura">Solo lectura</option>
+                  {APP_ROLES.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>

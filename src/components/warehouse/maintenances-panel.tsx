@@ -16,8 +16,11 @@ import {
   type EquipmentMaintenance,
   type MaintenanceType,
 } from "@/lib/warehouse/maintenances";
+import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 export function MaintenancesPanel() {
+  const { canWrite } = usePermissions("mantenimientos");
   const [items, setItems] = useState<EquipmentMaintenance[]>([]);
   const [equipment, setEquipment] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,6 +89,7 @@ export function MaintenancesPanel() {
 
   return (
     <div className="space-y-6">
+      <ReadOnlyBanner visible={!canWrite} />
       {error ? (
         <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
@@ -100,12 +104,14 @@ export function MaintenancesPanel() {
               Solo aplica a equipos médicos (activos), no a insumos ni medicamentos.
             </p>
           </div>
+          {canWrite ? (
           <Button
             onClick={() => setFormOpen(true)}
             className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
           >
             Programar mantenimiento
           </Button>
+          ) : null}
         </div>
       </section>
 
@@ -129,7 +135,7 @@ export function MaintenancesPanel() {
                 { label: "Técnico", value: item.technician || "—" },
               ],
               actions:
-                item.status !== "completado" && item.status !== "cancelado" ? (
+                canWrite && item.status !== "completado" && item.status !== "cancelado" ? (
                   <Button
                     size="sm"
                     className="h-9"
@@ -196,7 +202,8 @@ export function MaintenancesPanel() {
                       {item.status.replace("_", " ")}
                     </td>
                     <td className="px-4 py-3">
-                      {item.status !== "completado" &&
+                      {canWrite &&
+                      item.status !== "completado" &&
                       item.status !== "cancelado" ? (
                         <Button
                           size="sm"
@@ -227,7 +234,7 @@ export function MaintenancesPanel() {
         </DesktopTable>
       </section>
 
-      {formOpen ? (
+      {formOpen && canWrite ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <form
             onSubmit={handleCreate}

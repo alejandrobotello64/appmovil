@@ -29,6 +29,8 @@ import {
   type StockStatus,
 } from "@/lib/inventory/types";
 import { cn } from "@/lib/utils";
+import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -67,6 +69,9 @@ export function InventoryPanel({
   itemKind = "producto",
   catalogMode = false,
 }: InventoryPanelProps) {
+  const { canWrite } = usePermissions(
+    !catalogMode && itemKind === "equipo" ? "equipo" : "productos"
+  );
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
@@ -225,6 +230,8 @@ export function InventoryPanel({
           </p>
         ) : null}
 
+        <ReadOnlyBanner visible={!canWrite} />
+
         {loading ? (
           <p className="text-sm text-muted-foreground">
             Cargando inventario desde Supabase...
@@ -249,6 +256,7 @@ export function InventoryPanel({
                     : "Insumos, medicamentos, refacciones, accesorios y reactivos."}
               </p>
             </div>
+            {canWrite ? (
             <Button
               onClick={() => {
                 setEditingItem(null);
@@ -259,6 +267,7 @@ export function InventoryPanel({
               <Plus className="size-4" />
               {isEquipment ? "Nuevo equipo" : "Nuevo producto"}
             </Button>
+            ) : null}
           </div>
 
           {catalogMode || !isEquipment ? (
@@ -380,7 +389,7 @@ export function InventoryPanel({
                   { label: "Ubicación", value: item.location || "—" },
                   { label: "Precio", value: formatCurrency(item.unitPrice) },
                 ],
-                actions: (
+                actions: canWrite ? (
                   <>
                     <button
                       type="button"
@@ -399,7 +408,7 @@ export function InventoryPanel({
                       Desactivar
                     </button>
                   </>
-                ),
+                ) : undefined,
               };
             })}
           />
@@ -507,6 +516,7 @@ export function InventoryPanel({
                           {formatCurrency(item.unitPrice)}
                         </td>
                         <td className="px-4 py-3">
+                          {canWrite ? (
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
@@ -525,6 +535,9 @@ export function InventoryPanel({
                               <Trash2 className="size-4" />
                             </button>
                           </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Consulta</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -536,7 +549,7 @@ export function InventoryPanel({
         </section>
       </div>
 
-      {formOpen ? (
+      {formOpen && canWrite ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div
             role="dialog"

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { clearSession, getSession } from "@/lib/auth";
+import { GlobalSearch } from "@/components/dashboard/global-search";
 
 type AppShellProps = {
   title: string;
@@ -82,6 +83,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <GlobalSearch />
             <ThemeToggle showLabel={false} className="px-2.5 py-2 sm:px-3 sm:py-1.5" />
             <span className="hidden max-w-[140px] truncate text-sm text-muted-foreground lg:inline">
               {username}

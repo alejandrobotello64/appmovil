@@ -20,6 +20,13 @@ import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
 import { getMaintenances } from "@/lib/warehouse/maintenances";
 import { getPurchaseOrders } from "@/lib/warehouse/orders";
+import { getOpenTransferCount } from "@/lib/warehouse/stock";
+import {
+  daysUntilExpiry,
+  expiryBucket,
+  EXPIRY_BUCKETS,
+  type ExpiryBucket,
+} from "@/lib/inventory/expiry";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -34,6 +41,7 @@ export function WarehouseDashboard() {
   const [equipment, setEquipment] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [openOrders, setOpenOrders] = useState(0);
+  const [openTransfers, setOpenTransfers] = useState(0);
   const [pendingMaintenance, setPendingMaintenance] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -44,8 +52,9 @@ export function WarehouseDashboard() {
       getSuppliers(),
       getPurchaseOrders(),
       getMaintenances(),
+      getOpenTransferCount(),
     ])
-      .then(([productList, equipmentList, supplierList, orders, maintenances]) => {
+      .then(([productList, equipmentList, supplierList, orders, maintenances, transferCount]) => {
         setProducts(productList);
         setEquipment(equipmentList);
         setSuppliers(supplierList);
@@ -55,6 +64,7 @@ export function WarehouseDashboard() {
               order.status !== "recibido" && order.status !== "cancelado"
           ).length
         );
+        setOpenTransfers(transferCount);
         setPendingMaintenance(
           maintenances.filter(
             (item) =>
@@ -97,9 +107,10 @@ export function WarehouseDashboard() {
       activeSuppliers,
       categoriesUsed,
       openOrders,
+      openTransfers,
       pendingMaintenance,
     };
-  }, [products, equipment, suppliers, openOrders, pendingMaintenance]);
+  }, [products, equipment, suppliers, openOrders, openTransfers, pendingMaintenance]);
 
   const alerts = useMemo(
     () =>
@@ -108,6 +119,29 @@ export function WarehouseDashboard() {
       ),
     [products]
   );
+
+  const expiryAlerts = useMemo(() => {
+    const grouped: Record<ExpiryBucket, InventoryItem[]> = {
+      caducado: [],
+      "30": [],
+      "60": [],
+      "90": [],
+      "180": [],
+    };
+    for (const item of products) {
+      if (!item.expiryDate) continue;
+      const days = daysUntilExpiry(item.expiryDate);
+      if (days === null) continue;
+      const bucket = expiryBucket(days);
+      if (bucket) grouped[bucket].push(item);
+    }
+    return grouped;
+  }, [products]);
+
+  const expiryCounts = EXPIRY_BUCKETS.map((bucket) => ({
+    ...bucket,
+    count: expiryAlerts[bucket.id].length,
+  }));
 
   const cards = [
     {
@@ -158,6 +192,13 @@ export function WarehouseDashboard() {
       icon: ClipboardList,
       href: "/dashboard/almacen?tab=pedidos",
       tone: "text-[#00BFFF]",
+    },
+    {
+      label: "Traspasos abiertos",
+      value: stats.openTransfers,
+      icon: Truck,
+      href: "/dashboard/almacen?tab=movimientos",
+      tone: "text-[#3B46A5]",
     },
     {
       label: "Mantenimientos pendientes",
@@ -221,6 +262,47 @@ export function WarehouseDashboard() {
           );
         })}
       </div>
+
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <h3 className="font-semibold text-foreground">Caducidad 180 / 90 / 60 / 30</h3>
+        <div className="mt-4 grid gap-2 sm:grid-cols-5">
+          {expiryCounts.map((bucket) => (
+            <div
+              key={bucket.id}
+              className="rounded-xl border border-border/70 px-3 py-2"
+            >
+              <p className="text-xs text-muted-foreground">{bucket.label}</p>
+              <p className="mt-1 text-xl font-semibold">{bucket.count}</p>
+            </div>
+          ))}
+        </div>
+        {expiryCounts.every((bucket) => bucket.count === 0) ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            No hay productos caducados ni con vencimiento en 180 días.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {EXPIRY_BUCKETS.flatMap((bucket) =>
+              expiryAlerts[bucket.id].slice(0, 3).map((item) => (
+                <li
+                  key={`${bucket.id}-${item.id}`}
+                  className="flex flex-col gap-1 rounded-xl border border-border/70 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.sku} · cad. {item.expiryDate}
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                    {bucket.label}
+                  </span>
+                </li>
+              ))
+            )}
+          </ul>
+        )}
+      </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <h3 className="font-semibold text-foreground">

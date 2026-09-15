@@ -154,54 +154,117 @@ export async function createPurchaseOrder(
   return mapOrder(order, (items ?? []).map(mapItem));
 }
 
-export async function receivePurchaseOrder(
-  orderId: string
+export async function receivePurchaseOrderLines(
+  orderId: string,
+  lines: Array<{
+    lineId: string;
+    itemId: string | null;
+    receiveNow: number;
+    lotNumber?: string;
+    expiryDate?: string;
+    serialNumber?: string;
+    authorizeOverReceipt?: boolean;
+  }>,
+  createdBy: string,
+  destination?: { warehouseId?: string | null; locationId?: string | null }
 ): Promise<PurchaseOrder> {
   const orders = await getPurchaseOrders();
   const order = orders.find((item) => item.id === orderId);
   if (!order) throw new Error("Pedido no encontrado.");
+  if (order.status === "cancelado") {
+    throw new Error("No se puede recibir un pedido cancelado.");
+  }
+  if (!createdBy) {
+    throw new Error("La recepción requiere un usuario responsable.");
+  }
 
-  for (const line of order.items) {
-    if (!line.itemId) continue;
+  const { applyStockMovement } = await import("@/lib/warehouse/stock");
+
+  for (const input of lines) {
+    if (input.receiveNow <= 0) continue;
+    const line = order.items.find((item) => item.id === input.lineId);
+    if (!line || !input.itemId) continue;
+
     const pending = line.quantity - line.receivedQuantity;
-    if (pending <= 0) continue;
+    if (input.receiveNow > pending && !input.authorizeOverReceipt) {
+      throw new Error(
+        `No puedes recibir ${input.receiveNow} de ${line.itemName}: pendiente ${pending}. Marca autorización de sobre-recibo.`
+      );
+    }
 
-    const { data: product, error } = await supabase
-      .from("inventory_items")
-      .select("*")
-      .eq("id", line.itemId)
-      .single();
-
-    if (error || !product) continue;
-
-    const { applyStockMovement } = await import("@/lib/warehouse/stock");
     await applyStockMovement({
-      productId: line.itemId,
+      productId: input.itemId,
       movementType: "entrada",
-      quantity: pending,
-      createdBy: order.createdBy || "sistema",
-      note: `Recepción pedido ${order.orderNumber}`,
+      quantity: input.receiveNow,
+      createdBy,
+      reason: "recepcion_oc",
+      note: `Recepción ${order.orderNumber}${
+        input.authorizeOverReceipt && input.receiveNow > pending
+          ? " (sobre-recibo autorizado)"
+          : ""
+      }`,
       purchaseOrderId: order.id,
       supplierName: order.supplierName,
+      warehouseId: destination?.warehouseId ?? null,
+      locationId: destination?.locationId ?? null,
+      lotNumber: input.lotNumber || null,
+      expiryDate: input.expiryDate || null,
+      serialNumber: input.serialNumber || null,
     });
 
     await supabase
       .from("purchase_order_items")
-      .update({ received_quantity: line.quantity })
+      .update({ received_quantity: line.receivedQuantity + input.receiveNow })
       .eq("id", line.id);
   }
 
+  const refreshedItems = await supabase
+    .from("purchase_order_items")
+    .select("*")
+    .eq("order_id", orderId);
+  if (refreshedItems.error) throw new Error(refreshedItems.error.message);
+
+  const mapped = (refreshedItems.data ?? []).map(mapItem);
+  const allReceived =
+    mapped.length > 0 &&
+    mapped.every((line) => line.receivedQuantity >= line.quantity);
+  const anyReceived = mapped.some((line) => line.receivedQuantity > 0);
+  const nextStatus: PurchaseOrderStatus = allReceived
+    ? "recibido"
+    : anyReceived
+      ? "parcial"
+      : order.status;
+
   const { data: updated, error: updateError } = await supabase
     .from("purchase_orders")
-    .update({ status: "recibido" })
+    .update({ status: nextStatus })
     .eq("id", orderId)
     .select("*")
     .single();
 
   if (updateError) throw new Error(updateError.message);
+  return mapOrder(updated, mapped);
+}
 
-  const refreshed = await getPurchaseOrders();
-  return refreshed.find((item) => item.id === orderId) ?? mapOrder(updated);
+export async function receivePurchaseOrder(
+  orderId: string,
+  createdBy = "sistema",
+  destination?: { warehouseId?: string | null; locationId?: string | null }
+): Promise<PurchaseOrder> {
+  const orders = await getPurchaseOrders();
+  const order = orders.find((item) => item.id === orderId);
+  if (!order) throw new Error("Pedido no encontrado.");
+
+  return receivePurchaseOrderLines(
+    orderId,
+    order.items.map((line) => ({
+      lineId: line.id,
+      itemId: line.itemId,
+      receiveNow: Math.max(line.quantity - line.receivedQuantity, 0),
+    })),
+    createdBy,
+    destination
+  );
 }
 
 export async function cancelPurchaseOrder(orderId: string): Promise<void> {

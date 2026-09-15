@@ -18,6 +18,8 @@ import {
   type WarehouseMovement,
 } from "@/lib/warehouse/movements";
 import { cn } from "@/lib/utils";
+import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 const TYPE_LABELS: Record<string, string> = {
   entrada: "Entrada",
@@ -35,6 +37,7 @@ function isExpiredOrNear(item: InventoryItem) {
 }
 
 export function MovementsPanel() {
+  const { canWrite } = usePermissions("movimientos");
   const [movements, setMovements] = useState<WarehouseMovement[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -88,7 +91,7 @@ export function MovementsPanel() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!selected) return;
+    if (!selected || !canWrite) return;
 
     setSubmitting(true);
     setError("");
@@ -147,6 +150,10 @@ export function MovementsPanel() {
           Cambia materiales de ubicación o registra canjes con proveedores por
           insumos/medicamentos caducados o próximos a caducar.
         </p>
+
+        <div className="mt-4">
+          <ReadOnlyBanner visible={!canWrite} />
+        </div>
 
         <div className="mt-4 flex w-full flex-col gap-1 rounded-xl border border-border bg-muted/40 p-1 sm:inline-flex sm:w-auto sm:flex-row">
           <button
@@ -311,7 +318,7 @@ export function MovementsPanel() {
 
           <Button
             type="submit"
-            disabled={submitting || products.length === 0}
+            disabled={!canWrite || submitting || products.length === 0}
             className="w-full border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90 sm:w-fit"
           >
             {submitting

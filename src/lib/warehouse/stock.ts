@@ -143,6 +143,38 @@ export async function transferStock(input: {
   };
 }
 
+export type ProductLot = {
+  id: string;
+  lotNumber: string;
+  expiryDate: string;
+};
+
+export async function getProductLots(productId: string): Promise<ProductLot[]> {
+  const { data, error } = await db
+    .from("lots")
+    .select("id, lot_number, expiry_date")
+    .eq("product_id", productId)
+    .order("expiry_date", { ascending: true, nullsFirst: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    id: String(row.id),
+    lotNumber: String(row.lot_number ?? ""),
+    expiryDate: String(row.expiry_date ?? ""),
+  }));
+}
+
+export async function getOpenTransferCount(): Promise<number> {
+  const { count, error } = await db
+    .from("stock_transfers")
+    .select("*", { count: "exact", head: true })
+    .not("status", "in", "(recibido,cancelado)");
+  if (error) {
+    console.error("Error counting transfers:", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 export async function getKardex(productId?: string): Promise<KardexRow[]> {
   let query = db
     .from("inventory_movements")

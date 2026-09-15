@@ -15,6 +15,8 @@ import {
 } from "@/lib/suppliers/storage";
 import type { Supplier, SupplierInput } from "@/lib/suppliers/types";
 import { cn } from "@/lib/utils";
+import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
+import { usePermissions } from "@/lib/auth/use-permissions";
 
 const EMPTY_FORM: SupplierInput = {
   name: "",
@@ -29,6 +31,7 @@ const EMPTY_FORM: SupplierInput = {
 };
 
 export function SuppliersPanel() {
+  const { canWrite } = usePermissions("proveedores");
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
@@ -144,6 +147,7 @@ export function SuppliersPanel() {
 
   return (
     <div className="space-y-6">
+      <ReadOnlyBanner visible={!canWrite} />
       {error ? (
         <p
           role="alert"
@@ -163,6 +167,7 @@ export function SuppliersPanel() {
               Registra y administra proveedores del almacén médico.
             </p>
           </div>
+          {canWrite ? (
           <Button
             onClick={openCreate}
             className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
@@ -170,6 +175,7 @@ export function SuppliersPanel() {
             <Plus className="size-4" />
             Nuevo proveedor
           </Button>
+          ) : null}
         </div>
 
         <div className="border-b border-border p-4">
@@ -214,7 +220,7 @@ export function SuppliersPanel() {
                 { label: "RFC", value: supplier.rfc || "—" },
                 { label: "Ciudad", value: supplier.city || "—" },
               ],
-              actions: (
+              actions: canWrite ? (
                 <>
                   <button
                     type="button"
@@ -233,7 +239,7 @@ export function SuppliersPanel() {
                     Eliminar
                   </button>
                 </>
-              ),
+              ) : undefined,
             }))}
           />
 
@@ -295,6 +301,7 @@ export function SuppliersPanel() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
+                        {canWrite ? (
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -313,6 +320,9 @@ export function SuppliersPanel() {
                             <Trash2 className="size-4" />
                           </button>
                         </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Consulta</span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -324,7 +334,7 @@ export function SuppliersPanel() {
         )}
       </section>
 
-      {formOpen ? (
+      {formOpen && canWrite ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div
             role="dialog"
