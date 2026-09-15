@@ -2,7 +2,7 @@
 
 insert into public.app_users (username, password_hash, full_name, role)
 values (
-  'alejandro.botelloaz@hotmail.com',
+  'alexbazz64@gmail.com',
   extensions.crypt('admin123', extensions.gen_salt('bf')),
   'Administrador MAS',
   'admin'
