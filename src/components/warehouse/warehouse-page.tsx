@@ -11,7 +11,6 @@ import { OrdersPanel } from "@/components/warehouse/orders-panel";
 import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
 import { UsersPanel } from "@/components/warehouse/users-panel";
-import { WarehouseTabNav } from "@/components/warehouse/warehouse-tab-nav";
 import {
   WAREHOUSE_TABS,
   isWarehouseTabId,
@@ -33,7 +32,6 @@ export function WarehousePage() {
       title={activeTabMeta?.label ?? "Almacén"}
       subtitle="MAS · Almacén"
     >
-      <WarehouseTabNav />
       <div className="space-y-4 sm:space-y-6">
         {activeTab === "dashboard" ? <WarehouseDashboard /> : null}
 
