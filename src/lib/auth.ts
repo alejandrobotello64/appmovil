@@ -34,11 +34,22 @@ export async function loginWithCredentials(
 
   if (error) {
     console.error("Login error:", error.message);
-    throw new Error(
-      error.message.includes("crypt")
-        ? "Error de autenticación en el servidor. Contacta al administrador."
-        : "No se pudo iniciar sesión. Intenta de nuevo."
-    );
+    const message = error.message.toLowerCase();
+    if (message.includes("crypt")) {
+      throw new Error(
+        "Error de autenticación en el servidor. Contacta al administrador."
+      );
+    }
+    if (
+      message.includes("failed to fetch") ||
+      message.includes("network") ||
+      message.includes("fetch")
+    ) {
+      throw new Error(
+        "No se pudo conectar con la base de datos. Recarga la página e inténtalo de nuevo."
+      );
+    }
+    throw new Error("No se pudo iniciar sesión. Intenta de nuevo.");
   }
 
   const user = data?.[0];

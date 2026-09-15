@@ -1,13 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!configuredUrl || !supabaseAnonKey) {
   throw new Error(
     "Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local"
   );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+function resolveSupabaseUrl() {
+  try {
+    const parsed = new URL(configuredUrl);
+    const isLoopback =
+      parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+    if (isLoopback && typeof window !== "undefined") {
+      return window.location.origin;
+    }
+  } catch {
+    // keep configured URL
+  }
+  return configuredUrl;
+}
+
+export const supabase = createClient<Database>(
+  resolveSupabaseUrl(),
+  supabaseAnonKey
+);

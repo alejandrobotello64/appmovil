@@ -79,6 +79,8 @@ export function LoginForm() {
         </div>
 
         <form
+          method="post"
+          action="/"
           onSubmit={handleSubmit}
           className="rounded-2xl border border-border/80 bg-card/90 p-5 shadow-[0_20px_60px_-28px_rgba(59,70,165,0.45)] backdrop-blur-sm sm:p-8 dark:shadow-[0_20px_60px_-28px_rgba(0,191,255,0.25)]"
         >
