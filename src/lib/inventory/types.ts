@@ -1,14 +1,69 @@
-export const INVENTORY_CATEGORIES = [
+/** Categorías principales para identificar productos en el catálogo */
+export const CATALOG_CATEGORIES = [
   { id: "insumos", label: "Insumos", description: "Material de consumo médico" },
-  { id: "refacciones", label: "Refacciones", description: "Piezas y componentes de equipos" },
-  { id: "medicamentos", label: "Medicamentos", description: "Fármacos y soluciones" },
-  { id: "accesorios", label: "Accesorios", description: "Complementos y accesorios" },
-  { id: "equipos", label: "Equipos médicos", description: "Equipos y dispositivos" },
+  {
+    id: "medicamentos",
+    label: "Medicamentos",
+    description: "Fármacos y soluciones",
+  },
+  {
+    id: "refacciones",
+    label: "Refacciones",
+    description: "Piezas y componentes de equipos",
+  },
+  {
+    id: "accesorios",
+    label: "Accesorios",
+    description: "Complementos y accesorios",
+  },
+  {
+    id: "equipos",
+    label: "Equipos",
+    description: "Equipos y dispositivos médicos",
+  },
+] as const;
+
+export const PRODUCT_CATEGORIES = [
+  ...CATALOG_CATEGORIES.filter((item) => item.id !== "equipos"),
+  { id: "reactivos", label: "Reactivos", description: "Reactivos de laboratorio" },
+  { id: "otros", label: "Otros", description: "Artículos diversos" },
+] as const;
+
+export const EQUIPMENT_CATEGORY = {
+  id: "equipos",
+  label: "Equipos médicos",
+  description: "Equipos y dispositivos activos del almacén",
+} as const;
+
+export const INVENTORY_CATEGORIES = [
+  ...CATALOG_CATEGORIES.filter((item) => item.id !== "equipos"),
+  EQUIPMENT_CATEGORY,
   { id: "reactivos", label: "Reactivos", description: "Reactivos de laboratorio" },
   { id: "otros", label: "Otros", description: "Artículos diversos" },
 ] as const;
 
 export type InventoryCategoryId = (typeof INVENTORY_CATEGORIES)[number]["id"];
+export type CatalogCategoryId = (typeof CATALOG_CATEGORIES)[number]["id"];
+export type ProductCategoryId = (typeof PRODUCT_CATEGORIES)[number]["id"];
+export type ItemKind = "producto" | "equipo";
+export type AssetStatus =
+  | "operativo"
+  | "mantenimiento"
+  | "fuera_servicio"
+  | "baja";
+
+export const ASSET_STATUS_OPTIONS: { id: AssetStatus; label: string }[] = [
+  { id: "operativo", label: "Operativo" },
+  { id: "mantenimiento", label: "En mantenimiento" },
+  { id: "fuera_servicio", label: "Fuera de servicio" },
+  { id: "baja", label: "Baja" },
+];
+
+export function categoryToItemKind(
+  category: InventoryCategoryId
+): ItemKind {
+  return category === "equipos" ? "equipo" : "producto";
+}
 
 export const INVENTORY_UNITS = [
   "pieza",
@@ -32,6 +87,7 @@ export type InventoryItem = {
   sku: string;
   name: string;
   category: InventoryCategoryId;
+  itemKind: ItemKind;
   description: string;
   quantity: number;
   minStock: number;
@@ -44,6 +100,9 @@ export type InventoryItem = {
   supplier: string;
   expiryDate: string;
   notes: string;
+  assetStatus: AssetStatus;
+  lastMaintenanceDate: string;
+  nextMaintenanceDate: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -58,3 +117,9 @@ export type InventoryFilters = {
   category: InventoryCategoryId | "all";
   status: StockStatus | "all";
 };
+
+export function isProductCategory(
+  category: InventoryCategoryId
+): category is ProductCategoryId {
+  return category !== "equipos";
+}

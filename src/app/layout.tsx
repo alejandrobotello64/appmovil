@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider, themeInitScript } from "@/components/theme-provider";
@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   description: "Inicio de sesión — Medical Advanced Supplies",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -21,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${manrope.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="flex min-h-dvh flex-col bg-background text-foreground">
         <Script
           id="mas-theme-init"
           strategy="beforeInteractive"

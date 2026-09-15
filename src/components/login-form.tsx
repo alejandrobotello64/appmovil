@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { Check, Moon, Sun } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   clearRememberedCredentials,
   createSession,
@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 
 export function LoginForm() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -68,7 +67,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-full flex-1 items-center justify-center px-4 py-10">
+    <div className="safe-bottom safe-top relative flex min-h-dvh flex-1 items-center justify-center px-4 py-6 sm:py-10">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.22),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.28),transparent_45%)]"
@@ -76,52 +75,21 @@ export function LoginForm() {
 
       <div className="relative w-full max-w-[420px]">
         <div className="mb-6 flex justify-end">
-          <div
-            role="group"
-            aria-label="Elegir tema"
-            className="inline-flex items-center gap-1 rounded-full border border-border bg-card/80 p-1 shadow-sm backdrop-blur"
-          >
-            <button
-              type="button"
-              onClick={() => setTheme("light")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                theme === "light"
-                  ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Sun className="size-3.5" />
-              Claro
-            </button>
-            <button
-              type="button"
-              onClick={() => setTheme("dark")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                theme === "dark"
-                  ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Moon className="size-3.5" />
-              Oscuro
-            </button>
-          </div>
+          <ThemeToggle className="bg-card/80 shadow-sm backdrop-blur" />
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-border/80 bg-card/90 p-8 shadow-[0_20px_60px_-28px_rgba(59,70,165,0.45)] backdrop-blur-sm dark:shadow-[0_20px_60px_-28px_rgba(0,191,255,0.25)]"
+          className="rounded-2xl border border-border/80 bg-card/90 p-5 shadow-[0_20px_60px_-28px_rgba(59,70,165,0.45)] backdrop-blur-sm sm:p-8 dark:shadow-[0_20px_60px_-28px_rgba(0,191,255,0.25)]"
         >
           <div className="mb-8 flex flex-col items-center text-center">
             <Image
-              src="/assets/logo.jpg"
+              src="/assets/logo.png"
               alt="Medical Advanced Supplies"
               width={280}
               height={120}
               priority
-              className="h-auto w-[240px] object-contain dark:brightness-110"
+              className="h-auto w-full max-w-[220px] object-contain sm:max-w-[240px] dark:brightness-110"
             />
             <p className="mt-4 text-sm text-muted-foreground">
               Accede al panel de administración

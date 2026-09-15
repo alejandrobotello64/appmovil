@@ -9,7 +9,7 @@ import {
   getInventoryItems,
   getStockStatus,
 } from "@/lib/inventory/storage";
-import { INVENTORY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
+import { CATALOG_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 
 export function DashboardHomePage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -40,10 +40,10 @@ export function DashboardHomePage() {
           </p>
           <div className="mt-4">
             <Link
-              href="/dashboard/inventario"
+              href="/dashboard/almacen?tab=dashboard"
               className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] px-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
-              Ir al inventario
+              Ir al almacén
               <ArrowRight className="size-4" />
             </Link>
           </div>
@@ -68,9 +68,9 @@ export function DashboardHomePage() {
                   return (
                     <li
                       key={item.id}
-                      className="flex items-center justify-between rounded-xl border border-border/70 px-3 py-2"
+                      className="flex flex-col gap-2 rounded-xl border border-border/70 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground">
                           {item.name}
                         </p>
@@ -96,14 +96,14 @@ export function DashboardHomePage() {
               </h3>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              {INVENTORY_CATEGORIES.map((category) => {
+              {CATALOG_CATEGORIES.map((category) => {
                 const count = items.filter(
                   (item) => item.category === category.id
                 ).length;
                 return (
                   <Link
                     key={category.id}
-                    href={`/dashboard/inventario?category=${category.id}`}
+                    href={`/dashboard/almacen?tab=productos&category=${category.id}`}
                     className="rounded-xl border border-border/70 px-3 py-3 transition-colors hover:bg-muted/50"
                   >
                     <p className="text-sm font-medium text-foreground">

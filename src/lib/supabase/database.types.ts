@@ -48,6 +48,7 @@ export type Database = {
           sku: string;
           name: string;
           category: string;
+          item_kind: string;
           description: string;
           quantity: number;
           min_stock: number;
@@ -60,6 +61,9 @@ export type Database = {
           supplier: string;
           expiry_date: string | null;
           notes: string;
+          asset_status: string;
+          last_maintenance_date: string | null;
+          next_maintenance_date: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -68,6 +72,7 @@ export type Database = {
           sku: string;
           name: string;
           category: string;
+          item_kind?: string;
           description?: string;
           quantity?: number;
           min_stock?: number;
@@ -80,6 +85,9 @@ export type Database = {
           supplier?: string;
           expiry_date?: string | null;
           notes?: string;
+          asset_status?: string;
+          last_maintenance_date?: string | null;
+          next_maintenance_date?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -88,6 +96,7 @@ export type Database = {
           sku?: string;
           name?: string;
           category?: string;
+          item_kind?: string;
           description?: string;
           quantity?: number;
           min_stock?: number;
@@ -100,6 +109,231 @@ export type Database = {
           supplier?: string;
           expiry_date?: string | null;
           notes?: string;
+          asset_status?: string;
+          last_maintenance_date?: string | null;
+          next_maintenance_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      suppliers: {
+        Row: {
+          id: string;
+          name: string;
+          contact_name: string;
+          email: string;
+          phone: string;
+          rfc: string;
+          address: string;
+          city: string;
+          notes: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          contact_name?: string;
+          email?: string;
+          phone?: string;
+          rfc?: string;
+          address?: string;
+          city?: string;
+          notes?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          contact_name?: string;
+          email?: string;
+          phone?: string;
+          rfc?: string;
+          address?: string;
+          city?: string;
+          notes?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      warehouse_movements: {
+        Row: {
+          id: string;
+          item_id: string | null;
+          item_sku: string;
+          item_name: string;
+          movement_type: string;
+          quantity: number;
+          previous_quantity: number;
+          new_quantity: number;
+          note: string;
+          created_by: string;
+          created_at: string;
+          from_location: string;
+          to_location: string;
+          supplier_name: string;
+          previous_expiry: string | null;
+          new_expiry: string | null;
+        };
+        Insert: {
+          id?: string;
+          item_id?: string | null;
+          item_sku?: string;
+          item_name?: string;
+          movement_type: string;
+          quantity: number;
+          previous_quantity?: number;
+          new_quantity?: number;
+          note?: string;
+          created_by?: string;
+          created_at?: string;
+          from_location?: string;
+          to_location?: string;
+          supplier_name?: string;
+          previous_expiry?: string | null;
+          new_expiry?: string | null;
+        };
+        Update: {
+          id?: string;
+          item_id?: string | null;
+          item_sku?: string;
+          item_name?: string;
+          movement_type?: string;
+          quantity?: number;
+          previous_quantity?: number;
+          new_quantity?: number;
+          note?: string;
+          created_by?: string;
+          created_at?: string;
+          from_location?: string;
+          to_location?: string;
+          supplier_name?: string;
+          previous_expiry?: string | null;
+          new_expiry?: string | null;
+        };
+        Relationships: [];
+      };
+      purchase_orders: {
+        Row: {
+          id: string;
+          order_number: string;
+          supplier_id: string | null;
+          supplier_name: string;
+          status: string;
+          expected_date: string | null;
+          notes: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_number: string;
+          supplier_id?: string | null;
+          supplier_name?: string;
+          status?: string;
+          expected_date?: string | null;
+          notes?: string;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_number?: string;
+          supplier_id?: string | null;
+          supplier_name?: string;
+          status?: string;
+          expected_date?: string | null;
+          notes?: string;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      purchase_order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          item_id: string | null;
+          item_sku: string;
+          item_name: string;
+          quantity: number;
+          received_quantity: number;
+          unit_price: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          item_id?: string | null;
+          item_sku?: string;
+          item_name: string;
+          quantity: number;
+          received_quantity?: number;
+          unit_price?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          item_id?: string | null;
+          item_sku?: string;
+          item_name?: string;
+          quantity?: number;
+          received_quantity?: number;
+          unit_price?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      equipment_maintenances: {
+        Row: {
+          id: string;
+          equipment_id: string;
+          maintenance_type: string;
+          status: string;
+          scheduled_date: string;
+          completed_date: string | null;
+          technician: string;
+          cost: number;
+          notes: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          equipment_id: string;
+          maintenance_type?: string;
+          status?: string;
+          scheduled_date: string;
+          completed_date?: string | null;
+          technician?: string;
+          cost?: number;
+          notes?: string;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          equipment_id?: string;
+          maintenance_type?: string;
+          status?: string;
+          scheduled_date?: string;
+          completed_date?: string | null;
+          technician?: string;
+          cost?: number;
+          notes?: string;
+          created_by?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -118,6 +352,32 @@ export type Database = {
           username: string;
           full_name: string | null;
           role: string;
+        }[];
+      };
+      list_app_users: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+          is_active: boolean;
+          created_at: string;
+        }[];
+      };
+      create_app_user: {
+        Args: {
+          p_username: string;
+          p_password: string;
+          p_full_name?: string | null;
+          p_role?: string;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+          is_active: boolean;
         }[];
       };
     };

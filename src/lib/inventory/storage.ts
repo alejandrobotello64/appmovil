@@ -1,10 +1,12 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
+  AssetStatus,
   InventoryCategoryId,
   InventoryItem,
   InventoryItemInput,
   InventoryUnit,
+  ItemKind,
 } from "./types";
 
 type InventoryRow = Database["public"]["Tables"]["inventory_items"]["Row"];
@@ -21,11 +23,16 @@ export function getStockStatus(
 }
 
 function mapRowToItem(row: InventoryRow): InventoryItem {
+  const category = row.category as InventoryCategoryId;
+  const inferredKind: ItemKind =
+    row.item_kind === "equipo" || category === "equipos" ? "equipo" : "producto";
+
   return {
     id: row.id,
     sku: row.sku,
     name: row.name,
-    category: row.category as InventoryCategoryId,
+    category,
+    itemKind: inferredKind,
     description: row.description ?? "",
     quantity: row.quantity,
     minStock: row.min_stock,
@@ -38,16 +45,25 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     supplier: row.supplier ?? "",
     expiryDate: row.expiry_date ?? "",
     notes: row.notes ?? "",
+    assetStatus: (row.asset_status as AssetStatus) || "operativo",
+    lastMaintenanceDate: row.last_maintenance_date ?? "",
+    nextMaintenanceDate: row.next_maintenance_date ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
 function mapInputToRow(input: InventoryItemInput): InventoryInsert {
+  const itemKind: ItemKind =
+    input.itemKind === "equipo" || input.category === "equipos"
+      ? "equipo"
+      : "producto";
+
   return {
     sku: input.sku.trim(),
     name: input.name.trim(),
-    category: input.category,
+    category: itemKind === "equipo" ? "equipos" : input.category,
+    item_kind: itemKind,
     description: input.description ?? "",
     quantity: input.quantity,
     min_stock: input.minStock,
@@ -60,14 +76,29 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     supplier: input.supplier ?? "",
     expiry_date: input.expiryDate ? input.expiryDate : null,
     notes: input.notes ?? "",
+    asset_status: input.assetStatus || "operativo",
+    last_maintenance_date: input.lastMaintenanceDate
+      ? input.lastMaintenanceDate
+      : null,
+    next_maintenance_date: input.nextMaintenanceDate
+      ? input.nextMaintenanceDate
+      : null,
   };
 }
 
-export async function getInventoryItems(): Promise<InventoryItem[]> {
-  const { data, error } = await supabase
+export async function getInventoryItems(options?: {
+  kind?: ItemKind;
+}): Promise<InventoryItem[]> {
+  let query = supabase
     .from("inventory_items")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (options?.kind) {
+    query = query.eq("item_kind", options.kind);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error loading inventory:", error.message);
@@ -123,4 +154,25 @@ export async function deleteInventoryItem(id: string): Promise<void> {
     console.error("Error deleting inventory item:", error.message);
     throw new Error(error.message);
   }
+}
+
+export async function adjustInventoryQuantity(
+  id: string,
+  delta: number
+): Promise<InventoryItem> {
+  const items = await getInventoryItems();
+  const current = items.find((item) => item.id === id);
+  if (!current) {
+    throw new Error("Producto no encontrado.");
+  }
+
+  const nextQuantity = current.quantity + delta;
+  if (nextQuantity < 0) {
+    throw new Error("No hay suficiente stock para esta salida.");
+  }
+
+  return updateInventoryItem(id, {
+    ...current,
+    quantity: nextQuantity,
+  });
 }

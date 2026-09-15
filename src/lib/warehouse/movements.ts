@@ -1,0 +1,210 @@
+import { supabase } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/database.types";
+import {
+  getInventoryItems,
+  updateInventoryItem,
+} from "@/lib/inventory/storage";
+
+type MovementRow = Database["public"]["Tables"]["warehouse_movements"]["Row"];
+
+export type MovementType =
+  | "entrada"
+  | "salida"
+  | "cambio_ubicacion"
+  | "canje_caducado";
+
+export type WarehouseMovement = {
+  id: string;
+  itemId: string | null;
+  itemSku: string;
+  itemName: string;
+  movementType: MovementType;
+  quantity: number;
+  previousQuantity: number;
+  newQuantity: number;
+  note: string;
+  createdBy: string;
+  createdAt: string;
+  fromLocation: string;
+  toLocation: string;
+  supplierName: string;
+  previousExpiry: string;
+  newExpiry: string;
+};
+
+export type WarehouseMovementInput = {
+  itemId: string;
+  itemSku: string;
+  itemName: string;
+  movementType: MovementType;
+  quantity: number;
+  previousQuantity: number;
+  newQuantity: number;
+  note?: string;
+  createdBy?: string;
+  fromLocation?: string;
+  toLocation?: string;
+  supplierName?: string;
+  previousExpiry?: string;
+  newExpiry?: string;
+};
+
+function mapRow(row: MovementRow): WarehouseMovement {
+  return {
+    id: row.id,
+    itemId: row.item_id,
+    itemSku: row.item_sku,
+    itemName: row.item_name,
+    movementType: row.movement_type as MovementType,
+    quantity: row.quantity,
+    previousQuantity: row.previous_quantity,
+    newQuantity: row.new_quantity,
+    note: row.note ?? "",
+    createdBy: row.created_by ?? "",
+    createdAt: row.created_at,
+    fromLocation: row.from_location ?? "",
+    toLocation: row.to_location ?? "",
+    supplierName: row.supplier_name ?? "",
+    previousExpiry: row.previous_expiry ?? "",
+    newExpiry: row.new_expiry ?? "",
+  };
+}
+
+export async function getWarehouseMovements(): Promise<WarehouseMovement[]> {
+  const { data, error } = await supabase
+    .from("warehouse_movements")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.error("Error loading movements:", error.message);
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map(mapRow);
+}
+
+export async function createWarehouseMovement(
+  input: WarehouseMovementInput
+): Promise<WarehouseMovement> {
+  const { data, error } = await supabase
+    .from("warehouse_movements")
+    .insert({
+      item_id: input.itemId,
+      item_sku: input.itemSku,
+      item_name: input.itemName,
+      movement_type: input.movementType,
+      quantity: input.quantity,
+      previous_quantity: input.previousQuantity,
+      new_quantity: input.newQuantity,
+      note: input.note ?? "",
+      created_by: input.createdBy ?? "",
+      from_location: input.fromLocation ?? "",
+      to_location: input.toLocation ?? "",
+      supplier_name: input.supplierName ?? "",
+      previous_expiry: input.previousExpiry || null,
+      new_expiry: input.newExpiry || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error creating movement:", error.message);
+    throw new Error(error.message);
+  }
+
+  return mapRow(data);
+}
+
+export async function transferProductLocation(input: {
+  itemId: string;
+  newLocation: string;
+  note?: string;
+  createdBy?: string;
+}): Promise<WarehouseMovement> {
+  const products = await getInventoryItems({ kind: "producto" });
+  const product = products.find((item) => item.id === input.itemId);
+  if (!product) throw new Error("Producto no encontrado.");
+
+  const newLocation = input.newLocation.trim();
+  if (!newLocation) throw new Error("Indica la nueva ubicación.");
+  if (newLocation === product.location) {
+    throw new Error("La nueva ubicación es igual a la actual.");
+  }
+
+  await updateInventoryItem(product.id, {
+    ...product,
+    location: newLocation,
+  });
+
+  return createWarehouseMovement({
+    itemId: product.id,
+    itemSku: product.sku,
+    itemName: product.name,
+    movementType: "cambio_ubicacion",
+    quantity: product.quantity,
+    previousQuantity: product.quantity,
+    newQuantity: product.quantity,
+    fromLocation: product.location || "Sin ubicación",
+    toLocation: newLocation,
+    note: input.note,
+    createdBy: input.createdBy,
+  });
+}
+
+export async function exchangeExpiredProduct(input: {
+  itemId: string;
+  quantity: number;
+  supplierName: string;
+  newExpiryDate: string;
+  note?: string;
+  createdBy?: string;
+}): Promise<WarehouseMovement> {
+  const products = await getInventoryItems({ kind: "producto" });
+  const product = products.find((item) => item.id === input.itemId);
+  if (!product) throw new Error("Producto no encontrado.");
+
+  if (input.quantity <= 0) {
+    throw new Error("La cantidad a canjear debe ser mayor a 0.");
+  }
+  if (input.quantity > product.quantity) {
+    throw new Error("No puedes canjear más unidades de las disponibles.");
+  }
+  if (!input.supplierName.trim()) {
+    throw new Error("Indica el proveedor del canje.");
+  }
+  if (!input.newExpiryDate) {
+    throw new Error("Indica la nueva fecha de caducidad.");
+  }
+
+  // Canje: se mantiene el stock y se actualiza caducidad/lote con material fresco
+  await updateInventoryItem(product.id, {
+    ...product,
+    expiryDate: input.newExpiryDate,
+    supplier: input.supplierName.trim(),
+    notes: [
+      product.notes,
+      `Canje caducado ${new Date().toLocaleDateString("es-MX")}: ${input.quantity} ${product.unit}`,
+    ]
+      .filter(Boolean)
+      .join(" | "),
+  });
+
+  return createWarehouseMovement({
+    itemId: product.id,
+    itemSku: product.sku,
+    itemName: product.name,
+    movementType: "canje_caducado",
+    quantity: input.quantity,
+    previousQuantity: product.quantity,
+    newQuantity: product.quantity,
+    supplierName: input.supplierName.trim(),
+    previousExpiry: product.expiryDate,
+    newExpiry: input.newExpiryDate,
+    fromLocation: product.location,
+    toLocation: product.location,
+    note: input.note,
+    createdBy: input.createdBy,
+  });
+}
