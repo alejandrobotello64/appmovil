@@ -10,14 +10,44 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Medical Advanced Supplies | Acceso",
-  description: "Inicio de sesión — Medical Advanced Supplies",
+  applicationName: "Medical Advanced Supplies",
+  title: {
+    default: "Medical Advanced Supplies",
+    template: "%s | Medical Advanced Supplies",
+  },
+  description:
+    "Sistema interno de almacén e inventario — Medical Advanced Supplies",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "MAS",
+  },
+  icons: {
+    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+  openGraph: {
+    title: "Medical Advanced Supplies",
+    description: "Sistema interno de almacén e inventario",
+    siteName: "Medical Advanced Supplies",
+    images: [{ url: "/assets/logo.png" }],
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#3B46A5" },
+    { media: "(prefers-color-scheme: dark)", color: "#00BFFF" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
