@@ -61,12 +61,12 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
       </Suspense>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="safe-top sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border bg-background/95 px-3 py-2.5 backdrop-blur sm:gap-4 sm:px-4 sm:py-3 md:px-6">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <header className="app-header sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-background/95 backdrop-blur sm:gap-4">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => setSidebarOpen((current) => !current)}
-              className="touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
+              className="touch-target inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
               aria-label={sidebarOpen ? "Ocultar menú" : "Mostrar menú"}
               aria-expanded={sidebarOpen}
             >
@@ -82,9 +82,12 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             <GlobalSearch />
-            <ThemeToggle showLabel={false} className="px-2.5 py-2 sm:px-3 sm:py-1.5" />
+            <ThemeToggle
+              showLabel={false}
+              className="touch-target size-11 justify-center px-0 py-0 sm:size-auto sm:px-3 sm:py-1.5"
+            />
             <span className="hidden max-w-[140px] truncate text-sm text-muted-foreground lg:inline">
               {username}
             </span>
@@ -92,7 +95,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="h-9 px-2 sm:px-3"
+              className="touch-target h-11 px-3 sm:h-9 sm:px-3"
             >
               <LogOut className="size-4 sm:mr-1.5" />
               <span className="hidden sm:inline">Salir</span>
@@ -100,7 +103,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
           </div>
         </header>
 
-        <main className="safe-bottom flex-1 overflow-auto p-3 sm:p-4 md:p-6">
+        <main className="app-main flex-1 overflow-auto">
           {children}
         </main>
       </div>

@@ -89,7 +89,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             : "-translate-x-full lg:w-0 lg:overflow-hidden lg:border-r-0"
         )}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <div className="sidebar-header flex items-center justify-between border-b border-border">
           <div>
             <p className="text-[11px] font-semibold tracking-[0.18em] text-[#00BFFF] uppercase">
               MAS
@@ -101,7 +101,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden"
+            className="touch-target inline-flex size-11 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted lg:hidden"
             aria-label="Cerrar menú"
           >
             <X className="size-4" />
@@ -182,7 +182,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </div>
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
             Dashboard y operaciones de almacén
           </p>

@@ -23,6 +23,9 @@ export function ModalShell({
           "flex max-h-[92dvh] w-full max-w-3xl flex-col rounded-t-2xl border border-border bg-card shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
           className
         )}
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
       >
         <div className="shrink-0 border-b border-border px-4 py-4 sm:px-5">
           <h3 className="text-lg font-semibold text-foreground">{title}</h3>

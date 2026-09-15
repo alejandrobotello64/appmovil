@@ -67,7 +67,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="safe-bottom safe-top relative flex min-h-dvh flex-1 items-center justify-center px-4 py-6 sm:py-10">
+    <div className="login-shell relative flex min-h-dvh flex-1 items-center justify-center">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.22),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.28),transparent_45%)]"
@@ -75,7 +75,7 @@ export function LoginForm() {
 
       <div className="relative w-full max-w-[420px]">
         <div className="mb-6 flex justify-end">
-          <ThemeToggle className="bg-card/80 shadow-sm backdrop-blur" />
+          <ThemeToggle className="touch-target bg-card/80 shadow-sm backdrop-blur" />
         </div>
 
         <form
