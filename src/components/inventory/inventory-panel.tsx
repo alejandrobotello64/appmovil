@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { InventoryExcelActions } from "@/components/inventory/inventory-excel-actions";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -257,17 +258,34 @@ export function InventoryPanel({
               </p>
             </div>
             {canWrite ? (
-            <Button
-              onClick={() => {
-                setEditingItem(null);
-                setFormOpen(true);
-              }}
-              className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
-            >
-              <Plus className="size-4" />
-              {isEquipment ? "Nuevo equipo" : "Nuevo producto"}
-            </Button>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <InventoryExcelActions
+                items={items}
+                canWrite={canWrite}
+                defaultKind={isEquipment ? "equipo" : "producto"}
+                onImported={refreshItems}
+                onError={setError}
+              />
+              <Button
+                onClick={() => {
+                  setEditingItem(null);
+                  setFormOpen(true);
+                }}
+                className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+              >
+                <Plus className="size-4" />
+                {isEquipment ? "Nuevo equipo" : "Nuevo producto"}
+              </Button>
+            </div>
+            ) : (
+              <InventoryExcelActions
+                items={items}
+                canWrite={false}
+                defaultKind={isEquipment ? "equipo" : "producto"}
+                onImported={refreshItems}
+                onError={setError}
+              />
+            )}
           </div>
 
           {catalogMode || !isEquipment ? (

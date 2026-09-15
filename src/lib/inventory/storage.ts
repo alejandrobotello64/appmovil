@@ -208,6 +208,48 @@ export async function deleteInventoryItem(
   }
 }
 
+export async function bulkImportInventoryItems(
+  rows: InventoryItemInput[],
+  createdBy: string
+): Promise<{
+  created: number;
+  updated: number;
+  errors: Array<{ sku: string; message: string }>;
+}> {
+  const existing = await getInventoryItems({ includeInactive: true });
+  const bySku = new Map(
+    existing.map((item) => [item.sku.trim().toLowerCase(), item])
+  );
+  let created = 0;
+  let updated = 0;
+  const errors: Array<{ sku: string; message: string }> = [];
+
+  for (const input of rows) {
+    const key = input.sku.trim().toLowerCase();
+    try {
+      const current = bySku.get(key);
+      if (current) {
+        await updateInventoryItem(current.id, {
+          ...input,
+          quantity: current.quantity,
+        });
+        updated += 1;
+      } else {
+        const item = await createInventoryItem(input, createdBy);
+        bySku.set(key, item);
+        created += 1;
+      }
+    } catch (err) {
+      errors.push({
+        sku: input.sku,
+        message: err instanceof Error ? err.message : "No se pudo importar la fila.",
+      });
+    }
+  }
+
+  return { created, updated, errors };
+}
+
 export async function adjustInventoryQuantity(
   id: string,
   delta: number,

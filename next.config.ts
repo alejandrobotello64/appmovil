@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "**.cursor.com",
     "**.cursorusercontent.com",
   ],
+  serverExternalPackages: ["xlsx"],
 };
 
 export default nextConfig;
