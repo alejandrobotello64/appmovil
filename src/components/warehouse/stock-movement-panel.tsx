@@ -3,12 +3,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  adjustInventoryQuantity,
   getInventoryItems,
 } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
 import { getSession } from "@/lib/auth";
-import { createWarehouseMovement } from "@/lib/warehouse/movements";
 
 type StockMovementPanelProps = {
   mode: "entrada" | "salida";
@@ -52,30 +50,33 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setMessage("");
 
     try {
-      const previousQuantity = selected.quantity;
-      const delta = mode === "entrada" ? quantity : -quantity;
-      const updated = await adjustInventoryQuantity(selected.id, delta);
       const session = getSession();
-
-      await createWarehouseMovement({
-        itemId: selected.id,
-        itemSku: selected.sku,
-        itemName: selected.name,
+      if (!session?.username) {
+        throw new Error("Inicia sesión para registrar el movimiento.");
+      }
+      const { applyStockMovement } = await import("@/lib/warehouse/stock");
+      const result = await applyStockMovement({
+        productId: selected.id,
         movementType: mode,
         quantity,
-        previousQuantity,
-        newQuantity: updated.quantity,
+        createdBy: session.username,
         note,
-        createdBy: session?.username ?? "",
+        reason: mode === "salida" ? "consumo interno" : "entrada de mercancia",
+        lotNumber: mode === "entrada" && selected.tracksLot ? selected.serialNumber || null : null,
+        expiryDate: mode === "entrada" && selected.expiryDate ? selected.expiryDate : null,
       });
+      const updated = {
+        ...selected,
+        quantity: result.newQuantity,
+      };
 
       setItems((current) =>
         current.map((item) => (item.id === updated.id ? updated : item))
       );
       setMessage(
         mode === "entrada"
-          ? `Entrada registrada. Nuevo stock: ${updated.quantity} ${updated.unit}.`
-          : `Salida registrada. Nuevo stock: ${updated.quantity} ${updated.unit}.`
+          ? `Entrada ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.`
+          : `Salida ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.`
       );
       setQuantity(1);
       setNote("");
@@ -101,8 +102,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         {mode === "entrada"
-          ? "Suma unidades a productos consumibles (insumos, medicamentos, etc.)."
-          : "Descuenta unidades de productos consumibles. Los equipos médicos no usan este flujo."}
+          ? "Suma unidades mediante folio EM. La existencia no se edita a mano."
+          : "Descuenta unidades con folio SAL. No permite stock negativo ni medicamentos caducados."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-5 grid max-w-xl gap-4">

@@ -174,26 +174,21 @@ export async function receivePurchaseOrder(
 
     if (error || !product) continue;
 
-    await supabase
-      .from("inventory_items")
-      .update({ quantity: product.quantity + pending })
-      .eq("id", line.itemId);
+    const { applyStockMovement } = await import("@/lib/warehouse/stock");
+    await applyStockMovement({
+      productId: line.itemId,
+      movementType: "entrada",
+      quantity: pending,
+      createdBy: order.createdBy || "sistema",
+      note: `Recepción pedido ${order.orderNumber}`,
+      purchaseOrderId: order.id,
+      supplierName: order.supplierName,
+    });
 
     await supabase
       .from("purchase_order_items")
       .update({ received_quantity: line.quantity })
       .eq("id", line.id);
-
-    await supabase.from("warehouse_movements").insert({
-      item_id: line.itemId,
-      item_sku: line.itemSku,
-      item_name: line.itemName,
-      movement_type: "entrada",
-      quantity: pending,
-      previous_quantity: product.quantity,
-      new_quantity: product.quantity + pending,
-      note: `Recepción pedido ${order.orderNumber}`,
-    });
   }
 
   const { data: updated, error: updateError } = await supabase

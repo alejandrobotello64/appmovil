@@ -64,6 +64,15 @@ export type Database = {
           asset_status: string;
           last_maintenance_date: string | null;
           next_maintenance_date: string | null;
+          is_active: boolean;
+          tracks_lot: boolean;
+          tracks_serial: boolean;
+          tracks_expiry: boolean;
+          max_stock: number;
+          reorder_point: number;
+          part_number: string;
+          manufacturer: string;
+          subcategory: string;
           created_at: string;
           updated_at: string;
         };
@@ -88,6 +97,15 @@ export type Database = {
           asset_status?: string;
           last_maintenance_date?: string | null;
           next_maintenance_date?: string | null;
+          is_active?: boolean;
+          tracks_lot?: boolean;
+          tracks_serial?: boolean;
+          tracks_expiry?: boolean;
+          max_stock?: number;
+          reorder_point?: number;
+          part_number?: string;
+          manufacturer?: string;
+          subcategory?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -112,6 +130,15 @@ export type Database = {
           asset_status?: string;
           last_maintenance_date?: string | null;
           next_maintenance_date?: string | null;
+          is_active?: boolean;
+          tracks_lot?: boolean;
+          tracks_serial?: boolean;
+          tracks_expiry?: boolean;
+          max_stock?: number;
+          reorder_point?: number;
+          part_number?: string;
+          manufacturer?: string;
+          subcategory?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -379,6 +406,51 @@ export type Database = {
           role: string;
           is_active: boolean;
         }[];
+      };
+      apply_stock_movement: {
+        Args: {
+          p_product_id: string;
+          p_movement_type: string;
+          p_quantity: number;
+          p_note?: string;
+          p_created_by?: string;
+          p_reason?: string;
+          p_warehouse_id?: string | null;
+          p_location_id?: string | null;
+          p_lot_number?: string | null;
+          p_expiry_date?: string | null;
+          p_serial_number?: string | null;
+          p_supplier_name?: string;
+          p_purchase_order_id?: string | null;
+        };
+        Returns: {
+          folio: string;
+          movement_id: string;
+          new_quantity: number;
+        }[];
+      };
+      transfer_stock: {
+        Args: {
+          p_product_id: string;
+          p_quantity: number;
+          p_to_location_name: string;
+          p_note?: string;
+          p_created_by?: string;
+          p_from_location_id?: string | null;
+          p_to_warehouse_id?: string | null;
+        };
+        Returns: {
+          folio: string;
+          movement_id: string;
+          new_quantity: number;
+        }[];
+      };
+      deactivate_product: {
+        Args: {
+          p_product_id: string;
+          p_created_by?: string;
+        };
+        Returns: undefined;
       };
     };
     Enums: Record<string, never>;

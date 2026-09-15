@@ -30,6 +30,12 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=movimientos",
   },
   {
+    id: "kardex",
+    label: "Kardex",
+    description: "Historial inalterable de existencias",
+    href: "/dashboard/almacen?tab=kardex",
+  },
+  {
     id: "pedidos",
     label: "Pedidos",
     description: "Órdenes de compra y surtido",

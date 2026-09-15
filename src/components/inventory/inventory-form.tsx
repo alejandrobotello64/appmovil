@@ -42,6 +42,15 @@ function emptyForm(kind: ItemKind): InventoryItemInput {
     assetStatus: "operativo",
     lastMaintenanceDate: "",
     nextMaintenanceDate: "",
+    isActive: true,
+    tracksLot: kind !== "equipo",
+    tracksSerial: kind === "equipo",
+    tracksExpiry: false,
+    maxStock: 0,
+    reorderPoint: 0,
+    partNumber: "",
+    manufacturer: "",
+    subcategory: "",
   };
 }
 
@@ -199,18 +208,32 @@ export function InventoryForm({
 
         <label className="space-y-1.5">
           <span className="text-sm font-medium">
-            {isEquipment ? "Cantidad de activos" : "Cantidad"}
+            {item
+              ? "Existencia (solo por movimientos)"
+              : isEquipment
+                ? "Existencia inicial"
+                : "Existencia inicial"}
           </span>
           <input
-            required
+            required={!item}
             type="number"
-            min={isEquipment ? 1 : 0}
+            min={0}
             value={form.quantity}
+            disabled={Boolean(item)}
             onChange={(event) =>
               handleChange("quantity", Number(event.target.value))
             }
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none disabled:opacity-60"
           />
+          {item ? (
+            <span className="text-xs text-muted-foreground">
+              La existencia se actualiza con entradas, salidas o traspasos.
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              Si capturas unidades, se genera una entrada con folio EM.
+            </span>
+          )}
         </label>
 
         {!isEquipment ? (
@@ -297,6 +320,53 @@ export function InventoryForm({
             onChange={(event) => handleChange("supplier", event.target.value)}
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
           />
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium">Número de parte</span>
+          <input
+            value={form.partNumber}
+            onChange={(event) => handleChange("partNumber", event.target.value)}
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium">Fabricante</span>
+          <input
+            value={form.manufacturer}
+            onChange={(event) =>
+              handleChange("manufacturer", event.target.value)
+            }
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+          />
+        </label>
+
+        <label className="flex items-center gap-2 text-sm md:col-span-2">
+          <input
+            type="checkbox"
+            checked={form.tracksLot}
+            onChange={(event) => handleChange("tracksLot", event.target.checked)}
+          />
+          Control por lote
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.tracksSerial}
+            onChange={(event) =>
+              handleChange("tracksSerial", event.target.checked)
+            }
+          />
+          Control por número de serie
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.tracksExpiry}
+            onChange={(event) =>
+              handleChange("tracksExpiry", event.target.checked)
+            }
+          />
+          Control de caducidad
         </label>
 
         {!isEquipment ? (

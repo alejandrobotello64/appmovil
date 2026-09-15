@@ -31,7 +31,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 
 Si el esquema de la nube está vacío: `npx supabase link --project-ref iqfareiwiadqsauejaaf` y `npm run db:push` / `npm run db:seed` (requiere un access token válido en [Account tokens](https://supabase.com/dashboard/account/tokens)).
 
-## Scripts
+## Inventario MAS
+
+La existencia **no se edita a mano**. Productos, almacenes y ubicaciones viven en Postgres; entradas (`EM-`), salidas (`SAL-`) y traspasos (`TR-`) pasan por `apply_stock_movement` / `transfer_stock` y dejan kardex inmutable.
+
+Migración: `supabase/migrations/20260916000000_inventory_core_structure.sql` (aditiva; no borra `inventory_items` ni datos).
+
 
 | Script | Qué hace |
 | --- | --- |

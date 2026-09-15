@@ -17,6 +17,7 @@ import {
   Warehouse,
   Wrench,
   History,
+  BookOpen,
   X,
 } from "lucide-react";
 import { WAREHOUSE_TABS } from "@/lib/warehouse/tabs";
@@ -28,6 +29,7 @@ const TAB_ICONS = {
   entradas: ArrowDownToLine,
   salidas: ArrowUpFromLine,
   movimientos: History,
+  kardex: BookOpen,
   pedidos: ShoppingCart,
   proveedores: Truck,
   equipo: Wrench,

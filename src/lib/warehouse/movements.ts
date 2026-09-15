@@ -1,9 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
-import {
-  getInventoryItems,
-  updateInventoryItem,
-} from "@/lib/inventory/storage";
+import { getInventoryItems } from "@/lib/inventory/storage";
+import { applyStockMovement, transferStock } from "@/lib/warehouse/stock";
 
 type MovementRow = Database["public"]["Tables"]["warehouse_movements"]["Row"];
 
@@ -133,12 +131,20 @@ export async function transferProductLocation(input: {
     throw new Error("La nueva ubicación es igual a la actual.");
   }
 
-  await updateInventoryItem(product.id, {
-    ...product,
-    location: newLocation,
+  if (product.quantity <= 0) {
+    throw new Error("No hay existencia para traspasar. Usa una entrada primero.");
+  }
+
+  await transferStock({
+    productId: product.id,
+    quantity: product.quantity,
+    toLocationName: newLocation,
+    note: input.note,
+    createdBy: input.createdBy || "sistema",
   });
 
-  return createWarehouseMovement({
+  return {
+    id: crypto.randomUUID(),
     itemId: product.id,
     itemSku: product.sku,
     itemName: product.name,
@@ -146,11 +152,15 @@ export async function transferProductLocation(input: {
     quantity: product.quantity,
     previousQuantity: product.quantity,
     newQuantity: product.quantity,
+    note: input.note ?? "",
+    createdBy: input.createdBy ?? "",
+    createdAt: new Date().toISOString(),
     fromLocation: product.location || "Sin ubicación",
     toLocation: newLocation,
-    note: input.note,
-    createdBy: input.createdBy,
-  });
+    supplierName: "",
+    previousExpiry: "",
+    newExpiry: "",
+  };
 }
 
 export async function exchangeExpiredProduct(input: {
@@ -178,20 +188,19 @@ export async function exchangeExpiredProduct(input: {
     throw new Error("Indica la nueva fecha de caducidad.");
   }
 
-  // Canje: se mantiene el stock y se actualiza caducidad/lote con material fresco
-  await updateInventoryItem(product.id, {
-    ...product,
+  await applyStockMovement({
+    productId: product.id,
+    movementType: "canje_caducado",
+    quantity: input.quantity,
+    createdBy: input.createdBy || "sistema",
+    note: input.note,
+    supplierName: input.supplierName.trim(),
     expiryDate: input.newExpiryDate,
-    supplier: input.supplierName.trim(),
-    notes: [
-      product.notes,
-      `Canje caducado ${new Date().toLocaleDateString("es-MX")}: ${input.quantity} ${product.unit}`,
-    ]
-      .filter(Boolean)
-      .join(" | "),
+    lotNumber: `CANJE-${new Date().toISOString().slice(0, 10)}`,
   });
 
-  return createWarehouseMovement({
+  return {
+    id: crypto.randomUUID(),
     itemId: product.id,
     itemSku: product.sku,
     itemName: product.name,
@@ -199,12 +208,13 @@ export async function exchangeExpiredProduct(input: {
     quantity: input.quantity,
     previousQuantity: product.quantity,
     newQuantity: product.quantity,
+    note: input.note ?? "",
+    createdBy: input.createdBy ?? "",
+    createdAt: new Date().toISOString(),
+    fromLocation: product.location,
+    toLocation: product.location,
     supplierName: input.supplierName.trim(),
     previousExpiry: product.expiryDate,
     newExpiry: input.newExpiryDate,
-    fromLocation: product.location,
-    toLocation: product.location,
-    note: input.note,
-    createdBy: input.createdBy,
-  });
+  };
 }

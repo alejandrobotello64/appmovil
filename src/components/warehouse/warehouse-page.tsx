@@ -11,6 +11,7 @@ import { OrdersPanel } from "@/components/warehouse/orders-panel";
 import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
 import { UsersPanel } from "@/components/warehouse/users-panel";
+import { KardexPanel } from "@/components/warehouse/kardex-panel";
 import {
   WAREHOUSE_TABS,
   isWarehouseTabId,
@@ -51,6 +52,8 @@ export function WarehousePage() {
         ) : null}
 
         {activeTab === "movimientos" ? <MovementsPanel /> : null}
+
+        {activeTab === "kardex" ? <KardexPanel /> : null}
 
         {activeTab === "pedidos" ? <OrdersPanel /> : null}
 

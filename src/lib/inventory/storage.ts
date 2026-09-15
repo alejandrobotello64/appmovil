@@ -48,6 +48,15 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     assetStatus: (row.asset_status as AssetStatus) || "operativo",
     lastMaintenanceDate: row.last_maintenance_date ?? "",
     nextMaintenanceDate: row.next_maintenance_date ?? "",
+    isActive: row.is_active !== false,
+    tracksLot: Boolean(row.tracks_lot),
+    tracksSerial: Boolean(row.tracks_serial),
+    tracksExpiry: Boolean(row.tracks_expiry),
+    maxStock: row.max_stock ?? 0,
+    reorderPoint: row.reorder_point ?? row.min_stock,
+    partNumber: row.part_number ?? "",
+    manufacturer: row.manufacturer ?? "",
+    subcategory: row.subcategory ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -65,7 +74,7 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     category: itemKind === "equipo" ? "equipos" : input.category,
     item_kind: itemKind,
     description: input.description ?? "",
-    quantity: input.quantity,
+    quantity: 0,
     min_stock: input.minStock,
     unit: input.unit,
     location: input.location ?? "",
@@ -83,11 +92,27 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     next_maintenance_date: input.nextMaintenanceDate
       ? input.nextMaintenanceDate
       : null,
+    is_active: input.isActive !== false,
+    tracks_lot:
+      Boolean(input.tracksLot) ||
+      (itemKind !== "equipo" &&
+        (input.category === "medicamentos" || Boolean(input.expiryDate))),
+    tracks_serial: input.tracksSerial || itemKind === "equipo",
+    tracks_expiry:
+      input.tracksExpiry ||
+      input.category === "medicamentos" ||
+      Boolean(input.expiryDate),
+    max_stock: input.maxStock ?? 0,
+    reorder_point: input.reorderPoint || input.minStock,
+    part_number: input.partNumber ?? "",
+    manufacturer: input.manufacturer ?? "",
+    subcategory: input.subcategory ?? "",
   };
 }
 
 export async function getInventoryItems(options?: {
   kind?: ItemKind;
+  includeInactive?: boolean;
 }): Promise<InventoryItem[]> {
   let query = supabase
     .from("inventory_items")
@@ -96,6 +121,9 @@ export async function getInventoryItems(options?: {
 
   if (options?.kind) {
     query = query.eq("item_kind", options.kind);
+  }
+  if (!options?.includeInactive) {
+    query = query.eq("is_active", true);
   }
 
   const { data, error } = await query;
@@ -109,7 +137,8 @@ export async function getInventoryItems(options?: {
 }
 
 export async function createInventoryItem(
-  input: InventoryItemInput
+  input: InventoryItemInput,
+  createdBy = "sistema"
 ): Promise<InventoryItem> {
   const { data, error } = await supabase
     .from("inventory_items")
@@ -122,16 +151,36 @@ export async function createInventoryItem(
     throw new Error(error.message);
   }
 
-  return mapRowToItem(data);
+  const created = mapRowToItem(data);
+  if (input.quantity > 0) {
+    const { applyStockMovement } = await import("@/lib/warehouse/stock");
+    const result = await applyStockMovement({
+      productId: created.id,
+      movementType: "entrada",
+      quantity: input.quantity,
+      createdBy,
+      note: "Existencia inicial de alta de producto",
+      lotNumber: input.tracksLot ? input.serialNumber || "INICIAL" : null,
+      expiryDate: input.expiryDate || null,
+      serialNumber: input.itemKind === "equipo" ? input.serialNumber : null,
+      supplierName: input.supplier,
+    });
+    return { ...created, quantity: result.newQuantity };
+  }
+
+  return created;
 }
 
 export async function updateInventoryItem(
   id: string,
   input: InventoryItemInput
 ): Promise<InventoryItem> {
+  const payload = mapInputToRow(input);
+  delete payload.quantity;
+
   const { data, error } = await supabase
     .from("inventory_items")
-    .update(mapInputToRow(input))
+    .update(payload)
     .eq("id", id)
     .select("*")
     .single();
@@ -144,35 +193,39 @@ export async function updateInventoryItem(
   return mapRowToItem(data);
 }
 
-export async function deleteInventoryItem(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("inventory_items")
-    .delete()
-    .eq("id", id);
+export async function deleteInventoryItem(
+  id: string,
+  createdBy = "sistema"
+): Promise<void> {
+  const { error } = await supabase.rpc("deactivate_product", {
+    p_product_id: id,
+    p_created_by: createdBy,
+  });
 
   if (error) {
-    console.error("Error deleting inventory item:", error.message);
+    console.error("Error deactivating inventory item:", error.message);
     throw new Error(error.message);
   }
 }
 
 export async function adjustInventoryQuantity(
   id: string,
-  delta: number
+  delta: number,
+  createdBy = "sistema",
+  note = ""
 ): Promise<InventoryItem> {
-  const items = await getInventoryItems();
-  const current = items.find((item) => item.id === id);
-  if (!current) {
-    throw new Error("Producto no encontrado.");
-  }
-
-  const nextQuantity = current.quantity + delta;
-  if (nextQuantity < 0) {
-    throw new Error("No hay suficiente stock para esta salida.");
-  }
-
-  return updateInventoryItem(id, {
-    ...current,
-    quantity: nextQuantity,
+  const { applyStockMovement } = await import("@/lib/warehouse/stock");
+  const movementType = delta >= 0 ? "entrada" : "salida";
+  await applyStockMovement({
+    productId: id,
+    movementType,
+    quantity: Math.abs(delta),
+    createdBy,
+    note,
+    reason: movementType === "salida" ? "consumo interno" : "entrada de mercancia",
   });
+  const items = await getInventoryItems({ includeInactive: true });
+  const current = items.find((item) => item.id === id);
+  if (!current) throw new Error("Producto no encontrado.");
+  return current;
 }

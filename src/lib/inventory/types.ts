@@ -103,6 +103,15 @@ export type InventoryItem = {
   assetStatus: AssetStatus;
   lastMaintenanceDate: string;
   nextMaintenanceDate: string;
+  isActive: boolean;
+  tracksLot: boolean;
+  tracksSerial: boolean;
+  tracksExpiry: boolean;
+  maxStock: number;
+  reorderPoint: number;
+  partNumber: string;
+  manufacturer: string;
+  subcategory: string;
   createdAt: string;
   updatedAt: string;
 };

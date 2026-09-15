@@ -10,9 +10,12 @@ if (!configuredUrl || !supabaseAnonKey) {
   );
 }
 
+const supabaseUrl = configuredUrl;
+const supabaseKey = supabaseAnonKey;
+
 function resolveSupabaseUrl() {
   try {
-    const parsed = new URL(configuredUrl);
+    const parsed = new URL(supabaseUrl);
     const isLoopback =
       parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
     if (isLoopback && typeof window !== "undefined") {
@@ -21,10 +24,10 @@ function resolveSupabaseUrl() {
   } catch {
     // keep configured URL
   }
-  return configuredUrl;
+  return supabaseUrl;
 }
 
 export const supabase = createClient<Database>(
   resolveSupabaseUrl(),
-  supabaseAnonKey
+  supabaseKey
 );

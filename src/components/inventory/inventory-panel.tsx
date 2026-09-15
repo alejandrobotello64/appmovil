@@ -108,7 +108,8 @@ export function InventoryPanel({
       if (editingItem) {
         await updateInventoryItem(editingItem.id, payload);
       } else {
-        await createInventoryItem(payload);
+        const session = (await import("@/lib/auth")).getSession();
+        await createInventoryItem(payload, session?.username ?? "sistema");
       }
       await refreshItems();
       setFormOpen(false);
@@ -193,12 +194,13 @@ export function InventoryPanel({
 
   async function handleDelete(item: InventoryItem) {
     const confirmed = window.confirm(
-      `¿Eliminar "${item.name}" del inventario?`
+      `¿Desactivar "${item.name}"? El historial de movimientos se conserva.`
     );
     if (!confirmed) return;
     try {
       setError("");
-      await deleteInventoryItem(item.id);
+      const session = (await import("@/lib/auth")).getSession();
+      await deleteInventoryItem(item.id, session?.username ?? "sistema");
       await refreshItems();
     } catch (err) {
       setError(
@@ -394,7 +396,7 @@ export function InventoryPanel({
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
                     >
                       <Trash2 className="size-3.5" />
-                      Eliminar
+                      Desactivar
                     </button>
                   </>
                 ),
