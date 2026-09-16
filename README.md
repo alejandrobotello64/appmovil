@@ -35,7 +35,7 @@ Si el esquema de la nube está vacío: `npx supabase link --project-ref iqfareiw
 
 La existencia **no se edita a mano**. Productos, almacenes y ubicaciones viven en Postgres; entradas (`EM-`), salidas (`SAL-`) y traspasos (`TR-`) pasan por `apply_stock_movement` / `transfer_stock` y dejan kardex inmutable.
 
-El catálogo se puede **exportar e importar en Excel** (.xlsx) junto a Nuevo producto. Los SKU nuevos se dan de alta; los que ya existen se actualizan. La columna `existencia` solo carga stock inicial en altas nuevas.
+El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nuevo producto. Acepta la plantilla MAS o un inventario con columnas habituales (`Código`, `Descripción`, `Cantidad`, `Precio`). Los SKU nuevos se dan de alta; los que ya existen se actualizan. La columna de existencia solo carga stock inicial en altas nuevas.
 
 La recepción de pedidos puede ser **parcial**. Entradas y salidas piden almacén, ubicación, lote/caducidad/serie cuando el producto lo exige. Los roles (`administrador`, `almacén`, `compras`, `ventas`, `servicio`, `dirección`) filtran el menú y bloquean escritura.
 

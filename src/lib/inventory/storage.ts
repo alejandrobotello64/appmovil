@@ -114,26 +114,37 @@ export async function getInventoryItems(options?: {
   kind?: ItemKind;
   includeInactive?: boolean;
 }): Promise<InventoryItem[]> {
-  let query = supabase
-    .from("inventory_items")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const pageSize = 1000;
+  const rows: InventoryRow[] = [];
+  let from = 0;
 
-  if (options?.kind) {
-    query = query.eq("item_kind", options.kind);
+  while (true) {
+    let query = supabase
+      .from("inventory_items")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (options?.kind) {
+      query = query.eq("item_kind", options.kind);
+    }
+    if (!options?.includeInactive) {
+      query = query.eq("is_active", true);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error loading inventory:", error.message);
+      throw new Error(error.message);
+    }
+
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < pageSize) break;
+    from += pageSize;
   }
-  if (!options?.includeInactive) {
-    query = query.eq("is_active", true);
-  }
 
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Error loading inventory:", error.message);
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).map(mapRowToItem);
+  return rows.map(mapRowToItem);
 }
 
 export async function createInventoryItem(
@@ -208,9 +219,19 @@ export async function deleteInventoryItem(
   }
 }
 
+function isUniqueSkuError(message: string) {
+  const text = message.toLowerCase();
+  return (
+    text.includes("duplicate") ||
+    text.includes("unique") ||
+    text.includes("inventory_items_sku")
+  );
+}
+
 export async function bulkImportInventoryItems(
   rows: InventoryItemInput[],
-  createdBy: string
+  createdBy: string,
+  onProgress?: (done: number, total: number) => void
 ): Promise<{
   created: number;
   updated: number;
@@ -223,9 +244,29 @@ export async function bulkImportInventoryItems(
   let created = 0;
   let updated = 0;
   const errors: Array<{ sku: string; message: string }> = [];
+  const actor = createdBy.trim() || "sistema";
 
-  for (const input of rows) {
-    const key = input.sku.trim().toLowerCase();
+  for (const [index, raw] of rows.entries()) {
+    const input: InventoryItemInput = {
+      ...raw,
+      sku: raw.sku.trim(),
+      name: raw.name.trim(),
+      expiryDate:
+        raw.expiryDate && !Number.isNaN(Date.parse(raw.expiryDate))
+          ? raw.expiryDate
+          : "",
+      lastMaintenanceDate:
+        raw.lastMaintenanceDate &&
+        !Number.isNaN(Date.parse(raw.lastMaintenanceDate))
+          ? raw.lastMaintenanceDate
+          : "",
+      nextMaintenanceDate:
+        raw.nextMaintenanceDate &&
+        !Number.isNaN(Date.parse(raw.nextMaintenanceDate))
+          ? raw.nextMaintenanceDate
+          : "",
+    };
+    const key = input.sku.toLowerCase();
     try {
       const current = bySku.get(key);
       if (current) {
@@ -235,9 +276,25 @@ export async function bulkImportInventoryItems(
         });
         updated += 1;
       } else {
-        const item = await createInventoryItem(input, createdBy);
-        bySku.set(key, item);
-        created += 1;
+        try {
+          const item = await createInventoryItem(input, actor);
+          bySku.set(key, item);
+          created += 1;
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "";
+          if (!isUniqueSkuError(message)) throw err;
+          const latest = await getInventoryItems({ includeInactive: true });
+          const found = latest.find(
+            (item) => item.sku.trim().toLowerCase() === key
+          );
+          if (!found) throw err;
+          await updateInventoryItem(found.id, {
+            ...input,
+            quantity: found.quantity,
+          });
+          bySku.set(key, found);
+          updated += 1;
+        }
       }
     } catch (err) {
       errors.push({
@@ -245,6 +302,7 @@ export async function bulkImportInventoryItems(
         message: err instanceof Error ? err.message : "No se pudo importar la fila.",
       });
     }
+    onProgress?.(index + 1, rows.length);
   }
 
   return { created, updated, errors };

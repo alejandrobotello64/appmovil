@@ -49,35 +49,62 @@ export type ProductExcelRow = InventoryItemInput & { rowNumber: number };
 export type ParsedProductWorkbook = {
   rows: ProductExcelRow[];
   errors: Array<{ row: number; sku: string; message: string }>;
+  sheetName: string;
+  headers: string[];
 };
 
 const HEADER_ALIASES: Record<string, (typeof PRODUCT_EXCEL_HEADERS)[number]> = {
   sku: "sku",
   codigo: "sku",
   codigo_mas: "sku",
+  codigo_interno: "sku",
+  codigo_producto: "sku",
+  clave: "sku",
+  clave_producto: "sku",
+  cve: "sku",
+  cod: "sku",
   code: "sku",
+  id_producto: "sku",
+  no_parte: "numero_parte",
   nombre: "nombre",
   name: "nombre",
   producto: "nombre",
+  articulo: "nombre",
+  concepto: "nombre",
+  nombre_producto: "nombre",
+  descripcion: "descripcion",
+  description: "descripcion",
+  desc: "descripcion",
   categoria: "categoria",
   category: "categoria",
+  familia: "categoria",
+  linea: "categoria",
+  rubro: "categoria",
+  grupo: "categoria",
   tipo: "tipo",
   item_kind: "tipo",
   clase: "tipo",
-  descripcion: "descripcion",
-  description: "descripcion",
   existencia: "existencia",
   existencia_inicial: "existencia",
   cantidad: "existencia",
+  cant: "existencia",
   stock: "existencia",
+  stock_actual: "existencia",
   quantity: "existencia",
+  piezas: "existencia",
+  inventario: "existencia",
   stock_minimo: "stock_minimo",
   min_stock: "stock_minimo",
   minimo: "stock_minimo",
   unidad: "unidad",
   unit: "unidad",
+  um: "unidad",
+  udm: "unidad",
+  presentacion: "unidad",
   ubicacion: "ubicacion",
   location: "ubicacion",
+  almacen: "ubicacion",
+  bodega: "ubicacion",
   marca: "marca",
   brand: "marca",
   modelo: "modelo",
@@ -89,8 +116,12 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_EXCEL_HEADERS)[number]> = {
   part_number: "numero_parte",
   n_parte: "numero_parte",
   precio: "precio",
+  precio_unitario: "precio",
+  p_unitario: "precio",
+  precio_unit: "precio",
   unit_price: "precio",
   costo: "precio",
+  pu: "precio",
   proveedor: "proveedor",
   supplier: "proveedor",
   fabricante: "fabricante",
@@ -98,8 +129,13 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_EXCEL_HEADERS)[number]> = {
   caducidad: "caducidad",
   expiry: "caducidad",
   fecha_caducidad: "caducidad",
+  vencimiento: "caducidad",
+  fecha_vencimiento: "caducidad",
+  cad: "caducidad",
   notas: "notas",
   notes: "notas",
+  observaciones: "notas",
+  obs: "notas",
   subcategoria: "subcategoria",
   stock_maximo: "stock_maximo",
   max_stock: "stock_maximo",
@@ -134,15 +170,28 @@ export function normalizeHeader(value: string) {
 
 function cellText(value: unknown): string {
   if (value == null) return "";
+  if (typeof value === "number" && Number.isFinite(value)) {
+    if (Number.isInteger(value)) return String(value);
+    return String(value);
+  }
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return value.toISOString().slice(0, 10);
   }
-  return String(value).trim();
+  return String(value).replace(/\u00a0/g, " ").trim();
 }
 
 function cellNumber(value: unknown, fallback = 0): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
-  const parsed = Number(String(value ?? "").replace(",", ".").replace(/[^0-9.-]/g, ""));
+  let text = String(value ?? "").trim();
+  if (!text) return fallback;
+  text = text.replace(/[^0-9,.-]/g, "");
+  if (text.includes(",") && text.includes(".")) {
+    text = text.replace(/,/g, "");
+  } else if (text.includes(",")) {
+    const decimals = text.split(",")[1] ?? "";
+    text = decimals.length === 2 ? text.replace(",", ".") : text.replace(/,/g, "");
+  }
+  const parsed = Number(text);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
@@ -155,17 +204,21 @@ function cellBoolean(value: unknown, fallback = false): boolean {
 function excelDate(value: unknown): string {
   if (value == null || value === "") return "";
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const year = value.getFullYear();
+    if (year < 1990 || year > 2100) return "";
     return value.toISOString().slice(0, 10);
   }
   if (typeof value === "number" && Number.isFinite(value)) {
+    if (value < 30000 || value > 80000) return "";
     const epoch = new Date(Math.round((value - 25569) * 86400 * 1000));
     if (!Number.isNaN(epoch.getTime())) return epoch.toISOString().slice(0, 10);
   }
   const text = cellText(value);
   if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
-  const match = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  const match = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (match) {
-    const [, day, month, year] = match;
+    const [, day, month, yearRaw] = match;
+    const year = yearRaw.length === 2 ? `20${yearRaw}` : yearRaw;
     return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
   return "";
@@ -173,6 +226,13 @@ function excelDate(value: unknown): string {
 
 function parseCategory(value: unknown): InventoryCategoryId {
   const raw = stripAccents(cellText(value)).toLowerCase();
+  if (!raw) return "otros";
+  if (/farmac|medicament|solucion/.test(raw)) return "medicamentos";
+  if (/repuest|refacc/.test(raw)) return "refacciones";
+  if (/equipo|monitor|dispositivo/.test(raw)) return "equipos";
+  if (/reactivo|laboratorio/.test(raw)) return "reactivos";
+  if (/accesor/.test(raw)) return "accesorios";
+  if (/insumo|material|consumible/.test(raw)) return "insumos";
   const match = INVENTORY_CATEGORIES.find(
     (item) => item.id === raw || stripAccents(item.label).toLowerCase() === raw
   );
@@ -181,9 +241,15 @@ function parseCategory(value: unknown): InventoryCategoryId {
 
 function parseUnit(value: unknown): InventoryUnit {
   const raw = stripAccents(cellText(value)).toLowerCase();
-  return (INVENTORY_UNITS as readonly string[]).includes(raw)
-    ? (raw as InventoryUnit)
-    : "pieza";
+  if (!raw) return "pieza";
+  if (raw === "pza" || raw === "pzas" || raw === "pz" || raw === "pzas.") return "pieza";
+  if (raw === "cajas") return "caja";
+  if (raw === "frascos") return "frasco";
+  if (raw === "paquetes") return "paquete";
+  if ((INVENTORY_UNITS as readonly string[]).includes(raw)) {
+    return raw as InventoryUnit;
+  }
+  return "pieza";
 }
 
 function parseKind(
@@ -323,44 +389,130 @@ export function exportProductsToExcel(items: InventoryItem[], filename?: string)
   downloadWorkbook(workbook, filename ?? `catalogo-mas-${stamp}.xlsx`);
 }
 
+function pickSheetName(workbook: XLSX.WorkBook): string | undefined {
+  const names = workbook.SheetNames;
+  if (names.length === 0) return undefined;
+  const skip = (name: string) => /instrucc|instruction|ayuda|readme/i.test(name);
+  const scored = names
+    .filter((name) => !skip(name))
+    .map((name) => {
+      const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[name], {
+        header: 1,
+        blankrows: false,
+      }) as unknown[][];
+      const preferred = /producto|inventario|catalogo|articulo|stock|datos|lista/i.test(
+        name
+      );
+      return { name, rows: matrix.length, preferred };
+    })
+    .filter((item) => item.rows > 1)
+    .sort((a, b) => Number(b.preferred) - Number(a.preferred) || b.rows - a.rows);
+  return scored[0]?.name ?? names.find((name) => !skip(name)) ?? names[0];
+}
+
+function mapHeaders(cells: unknown[]) {
+  return cells.map((cell) => HEADER_ALIASES[normalizeHeader(cellText(cell))] ?? null);
+}
+
+function headerScore(mapping: ReturnType<typeof mapHeaders>) {
+  return mapping.filter(Boolean).length;
+}
+
+function applyFallbacks(mapping: ReturnType<typeof mapHeaders>) {
+  const next = [...mapping];
+  if (!next.includes("nombre")) {
+    const descriptionIndex = next.findIndex((key) => key === "descripcion");
+    if (descriptionIndex >= 0) next[descriptionIndex] = "nombre";
+  }
+  if (!next.includes("sku")) {
+    const partIndex = next.findIndex((key) => key === "numero_parte");
+    if (partIndex >= 0) next[partIndex] = "sku";
+  }
+  return next;
+}
+
+function fallbackSku(name: string, rowNumber: number) {
+  const slug = stripAccents(name)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 24);
+  return slug || `MAS-${String(rowNumber).padStart(4, "0")}`;
+}
+
+function readWorkbook(file: File, buffer: ArrayBuffer) {
+  const name = file.name.toLowerCase();
+  const isCsv =
+    name.endsWith(".csv") ||
+    file.type.includes("csv") ||
+    file.type === "text/plain";
+  if (isCsv) {
+    const text = new TextDecoder("utf-8").decode(buffer);
+    return XLSX.read(text, { type: "string", cellDates: true });
+  }
+  return XLSX.read(new Uint8Array(buffer), { type: "array", cellDates: true });
+}
+
 export async function parseProductWorkbook(
   file: File,
   defaultKind: ItemKind = "producto"
 ): Promise<ParsedProductWorkbook> {
   const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
-  const sheetName =
-    workbook.SheetNames.find((name) => name.toLowerCase() === "productos") ??
-    workbook.SheetNames[0];
+  const workbook = readWorkbook(file, buffer);
+  const sheetName = pickSheetName(workbook);
   if (!sheetName) {
-    return { rows: [], errors: [{ row: 0, sku: "", message: "El archivo no tiene hojas." }] };
+    return {
+      rows: [],
+      errors: [{ row: 0, sku: "", message: "El archivo no tiene hojas." }],
+      sheetName: "",
+      headers: [],
+    };
   }
 
   const sheet = workbook.Sheets[sheetName];
-  const matrix = XLSX.utils.sheet_to_json<(string | number | Date | null)[]>(sheet, {
+  const matrix = XLSX.utils.sheet_to_json(sheet, {
     header: 1,
     defval: "",
     raw: true,
-  });
+    blankrows: false,
+  }) as (string | number | Date | null)[][];
   if (matrix.length < 2) {
     return {
       rows: [],
       errors: [{ row: 1, sku: "", message: "No hay filas de productos. Descarga la plantilla." }],
+      sheetName,
+      headers: [],
     };
   }
 
-  const headerCells = (matrix[0] ?? []).map((cell) => normalizeHeader(cellText(cell)));
-  const columnMap = headerCells.map((header) => HEADER_ALIASES[header] ?? null);
-  if (!columnMap.includes("sku") || !columnMap.includes("nombre")) {
+  let headerIndex = 0;
+  let columnMap = applyFallbacks(mapHeaders(matrix[0] ?? []));
+  let bestScore = headerScore(columnMap);
+  for (let index = 1; index < Math.min(matrix.length, 20); index += 1) {
+    const candidate = applyFallbacks(mapHeaders(matrix[index] ?? []));
+    const score = headerScore(candidate);
+    if (score > bestScore) {
+      bestScore = score;
+      headerIndex = index;
+      columnMap = candidate;
+    }
+  }
+
+  const headers = (matrix[headerIndex] ?? []).map((cell) => cellText(cell));
+  if (!columnMap.includes("nombre")) {
     return {
       rows: [],
       errors: [
         {
-          row: 1,
+          row: headerIndex + 1,
           sku: "",
-          message: "Faltan las columnas sku y nombre. Usa la plantilla de Excel.",
+          message: `No encontré una columna de nombre. Columnas leídas: ${
+            headers.filter(Boolean).join(", ") || "(vacías)"
+          }. Sirve nombre, producto, artículo o descripción.`,
         },
       ],
+      sheetName,
+      headers,
     };
   }
 
@@ -368,7 +520,7 @@ export async function parseProductWorkbook(
   const errors: ParsedProductWorkbook["errors"] = [];
   const seen = new Set<string>();
 
-  for (let index = 1; index < matrix.length; index += 1) {
+  for (let index = headerIndex + 1; index < matrix.length; index += 1) {
     const line = matrix[index] ?? [];
     const record: Partial<Record<(typeof PRODUCT_EXCEL_HEADERS)[number], unknown>> = {};
     columnMap.forEach((key, columnIndex) => {
@@ -376,27 +528,28 @@ export async function parseProductWorkbook(
       record[key] = line[columnIndex];
     });
 
-    const sku = cellText(record.sku);
+    let sku = cellText(record.sku);
     const name = cellText(record.nombre);
     const rowNumber = index + 1;
-    const empty = !sku && !name && !cellText(record.categoria);
+    const empty = !sku && !name && !cellText(record.categoria) && !cellText(record.existencia);
     if (empty) continue;
 
-    if (!sku || !name) {
+    if (!name) {
       errors.push({
         row: rowNumber,
         sku,
-        message: "La fila necesita sku y nombre.",
+        message: "La fila no tiene nombre o descripción del producto.",
       });
       continue;
     }
+    if (!sku) sku = fallbackSku(name, rowNumber);
 
     const skuKey = sku.toLowerCase();
     if (seen.has(skuKey)) {
       errors.push({
         row: rowNumber,
         sku,
-        message: "sku duplicado en el archivo.",
+        message: "sku duplicado en el archivo; se omitió esta fila.",
       });
       continue;
     }
@@ -446,5 +599,5 @@ export async function parseProductWorkbook(
     });
   }
 
-  return { rows, errors };
+  return { rows, errors, sheetName, headers };
 }

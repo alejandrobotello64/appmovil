@@ -33,6 +33,9 @@ export function InventoryExcelActions({
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [sheetName, setSheetName] = useState("");
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [progress, setProgress] = useState("");
   const [preview, setPreview] = useState<ProductExcelRow[]>([]);
   const [parseErrors, setParseErrors] = useState<
     Array<{ row: number; sku: string; message: string }>
@@ -57,6 +60,8 @@ export function InventoryExcelActions({
       const parsed = await parseProductWorkbook(file, defaultKind);
       setPreview(parsed.rows);
       setParseErrors(parsed.errors);
+      setSheetName(parsed.sheetName);
+      setHeaders(parsed.headers.filter(Boolean));
       setOpen(true);
       if (parsed.rows.length === 0 && parsed.errors.length === 0) {
         onError("El archivo no tiene productos para importar.");
@@ -77,11 +82,13 @@ export function InventoryExcelActions({
     if (preview.length === 0) return;
     setBusy(true);
     setResult("");
+    setProgress("");
     try {
       const session = getSession();
       const outcome = await bulkImportInventoryItems(
         preview,
-        session?.username ?? "sistema"
+        session?.username ?? "sistema",
+        (done, total) => setProgress(`${done} / ${total}`)
       );
       const parts = [
         outcome.created ? `${outcome.created} nuevos` : "",
@@ -112,6 +119,7 @@ export function InventoryExcelActions({
       );
     } finally {
       setBusy(false);
+      setProgress("");
     }
   }
 
@@ -120,7 +128,7 @@ export function InventoryExcelActions({
       <input
         ref={fileRef}
         type="file"
-        accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+        accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
         className="sr-only"
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -149,16 +157,25 @@ export function InventoryExcelActions({
       {open ? (
         <ModalShell
           title="Importar catálogo Excel"
-          description="Los sku nuevos se dan de alta. Los sku que ya existen se actualizan sin cambiar la existencia."
+          description="Acepta la plantilla MAS o un inventario con columnas como Código, Descripción, Cantidad y Precio."
           className="max-w-3xl"
         >
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Archivo: <span className="font-medium text-foreground">{fileName}</span>
+              {sheetName ? ` · hoja ${sheetName}` : ""}
               {" · "}
               {preview.length} fila{preview.length === 1 ? "" : "s"} lista
               {preview.length === 1 ? "" : "s"} para importar.
             </p>
+            {headers.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Columnas detectadas: {headers.join(", ")}
+              </p>
+            ) : null}
+            {progress ? (
+              <p className="text-sm text-foreground">Importando {progress}...</p>
+            ) : null}
 
             <div className="flex flex-wrap gap-2">
               <Button
@@ -204,7 +221,7 @@ export function InventoryExcelActions({
 
             {parseErrors.length > 0 ? (
               <ul className="space-y-1 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {parseErrors.slice(0, 8).map((item, index) => (
+                {parseErrors.slice(0, 40).map((item, index) => (
                   <li key={`${item.sku}-${item.row}-${index}`}>
                     {item.row ? `Fila ${item.row}` : item.sku || "Error"}: {item.message}
                   </li>
@@ -227,6 +244,9 @@ export function InventoryExcelActions({
                   setPreview([]);
                   setParseErrors([]);
                   setResult("");
+                  setProgress("");
+                  setHeaders([]);
+                  setSheetName("");
                 }}
               >
                 Cerrar
@@ -237,7 +257,7 @@ export function InventoryExcelActions({
                 onClick={() => void handleImport()}
                 className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
               >
-                {busy ? "Importando..." : `Importar ${preview.length}`}
+                {busy ? (progress ? `Importando ${progress}` : "Importando...") : `Importar ${preview.length}`}
               </Button>
             </div>
           </div>
