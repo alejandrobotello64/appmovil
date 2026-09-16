@@ -13,7 +13,9 @@ npm run dev:api &         # gateway en http://127.0.0.1:54321
 npm run dev               # http://127.0.0.1:43145
 ```
 
-Usuario inicial (seed): `alexbazz64@gmail.com` / `admin123`.
+Usuarios iniciales (seed): `alexbazz64@gmail.com` / `admin123` y `masservice.lcs@gmail.com` / `mas101012`.
+
+El catálogo real (más de 1500 SKU) está en `supabase/seed_catalog.sql` y se carga con `npm run db:local`. Para volver a volcar la base local al repo: `npm run db:export-catalog`.
 
 ## Conectar el proyecto de Supabase en la nube
 
@@ -45,7 +47,8 @@ Migración: `supabase/migrations/20260916000000_inventory_core_structure.sql` (a
 | Script | Qué hace |
 | --- | --- |
 | `npm run dev` | Next.js en el puerto 43145 |
-| `npm run db:local` | Crea la base `mas`, aplica `supabase/migrations` y `seed.sql` |
+| `npm run db:local` | Crea la base `mas`, aplica migraciones, usuarios y el catálogo |
+| `npm run db:export-catalog` | Vuelca `inventory_items` local a `supabase/seed_catalog.sql` |
 | `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
 | `npm run db:push` | Empuja migraciones al proyecto linkeado |
 | `npm run db:seed` | Seed en el proyecto linkeado |

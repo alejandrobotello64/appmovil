@@ -8,6 +8,7 @@
     "start": "next start --hostname 0.0.0.0 --port 43145",
     "lint": "eslint",
     "db:local": "bash scripts/setup-local-db.sh",
+    "db:export-catalog": "bash scripts/export-catalog.sh",
     "dev:api": "bash scripts/start-local-api.sh",
     "db:push": "supabase db push",
     "db:seed": "supabase db seed",
