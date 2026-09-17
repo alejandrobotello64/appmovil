@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LoginBackground } from "@/components/login-background";
 import {
   clearRememberedCredentials,
   createSession,
@@ -67,22 +68,19 @@ export function LoginForm() {
   }
 
   return (
-    <div className="login-shell relative flex min-h-dvh flex-1 items-center justify-center">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.22),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.28),transparent_45%)]"
-      />
+    <div className="login-shell relative flex min-h-dvh flex-1 items-center justify-center overflow-hidden px-4 py-8">
+      <LoginBackground />
 
-      <div className="relative w-full max-w-[420px]">
+      <div className="relative z-10 w-full max-w-[420px]">
         <div className="mb-6 flex justify-end">
-          <ThemeToggle className="touch-target bg-card/80 shadow-sm backdrop-blur" />
+          <ThemeToggle className="touch-target border border-white/15 bg-black/35 text-white shadow-sm backdrop-blur-md hover:bg-black/45" />
         </div>
 
         <form
           method="post"
           action="/"
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-border/80 bg-card/90 p-5 shadow-[0_20px_60px_-28px_rgba(59,70,165,0.45)] backdrop-blur-sm sm:p-8 dark:shadow-[0_20px_60px_-28px_rgba(0,191,255,0.25)]"
+          className="rounded-2xl border border-white/20 bg-card/85 p-5 shadow-[0_24px_80px_-28px_rgba(0,0,0,0.65)] backdrop-blur-xl sm:p-8 dark:bg-card/75"
         >
           <div className="mb-8 flex flex-col items-center text-center">
             <Image
@@ -100,7 +98,9 @@ export function LoginForm() {
 
           <div className="space-y-4">
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Usuario / correo</span>
+              <span className="text-sm font-medium text-foreground">
+                Usuario / correo
+              </span>
               <input
                 type="text"
                 name="username"
@@ -108,7 +108,7 @@ export function LoginForm() {
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 placeholder="correo@empresa.com"
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/25 dark:focus:border-[#00BFFF]"
+                className="h-11 w-full rounded-lg border border-input bg-background/90 px-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/25 dark:focus:border-[#00BFFF]"
                 required
               />
             </label>
@@ -124,7 +124,7 @@ export function LoginForm() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/25 dark:focus:border-[#00BFFF]"
+                className="h-11 w-full rounded-lg border border-input bg-background/90 px-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/25 dark:focus:border-[#00BFFF]"
                 required
               />
             </label>
