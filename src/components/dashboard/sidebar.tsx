@@ -24,6 +24,7 @@ import {
   Wrench,
   History,
   BookOpen,
+  CalendarDays,
   Shield,
   X,
 } from "lucide-react";
@@ -48,6 +49,7 @@ const TAB_ICONS = {
   proveedores: Truck,
   equipo: Wrench,
   mantenimientos: ClipboardList,
+  calendario: CalendarDays,
   reporte: FileBarChart2,
 } as const;
 

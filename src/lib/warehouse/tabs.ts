@@ -84,6 +84,12 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=mantenimientos",
   },
   {
+    id: "calendario",
+    label: "Calendario",
+    description: "Mantenimientos, cumpleaños y eventos por área",
+    href: "/dashboard/almacen?tab=calendario",
+  },
+  {
     id: "reporte",
     label: "Reporte",
     description: "Reportes operativos del almacén",

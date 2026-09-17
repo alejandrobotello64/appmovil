@@ -10,6 +10,7 @@ import { SuppliersPanel } from "@/components/warehouse/suppliers-panel";
 import { MovementsPanel } from "@/components/warehouse/movements-panel";
 import { OrdersPanel } from "@/components/warehouse/orders-panel";
 import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
+import { CalendarPanel } from "@/components/warehouse/calendar-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
 import { KardexPanel } from "@/components/warehouse/kardex-panel";
 import { getSession } from "@/lib/auth";
@@ -94,6 +95,8 @@ export function WarehousePage() {
             ) : null}
 
             {activeTab === "mantenimientos" ? <MaintenancesPanel /> : null}
+
+            {activeTab === "calendario" ? <CalendarPanel /> : null}
 
             {activeTab === "reporte" ? <ReportPanel /> : null}
           </>

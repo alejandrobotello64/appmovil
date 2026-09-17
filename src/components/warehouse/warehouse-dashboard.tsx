@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Boxes,
+  CalendarDays,
   ClipboardList,
   Package,
   PackageX,
@@ -207,6 +208,13 @@ export function WarehouseDashboard() {
       icon: Wrench,
       href: "/dashboard/almacen?tab=mantenimientos",
       tone: "text-amber-600",
+    },
+    {
+      label: "Calendario",
+      value: "Agenda",
+      icon: CalendarDays,
+      href: "/dashboard/almacen?tab=calendario",
+      tone: "text-[#3B46A5]",
     },
     {
       label: "Proveedores activos",

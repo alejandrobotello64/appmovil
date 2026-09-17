@@ -402,6 +402,93 @@ export type Database = {
         };
         Relationships: [];
       };
+      calendar_events: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          event_date: string;
+          start_time: string;
+          end_time: string;
+          location: string;
+          visible_areas: string[];
+          notify_email: boolean;
+          notify_whatsapp: boolean;
+          reminder_days: number;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string;
+          event_date: string;
+          start_time?: string;
+          end_time?: string;
+          location?: string;
+          visible_areas?: string[];
+          notify_email?: boolean;
+          notify_whatsapp?: boolean;
+          reminder_days?: number;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string;
+          event_date?: string;
+          start_time?: string;
+          end_time?: string;
+          location?: string;
+          visible_areas?: string[];
+          notify_email?: boolean;
+          notify_whatsapp?: boolean;
+          reminder_days?: number;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      calendar_reminders: {
+        Row: {
+          id: string;
+          event_id: string;
+          channel: string;
+          recipient_name: string;
+          recipient_target: string;
+          message: string;
+          status: string;
+          sent_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          channel: string;
+          recipient_name?: string;
+          recipient_target?: string;
+          message?: string;
+          status?: string;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          channel?: string;
+          recipient_name?: string;
+          recipient_target?: string;
+          message?: string;
+          status?: string;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

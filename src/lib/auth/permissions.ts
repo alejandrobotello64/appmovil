@@ -25,6 +25,7 @@ export type WarehouseModule =
   | "proveedores"
   | "equipo"
   | "mantenimientos"
+  | "calendario"
   | "reporte"
   | "usuarios";
 
@@ -60,6 +61,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "proveedores",
     "equipo",
     "mantenimientos",
+    "calendario",
     "reporte",
     "usuarios",
   ],
@@ -73,6 +75,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "pedidos",
     "proveedores",
     "equipo",
+    "calendario",
     "reporte",
   ],
   compras: [
@@ -82,18 +85,27 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "pedidos",
     "proveedores",
     "kardex",
+    "calendario",
     "reporte",
   ],
-  ventas: ["dashboard", ...CATALOG_MODULES, "kardex", "reporte"],
+  ventas: ["dashboard", ...CATALOG_MODULES, "kardex", "reporte", "calendario"],
   servicio: [
     "dashboard",
     ...CATALOG_MODULES,
     "salidas",
     "equipo",
     "mantenimientos",
+    "calendario",
     "kardex",
   ],
-  direccion: ["dashboard", ...CATALOG_MODULES, "kardex", "reporte", "equipo"],
+  direccion: [
+    "dashboard",
+    ...CATALOG_MODULES,
+    "kardex",
+    "reporte",
+    "equipo",
+    "calendario",
+  ],
 };
 
 export function normalizeRole(role: string | null | undefined): AppRole {
@@ -110,7 +122,13 @@ export function canWriteModule(role: string | null | undefined, module: Warehous
   if (normalized === "direccion" || normalized === "ventas") {
     return false;
   }
-  if (normalized === "servicio" && (module === "salidas" || module === "equipo" || module === "mantenimientos")) {
+  if (
+    normalized === "servicio" &&
+    (module === "salidas" ||
+      module === "equipo" ||
+      module === "mantenimientos" ||
+      module === "calendario")
+  ) {
     return true;
   }
   if (normalized === "compras") {

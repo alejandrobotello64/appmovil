@@ -1,6 +1,6 @@
 # Medical Advanced Supplies (MAS)
 
-App de almacén e inventario: login, inventario, proveedores, órdenes, movimientos y mantenimientos. El código vive en GitHub (`alejandrobotello64/appmovil`) y los datos en Postgres con la API de Supabase.
+App de almacén e inventario: login, inventario, proveedores, órdenes, movimientos, mantenimientos y calendario operativo (cumpleaños, servicios y eventos por área con recordatorios por correo o WhatsApp). El código vive en GitHub (`alejandrobotello64/appmovil`) y los datos en Postgres con la API de Supabase.
 
 ## Arranque local
 
