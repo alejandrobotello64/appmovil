@@ -5,8 +5,15 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONF_DIR="${MAS_DATA_DIR:-$HOME/.local/mas}"
 mkdir -p "$CONF_DIR"
 
-if ! pg_lsclusters --no-header | awk '{print $1,$2,$4}' | grep -q '16 main online'; then
-  sudo pg_ctlcluster 16 main start
+if command -v pg_lsclusters >/dev/null 2>&1; then
+  CLUSTER="$(pg_lsclusters --no-header | awk '{print $1, $2, $4}' | awk '$3 != "online" {print $1, $2; exit}')"
+  if [[ -n "${CLUSTER:-}" ]]; then
+    # shellcheck disable=SC2086
+    sudo pg_ctlcluster $CLUSTER start
+  fi
+else
+  echo "PostgreSQL no está instalado (falta pg_lsclusters)." >&2
+  exit 1
 fi
 
 sudo -u postgres psql -v ON_ERROR_STOP=1 <<'SQL'
@@ -17,12 +24,23 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -c "select 1 from pg_database where dat
   || sudo -u postgres createdb mas
 
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/scripts/setup-local-db.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/supabase/migrations/20260915000000_initial_schema.sql"
+shopt -s nullglob
+for migration in "$ROOT"/supabase/migrations/*.sql; do
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$migration"
+done
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/supabase/seed.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/supabase/migrations/20260916000000_inventory_core_structure.sql"
 if [ -f "$ROOT/supabase/seed_catalog.sql" ]; then
   sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/supabase/seed_catalog.sql"
 fi
+# Reaplica reglas de categoría sobre el catálogo ya cargado.
+sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas <<'SQL'
+update public.inventory_items
+set
+  tracks_expiry = true,
+  tracks_lot = true
+where item_kind = 'producto'
+  and category in ('insumos', 'medicamentos', 'reactivos');
+SQL
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas <<'SQL'
 grant usage on schema public to anon, authenticated, authenticator;
 grant select, insert, update, delete on all tables in schema public to anon, authenticated;
