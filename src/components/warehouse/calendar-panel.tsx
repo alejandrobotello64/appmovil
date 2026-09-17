@@ -699,27 +699,19 @@ export function CalendarPanel() {
       </div>
 
       {composeEvent ? (
-        <section className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h3 className="font-semibold">Recordatorios · {composeEvent.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {formatLongDate(composeEvent.eventDate)}
-                {composeEvent.location ? ` · ${composeEvent.location}` : ""}
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setComposeEventId(null)}>
-              Cerrar
-            </Button>
-          </div>
+        <ModalShell
+          title={`Recordatorios · ${composeEvent.title}`}
+          description={`${formatLongDate(composeEvent.eventDate)}${composeEvent.location ? ` · ${composeEvent.location}` : ""}`}
+        >
           {composeReminders.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Este evento no tiene destinatarios con correo o WhatsApp en las
-              áreas seleccionadas.
+              áreas seleccionadas. Completa correo y teléfono en la ficha del
+              colaborador para poder avisar.
             </p>
           ) : (
             <>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   onClick={() => void sendEmails(composeReminders)}
@@ -759,7 +751,12 @@ export function CalendarPanel() {
               </p>
             </>
           )}
-        </section>
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => setComposeEventId(null)}>
+              Cerrar
+            </Button>
+          </div>
+        </ModalShell>
       ) : null}
 
       {formOpen ? (
