@@ -1,0 +1,17 @@
+{
+  "install": "npm install && npm run build",
+  "start": "true",
+  "terminals": [
+    {
+      "name": "api",
+      "command": "npm run db:local && npm run dev:api",
+      "description": "Postgres + PostgREST gateway"
+    },
+    {
+      "name": "web",
+      "command": "npm run start",
+      "description": "MAS on 0.0.0.0:43145"
+    }
+  ],
+  "ports": [{ "name": "web", "port": 43145 }]
+}
