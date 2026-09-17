@@ -1,7 +1,12 @@
 import { type NextRequest } from "next/server";
 
+const configuredUpstream =
+  process.env.SUPABASE_INTERNAL_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const UPSTREAM =
-  process.env.SUPABASE_INTERNAL_URL ?? "http://127.0.0.1:54321";
+  configuredUpstream &&
+  !/127\.0\.0\.1|localhost|0\.0\.0\.0/.test(configuredUpstream)
+    ? configuredUpstream
+    : (process.env.SUPABASE_INTERNAL_URL ?? "http://127.0.0.1:54321");
 
 const FORWARD_HEADERS = [
   "authorization",

@@ -38,7 +38,7 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const user = await loginWithCredentials(username, password);
+      const user = await loginWithCredentials(username.trim(), password);
       if (!user) {
         setError("Usuario o contraseña incorrectos.");
         return;

@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     "**.cursor.com",
     "**.cursorusercontent.com",
     "**.cloud.cursor.com",
+    "**.trycloudflare.com",
+    "**.lhr.life",
   ],
   images: {
     unoptimized: true,

@@ -29,7 +29,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://iqfareiwiadqsauejaaf.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 ```
 
-3. Reinicia `npm run dev`. No hace falta PostgREST local.
+3. Reinicia `npm run dev`. Con URL de la nube, el navegador habla directo con Supabase (no con localhost). No hace falta PostgREST local.
 
 Si el esquema de la nube está vacío: `npx supabase link --project-ref iqfareiwiadqsauejaaf` y `npm run db:push` / `npm run db:seed` (requiere un access token válido en [Account tokens](https://supabase.com/dashboard/account/tokens)).
 

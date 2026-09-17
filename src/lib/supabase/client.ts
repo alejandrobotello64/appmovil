@@ -14,11 +14,24 @@ if (!configuredUrl || !supabaseAnonKey) {
 const publicUrl: string = configuredUrl;
 const anonKey: string = supabaseAnonKey;
 
+function isLoopbackUrl(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return host === "127.0.0.1" || host === "localhost" || host === "0.0.0.0";
+  } catch {
+    return true;
+  }
+}
+
 function resolveSupabaseUrl() {
-  // El preview de Cursor no reenvía :54321. El navegador siempre habla con
-  // el mismo origen (Next.js /rest/v1 → PostgREST).
+  // Local/preview: el navegador habla con el mismo origen y Next.js
+  // reenvía /rest/v1 a PostgREST. Nube: usa el proyecto de Supabase
+  // (si siempre vamos a origin, el JWT de la nube choca con localhost).
   if (typeof window !== "undefined") {
-    return window.location.origin;
+    if (isLoopbackUrl(publicUrl)) {
+      return window.location.origin;
+    }
+    return publicUrl;
   }
   return internalUrl || publicUrl;
 }

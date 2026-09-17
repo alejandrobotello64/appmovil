@@ -41,6 +41,15 @@ export async function loginWithCredentials(
       );
     }
     if (
+      message.includes("jwt") ||
+      message.includes("invalid api key") ||
+      message.includes("invalid authentication")
+    ) {
+      throw new Error(
+        "La clave de la base de datos no coincide. Revisa NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local."
+      );
+    }
+    if (
       message.includes("failed to fetch") ||
       message.includes("network") ||
       message.includes("fetch")
