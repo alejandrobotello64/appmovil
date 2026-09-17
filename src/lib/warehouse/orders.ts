@@ -162,6 +162,7 @@ export async function receivePurchaseOrderLines(
     receiveNow: number;
     lotNumber?: string;
     expiryDate?: string;
+    manufacturedAt?: string;
     serialNumber?: string;
     authorizeOverReceipt?: boolean;
   }>,
@@ -209,6 +210,7 @@ export async function receivePurchaseOrderLines(
       locationId: destination?.locationId ?? null,
       lotNumber: input.lotNumber || null,
       expiryDate: input.expiryDate || null,
+      manufacturedAt: input.manufacturedAt || null,
       serialNumber: input.serialNumber || null,
     });
 

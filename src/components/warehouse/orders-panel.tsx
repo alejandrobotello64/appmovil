@@ -10,7 +10,10 @@ import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { getInventoryItems } from "@/lib/inventory/storage";
-import type { InventoryItem } from "@/lib/inventory/types";
+import {
+  categoryRequiresManufactureDate,
+  type InventoryItem,
+} from "@/lib/inventory/types";
 import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
 import {
@@ -33,6 +36,7 @@ type ReceiveDraft = {
   receiveNow: number;
   lotNumber: string;
   expiryDate: string;
+  manufacturedAt: string;
   serialNumber: string;
 };
 
@@ -144,6 +148,7 @@ export function OrdersPanel() {
         receiveNow: pendingQty(line),
         lotNumber: "",
         expiryDate: "",
+        manufacturedAt: "",
         serialNumber: "",
       }))
     );
@@ -173,6 +178,7 @@ export function OrdersPanel() {
           receiveNow: draft.receiveNow,
           lotNumber: draft.lotNumber,
           expiryDate: draft.expiryDate,
+          manufacturedAt: draft.manufacturedAt,
           serialNumber: draft.serialNumber,
           authorizeOverReceipt,
         })),
@@ -524,9 +530,33 @@ export function OrdersPanel() {
                               />
                               <input
                                 type="date"
-                                value={draft?.expiryDate ?? ""}
+                                value={
+                                  categoryRequiresManufactureDate(
+                                    products.find((item) => item.id === line.itemId)
+                                      ?.category ?? "insumos"
+                                  )
+                                    ? (draft?.manufacturedAt ?? "")
+                                    : (draft?.expiryDate ?? "")
+                                }
                                 onChange={(event) =>
-                                  updateDraft(line.id, { expiryDate: event.target.value })
+                                  categoryRequiresManufactureDate(
+                                    products.find((item) => item.id === line.itemId)
+                                      ?.category ?? "insumos"
+                                  )
+                                    ? updateDraft(line.id, {
+                                        manufacturedAt: event.target.value,
+                                      })
+                                    : updateDraft(line.id, {
+                                        expiryDate: event.target.value,
+                                      })
+                                }
+                                title={
+                                  categoryRequiresManufactureDate(
+                                    products.find((item) => item.id === line.itemId)
+                                      ?.category ?? "insumos"
+                                  )
+                                    ? "Fecha de fabricación"
+                                    : "Fecha de caducidad"
                                 }
                                 className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
                               />

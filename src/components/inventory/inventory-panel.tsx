@@ -20,6 +20,7 @@ import {
 import {
   ASSET_STATUS_OPTIONS,
   categoryRequiresExpiry,
+  categoryRequiresManufactureDate,
   getSupplyCategoryMeta,
   INVENTORY_CATEGORIES,
   type InventoryCategoryId,
@@ -80,6 +81,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const requiresExpiry = supplyCategory
     ? categoryRequiresExpiry(supplyCategory)
     : false;
+  const requiresManufactureDate = supplyCategory
+    ? categoryRequiresManufactureDate(supplyCategory)
+    : false;
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
@@ -101,9 +105,14 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
         itemKind: formItemKind,
         category,
         tracksExpiry:
-          categoryRequiresExpiry(category) || Boolean(data.tracksExpiry),
+          categoryRequiresExpiry(category) &&
+          !categoryRequiresManufactureDate(category),
         tracksLot:
           categoryRequiresExpiry(category) || Boolean(data.tracksLot),
+        expiryDate: categoryRequiresManufactureDate(category)
+          ? ""
+          : data.expiryDate,
+        manufacturedAt: data.manufacturedAt,
       };
       if (editingItem) {
         await updateInventoryItem(editingItem.id, payload);
@@ -223,7 +232,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                   ? "Activos con número de serie, estado operativo y mantenimiento."
                   : requiresExpiry
                     ? `${supplyMeta?.description ?? ""}. Caducidad y lote obligatorios.`
-                    : `${supplyMeta?.description ?? ""}. Tabla propia sin caducidad obligatoria.`}
+                    : requiresManufactureDate
+                      ? `${supplyMeta?.description ?? ""}. Fecha de fabricación obligatoria; no lleva caducidad.`
+                      : `${supplyMeta?.description ?? ""}. Tabla propia sin caducidad obligatoria.`}
               </p>
             </div>
             {canWrite ? (
@@ -330,7 +341,17 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                         : `${item.quantity} ${item.unit} (mín. ${item.minStock})`,
                   },
                   { label: "Ubicación", value: item.location || "—" },
-                  { label: "Precio", value: formatCurrency(item.unitPrice) },
+                  {
+                    label: requiresManufactureDate
+                      ? "Fabricación"
+                      : "Precio",
+                    value: requiresManufactureDate
+                      ? item.manufacturedAt || "—"
+                      : formatCurrency(item.unitPrice),
+                  },
+                  ...(requiresManufactureDate
+                    ? [{ label: "Precio", value: formatCurrency(item.unitPrice) }]
+                    : []),
                 ],
                 actions: canWrite ? (
                   <>
@@ -376,6 +397,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     <th className="px-4 py-3 font-medium">Próx. mant.</th>
                   )}
                   <th className="px-4 py-3 font-medium">Ubicación</th>
+                  {requiresManufactureDate ? (
+                    <th className="px-4 py-3 font-medium">Fabricación</th>
+                  ) : null}
                   <th className="px-4 py-3 font-medium">Precio</th>
                   <th className="px-4 py-3 font-medium">Acciones</th>
                 </tr>
@@ -384,7 +408,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={requiresManufactureDate ? 9 : 8}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isEquipment
@@ -457,6 +481,11 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                         <td className="px-4 py-3 text-muted-foreground">
                           {item.location || "—"}
                         </td>
+                        {requiresManufactureDate ? (
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {item.manufacturedAt || "—"}
+                          </td>
+                        ) : null}
                         <td className="px-4 py-3">
                           {formatCurrency(item.unitPrice)}
                         </td>
@@ -520,7 +549,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                   ? "Los equipos se gestionan como activos, no como stock consumible."
                   : requiresExpiry
                     ? "Esta tabla exige control de caducidad y lote en entradas."
-                    : "Tabla propia de refacciones/accesorios sin caducidad obligatoria."}
+                    : requiresManufactureDate
+                      ? "Los accesorios llevan fecha de fabricación y no caducan."
+                      : "Tabla propia de refacciones/accesorios sin caducidad obligatoria."}
               </p>
             </div>
             <InventoryForm

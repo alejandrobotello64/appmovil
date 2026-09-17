@@ -89,6 +89,7 @@ export async function applyStockMovement(input: {
   locationId?: string | null;
   lotNumber?: string | null;
   expiryDate?: string | null;
+  manufacturedAt?: string | null;
   serialNumber?: string | null;
   supplierName?: string;
   purchaseOrderId?: string | null;
@@ -112,6 +113,24 @@ export async function applyStockMovement(input: {
   if (error) throw new Error(error.message);
   const row = data?.[0];
   if (!row) throw new Error("El movimiento no devolvió folio.");
+
+  if (input.manufacturedAt) {
+    const { error: itemError } = await db
+      .from("inventory_items")
+      .update({ manufactured_at: input.manufacturedAt })
+      .eq("id", input.productId);
+    if (itemError) throw new Error(itemError.message);
+
+    if (input.lotNumber) {
+      const { error: lotError } = await db
+        .from("lots")
+        .update({ manufactured_at: input.manufacturedAt })
+        .eq("product_id", input.productId)
+        .eq("lot_number", input.lotNumber);
+      if (lotError) throw new Error(lotError.message);
+    }
+  }
+
   return {
     folio: row.folio,
     movementId: row.movement_id,
@@ -147,12 +166,13 @@ export type ProductLot = {
   id: string;
   lotNumber: string;
   expiryDate: string;
+  manufacturedAt: string;
 };
 
 export async function getProductLots(productId: string): Promise<ProductLot[]> {
   const { data, error } = await db
     .from("lots")
-    .select("id, lot_number, expiry_date")
+    .select("id, lot_number, expiry_date, manufactured_at")
     .eq("product_id", productId)
     .order("expiry_date", { ascending: true, nullsFirst: false });
   if (error) throw new Error(error.message);
@@ -160,6 +180,7 @@ export async function getProductLots(productId: string): Promise<ProductLot[]> {
     id: String(row.id),
     lotNumber: String(row.lot_number ?? ""),
     expiryDate: String(row.expiry_date ?? ""),
+    manufacturedAt: String(row.manufactured_at ?? ""),
   }));
 }
 

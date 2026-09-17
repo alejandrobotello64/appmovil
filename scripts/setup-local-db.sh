@@ -40,6 +40,11 @@ set
   tracks_lot = true
 where item_kind = 'producto'
   and category in ('insumos', 'medicamentos', 'reactivos');
+update public.inventory_items
+set
+  tracks_expiry = false,
+  expiry_date = null
+where category = 'accesorios';
 SQL
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas <<'SQL'
 grant usage on schema public to anon, authenticated, authenticator;

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   ASSET_STATUS_OPTIONS,
   categoryRequiresExpiry,
+  categoryRequiresManufactureDate,
   getSupplyCategoryMeta,
   INVENTORY_UNITS,
   type InventoryItem,
@@ -30,6 +31,8 @@ function emptyForm(
     kind === "equipo" ? "equipos" : lockedCategory ?? "insumos";
   const requiresExpiry =
     kind !== "equipo" && categoryRequiresExpiry(category);
+  const requiresManufactureDate =
+    kind !== "equipo" && categoryRequiresManufactureDate(category);
   return {
     sku: "",
     name: "",
@@ -46,6 +49,7 @@ function emptyForm(
     unitPrice: 0,
     supplier: "",
     expiryDate: "",
+    manufacturedAt: "",
     notes: "",
     assetStatus: "operativo",
     lastMaintenanceDate: "",
@@ -53,7 +57,7 @@ function emptyForm(
     isActive: true,
     tracksLot: kind !== "equipo" ? requiresExpiry : false,
     tracksSerial: kind === "equipo",
-    tracksExpiry: requiresExpiry,
+    tracksExpiry: requiresExpiry && !requiresManufactureDate,
     maxStock: 0,
     reorderPoint: 0,
     partNumber: "",
@@ -84,13 +88,16 @@ export function InventoryForm({
       itemKind === "equipo"
         ? "equipos"
         : lockedCategory ?? item.category;
+    const requiresExpiry = categoryRequiresExpiry(category);
+    const requiresManufactureDate = categoryRequiresManufactureDate(category);
     setForm({
       ...rest,
       itemKind: item.itemKind || itemKind,
       category,
-      tracksExpiry:
-        categoryRequiresExpiry(category) || Boolean(rest.tracksExpiry),
-      tracksLot: categoryRequiresExpiry(category) || Boolean(rest.tracksLot),
+      expiryDate: requiresManufactureDate ? "" : rest.expiryDate,
+      manufacturedAt: rest.manufacturedAt ?? "",
+      tracksExpiry: requiresExpiry,
+      tracksLot: requiresExpiry || Boolean(rest.tracksLot),
     });
   }, [item, itemKind, lockedCategory]);
 
@@ -106,12 +113,15 @@ export function InventoryForm({
     const category =
       itemKind === "equipo" ? "equipos" : lockedCategory ?? form.category;
     const requiresExpiry = categoryRequiresExpiry(category);
+    const requiresManufactureDate = categoryRequiresManufactureDate(category);
     onSubmit({
       ...form,
       itemKind,
       category,
       quantity: itemKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
-      tracksExpiry: requiresExpiry || form.tracksExpiry,
+      expiryDate: requiresManufactureDate ? "" : form.expiryDate,
+      manufacturedAt: requiresManufactureDate ? form.manufacturedAt : form.manufacturedAt,
+      tracksExpiry: requiresExpiry,
       tracksLot: requiresExpiry || form.tracksLot,
     });
   }
@@ -123,6 +133,9 @@ export function InventoryForm({
   const requiresExpiry =
     !isEquipment &&
     categoryRequiresExpiry(lockedCategory ?? form.category);
+  const requiresManufactureDate =
+    !isEquipment &&
+    categoryRequiresManufactureDate(lockedCategory ?? form.category);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,7 +144,9 @@ export function InventoryForm({
           ? "Registro de equipo médico (activo): control por serie, estado y mantenimiento."
           : requiresExpiry
             ? `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} con caducidad y lote obligatorios.`
-            : `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} en tabla propia.`}
+            : requiresManufactureDate
+              ? `Registro de ${lockedMeta?.label.toLowerCase() ?? "accesorio"} con fecha de fabricación. No lleva caducidad.`
+              : `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} en tabla propia.`}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -359,19 +374,42 @@ export function InventoryForm({
           />
           Control por número de serie
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={form.tracksExpiry || requiresExpiry}
-            disabled={requiresExpiry}
-            onChange={(event) =>
-              handleChange("tracksExpiry", event.target.checked)
-            }
-          />
-          Control de caducidad{requiresExpiry ? " (obligatorio)" : ""}
-        </label>
+        {!requiresManufactureDate ? (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.tracksExpiry || requiresExpiry}
+              disabled={requiresExpiry}
+              onChange={(event) =>
+                handleChange("tracksExpiry", event.target.checked)
+              }
+            />
+            Control de caducidad{requiresExpiry ? " (obligatorio)" : ""}
+          </label>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Los accesorios no controlan caducidad.
+          </p>
+        )}
 
-        {!isEquipment ? (
+        {!isEquipment && requiresManufactureDate ? (
+          <label className="space-y-1.5 md:col-span-2">
+            <span className="text-sm font-medium">
+              Fecha de fabricación (obligatoria)
+            </span>
+            <input
+              type="date"
+              required
+              value={form.manufacturedAt}
+              onChange={(event) =>
+                handleChange("manufacturedAt", event.target.value)
+              }
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            />
+          </label>
+        ) : null}
+
+        {!isEquipment && !requiresManufactureDate ? (
           <label className="space-y-1.5 md:col-span-2">
             <span className="text-sm font-medium">
               Fecha de caducidad
@@ -386,7 +424,7 @@ export function InventoryForm({
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             />
           </label>
-        ) : (
+        ) : isEquipment ? (
           <>
             <label className="space-y-1.5">
               <span className="text-sm font-medium">Último mantenimiento</span>
@@ -411,7 +449,7 @@ export function InventoryForm({
               />
             </label>
           </>
-        )}
+        ) : null}
 
         <label className="space-y-1.5 md:col-span-2">
           <span className="text-sm font-medium">Descripción</span>

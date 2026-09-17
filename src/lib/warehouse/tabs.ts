@@ -26,7 +26,7 @@ export const WAREHOUSE_TABS = [
   {
     id: "accesorios",
     label: "Accesorios",
-    description: "Complementos y accesorios",
+    description: "Complementos con fecha de fabricación, sin caducidad",
     href: "/dashboard/almacen?tab=accesorios",
   },
   {

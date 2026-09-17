@@ -130,7 +130,7 @@ export function WarehouseDashboard() {
       "180": [],
     };
     for (const item of products) {
-      if (!item.expiryDate) continue;
+      if (!item.expiryDate || item.category === "accesorios") continue;
       const days = daysUntilExpiry(item.expiryDate);
       if (days === null) continue;
       const bucket = expiryBucket(days);
@@ -234,8 +234,8 @@ export function WarehouseDashboard() {
         </h2>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           Separa el control por tablas: <strong>insumos/medicamentos/reactivos</strong>{" "}
-          (con caducidad), <strong>refacciones/accesorios</strong> y{" "}
-          <strong>equipos médicos</strong>.
+          (con caducidad), <strong>accesorios</strong> (fecha de fabricación),{" "}
+          <strong>refacciones</strong> y <strong>equipos médicos</strong>.
         </p>
       </section>
 

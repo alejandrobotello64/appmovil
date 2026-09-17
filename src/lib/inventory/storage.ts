@@ -11,6 +11,7 @@ import type {
 } from "./types";
 import {
   categoryRequiresExpiry,
+  categoryRequiresManufactureDate,
   SUPPLY_CATEGORY_IDS,
 } from "./types";
 
@@ -49,6 +50,7 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     unitPrice: Number(row.unit_price ?? 0),
     supplier: row.supplier ?? "",
     expiryDate: row.expiry_date ?? "",
+    manufacturedAt: row.manufactured_at ?? "",
     notes: row.notes ?? "",
     assetStatus: (row.asset_status as AssetStatus) || "operativo",
     lastMaintenanceDate: row.last_maintenance_date ?? "",
@@ -88,7 +90,12 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     serial_number: input.serialNumber ?? "",
     unit_price: input.unitPrice,
     supplier: input.supplier ?? "",
-    expiry_date: input.expiryDate ? input.expiryDate : null,
+    expiry_date: categoryRequiresManufactureDate(input.category)
+      ? null
+      : input.expiryDate
+        ? input.expiryDate
+        : null,
+    manufactured_at: input.manufacturedAt ? input.manufacturedAt : null,
     notes: input.notes ?? "",
     asset_status: input.assetStatus || "operativo",
     last_maintenance_date: input.lastMaintenanceDate
@@ -104,9 +111,10 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
         (categoryRequiresExpiry(input.category) || Boolean(input.expiryDate))),
     tracks_serial: input.tracksSerial || itemKind === "equipo",
     tracks_expiry:
-      input.tracksExpiry ||
-      categoryRequiresExpiry(input.category) ||
-      Boolean(input.expiryDate),
+      !categoryRequiresManufactureDate(input.category) &&
+      (input.tracksExpiry ||
+        categoryRequiresExpiry(input.category) ||
+        Boolean(input.expiryDate)),
     max_stock: input.maxStock ?? 0,
     reorder_point: input.reorderPoint || input.minStock,
     part_number: input.partNumber ?? "",
@@ -225,7 +233,10 @@ export async function createInventoryItem(
       createdBy,
       note: "Existencia inicial de alta de producto",
       lotNumber: input.tracksLot ? input.serialNumber || "INICIAL" : null,
-      expiryDate: input.expiryDate || null,
+      expiryDate: categoryRequiresManufactureDate(input.category)
+        ? null
+        : input.expiryDate || null,
+      manufacturedAt: input.manufacturedAt || null,
       serialNumber: input.itemKind === "equipo" ? input.serialNumber : null,
       supplierName: input.supplier,
     });
@@ -307,6 +318,10 @@ export async function bulkImportInventoryItems(
       expiryDate:
         raw.expiryDate && !Number.isNaN(Date.parse(raw.expiryDate))
           ? raw.expiryDate
+          : "",
+      manufacturedAt:
+        raw.manufacturedAt && !Number.isNaN(Date.parse(raw.manufacturedAt))
+          ? raw.manufacturedAt
           : "",
       lastMaintenanceDate:
         raw.lastMaintenanceDate &&

@@ -18,7 +18,7 @@ export const SUPPLY_CATEGORIES = [
   {
     id: "accesorios",
     label: "Accesorios",
-    description: "Complementos y accesorios",
+    description: "Complementos con fecha de fabricación, sin caducidad",
   },
   {
     id: "reactivos",
@@ -36,6 +36,9 @@ export const EXPIRY_SUPPLY_CATEGORY_IDS = [
 
 /** Refacciones y accesorios (sin caducidad obligatoria) */
 export const PARTS_SUPPLY_CATEGORY_IDS = ["refacciones", "accesorios"] as const;
+
+/** Accesorios llevan fecha de fabricación, no caducidad */
+export const MANUFACTURE_DATE_CATEGORY_IDS = ["accesorios"] as const;
 
 /** Categorías principales para identificar productos en el catálogo */
 export const CATALOG_CATEGORIES = [
@@ -86,6 +89,14 @@ export function categoryRequiresExpiry(
   category: InventoryCategoryId
 ): boolean {
   return (EXPIRY_SUPPLY_CATEGORY_IDS as readonly string[]).includes(category);
+}
+
+export function categoryRequiresManufactureDate(
+  category: InventoryCategoryId
+): boolean {
+  return (MANUFACTURE_DATE_CATEGORY_IDS as readonly string[]).includes(
+    category
+  );
 }
 
 export function getSupplyCategoryMeta(category: SupplyCategoryId) {
@@ -148,6 +159,7 @@ export type InventoryItem = {
   unitPrice: number;
   supplier: string;
   expiryDate: string;
+  manufacturedAt: string;
   notes: string;
   assetStatus: AssetStatus;
   lastMaintenanceDate: string;

@@ -93,6 +93,7 @@ export type Database = {
           unit_price: number;
           supplier: string;
           expiry_date: string | null;
+          manufactured_at: string | null;
           notes: string;
           asset_status: string;
           last_maintenance_date: string | null;
@@ -126,6 +127,7 @@ export type Database = {
           unit_price?: number;
           supplier?: string;
           expiry_date?: string | null;
+          manufactured_at?: string | null;
           notes?: string;
           asset_status?: string;
           last_maintenance_date?: string | null;
@@ -159,6 +161,7 @@ export type Database = {
           unit_price?: number;
           supplier?: string;
           expiry_date?: string | null;
+          manufactured_at?: string | null;
           notes?: string;
           asset_status?: string;
           last_maintenance_date?: string | null;

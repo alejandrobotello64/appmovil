@@ -19,6 +19,7 @@ import type {
 import {
   SUPPLY_CATEGORIES,
   categoryRequiresExpiry,
+  categoryRequiresManufactureDate,
 } from "@/lib/inventory/types";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -60,6 +61,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   );
   const [lotNumber, setLotNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
+  const [manufacturedAt, setManufacturedAt] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [technician, setTechnician] = useState("");
   const [relatedSerial, setRelatedSerial] = useState("");
@@ -73,6 +75,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const isEquipmentCatalog = catalogKind === "equipos";
   const requiresExpiry =
     !isEquipmentCatalog && categoryRequiresExpiry(catalogKind);
+  const requiresManufactureDate =
+    !isEquipmentCatalog && categoryRequiresManufactureDate(catalogKind);
 
   async function loadCatalog(kind: CatalogKind) {
     const data =
@@ -132,6 +136,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setLots(rows);
         setLotNumber(rows[0]?.lotNumber ?? "");
         setExpiryDate(rows[0]?.expiryDate ?? "");
+        setManufacturedAt(rows[0]?.manufacturedAt ?? "");
       })
       .catch(() => setLots([]));
   }, [itemId, mode, isEquipmentCatalog]);
@@ -141,6 +146,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       setQuantity(1);
       setLotNumber("");
       setExpiryDate("");
+      setManufacturedAt("");
     }
   }, [isEquipmentCatalog]);
 
@@ -213,6 +219,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             : "Este producto exige fecha de caducidad."
         );
       }
+      if (mode === "entrada" && requiresManufactureDate && !manufacturedAt) {
+        throw new Error("Los accesorios exigen fecha de fabricación.");
+      }
       if (selected.tracksSerial && !serialNumber.trim()) {
         throw new Error(
           isEquipmentCatalog
@@ -244,7 +253,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         warehouseId: warehouseId || null,
         locationId: locationId || null,
         lotNumber: isEquipmentCatalog ? null : lotNumber || null,
-        expiryDate: isEquipmentCatalog ? null : expiryDate || null,
+        expiryDate:
+          isEquipmentCatalog || requiresManufactureDate
+            ? null
+            : expiryDate || null,
+        manufacturedAt: requiresManufactureDate ? manufacturedAt || null : null,
         serialNumber: serialNumber || null,
       });
       const updated = {
@@ -304,7 +317,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             <p className="mt-1 text-sm text-muted-foreground">
               {mode === "entrada"
                 ? "Elige la tabla (insumos, medicamentos, refacciones, etc.) o da de alta un equipo."
-                : "Descuenta unidades por tabla. Insumos/medicamentos/reactivos usan caducidad."}
+                : "Descuenta unidades por tabla. Insumos/medicamentos/reactivos usan caducidad; accesorios, fecha de fabricación."}
             </p>
           </div>
           {canWrite ? (
@@ -462,6 +475,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     );
                     setLotNumber(event.target.value);
                     setExpiryDate(lot?.expiryDate ?? "");
+                    setManufacturedAt(lot?.manufacturedAt ?? "");
                   }}
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
                 >
@@ -469,7 +483,13 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   {lots.map((lot) => (
                     <option key={lot.id} value={lot.lotNumber}>
                       {lot.lotNumber}
-                      {lot.expiryDate ? ` · cad. ${lot.expiryDate}` : ""}
+                      {requiresManufactureDate
+                        ? lot.manufacturedAt
+                          ? ` · fab. ${lot.manufacturedAt}`
+                          : ""
+                        : lot.expiryDate
+                          ? ` · cad. ${lot.expiryDate}`
+                          : ""}
                     </option>
                   ))}
                 </select>
@@ -495,20 +515,32 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 </label>
                 <label className="space-y-1.5">
                   <span className="text-sm font-medium">
-                    Caducidad
-                    {selected?.tracksExpiry || requiresExpiry
+                    {requiresManufactureDate
+                      ? "Fecha de fabricación"
+                      : "Caducidad"}
+                    {requiresManufactureDate ||
+                    selected?.tracksExpiry ||
+                    requiresExpiry
                       ? " (obligatoria)"
                       : ""}
                   </span>
                   <input
                     type="date"
-                    value={expiryDate}
+                    value={
+                      requiresManufactureDate ? manufacturedAt : expiryDate
+                    }
                     disabled={!canWrite}
                     required={Boolean(
-                      (selected?.tracksExpiry || requiresExpiry) &&
-                        mode === "entrada"
+                      mode === "entrada" &&
+                        (requiresManufactureDate ||
+                          selected?.tracksExpiry ||
+                          requiresExpiry)
                     )}
-                    onChange={(event) => setExpiryDate(event.target.value)}
+                    onChange={(event) =>
+                      requiresManufactureDate
+                        ? setManufacturedAt(event.target.value)
+                        : setExpiryDate(event.target.value)
+                    }
                     className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
                   />
                 </label>

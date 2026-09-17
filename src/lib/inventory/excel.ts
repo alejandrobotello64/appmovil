@@ -11,6 +11,7 @@ import {
   ASSET_STATUS_OPTIONS,
   INVENTORY_CATEGORIES,
   INVENTORY_UNITS,
+  categoryRequiresManufactureDate,
 } from "@/lib/inventory/types";
 
 export const PRODUCT_EXCEL_HEADERS = [
@@ -31,6 +32,7 @@ export const PRODUCT_EXCEL_HEADERS = [
   "proveedor",
   "fabricante",
   "caducidad",
+  "fecha_fabricacion",
   "notas",
   "subcategoria",
   "stock_maximo",
@@ -132,6 +134,12 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_EXCEL_HEADERS)[number]> = {
   vencimiento: "caducidad",
   fecha_vencimiento: "caducidad",
   cad: "caducidad",
+  fecha_fabricacion: "fecha_fabricacion",
+  fecha_de_fabricacion: "fecha_fabricacion",
+  fabricated: "fecha_fabricacion",
+  manufactured_at: "fecha_fabricacion",
+  manufactured: "fecha_fabricacion",
+  f_fabricacion: "fecha_fabricacion",
   notas: "notas",
   notes: "notas",
   observaciones: "notas",
@@ -297,7 +305,8 @@ export function itemToExcelRecord(item: InventoryItem): Record<string, string | 
     precio: item.unitPrice,
     proveedor: item.supplier,
     fabricante: item.manufacturer,
-    caducidad: item.expiryDate,
+    caducidad: item.category === "accesorios" ? "" : item.expiryDate,
+    fecha_fabricacion: item.manufacturedAt,
     notas: item.notes,
     subcategoria: item.subcategory,
     stock_maximo: item.maxStock,
@@ -331,6 +340,7 @@ function exampleRow(): Record<string, string | number> {
     proveedor: "",
     fabricante: "",
     caducidad: "2027-12-31",
+    fecha_fabricacion: "",
     notas: "",
     subcategoria: "",
     stock_maximo: 80,
@@ -358,8 +368,9 @@ function withInstructionSheet(workbook: XLSX.WorkBook) {
     ["4. tipo: producto o equipo. Si la categoria es equipos, se guarda como equipo."],
     ["5. existencia: solo se usa como stock inicial al crear un sku nuevo. No cambia existencias de productos que ya existen."],
     ["6. controla_lote, controla_serie, controla_caducidad y activo: si / no."],
-    ["7. Fechas en formato AAAA-MM-DD. unidad: pieza, caja, paquete, litro, ml, kg, g, par, rollo, frasco."],
-    ["8. Puedes exportar el catálogo, editarlo en Excel y volver a importarlo. Los sku existentes se actualizan."],
+    ["7. Accesorios: usa fecha_fabricacion (AAAA-MM-DD). No llevan caducidad."],
+    ["8. Fechas en formato AAAA-MM-DD. unidad: pieza, caja, paquete, litro, ml, kg, g, par, rollo, frasco."],
+    ["9. Puedes exportar el catálogo, editarlo en Excel y volver a importarlo. Los sku existentes se actualizan."],
   ];
   XLSX.utils.book_append_sheet(
     workbook,
@@ -558,10 +569,16 @@ export async function parseProductWorkbook(
     const category = parseCategory(record.categoria);
     const itemKind = parseKind(record.tipo, category, defaultKind);
     const resolvedCategory = itemKind === "equipo" ? "equipos" : category;
-    const tracksExpiry = cellBoolean(
-      record.controla_caducidad,
-      resolvedCategory === "medicamentos" || Boolean(excelDate(record.caducidad))
-    );
+    const isAccessory = categoryRequiresManufactureDate(resolvedCategory);
+    const tracksExpiry = isAccessory
+      ? false
+      : cellBoolean(
+          record.controla_caducidad,
+          resolvedCategory === "medicamentos" ||
+            resolvedCategory === "insumos" ||
+            resolvedCategory === "reactivos" ||
+            Boolean(excelDate(record.caducidad))
+        );
 
     rows.push({
       rowNumber,
@@ -579,7 +596,8 @@ export async function parseProductWorkbook(
       serialNumber: cellText(record.serie),
       unitPrice: Math.max(0, cellNumber(record.precio, 0)),
       supplier: cellText(record.proveedor),
-      expiryDate: excelDate(record.caducidad),
+      expiryDate: isAccessory ? "" : excelDate(record.caducidad),
+      manufacturedAt: excelDate(record.fecha_fabricacion),
       notes: cellText(record.notas),
       assetStatus: parseAssetStatus(record.estado_equipo),
       lastMaintenanceDate: excelDate(record.ultimo_mantenimiento),

@@ -37,6 +37,7 @@ columns = [
     "unit_price",
     "supplier",
     "expiry_date",
+    "manufactured_at",
     "notes",
     "asset_status",
     "last_maintenance_date",
