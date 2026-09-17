@@ -171,12 +171,14 @@ export function NewOrderForm({
     }
   }
 
+  const canCreate = lines.length > 0 && !submitting;
+
   return (
     <form
       onSubmit={handleCreate}
-      className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+      className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:min-h-[calc(100dvh-7rem)]"
     >
-      <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+      <div className="flex shrink-0 flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">Nuevo pedido</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -189,8 +191,8 @@ export function NewOrderForm({
           </Button>
           <Button
             type="submit"
-            disabled={submitting || lines.length === 0}
-            className="h-9 border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+            disabled={!canCreate}
+            className="h-9 border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90 disabled:opacity-40"
           >
             {submitting ? "Creando..." : "Crear pedido"}
           </Button>
@@ -203,8 +205,8 @@ export function NewOrderForm({
         </p>
       ) : null}
 
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <section className="space-y-4 border-b border-border p-4 sm:p-5 lg:border-r lg:border-b-0">
+      <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+        <section className="space-y-4 overflow-y-auto border-b border-border p-4 sm:p-5 lg:border-r lg:border-b-0">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
               <span className="text-sm font-medium">Proveedor</span>
@@ -263,12 +265,12 @@ export function NewOrderForm({
                 {products.length.toLocaleString("es-MX")} productos
               </p>
             </div>
-            <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+            <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => setCategoryFilter("all")}
                 className={cn(
-                  "h-8 shrink-0 rounded-full px-3 text-xs font-medium",
+                  "h-8 rounded-full px-3 text-xs font-medium",
                   categoryFilter === "all"
                     ? "bg-[#3B46A5] text-white"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -282,7 +284,7 @@ export function NewOrderForm({
                   type="button"
                   onClick={() => setCategoryFilter(category.id)}
                   className={cn(
-                    "h-8 shrink-0 rounded-full px-3 text-xs font-medium",
+                    "h-8 rounded-full px-3 text-xs font-medium",
                     categoryFilter === category.id
                       ? "bg-[#3B46A5] text-white"
                       : "bg-muted text-muted-foreground hover:text-foreground"
@@ -292,25 +294,34 @@ export function NewOrderForm({
                 </button>
               ))}
             </div>
-            <div className="grid gap-2 sm:grid-cols-[1fr_96px]">
-              <label className="relative">
-                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={query}
-                  autoFocus
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Código MAS, nombre, marca o número de parte"
-                  className={`${fieldClass} pl-10`}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      if (matches[0]) addProduct(matches[0]);
-                    }
-                  }}
-                />
+            <div className="grid grid-cols-[1fr_5.5rem] items-end gap-2">
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Buscar producto
+                </span>
+                <span className="relative block">
+                  <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    name="catalogQuery"
+                    data-catalog-search="true"
+                    value={query}
+                    autoFocus
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="SKU, nombre o marca"
+                    className={`${fieldClass} pl-10`}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        if (matches[0]) addProduct(matches[0]);
+                      }
+                    }}
+                  />
+                </span>
               </label>
-              <label className="space-y-0">
-                <span className="sr-only">Cantidad a agregar</span>
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Cant.
+                </span>
                 <input
                   type="number"
                   min={1}
@@ -319,7 +330,6 @@ export function NewOrderForm({
                     setQuantity(Math.max(1, Number(event.target.value) || 1))
                   }
                   className={fieldClass}
-                  title="Cantidad"
                 />
               </label>
             </div>
@@ -331,7 +341,7 @@ export function NewOrderForm({
                 primer resultado.
               </p>
             )}
-            <ul className="max-h-72 overflow-y-auto rounded-xl border border-border bg-background">
+            <ul className="max-h-64 overflow-y-auto rounded-xl border border-border bg-background lg:max-h-none">
               {matches.length === 0 ? (
                 <li className="px-3 py-8 text-center text-sm text-muted-foreground">
                   {products.length === 0
@@ -386,8 +396,8 @@ export function NewOrderForm({
           </div>
         </section>
 
-        <section className="flex min-h-[320px] flex-col p-4 sm:p-5">
-          <div className="mb-3 flex items-center justify-between gap-3">
+        <section className="flex min-h-[280px] flex-col p-4 sm:p-5">
+          <div className="mb-3 flex shrink-0 items-center justify-between gap-3">
             <h3 className="text-sm font-semibold">Líneas del pedido</h3>
             <p className="text-xs text-muted-foreground">
               {lines.length === 0
@@ -397,16 +407,16 @@ export function NewOrderForm({
           </div>
 
           {lines.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 px-4 py-10 text-center">
+            <div className="flex min-h-[180px] flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 px-4 py-10 text-center">
               <PackagePlus className="size-8 text-muted-foreground" />
               <p className="mt-3 text-sm font-medium">Aún no hay líneas</p>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Busca un insumo, medicamento o accesorio a la izquierda y
+                Busca un insumo, medicamento o accesorio en el catálogo y
                 tócalo para agregarlo.
               </p>
             </div>
           ) : (
-            <>
+            <div className="min-h-0 flex-1 overflow-auto">
               <ul className="space-y-2 md:hidden">
                 {lines.map((line) => (
                   <li
@@ -490,7 +500,7 @@ export function NewOrderForm({
                 ))}
               </ul>
 
-              <div className="hidden min-h-0 flex-1 overflow-x-auto rounded-xl border border-border md:block">
+              <div className="hidden rounded-xl border border-border md:block">
                 <table className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
@@ -563,10 +573,10 @@ export function NewOrderForm({
                   </tbody>
                 </table>
               </div>
-            </>
+            </div>
           )}
 
-          <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="sticky bottom-0 mt-4 flex shrink-0 flex-col gap-3 border-t border-border bg-card pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs text-muted-foreground">Total estimado</p>
               <p className="text-xl font-semibold tabular-nums">
@@ -584,8 +594,8 @@ export function NewOrderForm({
               </Button>
               <Button
                 type="submit"
-                disabled={submitting || lines.length === 0}
-                className="h-10 flex-1 border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90 sm:min-w-40 sm:flex-none"
+                disabled={!canCreate}
+                className="h-10 flex-1 border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90 disabled:opacity-40 sm:min-w-40 sm:flex-none"
               >
                 {submitting ? "Creando..." : "Crear pedido"}
               </Button>
