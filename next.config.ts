@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
     "**.cursorusercontent.com",
     "**.cloud.cursor.com",
   ],
+  images: {
+    unoptimized: true,
+  },
   serverExternalPackages: ["xlsx"],
 };
 
