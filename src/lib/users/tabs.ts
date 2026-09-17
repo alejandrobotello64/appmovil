@@ -8,7 +8,7 @@ export const USERS_TABS = [
   {
     id: "alta",
     label: "Alta de colaborador",
-    description: "Registra datos personales y acceso de un empleado nuevo",
+    description: "Registra o edita la ficha completa de un colaborador",
     href: "/dashboard/usuarios?tab=alta",
   },
   {

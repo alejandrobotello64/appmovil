@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
+  Pencil,
   Shield,
   UserCheck,
   UserMinus,
@@ -105,11 +107,38 @@ function emptyToNull(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
+function isoDate(value: string | null | undefined): string {
+  if (!value) return "";
+  return value.slice(0, 10);
+}
+
+function userToAlta(user: ListedUser): AltaFormState {
+  return {
+    fullName: user.full_name ?? "",
+    employeeNumber: user.employee_number ?? "",
+    curp: user.curp ?? "",
+    rfc: user.rfc ?? "",
+    birthDate: isoDate(user.birth_date),
+    phone: user.phone ?? "",
+    email: user.email ?? "",
+    address: user.address ?? "",
+    jobTitle: user.job_title ?? "",
+    department: user.department ?? "",
+    hireDate: isoDate(user.hire_date),
+    role: normalizeRole(user.role),
+    username: user.username ?? "",
+    password: "",
+    notes: user.notes ?? "",
+  };
+}
+
 type UsersPanelProps = {
   activeTab: UsersTabId;
+  editUserId?: string | null;
 };
 
-export function UsersPanel({ activeTab }: UsersPanelProps) {
+export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
+  const router = useRouter();
   const { canWrite } = usePermissions("usuarios");
   const [users, setUsers] = useState<ListedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,6 +147,8 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const [alta, setAlta] = useState<AltaFormState>(EMPTY_ALTA);
+  const [editingId, setEditingId] = useState("");
+  const [fichaQuery, setFichaQuery] = useState("");
 
   const [selectedUserId, setSelectedUserId] = useState("");
   const [permissionRole, setPermissionRole] = useState<AppRole>("almacen");
@@ -151,6 +182,19 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
     setError("");
     setMessage("");
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "alta") return;
+    const nextId = editUserId ?? "";
+    setEditingId(nextId);
+    if (!nextId) setAlta(EMPTY_ALTA);
+  }, [activeTab, editUserId]);
+
+  useEffect(() => {
+    if (!editingId) return;
+    const match = users.find((user) => user.id === editingId);
+    if (match) setAlta(userToAlta(match));
+  }, [editingId, users]);
 
   const activeUsers = useMemo(
     () => users.filter((user) => user.is_active),
@@ -202,6 +246,24 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
     if (first) setSelectedUserId(first.id);
   }, [users, activeUsers, selectedUserId]);
 
+  const fichaOptions = useMemo(() => {
+    const q = fichaQuery.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((user) =>
+      [
+        user.full_name,
+        user.username,
+        user.employee_number,
+        user.email,
+        user.job_title,
+        user.department,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [users, fichaQuery]);
+
   function updateAlta<K extends keyof AltaFormState>(
     key: K,
     value: AltaFormState[K]
@@ -209,37 +271,81 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
     setAlta((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleCreate(event: FormEvent) {
+  function openFicha(userId: string) {
+    setMessage("");
+    setError("");
+    if (!userId) {
+      setEditingId("");
+      setAlta(EMPTY_ALTA);
+      router.replace("/dashboard/usuarios?tab=alta");
+      return;
+    }
+    const match = users.find((user) => user.id === userId);
+    if (match) {
+      setEditingId(match.id);
+      setAlta(userToAlta(match));
+    }
+    router.replace(`/dashboard/usuarios?tab=alta&id=${userId}`);
+  }
+
+  function profilePayload() {
+    return {
+      p_username: alta.username.trim(),
+      p_full_name: alta.fullName.trim(),
+      p_role: alta.role,
+      p_email: alta.email.trim(),
+      p_phone: alta.phone.trim(),
+      p_employee_number: alta.employeeNumber.trim(),
+      p_curp: alta.curp.trim(),
+      p_rfc: alta.rfc.trim(),
+      p_job_title: alta.jobTitle.trim(),
+      p_department: alta.department.trim(),
+      p_hire_date: emptyToNull(alta.hireDate),
+      p_birth_date: emptyToNull(alta.birthDate),
+      p_address: alta.address.trim(),
+      p_notes: alta.notes.trim(),
+    };
+  }
+
+  async function handleSaveFicha(event: FormEvent) {
     event.preventDefault();
     if (!canWrite) return;
     setSubmitting(true);
     setError("");
     setMessage("");
     try {
-      const { error: rpcError } = await supabase.rpc("create_app_user", {
-        p_username: alta.username.trim(),
-        p_password: alta.password,
-        p_full_name: alta.fullName.trim(),
-        p_role: alta.role,
-        p_email: alta.email.trim(),
-        p_phone: alta.phone.trim(),
-        p_employee_number: alta.employeeNumber.trim(),
-        p_curp: alta.curp.trim(),
-        p_rfc: alta.rfc.trim(),
-        p_job_title: alta.jobTitle.trim(),
-        p_department: alta.department.trim(),
-        p_hire_date: emptyToNull(alta.hireDate),
-        p_birth_date: emptyToNull(alta.birthDate),
-        p_address: alta.address.trim(),
-        p_notes: alta.notes.trim(),
-      });
-      if (rpcError) throw new Error(rpcError.message);
-      setAlta(EMPTY_ALTA);
-      await loadUsers();
-      setMessage("Colaborador dado de alta correctamente.");
+      if (editingId) {
+        const { error: rpcError } = await supabase.rpc(
+          "update_app_user_profile",
+          {
+            p_user_id: editingId,
+            ...profilePayload(),
+            p_password: alta.password.trim() ? alta.password : null,
+          }
+        );
+        if (rpcError) throw new Error(rpcError.message);
+        await loadUsers();
+        setAlta((current) => ({ ...current, password: "" }));
+        setMessage("Ficha del colaborador actualizada.");
+      } else {
+        const { error: rpcError } = await supabase.rpc("create_app_user", {
+          p_password: alta.password,
+          ...profilePayload(),
+        });
+        if (rpcError) throw new Error(rpcError.message);
+        setAlta(EMPTY_ALTA);
+        setEditingId("");
+        await loadUsers();
+        setMessage("Colaborador dado de alta correctamente.");
+        router.replace("/dashboard/usuarios?tab=alta");
+      }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo crear el usuario."
+        err instanceof Error
+          ? err.message
+          : editingId
+            ? "No se pudo guardar la ficha."
+            : "No se pudo crear el usuario."
       );
     } finally {
       setSubmitting(false);
@@ -470,6 +576,15 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                     { label: "Teléfono", value: user.phone || "—" },
                     { label: "Correo", value: user.email || "—" },
                   ],
+                  actions: canWrite ? (
+                    <Link
+                      href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                    >
+                      <Pencil className="size-3.5" />
+                      Editar ficha
+                    </Link>
+                  ) : undefined,
                 }))}
               />
               <DesktopTable>
@@ -485,13 +600,14 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                       <th className="px-3 py-2 font-medium">Teléfono</th>
                       <th className="px-3 py-2 font-medium">Correo</th>
                       <th className="px-3 py-2 font-medium">Estado</th>
+                      <th className="px-3 py-2 font-medium">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={9}
+                          colSpan={10}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
                           No hay colaboradores registrados.
@@ -530,6 +646,19 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                               {user.is_active ? "Activo" : "Inactivo"}
                             </span>
                           </td>
+                          <td className="px-3 py-2">
+                            {canWrite ? (
+                              <Link
+                                href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
+                              >
+                                <Pencil className="size-3.5" />
+                                Editar
+                              </Link>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -541,7 +670,58 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
         ) : null}
 
         {!loading && activeTab === "alta" ? (
-          <form onSubmit={handleCreate} className="space-y-6">
+          <form onSubmit={handleSaveFicha} className="space-y-6">
+            <section className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 sm:grid-cols-[1fr_auto]">
+              <div className="space-y-3 sm:col-span-2">
+                <h3 className="text-base font-semibold text-foreground">
+                  {editingId ? "Editar ficha del colaborador" : "Alta de colaborador"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Completa o corrige todos los datos personales, laborales y de
+                  acceso. Puedes cargar una ficha existente para editarla.
+                </p>
+              </div>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Buscar colaborador</span>
+                <input
+                  value={fichaQuery}
+                  onChange={(event) => setFichaQuery(event.target.value)}
+                  placeholder="Nombre, usuario, no. empleado o correo"
+                  className={inputClass}
+                />
+              </label>
+              <label className="space-y-1.5 sm:min-w-[240px]">
+                <span className="text-sm font-medium">Ficha</span>
+                <select
+                  value={editingId}
+                  onChange={(event) => openFicha(event.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Nuevo colaborador</option>
+                  {fichaOptions.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {(user.full_name || user.username) +
+                        (user.employee_number
+                          ? ` · ${user.employee_number}`
+                          : "")}
+                      {user.is_active ? "" : " (baja)"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {editingId ? (
+                <div className="sm:col-span-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9"
+                    onClick={() => openFicha("")}
+                  >
+                    Nueva ficha
+                  </Button>
+                </div>
+              ) : null}
+            </section>
             <section className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 sm:grid-cols-2">
               <h3 className="text-base font-semibold text-foreground sm:col-span-2">
                 Datos personales
@@ -691,9 +871,11 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Contraseña *</span>
+                <span className="text-sm font-medium">
+                  {editingId ? "Nueva contraseña (opcional)" : "Contraseña *"}
+                </span>
                 <input
-                  required
+                  required={!editingId}
                   type="password"
                   minLength={6}
                   disabled={!canWrite}
@@ -701,6 +883,11 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                   onChange={(e) => updateAlta("password", e.target.value)}
                   className={inputClass}
                   autoComplete="new-password"
+                  placeholder={
+                    editingId
+                      ? "Déjala vacía para no cambiarla"
+                      : "Mínimo 6 caracteres"
+                  }
                 />
               </label>
               <label className="space-y-1.5 sm:col-span-2">
@@ -720,7 +907,11 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
               disabled={!canWrite || submitting}
               className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
             >
-              {submitting ? "Guardando..." : "Dar de alta colaborador"}
+              {submitting
+                ? "Guardando..."
+                : editingId
+                  ? "Guardar ficha"
+                  : "Dar de alta colaborador"}
             </Button>
           </form>
         ) : null}
@@ -753,14 +944,23 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                     },
                   ],
                   actions: canWrite ? (
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      onClick={() => void handleSetActive(user, false)}
-                      className="inline-flex h-9 items-center rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
-                    >
-                      Dar de baja
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                      >
+                        <Pencil className="size-3.5" />
+                        Editar ficha
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => void handleSetActive(user, false)}
+                        className="inline-flex h-9 items-center rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                      >
+                        Dar de baja
+                      </button>
+                    </div>
                   ) : undefined,
                 }))}
               />
@@ -804,15 +1004,24 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                           </td>
                           <td className="px-3 py-2">
                             {canWrite ? (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                disabled={submitting}
-                                onClick={() => void handleSetActive(user, false)}
-                                className="h-8 border-destructive/30 text-destructive"
-                              >
-                                Dar de baja
-                              </Button>
+                              <div className="flex flex-wrap gap-2">
+                                <Link
+                                  href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
+                                >
+                                  <Pencil className="size-3.5" />
+                                  Editar
+                                </Link>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={submitting}
+                                  onClick={() => void handleSetActive(user, false)}
+                                  className="h-8 border-destructive/30 text-destructive"
+                                >
+                                  Dar de baja
+                                </Button>
+                              </div>
                             ) : (
                               "—"
                             )}
@@ -845,14 +1054,23 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                     { label: "Área", value: user.department || "—" },
                   ],
                   actions: canWrite ? (
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      onClick={() => void handleSetActive(user, true)}
-                      className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-xs font-medium"
-                    >
-                      Reactivar
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                      >
+                        <Pencil className="size-3.5" />
+                        Editar ficha
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => void handleSetActive(user, true)}
+                        className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-xs font-medium"
+                      >
+                        Reactivar
+                      </button>
+                    </div>
                   ) : undefined,
                 }))}
               />
@@ -896,15 +1114,24 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
                           </td>
                           <td className="px-3 py-2">
                             {canWrite ? (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                disabled={submitting}
-                                onClick={() => void handleSetActive(user, true)}
-                                className="h-8"
-                              >
-                                Reactivar
-                              </Button>
+                              <div className="flex flex-wrap gap-2">
+                                <Link
+                                  href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
+                                >
+                                  <Pencil className="size-3.5" />
+                                  Editar
+                                </Link>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={submitting}
+                                  onClick={() => void handleSetActive(user, true)}
+                                  className="h-8"
+                                >
+                                  Reactivar
+                                </Button>
+                              </div>
                             ) : (
                               "—"
                             )}
@@ -957,9 +1184,20 @@ export function UsersPanel({ activeTab }: UsersPanelProps) {
             </section>
 
             <section className="space-y-4 rounded-xl border border-border bg-muted/20 p-4">
-              <h3 className="text-base font-semibold text-foreground">
-                Datos y permisos
-              </h3>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-base font-semibold text-foreground">
+                      Datos y permisos
+                    </h3>
+                    {selectedUser ? (
+                      <Link
+                        href={`/dashboard/usuarios?tab=alta&id=${selectedUser.id}`}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+                      >
+                        <Pencil className="size-3.5" />
+                        Ficha completa
+                      </Link>
+                    ) : null}
+                  </div>
               {selectedUser ? (
                 <form onSubmit={handleSavePermissions} className="grid gap-4">
                   <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm">

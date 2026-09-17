@@ -503,6 +503,33 @@ export type Database = {
           is_active: boolean;
         }[];
       };
+      update_app_user_profile: {
+        Args: {
+          p_user_id: string;
+          p_username: string;
+          p_full_name: string;
+          p_role: string;
+          p_email?: string;
+          p_phone?: string;
+          p_employee_number?: string;
+          p_curp?: string;
+          p_rfc?: string;
+          p_job_title?: string;
+          p_department?: string;
+          p_hire_date?: string | null;
+          p_birth_date?: string | null;
+          p_address?: string;
+          p_notes?: string;
+          p_password?: string | null;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+          is_active: boolean;
+        }[];
+      };
       apply_stock_movement: {
         Args: {
           p_product_id: string;

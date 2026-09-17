@@ -11,6 +11,7 @@ import { normalizeUsersTab, USERS_TABS } from "@/lib/users/tabs";
 export function UsersPage() {
   const searchParams = useSearchParams();
   const activeTab = normalizeUsersTab(searchParams.get("tab"));
+  const editUserId = searchParams.get("id");
   const activeTabMeta = USERS_TABS.find((tab) => tab.id === activeTab);
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
@@ -33,7 +34,7 @@ export function UsersPage() {
             </p>
           </section>
         ) : allowed ? (
-          <UsersPanel activeTab={activeTab} />
+          <UsersPanel activeTab={activeTab} editUserId={editUserId} />
         ) : (
           <p className="text-sm text-muted-foreground">Cargando...</p>
         )}
