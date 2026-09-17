@@ -29,7 +29,7 @@ const LOGIN_SLIDES = [
 
 const INTERVAL_MS = 6500;
 
-export function LoginBackground() {
+export function LoginCarousel() {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -40,14 +40,14 @@ export function LoginBackground() {
   }, []);
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
       {LOGIN_SLIDES.map((slide, index) => {
         const isActive = index === active;
         return (
           <div
             key={slide.src}
             className={cn(
-              "absolute inset-0 transition-opacity duration-[1800ms] ease-in-out",
+              "absolute inset-0 transition-opacity duration-[1400ms] ease-in-out",
               isActive ? "opacity-100" : "opacity-0"
             )}
           >
@@ -56,28 +56,27 @@ export function LoginBackground() {
               alt={slide.alt}
               fill
               priority={index === 0}
-              sizes="100vw"
+              sizes="(max-width: 420px) 100vw, 420px"
               className={cn(
                 "object-cover transition-transform duration-[6500ms] ease-out",
-                isActive ? "scale-110" : "scale-100"
+                isActive ? "scale-105" : "scale-100"
               )}
             />
           </div>
         );
       })}
 
-      <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(8,12,28,0.72)_0%,rgba(12,18,40,0.55)_42%,rgba(8,12,28,0.78)_100%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,191,255,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.28),transparent_50%)]" />
+      {/* Oscurece la foto para priorizar logo y campos */}
+      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,28,0.35)_0%,rgba(8,12,28,0.62)_45%,rgba(8,12,28,0.78)_100%)]" />
 
-      <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
         {LOGIN_SLIDES.map((slide, index) => (
           <span
             key={slide.src}
             className={cn(
               "h-1.5 rounded-full transition-all duration-500",
-              index === active
-                ? "w-6 bg-white"
-                : "w-1.5 bg-white/40"
+              index === active ? "w-5 bg-white" : "w-1.5 bg-white/45"
             )}
           />
         ))}
