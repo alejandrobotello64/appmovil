@@ -91,11 +91,13 @@ const EMPTY_ALTA: AltaFormState = {
 
 const MODULE_LABELS: Record<WarehouseModule, string> = {
   ...Object.fromEntries(WAREHOUSE_TABS.map((tab) => [tab.id, tab.label])),
+  calendario: "Calendario",
   usuarios: "Usuarios",
 } as Record<WarehouseModule, string>;
 
 const PERMISSION_MODULES: WarehouseModule[] = [
   ...(WAREHOUSE_TABS.map((tab) => tab.id) as WarehouseModule[]),
+  "calendario",
   "usuarios",
 ];
 

@@ -213,7 +213,7 @@ export function WarehouseDashboard() {
       label: "Calendario",
       value: "Agenda",
       icon: CalendarDays,
-      href: "/dashboard/almacen?tab=calendario",
+      href: "/dashboard/calendario",
       tone: "text-[#3B46A5]",
     },
     {

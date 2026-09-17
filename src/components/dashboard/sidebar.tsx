@@ -49,7 +49,6 @@ const TAB_ICONS = {
   proveedores: Truck,
   equipo: Wrench,
   mantenimientos: ClipboardList,
-  calendario: CalendarDays,
   reporte: FileBarChart2,
 } as const;
 
@@ -73,6 +72,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const activeUsersTab = normalizeUsersTab(searchParams.get("tab"));
   const inWarehouse = pathname.startsWith("/dashboard/almacen");
   const inUsers = pathname.startsWith("/dashboard/usuarios");
+  const inCalendar = pathname.startsWith("/dashboard/calendario");
   const [warehouseOpen, setWarehouseOpen] = useState(inWarehouse);
   const [usersOpen, setUsersOpen] = useState(inUsers);
   const [role, setRole] = useState("administrador");
@@ -169,7 +169,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               aria-expanded={warehouseOpen}
               className={cn(
                 "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                inWarehouse || warehouseOpen
+                inWarehouse
                   ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
@@ -216,6 +216,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             ) : null}
           </div>
 
+          {canViewModule(role, "calendario") ? (
+            <Link
+              href="/dashboard/calendario"
+              onClick={onClose}
+              className={cn(
+                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                inCalendar
+                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <CalendarDays className="size-4 shrink-0" />
+              Calendario
+            </Link>
+          ) : null}
+
           {canViewModule(role, "usuarios") ? (
             <div className="mt-2">
               <button
@@ -224,7 +240,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 aria-expanded={usersOpen}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                  inUsers || usersOpen
+                  inUsers
                     ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
@@ -270,7 +286,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
-            Panel principal, almacén y usuarios
+            Panel principal, almacén, calendario y usuarios
           </p>
         </div>
       </aside>
