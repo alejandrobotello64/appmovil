@@ -176,7 +176,7 @@ export function NewOrderForm({
   return (
     <form
       onSubmit={handleCreate}
-      className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:min-h-[calc(100dvh-7rem)]"
+      className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:h-[calc(100dvh-7rem)]"
     >
       <div className="flex shrink-0 flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div className="min-w-0">
@@ -205,8 +205,8 @@ export function NewOrderForm({
         </p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <section className="space-y-4 overflow-y-auto border-b border-border p-4 sm:p-5 lg:border-r lg:border-b-0">
+      <div className="grid min-h-0 flex-1 gap-0 overflow-hidden lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+        <section className="min-h-0 space-y-4 overflow-y-auto border-b border-border p-4 sm:p-5 lg:border-r lg:border-b-0">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
               <span className="text-sm font-medium">Proveedor</span>
@@ -396,7 +396,7 @@ export function NewOrderForm({
           </div>
         </section>
 
-        <section className="flex min-h-[280px] flex-col p-4 sm:p-5">
+        <section className="flex min-h-[280px] flex-col overflow-hidden p-4 sm:p-5 lg:min-h-0">
           <div className="mb-3 flex shrink-0 items-center justify-between gap-3">
             <h3 className="text-sm font-semibold">Líneas del pedido</h3>
             <p className="text-xs text-muted-foreground">
