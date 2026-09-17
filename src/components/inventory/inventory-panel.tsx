@@ -12,26 +12,28 @@ import {
 import {
   createInventoryItem,
   deleteInventoryItem,
-  getInventoryItems,
+  getEquipmentItems,
   getStockStatus,
+  getSupplyItemsByCategory,
   updateInventoryItem,
 } from "@/lib/inventory/storage";
 import {
   ASSET_STATUS_OPTIONS,
-  CATALOG_CATEGORIES,
+  categoryRequiresExpiry,
+  getSupplyCategoryMeta,
   INVENTORY_CATEGORIES,
-  PRODUCT_CATEGORIES,
-  categoryToItemKind,
   type InventoryCategoryId,
   type InventoryItem,
   type InventoryItemInput,
   type ItemKind,
   type StockStatus,
+  type SupplyCategoryId,
 } from "@/lib/inventory/types";
 import { cn } from "@/lib/utils";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { InventoryExcelActions } from "@/components/inventory/inventory-excel-actions";
+import type { WarehouseModule } from "@/lib/auth/permissions";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -59,57 +61,49 @@ function formatCurrency(value: number) {
 }
 
 type InventoryPanelProps = {
-  initialCategory?: string | null;
-  itemKind?: ItemKind;
-  /** Catálogo de productos con filtros por categoría (incluye equipos) */
-  catalogMode?: boolean;
+  /** Tabla propia por categoría, o equipos */
+  panelMode?: SupplyCategoryId | "equipment";
 };
 
-export function InventoryPanel({
-  initialCategory = null,
-  itemKind = "producto",
-  catalogMode = false,
-}: InventoryPanelProps) {
-  const { canWrite } = usePermissions(
-    !catalogMode && itemKind === "equipo" ? "equipo" : "productos"
-  );
+export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
+  const isEquipment = panelMode === "equipment";
+  const supplyCategory: SupplyCategoryId | null = isEquipment
+    ? null
+    : panelMode;
+  const permissionModule: WarehouseModule = isEquipment
+    ? "equipo"
+    : (supplyCategory as WarehouseModule);
+  const { canWrite } = usePermissions(permissionModule);
+  const supplyMeta = supplyCategory
+    ? getSupplyCategoryMeta(supplyCategory)
+    : null;
+  const requiresExpiry = supplyCategory
+    ? categoryRequiresExpiry(supplyCategory)
+    : false;
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<
-    InventoryCategoryId | "all"
-  >("all");
   const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const isEquipment = !catalogMode && itemKind === "equipo";
-  const categoryOptions = catalogMode
-    ? CATALOG_CATEGORIES
-    : isEquipment
-      ? INVENTORY_CATEGORIES.filter((item) => item.id === "equipos")
-      : PRODUCT_CATEGORIES;
 
-  const formItemKind: ItemKind = catalogMode
-    ? editingItem
-      ? editingItem.itemKind
-      : categoryFilter === "equipos"
-        ? "equipo"
-        : "producto"
-    : itemKind;
+  const formItemKind: ItemKind = isEquipment ? "equipo" : "producto";
 
   async function handleSubmit(data: InventoryItemInput) {
     try {
       setError("");
+      const category = isEquipment
+        ? "equipos"
+        : (supplyCategory ?? data.category);
       const payload: InventoryItemInput = {
         ...data,
-        itemKind: catalogMode
-          ? categoryToItemKind(data.category)
-          : itemKind,
-        category:
-          catalogMode && categoryToItemKind(data.category) === "equipo"
-            ? "equipos"
-            : data.category,
+        itemKind: formItemKind,
+        category,
+        tracksExpiry:
+          categoryRequiresExpiry(category) || Boolean(data.tracksExpiry),
+        tracksLot:
+          categoryRequiresExpiry(category) || Boolean(data.tracksLot),
       };
       if (editingItem) {
         await updateInventoryItem(editingItem.id, payload);
@@ -129,17 +123,6 @@ export function InventoryPanel({
     }
   }
 
-  useEffect(() => {
-    if (!initialCategory) {
-      setCategoryFilter("all");
-      return;
-    }
-    const valid = categoryOptions.some((item) => item.id === initialCategory);
-    if (valid) {
-      setCategoryFilter(initialCategory as InventoryCategoryId);
-    }
-  }, [initialCategory, categoryOptions]);
-
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const status = getStockStatus(item.quantity, item.minStock);
@@ -149,34 +132,22 @@ export function InventoryPanel({
           .join(" ")
           .toLowerCase()
           .includes(search.toLowerCase());
-      const matchesCategory =
-        categoryFilter === "all" || item.category === categoryFilter;
       const matchesStatus =
         isEquipment ||
         item.itemKind === "equipo" ||
         statusFilter === "all" ||
         status === statusFilter;
-      return matchesSearch && matchesCategory && matchesStatus;
+      return matchesSearch && matchesStatus;
     });
-  }, [items, search, categoryFilter, statusFilter, isEquipment]);
-
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: items.length };
-    for (const category of categoryOptions) {
-      counts[category.id] = items.filter(
-        (item) => item.category === category.id
-      ).length;
-    }
-    return counts;
-  }, [items, categoryOptions]);
+  }, [items, search, statusFilter, isEquipment]);
 
   async function refreshItems() {
     try {
       setLoading(true);
       setError("");
-      const data = catalogMode
-        ? await getInventoryItems()
-        : await getInventoryItems({ kind: itemKind });
+      const data = isEquipment
+        ? await getEquipmentItems()
+        : await getSupplyItemsByCategory(supplyCategory ?? "insumos");
       setItems(data);
     } catch (err) {
       setError(
@@ -191,7 +162,7 @@ export function InventoryPanel({
 
   useEffect(() => {
     void refreshItems();
-  }, [itemKind, catalogMode]);
+  }, [panelMode, isEquipment, supplyCategory]);
 
   function handleEdit(item: InventoryItem) {
     setEditingItem(item);
@@ -245,16 +216,14 @@ export function InventoryPanel({
               <h2 className="text-lg font-semibold text-foreground">
                 {isEquipment
                   ? "Equipos médicos"
-                  : catalogMode
-                    ? "Catálogo de productos"
-                    : "Productos consumibles"}
+                  : supplyMeta?.label ?? "Catálogo"}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {isEquipment
                   ? "Activos con número de serie, estado operativo y mantenimiento."
-                  : catalogMode
-                    ? "Identifica por equipos, refacciones, accesorios, insumos y medicamentos."
-                    : "Insumos, medicamentos, refacciones, accesorios y reactivos."}
+                  : requiresExpiry
+                    ? `${supplyMeta?.description ?? ""}. Caducidad y lote obligatorios.`
+                    : `${supplyMeta?.description ?? ""}. Tabla propia sin caducidad obligatoria.`}
               </p>
             </div>
             {canWrite ? (
@@ -274,7 +243,9 @@ export function InventoryPanel({
                 className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
               >
                 <Plus className="size-4" />
-                {isEquipment ? "Nuevo equipo" : "Nuevo producto"}
+                {isEquipment
+                  ? "Nuevo equipo"
+                  : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
               </Button>
             </div>
             ) : (
@@ -288,41 +259,7 @@ export function InventoryPanel({
             )}
           </div>
 
-          {catalogMode || !isEquipment ? (
-            <div className="hidden flex-wrap gap-2 border-b border-border px-4 py-3 md:flex">
-              <button
-                type="button"
-                onClick={() => setCategoryFilter("all")}
-                className={cn(
-                  "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                  categoryFilter === "all"
-                    ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Todos ({categoryCounts.all ?? 0})
-              </button>
-              {categoryOptions.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() =>
-                    setCategoryFilter(category.id as InventoryCategoryId)
-                  }
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                    categoryFilter === category.id
-                      ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {category.label} ({categoryCounts[category.id] ?? 0})
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[1fr_auto_auto]">
+          <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[1fr_auto]">
             <label className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -332,22 +269,6 @@ export function InventoryPanel({
                 className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-10 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20"
               />
             </label>
-            <select
-              value={categoryFilter}
-              onChange={(event) =>
-                setCategoryFilter(
-                  event.target.value as InventoryCategoryId | "all"
-                )
-              }
-              className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            >
-              <option value="all">Todas las categorías</option>
-              {categoryOptions.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
             {!isEquipment ? (
               <select
                 value={statusFilter}
@@ -367,7 +288,11 @@ export function InventoryPanel({
           </div>
 
           <ResponsiveDataList
-            emptyMessage="No hay productos que coincidan con los filtros."
+            emptyMessage={
+              isEquipment
+                ? "No hay equipos que coincidan con los filtros."
+                : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`
+            }
             items={filteredItems.map((item) => {
               const status = getStockStatus(item.quantity, item.minStock);
               return {
@@ -462,7 +387,9 @@ export function InventoryPanel({
                       colSpan={8}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
-                      No hay productos que coincidan con los filtros.
+                      {isEquipment
+                        ? "No hay equipos que coincidan con los filtros."
+                        : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`}
                     </td>
                   </tr>
                 ) : (
@@ -583,27 +510,23 @@ export function InventoryPanel({
                 {editingItem
                   ? isEquipment
                     ? "Editar equipo"
-                    : "Editar producto"
+                    : `Editar ${supplyMeta?.label.toLowerCase() ?? "artículo"}`
                   : isEquipment
                     ? "Nuevo equipo médico"
-                    : "Nuevo producto consumible"}
+                    : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {isEquipment
                   ? "Los equipos se gestionan como activos, no como stock consumible."
-                  : "Los productos consumibles controlan existencias y caducidad."}
+                  : requiresExpiry
+                    ? "Esta tabla exige control de caducidad y lote en entradas."
+                    : "Tabla propia de refacciones/accesorios sin caducidad obligatoria."}
               </p>
             </div>
             <InventoryForm
               item={editingItem}
-              itemKind={
-                catalogMode
-                  ? editingItem
-                    ? editingItem.itemKind
-                    : formItemKind
-                  : itemKind
-              }
-              catalogCategories={catalogMode}
+              itemKind={formItemKind}
+              lockedCategory={supplyCategory ?? undefined}
               onSubmit={handleSubmit}
               onCancel={() => {
                 setFormOpen(false);

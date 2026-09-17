@@ -19,6 +19,17 @@ export type Database = {
           is_active: boolean;
           created_at: string;
           updated_at: string;
+          email: string;
+          phone: string;
+          employee_number: string;
+          curp: string;
+          rfc: string;
+          job_title: string;
+          department: string;
+          hire_date: string | null;
+          birth_date: string | null;
+          address: string;
+          notes: string;
         };
         Insert: {
           id?: string;
@@ -29,6 +40,17 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          email?: string;
+          phone?: string;
+          employee_number?: string;
+          curp?: string;
+          rfc?: string;
+          job_title?: string;
+          department?: string;
+          hire_date?: string | null;
+          birth_date?: string | null;
+          address?: string;
+          notes?: string;
         };
         Update: {
           id?: string;
@@ -39,6 +61,17 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          email?: string;
+          phone?: string;
+          employee_number?: string;
+          curp?: string;
+          rfc?: string;
+          job_title?: string;
+          department?: string;
+          hire_date?: string | null;
+          birth_date?: string | null;
+          address?: string;
+          notes?: string;
         };
         Relationships: [];
       };
@@ -390,6 +423,17 @@ export type Database = {
           role: string;
           is_active: boolean;
           created_at: string;
+          email: string;
+          phone: string;
+          employee_number: string;
+          curp: string;
+          rfc: string;
+          job_title: string;
+          department: string;
+          hire_date: string | null;
+          birth_date: string | null;
+          address: string;
+          notes: string;
         }[];
       };
       create_app_user: {
@@ -398,6 +442,55 @@ export type Database = {
           p_password: string;
           p_full_name?: string | null;
           p_role?: string;
+          p_email?: string;
+          p_phone?: string;
+          p_employee_number?: string;
+          p_curp?: string;
+          p_rfc?: string;
+          p_job_title?: string;
+          p_department?: string;
+          p_hire_date?: string | null;
+          p_birth_date?: string | null;
+          p_address?: string;
+          p_notes?: string;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+          is_active: boolean;
+        }[];
+      };
+      set_app_user_active: {
+        Args: {
+          p_user_id: string;
+          p_is_active: boolean;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+          is_active: boolean;
+        }[];
+      };
+      update_app_user_access: {
+        Args: {
+          p_user_id: string;
+          p_role: string;
+          p_full_name?: string | null;
+          p_email?: string | null;
+          p_phone?: string | null;
+          p_employee_number?: string | null;
+          p_curp?: string | null;
+          p_rfc?: string | null;
+          p_job_title?: string | null;
+          p_department?: string | null;
+          p_hire_date?: string | null;
+          p_birth_date?: string | null;
+          p_address?: string | null;
+          p_notes?: string | null;
         };
         Returns: {
           id: string;

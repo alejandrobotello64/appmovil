@@ -6,10 +6,34 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=dashboard",
   },
   {
-    id: "productos",
-    label: "Productos",
-    description: "Catálogo y existencias",
-    href: "/dashboard/almacen?tab=productos",
+    id: "insumos",
+    label: "Insumos",
+    description: "Material de consumo con caducidad",
+    href: "/dashboard/almacen?tab=insumos",
+  },
+  {
+    id: "medicamentos",
+    label: "Medicamentos",
+    description: "Fármacos con caducidad y lote",
+    href: "/dashboard/almacen?tab=medicamentos",
+  },
+  {
+    id: "refacciones",
+    label: "Refacciones",
+    description: "Piezas y componentes de equipos",
+    href: "/dashboard/almacen?tab=refacciones",
+  },
+  {
+    id: "accesorios",
+    label: "Accesorios",
+    description: "Complementos y accesorios",
+    href: "/dashboard/almacen?tab=accesorios",
+  },
+  {
+    id: "reactivos",
+    label: "Reactivos",
+    description: "Reactivos de laboratorio con caducidad",
+    href: "/dashboard/almacen?tab=reactivos",
   },
   {
     id: "entradas",
@@ -49,7 +73,7 @@ export const WAREHOUSE_TABS = [
   },
   {
     id: "equipo",
-    label: "Equipo",
+    label: "Equipos",
     description: "Equipos médicos del almacén",
     href: "/dashboard/almacen?tab=equipo",
   },
@@ -65,15 +89,23 @@ export const WAREHOUSE_TABS = [
     description: "Reportes operativos del almacén",
     href: "/dashboard/almacen?tab=reporte",
   },
-  {
-    id: "usuarios",
-    label: "Usuarios",
-    description: "Usuarios con acceso al sistema",
-    href: "/dashboard/almacen?tab=usuarios",
-  },
 ] as const;
 
 export type WarehouseTabId = (typeof WAREHOUSE_TABS)[number]["id"];
+
+const LEGACY_TAB_ALIASES: Record<string, WarehouseTabId> = {
+  productos: "insumos",
+};
+
+export function normalizeWarehouseTab(
+  value: string | null
+): WarehouseTabId | null {
+  if (!value) return null;
+  if (value in LEGACY_TAB_ALIASES) {
+    return LEGACY_TAB_ALIASES[value];
+  }
+  return isWarehouseTabId(value) ? value : null;
+}
 
 export function isWarehouseTabId(value: string | null): value is WarehouseTabId {
   return WAREHOUSE_TABS.some((tab) => tab.id === value);

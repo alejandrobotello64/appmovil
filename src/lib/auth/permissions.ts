@@ -12,7 +12,11 @@ export const APP_ROLES = [
 export type AppRole = (typeof APP_ROLES)[number]["id"];
 export type WarehouseModule =
   | "dashboard"
-  | "productos"
+  | "insumos"
+  | "medicamentos"
+  | "refacciones"
+  | "accesorios"
+  | "reactivos"
   | "entradas"
   | "salidas"
   | "movimientos"
@@ -23,6 +27,14 @@ export type WarehouseModule =
   | "mantenimientos"
   | "reporte"
   | "usuarios";
+
+const CATALOG_MODULES: WarehouseModule[] = [
+  "insumos",
+  "medicamentos",
+  "refacciones",
+  "accesorios",
+  "reactivos",
+];
 
 const ROLE_ALIASES: Record<string, AppRole> = {
   admin: "administrador",
@@ -39,7 +51,7 @@ const ROLE_ALIASES: Record<string, AppRole> = {
 const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
   administrador: [
     "dashboard",
-    "productos",
+    ...CATALOG_MODULES,
     "entradas",
     "salidas",
     "movimientos",
@@ -53,7 +65,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
   ],
   almacen: [
     "dashboard",
-    "productos",
+    ...CATALOG_MODULES,
     "entradas",
     "salidas",
     "movimientos",
@@ -63,10 +75,25 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "equipo",
     "reporte",
   ],
-  compras: ["dashboard", "productos", "entradas", "pedidos", "proveedores", "kardex", "reporte"],
-  ventas: ["dashboard", "productos", "kardex", "reporte"],
-  servicio: ["dashboard", "productos", "salidas", "equipo", "mantenimientos", "kardex"],
-  direccion: ["dashboard", "productos", "kardex", "reporte", "equipo"],
+  compras: [
+    "dashboard",
+    ...CATALOG_MODULES,
+    "entradas",
+    "pedidos",
+    "proveedores",
+    "kardex",
+    "reporte",
+  ],
+  ventas: ["dashboard", ...CATALOG_MODULES, "kardex", "reporte"],
+  servicio: [
+    "dashboard",
+    ...CATALOG_MODULES,
+    "salidas",
+    "equipo",
+    "mantenimientos",
+    "kardex",
+  ],
+  direccion: ["dashboard", ...CATALOG_MODULES, "kardex", "reporte", "equipo"],
 };
 
 export function normalizeRole(role: string | null | undefined): AppRole {
@@ -99,4 +126,15 @@ export function roleFromSession(session: SessionData | null) {
 export function roleLabel(role: string | null | undefined) {
   const normalized = normalizeRole(role);
   return APP_ROLES.find((item) => item.id === normalized)?.label ?? role ?? "Dirección";
+}
+
+export function modulesForRole(role: string | null | undefined): WarehouseModule[] {
+  return [...WRITE_MODULES[normalizeRole(role)]];
+}
+
+export function roleCanWrite(
+  role: string | null | undefined,
+  module: WarehouseModule
+): boolean {
+  return canWriteModule(role, module);
 }

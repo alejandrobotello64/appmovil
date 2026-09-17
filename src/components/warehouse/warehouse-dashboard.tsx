@@ -12,10 +12,11 @@ import {
   Wrench,
 } from "lucide-react";
 import {
-  getInventoryItems,
+  getEquipmentItems,
   getStockStatus,
+  getSupplyItems,
 } from "@/lib/inventory/storage";
-import { PRODUCT_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
+import { SUPPLY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
 import { getMaintenances } from "@/lib/warehouse/maintenances";
@@ -47,8 +48,8 @@ export function WarehouseDashboard() {
 
   useEffect(() => {
     void Promise.all([
-      getInventoryItems({ kind: "producto" }),
-      getInventoryItems({ kind: "equipo" }),
+      getSupplyItems(),
+      getEquipmentItems(),
       getSuppliers(),
       getPurchaseOrders(),
       getMaintenances(),
@@ -92,7 +93,7 @@ export function WarehouseDashboard() {
       (item) => item.assetStatus === "operativo"
     ).length;
     const activeSuppliers = suppliers.filter((item) => item.isActive).length;
-    const categoriesUsed = PRODUCT_CATEGORIES.filter((category) =>
+    const categoriesUsed = SUPPLY_CATEGORIES.filter((category) =>
       products.some((item) => item.category === category.id)
     ).length;
 
@@ -145,21 +146,21 @@ export function WarehouseDashboard() {
 
   const cards = [
     {
-      label: "Productos consumibles",
+      label: "Insumos",
       value: stats.totalProducts,
       icon: Package,
-      href: "/dashboard/almacen?tab=productos",
+      href: "/dashboard/almacen?tab=insumos",
       tone: "text-[#3B46A5]",
     },
     {
       label: "Unidades en stock",
       value: stats.totalUnits,
       icon: Boxes,
-      href: "/dashboard/almacen?tab=productos",
+      href: "/dashboard/almacen?tab=insumos",
       tone: "text-[#00BFFF]",
     },
     {
-      label: "Valor de productos",
+      label: "Valor de insumos",
       value: formatCurrency(stats.inventoryValue),
       icon: ClipboardList,
       href: "/dashboard/almacen?tab=reporte",
@@ -169,14 +170,14 @@ export function WarehouseDashboard() {
       label: "Bajo stock",
       value: stats.lowStock,
       icon: AlertTriangle,
-      href: "/dashboard/almacen?tab=productos",
+      href: "/dashboard/almacen?tab=insumos",
       tone: "text-amber-600",
     },
     {
       label: "Agotados",
       value: stats.outOfStock,
       icon: PackageX,
-      href: "/dashboard/almacen?tab=productos",
+      href: "/dashboard/almacen?tab=insumos",
       tone: "text-destructive",
     },
     {
@@ -232,9 +233,9 @@ export function WarehouseDashboard() {
           Dashboard operativo
         </h2>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Separa el control de <strong>productos consumibles</strong> (insumos,
-          medicamentos, refacciones) del control de{" "}
-          <strong>equipos médicos</strong> (activos con serie y mantenimiento).
+          Separa el control por tablas: <strong>insumos/medicamentos/reactivos</strong>{" "}
+          (con caducidad), <strong>refacciones/accesorios</strong> y{" "}
+          <strong>equipos médicos</strong>.
         </p>
       </section>
 

@@ -4,28 +4,36 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ASSET_STATUS_OPTIONS,
-  CATALOG_CATEGORIES,
+  categoryRequiresExpiry,
+  getSupplyCategoryMeta,
   INVENTORY_UNITS,
-  PRODUCT_CATEGORIES,
-  categoryToItemKind,
   type InventoryItem,
   type InventoryItemInput,
   type ItemKind,
+  type SupplyCategoryId,
 } from "@/lib/inventory/types";
 
 type InventoryFormProps = {
   item?: InventoryItem | null;
   itemKind?: ItemKind;
-  catalogCategories?: boolean;
+  /** Bloquea la categoría a una tabla propia */
+  lockedCategory?: SupplyCategoryId;
   onSubmit: (data: InventoryItemInput) => void;
   onCancel: () => void;
 };
 
-function emptyForm(kind: ItemKind): InventoryItemInput {
+function emptyForm(
+  kind: ItemKind,
+  lockedCategory?: SupplyCategoryId
+): InventoryItemInput {
+  const category =
+    kind === "equipo" ? "equipos" : lockedCategory ?? "insumos";
+  const requiresExpiry =
+    kind !== "equipo" && categoryRequiresExpiry(category);
   return {
     sku: "",
     name: "",
-    category: kind === "equipo" ? "equipos" : "insumos",
+    category,
     itemKind: kind,
     description: "",
     quantity: kind === "equipo" ? 1 : 0,
@@ -43,9 +51,9 @@ function emptyForm(kind: ItemKind): InventoryItemInput {
     lastMaintenanceDate: "",
     nextMaintenanceDate: "",
     isActive: true,
-    tracksLot: kind !== "equipo",
+    tracksLot: kind !== "equipo" ? requiresExpiry : false,
     tracksSerial: kind === "equipo",
-    tracksExpiry: false,
+    tracksExpiry: requiresExpiry,
     maxStock: 0,
     reorderPoint: 0,
     partNumber: "",
@@ -57,70 +65,73 @@ function emptyForm(kind: ItemKind): InventoryItemInput {
 export function InventoryForm({
   item,
   itemKind = "producto",
-  catalogCategories = false,
+  lockedCategory,
   onSubmit,
   onCancel,
 }: InventoryFormProps) {
-  const [form, setForm] = useState<InventoryItemInput>(emptyForm(itemKind));
+  const [form, setForm] = useState<InventoryItemInput>(
+    emptyForm(itemKind, lockedCategory)
+  );
 
   useEffect(() => {
     if (!item) {
-      setForm(emptyForm(itemKind));
+      setForm(emptyForm(itemKind, lockedCategory));
       return;
     }
     const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } =
       item;
-    setForm({ ...rest, itemKind: item.itemKind || itemKind });
-  }, [item, itemKind]);
+    const category =
+      itemKind === "equipo"
+        ? "equipos"
+        : lockedCategory ?? item.category;
+    setForm({
+      ...rest,
+      itemKind: item.itemKind || itemKind,
+      category,
+      tracksExpiry:
+        categoryRequiresExpiry(category) || Boolean(rest.tracksExpiry),
+      tracksLot: categoryRequiresExpiry(category) || Boolean(rest.tracksLot),
+    });
+  }, [item, itemKind, lockedCategory]);
 
   function handleChange<K extends keyof InventoryItemInput>(
     key: K,
     value: InventoryItemInput[K]
   ) {
-    setForm((current) => {
-      const next = { ...current, [key]: value };
-      if (key === "category") {
-        const kind = categoryToItemKind(
-          value as InventoryItemInput["category"]
-        );
-        next.itemKind = kind;
-        if (kind === "equipo") {
-          next.category = "equipos";
-          next.quantity = Math.max(1, current.quantity || 1);
-        }
-      }
-      return next;
-    });
+    setForm((current) => ({ ...current, [key]: value }));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const resolvedKind = catalogCategories
-      ? categoryToItemKind(form.category)
-      : itemKind;
+    const category =
+      itemKind === "equipo" ? "equipos" : lockedCategory ?? form.category;
+    const requiresExpiry = categoryRequiresExpiry(category);
     onSubmit({
       ...form,
-      itemKind: resolvedKind,
-      category: resolvedKind === "equipo" ? "equipos" : form.category,
-      quantity:
-        resolvedKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
+      itemKind,
+      category,
+      quantity: itemKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
+      tracksExpiry: requiresExpiry || form.tracksExpiry,
+      tracksLot: requiresExpiry || form.tracksLot,
     });
   }
 
-  const isEquipment =
-    (catalogCategories
-      ? categoryToItemKind(form.category)
-      : itemKind) === "equipo";
-  const categoryChoices = catalogCategories
-    ? CATALOG_CATEGORIES
-    : PRODUCT_CATEGORIES;
+  const isEquipment = itemKind === "equipo";
+  const lockedMeta = lockedCategory
+    ? getSupplyCategoryMeta(lockedCategory)
+    : null;
+  const requiresExpiry =
+    !isEquipment &&
+    categoryRequiresExpiry(lockedCategory ?? form.category);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
         {isEquipment
           ? "Registro de equipo médico (activo): control por serie, estado y mantenimiento."
-          : "Registro de producto consumible: insumos, medicamentos, refacciones y similares."}
+          : requiresExpiry
+            ? `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} con caducidad y lote obligatorios.`
+            : `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} en tabla propia.`}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -135,7 +146,9 @@ export function InventoryForm({
         </label>
         <label className="space-y-1.5">
           <span className="text-sm font-medium">
-            {isEquipment ? "Nombre del equipo" : "Nombre del producto"}
+            {isEquipment
+              ? "Nombre del equipo"
+              : `Nombre del ${lockedMeta?.label.toLowerCase() ?? "artículo"}`}
           </span>
           <input
             required
@@ -145,26 +158,13 @@ export function InventoryForm({
           />
         </label>
 
-        {!isEquipment || catalogCategories ? (
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">Categoría</span>
-            <select
-              value={form.category}
-              onChange={(event) =>
-                handleChange(
-                  "category",
-                  event.target.value as InventoryItemInput["category"]
-                )
-              }
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            >
-              {categoryChoices.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
-          </label>
+        {!isEquipment && lockedMeta ? (
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium">Tabla</span>
+            <p className="flex h-10 items-center rounded-lg border border-input bg-muted/40 px-3 text-sm">
+              {lockedMeta.label}
+            </p>
+          </div>
         ) : null}
 
         {isEquipment ? (
@@ -343,10 +343,11 @@ export function InventoryForm({
         <label className="flex items-center gap-2 text-sm md:col-span-2">
           <input
             type="checkbox"
-            checked={form.tracksLot}
+            checked={form.tracksLot || requiresExpiry}
+            disabled={requiresExpiry}
             onChange={(event) => handleChange("tracksLot", event.target.checked)}
           />
-          Control por lote
+          Control por lote{requiresExpiry ? " (obligatorio)" : ""}
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -361,17 +362,21 @@ export function InventoryForm({
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
-            checked={form.tracksExpiry}
+            checked={form.tracksExpiry || requiresExpiry}
+            disabled={requiresExpiry}
             onChange={(event) =>
               handleChange("tracksExpiry", event.target.checked)
             }
           />
-          Control de caducidad
+          Control de caducidad{requiresExpiry ? " (obligatorio)" : ""}
         </label>
 
         {!isEquipment ? (
           <label className="space-y-1.5 md:col-span-2">
-            <span className="text-sm font-medium">Fecha de caducidad</span>
+            <span className="text-sm font-medium">
+              Fecha de caducidad
+              {requiresExpiry ? " (se captura en entradas)" : ""}
+            </span>
             <input
               type="date"
               value={form.expiryDate}

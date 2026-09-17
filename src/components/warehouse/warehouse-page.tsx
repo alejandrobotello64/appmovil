@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { InventoryPanel } from "@/components/inventory/inventory-panel";
 import { WarehouseDashboard } from "@/components/warehouse/warehouse-dashboard";
@@ -11,32 +11,47 @@ import { MovementsPanel } from "@/components/warehouse/movements-panel";
 import { OrdersPanel } from "@/components/warehouse/orders-panel";
 import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
-import { UsersPanel } from "@/components/warehouse/users-panel";
 import { KardexPanel } from "@/components/warehouse/kardex-panel";
 import { getSession } from "@/lib/auth";
 import { canViewModule, type WarehouseModule } from "@/lib/auth/permissions";
 import {
   WAREHOUSE_TABS,
-  isWarehouseTabId,
+  normalizeWarehouseTab,
   type WarehouseTabId,
 } from "@/lib/warehouse/tabs";
+import type { SupplyCategoryId } from "@/lib/inventory/types";
+
+const SUPPLY_TABS: SupplyCategoryId[] = [
+  "insumos",
+  "medicamentos",
+  "refacciones",
+  "accesorios",
+  "reactivos",
+];
 
 export function WarehousePage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const categoryParam = searchParams.get("category");
-  const activeTab: WarehouseTabId = isWarehouseTabId(tabParam)
-    ? tabParam
-    : "dashboard";
+  const activeTab: WarehouseTabId = normalizeWarehouseTab(tabParam) ?? "dashboard";
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     setRole(getSession()?.role ?? "direccion");
   }, []);
 
+  useEffect(() => {
+    if (tabParam === "usuarios") {
+      router.replace("/dashboard/usuarios");
+    }
+  }, [tabParam, router]);
+
   const activeTabMeta = WAREHOUSE_TABS.find((tab) => tab.id === activeTab);
   const allowed =
     role === null || canViewModule(role, activeTab as WarehouseModule);
+  const supplyTab = SUPPLY_TABS.includes(activeTab as SupplyCategoryId)
+    ? (activeTab as SupplyCategoryId)
+    : null;
 
   return (
     <AppShell
@@ -56,12 +71,7 @@ export function WarehousePage() {
           <>
             {activeTab === "dashboard" ? <WarehouseDashboard /> : null}
 
-            {activeTab === "productos" ? (
-              <InventoryPanel
-                catalogMode
-                initialCategory={categoryParam}
-              />
-            ) : null}
+            {supplyTab ? <InventoryPanel panelMode={supplyTab} /> : null}
 
             {activeTab === "entradas" ? (
               <StockMovementPanel mode="entrada" />
@@ -80,14 +90,12 @@ export function WarehousePage() {
             {activeTab === "proveedores" ? <SuppliersPanel /> : null}
 
             {activeTab === "equipo" ? (
-              <InventoryPanel itemKind="equipo" />
+              <InventoryPanel panelMode="equipment" />
             ) : null}
 
             {activeTab === "mantenimientos" ? <MaintenancesPanel /> : null}
 
             {activeTab === "reporte" ? <ReportPanel /> : null}
-
-            {activeTab === "usuarios" ? <UsersPanel /> : null}
           </>
         )}
       </div>

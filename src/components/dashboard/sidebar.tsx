@@ -6,28 +6,40 @@ import { useEffect, useState } from "react";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  Beaker,
   ChevronDown,
   ClipboardList,
   FileBarChart2,
   LayoutDashboard,
   Package,
+  Pill,
+  Puzzle,
+  Settings2,
   ShoppingCart,
   Truck,
   Users,
+  UserMinus,
+  UserPlus,
   Warehouse,
   Wrench,
   History,
   BookOpen,
+  Shield,
   X,
 } from "lucide-react";
-import { WAREHOUSE_TABS } from "@/lib/warehouse/tabs";
+import { WAREHOUSE_TABS, normalizeWarehouseTab } from "@/lib/warehouse/tabs";
+import { USERS_TABS, normalizeUsersTab } from "@/lib/users/tabs";
 import { canViewModule, type WarehouseModule } from "@/lib/auth/permissions";
 import { getSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const TAB_ICONS = {
   dashboard: LayoutDashboard,
-  productos: Package,
+  insumos: Package,
+  medicamentos: Pill,
+  refacciones: Settings2,
+  accesorios: Puzzle,
+  reactivos: Beaker,
   entradas: ArrowDownToLine,
   salidas: ArrowUpFromLine,
   movimientos: History,
@@ -37,7 +49,13 @@ const TAB_ICONS = {
   equipo: Wrench,
   mantenimientos: ClipboardList,
   reporte: FileBarChart2,
-  usuarios: Users,
+} as const;
+
+const USER_TAB_ICONS = {
+  dashboard: LayoutDashboard,
+  alta: UserPlus,
+  baja: UserMinus,
+  permisos: Shield,
 } as const;
 
 type SidebarProps = {
@@ -49,9 +67,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get("tab");
+  const activeWarehouseTab = normalizeWarehouseTab(searchParams.get("tab"));
+  const activeUsersTab = normalizeUsersTab(searchParams.get("tab"));
   const inWarehouse = pathname.startsWith("/dashboard/almacen");
+  const inUsers = pathname.startsWith("/dashboard/usuarios");
   const [warehouseOpen, setWarehouseOpen] = useState(inWarehouse);
+  const [usersOpen, setUsersOpen] = useState(inUsers);
   const [role, setRole] = useState("administrador");
 
   useEffect(() => {
@@ -62,11 +83,23 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     if (inWarehouse) setWarehouseOpen(true);
   }, [inWarehouse]);
 
+  useEffect(() => {
+    if (inUsers) setUsersOpen(true);
+  }, [inUsers]);
+
   function handleWarehouseClick() {
     const nextOpen = !warehouseOpen;
     setWarehouseOpen(nextOpen);
     if (nextOpen) {
       router.push("/dashboard/almacen?tab=dashboard");
+    }
+  }
+
+  function handleUsersClick() {
+    const nextOpen = !usersOpen;
+    setUsersOpen(nextOpen);
+    if (nextOpen) {
+      router.push("/dashboard/usuarios?tab=dashboard");
     }
   }
 
@@ -157,8 +190,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   const Icon = TAB_ICONS[tab.id];
                   const isActive =
                     inWarehouse &&
-                    (activeTab === tab.id ||
-                      (!activeTab && tab.id === "dashboard"));
+                    (activeWarehouseTab === tab.id ||
+                      (!activeWarehouseTab && tab.id === "dashboard"));
 
                   return (
                     <Link
@@ -180,11 +213,62 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               </div>
             ) : null}
           </div>
+
+          {canViewModule(role, "usuarios") ? (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={handleUsersClick}
+                aria-expanded={usersOpen}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                  inUsers || usersOpen
+                    ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <Users className="size-4 shrink-0" />
+                <span className="flex-1">Usuarios</span>
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform",
+                    usersOpen ? "rotate-180" : "rotate-0"
+                  )}
+                />
+              </button>
+
+              {usersOpen ? (
+                <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
+                  {USERS_TABS.map((tab) => {
+                    const Icon = USER_TAB_ICONS[tab.id];
+                    const isActive = inUsers && activeUsersTab === tab.id;
+
+                    return (
+                      <Link
+                        key={tab.id}
+                        href={tab.href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                          isActive
+                            ? "bg-muted font-medium text-foreground"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="size-3.5 shrink-0" />
+                        {tab.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </nav>
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
-            Dashboard y operaciones de almacén
+            Panel principal, almacén y usuarios
           </p>
         </div>
       </aside>

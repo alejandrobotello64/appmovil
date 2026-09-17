@@ -7,6 +7,11 @@ import type {
   InventoryItemInput,
   InventoryUnit,
   ItemKind,
+  SupplyCategoryId,
+} from "./types";
+import {
+  categoryRequiresExpiry,
+  SUPPLY_CATEGORY_IDS,
 } from "./types";
 
 type InventoryRow = Database["public"]["Tables"]["inventory_items"]["Row"];
@@ -96,11 +101,11 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     tracks_lot:
       Boolean(input.tracksLot) ||
       (itemKind !== "equipo" &&
-        (input.category === "medicamentos" || Boolean(input.expiryDate))),
+        (categoryRequiresExpiry(input.category) || Boolean(input.expiryDate))),
     tracks_serial: input.tracksSerial || itemKind === "equipo",
     tracks_expiry:
       input.tracksExpiry ||
-      input.category === "medicamentos" ||
+      categoryRequiresExpiry(input.category) ||
       Boolean(input.expiryDate),
     max_stock: input.maxStock ?? 0,
     reorder_point: input.reorderPoint || input.minStock,
@@ -110,10 +115,11 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
   };
 }
 
-export async function getInventoryItems(options?: {
+async function fetchInventoryRows(options?: {
   kind?: ItemKind;
+  categories?: SupplyCategoryId[];
   includeInactive?: boolean;
-}): Promise<InventoryItem[]> {
+}): Promise<InventoryRow[]> {
   const pageSize = 1000;
   const rows: InventoryRow[] = [];
   let from = 0;
@@ -127,6 +133,9 @@ export async function getInventoryItems(options?: {
 
     if (options?.kind) {
       query = query.eq("item_kind", options.kind);
+    }
+    if (options?.categories?.length) {
+      query = query.in("category", options.categories);
     }
     if (!options?.includeInactive) {
       query = query.eq("is_active", true);
@@ -144,6 +153,50 @@ export async function getInventoryItems(options?: {
     from += pageSize;
   }
 
+  return rows;
+}
+
+export async function getInventoryItems(options?: {
+  kind?: ItemKind;
+  includeInactive?: boolean;
+}): Promise<InventoryItem[]> {
+  const rows = await fetchInventoryRows(options);
+  return rows.map(mapRowToItem);
+}
+
+/** Todas las tablas de consumibles (sin equipos) */
+export async function getSupplyItems(options?: {
+  includeInactive?: boolean;
+}): Promise<InventoryItem[]> {
+  const rows = await fetchInventoryRows({
+    kind: "producto",
+    categories: [...SUPPLY_CATEGORY_IDS],
+    includeInactive: options?.includeInactive,
+  });
+  return rows.map(mapRowToItem);
+}
+
+/** Una sola categoría / tabla lógica (insumos, medicamentos, etc.) */
+export async function getSupplyItemsByCategory(
+  category: SupplyCategoryId,
+  options?: { includeInactive?: boolean }
+): Promise<InventoryItem[]> {
+  const rows = await fetchInventoryRows({
+    kind: "producto",
+    categories: [category],
+    includeInactive: options?.includeInactive,
+  });
+  return rows.map(mapRowToItem);
+}
+
+/** Equipos médicos (activos con serie y mantenimiento) */
+export async function getEquipmentItems(options?: {
+  includeInactive?: boolean;
+}): Promise<InventoryItem[]> {
+  const rows = await fetchInventoryRows({
+    kind: "equipo",
+    includeInactive: options?.includeInactive,
+  });
   return rows.map(mapRowToItem);
 }
 

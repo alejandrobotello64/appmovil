@@ -1,10 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ModalShell } from "@/components/ui/modal-shell";
+import { InventoryForm } from "@/components/inventory/inventory-form";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
-import { getInventoryItems } from "@/lib/inventory/storage";
-import type { InventoryItem } from "@/lib/inventory/types";
+import {
+  createInventoryItem,
+  getEquipmentItems,
+  getSupplyItemsByCategory,
+} from "@/lib/inventory/storage";
+import type {
+  InventoryItem,
+  InventoryItemInput,
+  SupplyCategoryId,
+} from "@/lib/inventory/types";
+import {
+  SUPPLY_CATEGORIES,
+  categoryRequiresExpiry,
+} from "@/lib/inventory/types";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
@@ -20,13 +35,17 @@ import {
   type Warehouse,
   type WarehouseLocation,
 } from "@/lib/warehouse/stock";
+import { cn } from "@/lib/utils";
 
 type StockMovementPanelProps = {
   mode: "entrada" | "salida";
 };
 
+type CatalogKind = SupplyCategoryId | "equipos";
+
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
+  const [catalogKind, setCatalogKind] = useState<CatalogKind>("insumos");
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
@@ -48,13 +67,30 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [equipmentFormOpen, setEquipmentFormOpen] = useState(false);
+  const [creatingEquipment, setCreatingEquipment] = useState(false);
+
+  const isEquipmentCatalog = catalogKind === "equipos";
+  const requiresExpiry =
+    !isEquipmentCatalog && categoryRequiresExpiry(catalogKind);
+
+  async function loadCatalog(kind: CatalogKind) {
+    const data =
+      kind === "equipos"
+        ? await getEquipmentItems()
+        : await getSupplyItemsByCategory(kind);
+    setItems(data);
+    setItemId((current) =>
+      data.some((item) => item.id === current) ? current : data[0]?.id ?? ""
+    );
+    return data;
+  }
 
   useEffect(() => {
-    void Promise.all([getInventoryItems({ kind: "producto" }), getWarehouses()])
-      .then(([data, warehouseList]) => {
-        setItems(data);
+    setLoading(true);
+    void Promise.all([loadCatalog(catalogKind), getWarehouses()])
+      .then(([, warehouseList]) => {
         setWarehouses(warehouseList);
-        if (data[0]) setItemId(data[0].id);
         const defaultWarehouse =
           warehouseList.find((item) => item.isDefault) ?? warehouseList[0];
         if (defaultWarehouse) setWarehouseId(defaultWarehouse.id);
@@ -65,7 +101,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         );
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [catalogKind]);
 
   useEffect(() => {
     if (!warehouseId) return;
@@ -87,7 +123,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   );
 
   useEffect(() => {
-    if (!itemId || mode !== "salida") {
+    if (!itemId || mode !== "salida" || isEquipmentCatalog) {
       setLots([]);
       return;
     }
@@ -98,7 +134,57 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setExpiryDate(rows[0]?.expiryDate ?? "");
       })
       .catch(() => setLots([]));
-  }, [itemId, mode]);
+  }, [itemId, mode, isEquipmentCatalog]);
+
+  useEffect(() => {
+    if (isEquipmentCatalog) {
+      setQuantity(1);
+      setLotNumber("");
+      setExpiryDate("");
+    }
+  }, [isEquipmentCatalog]);
+
+  async function handleCreateEquipment(data: InventoryItemInput) {
+    try {
+      setCreatingEquipment(true);
+      setError("");
+      setMessage("");
+      const session = getSession();
+      if (!session?.username) {
+        throw new Error("Inicia sesión para dar de alta el equipo.");
+      }
+      const created = await createInventoryItem(
+        {
+          ...data,
+          itemKind: "equipo",
+          category: "equipos",
+          quantity: Math.max(1, data.quantity || 1),
+        },
+        session.username
+      );
+      setCatalogKind("equipos");
+      const next = await loadCatalog("equipos");
+      if (!next.some((item) => item.id === created.id)) {
+        setItems([created, ...next]);
+      }
+      setItemId(created.id);
+      setSerialNumber(created.serialNumber || "");
+      setEquipmentFormOpen(false);
+      setMessage(
+        `Equipo ${created.sku} dado de alta${
+          created.quantity > 0 ? ` con existencia ${created.quantity}` : ""
+        }.`
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo dar de alta el equipo."
+      );
+    } finally {
+      setCreatingEquipment(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,14 +199,26 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (!session?.username) {
         throw new Error("Inicia sesión para registrar el movimiento.");
       }
-      if (mode === "entrada" && selected.tracksLot && !lotNumber.trim()) {
-        throw new Error("Este producto exige número de lote.");
+      if (mode === "entrada" && (selected.tracksLot || requiresExpiry) && !lotNumber.trim()) {
+        throw new Error(
+          requiresExpiry
+            ? "Insumos, medicamentos y reactivos exigen número de lote."
+            : "Este producto exige número de lote."
+        );
       }
-      if (mode === "entrada" && selected.tracksExpiry && !expiryDate) {
-        throw new Error("Este producto exige fecha de caducidad.");
+      if (mode === "entrada" && (selected.tracksExpiry || requiresExpiry) && !expiryDate) {
+        throw new Error(
+          requiresExpiry
+            ? "Insumos, medicamentos y reactivos exigen fecha de caducidad."
+            : "Este producto exige fecha de caducidad."
+        );
       }
       if (selected.tracksSerial && !serialNumber.trim()) {
-        throw new Error("Este producto exige número de serie.");
+        throw new Error(
+          isEquipmentCatalog
+            ? "El equipo exige número de serie."
+            : "Este producto exige número de serie."
+        );
       }
 
       const reasonLabel =
@@ -139,14 +237,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       const result = await applyStockMovement({
         productId: selected.id,
         movementType: mode,
-        quantity,
+        quantity: isEquipmentCatalog ? 1 : quantity,
         createdBy: session.username,
         note: extraNote,
         reason: reasonLabel,
         warehouseId: warehouseId || null,
         locationId: locationId || null,
-        lotNumber: lotNumber || null,
-        expiryDate: expiryDate || null,
+        lotNumber: isEquipmentCatalog ? null : lotNumber || null,
+        expiryDate: isEquipmentCatalog ? null : expiryDate || null,
         serialNumber: serialNumber || null,
       });
       const updated = {
@@ -182,241 +280,360 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   if (loading) {
     return (
-      <p className="text-sm text-muted-foreground">Cargando productos...</p>
+      <p className="text-sm text-muted-foreground">
+        Cargando {isEquipmentCatalog ? "equipos" : catalogKind}...
+      </p>
     );
   }
 
   const reasons = mode === "entrada" ? ENTRY_REASONS : ISSUE_REASONS;
   const showServiceFields = mode === "salida" && isServiceIssue(reason);
+  const catalogOptions = [
+    ...SUPPLY_CATEGORIES.map((item) => ({ id: item.id as CatalogKind, label: item.label })),
+    { id: "equipos" as const, label: "Equipos" },
+  ];
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground">
-        {mode === "entrada" ? "Registrar entrada" : "Registrar salida"}
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {mode === "entrada"
-          ? "Suma unidades mediante folio EM. La existencia no se edita a mano."
-          : "Descuenta unidades con folio SAL. No permite stock negativo ni medicamentos caducados."}
-      </p>
-
-      <div className="mt-4">
-        <ReadOnlyBanner visible={!canWrite} />
-      </div>
-
-      <form onSubmit={handleSubmit} className="mt-5 grid max-w-2xl gap-4">
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium">Producto</span>
-          <select
-            required
-            value={itemId}
-            onChange={(event) => setItemId(event.target.value)}
-            disabled={!canWrite}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-          >
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.sku} — {item.name} ({item.quantity} {item.unit})
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">Almacén</span>
-            <select
-              required
-              value={warehouseId}
-              onChange={(event) => setWarehouseId(event.target.value)}
-              disabled={!canWrite}
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+    <>
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              {mode === "entrada" ? "Registrar entrada" : "Registrar salida"}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {mode === "entrada"
+                ? "Elige la tabla (insumos, medicamentos, refacciones, etc.) o da de alta un equipo."
+                : "Descuenta unidades por tabla. Insumos/medicamentos/reactivos usan caducidad."}
+            </p>
+          </div>
+          {canWrite ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setError("");
+                setEquipmentFormOpen(true);
+              }}
+              className="shrink-0"
             >
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.code} — {warehouse.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">Ubicación</span>
-            <select
-              value={locationId}
-              onChange={(event) => setLocationId(event.target.value)}
-              disabled={!canWrite}
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            >
-              {locations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.code} — {location.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <Plus className="size-4" />
+              Dar de alta equipo
+            </Button>
+          ) : null}
         </div>
 
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium">Cantidad</span>
-          <input
-            required
-            type="number"
-            min={1}
-            value={quantity}
-            disabled={!canWrite}
-            onChange={(event) => setQuantity(Number(event.target.value))}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-          />
-        </label>
+        <div className="mt-4">
+          <ReadOnlyBanner visible={!canWrite} />
+        </div>
 
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium">Motivo</span>
-          <select
-            value={reason}
-            disabled={!canWrite}
-            onChange={(event) => setReason(event.target.value)}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-          >
-            {reasons.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {mode === "salida" && lots.length > 0 ? (
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">Lote (FEFO)</span>
-            <select
-              value={lotNumber}
-              disabled={!canWrite}
-              onChange={(event) => {
-                const lot = lots.find((item) => item.lotNumber === event.target.value);
-                setLotNumber(event.target.value);
-                setExpiryDate(lot?.expiryDate ?? "");
+        <div className="mt-4 flex flex-wrap gap-1 rounded-xl border border-border bg-muted/40 p-1">
+          {catalogOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => {
+                setCatalogKind(option.id);
+                setError("");
+                setMessage("");
               }}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                catalogKind === option.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-5 grid max-w-2xl gap-4">
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">
+              {isEquipmentCatalog ? "Equipo" : "Artículo"}
+            </span>
+            <select
+              required
+              value={itemId}
+              onChange={(event) => setItemId(event.target.value)}
+              disabled={!canWrite}
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             >
-              <option value="">Sin lote / automático</option>
-              {lots.map((lot) => (
-                <option key={lot.id} value={lot.lotNumber}>
-                  {lot.lotNumber}
-                  {lot.expiryDate ? ` · cad. ${lot.expiryDate}` : ""}
+              {items.length === 0 ? (
+                <option value="">
+                  {isEquipmentCatalog
+                    ? "No hay equipos. Da de alta uno nuevo."
+                    : `No hay ${catalogKind} disponibles.`}
+                </option>
+              ) : (
+                items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} — {item.name}
+                    {isEquipmentCatalog && item.serialNumber
+                      ? ` · S/N ${item.serialNumber}`
+                      : ` (${item.quantity} ${item.unit})`}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">Almacén</span>
+              <select
+                required
+                value={warehouseId}
+                onChange={(event) => setWarehouseId(event.target.value)}
+                disabled={!canWrite}
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+              >
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.code} — {warehouse.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">Ubicación</span>
+              <select
+                value={locationId}
+                onChange={(event) => setLocationId(event.target.value)}
+                disabled={!canWrite}
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+              >
+                {locations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.code} — {location.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {!isEquipmentCatalog ? (
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">Cantidad</span>
+              <input
+                required
+                type="number"
+                min={1}
+                value={quantity}
+                disabled={!canWrite}
+                onChange={(event) => setQuantity(Number(event.target.value))}
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+              />
+            </label>
+          ) : (
+            <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              Los equipos se mueven de 1 en 1 como activos (serie obligatoria).
+            </p>
+          )}
+
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Motivo</span>
+            <select
+              value={reason}
+              disabled={!canWrite}
+              onChange={(event) => setReason(event.target.value)}
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            >
+              {reasons.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
                 </option>
               ))}
             </select>
           </label>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">
-                Lote{selected?.tracksLot ? " (obligatorio)" : ""}
-              </span>
-              <input
-                value={lotNumber}
-                disabled={!canWrite}
-                required={Boolean(selected?.tracksLot && mode === "entrada")}
-                onChange={(event) => setLotNumber(event.target.value)}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-              />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">
-                Caducidad{selected?.tracksExpiry ? " (obligatoria)" : ""}
-              </span>
-              <input
-                type="date"
-                value={expiryDate}
-                disabled={!canWrite}
-                required={Boolean(selected?.tracksExpiry && mode === "entrada")}
-                onChange={(event) => setExpiryDate(event.target.value)}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-              />
-            </label>
-          </div>
-        )}
 
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium">
-            Número de serie{selected?.tracksSerial ? " (obligatorio)" : ""}
-          </span>
-          <input
-            value={serialNumber}
-            disabled={!canWrite}
-            required={Boolean(selected?.tracksSerial)}
-            onChange={(event) => setSerialNumber(event.target.value)}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-          />
-        </label>
+          {!isEquipmentCatalog ? (
+            mode === "salida" && lots.length > 0 ? (
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Lote (FEFO)</span>
+                <select
+                  value={lotNumber}
+                  disabled={!canWrite}
+                  onChange={(event) => {
+                    const lot = lots.find(
+                      (item) => item.lotNumber === event.target.value
+                    );
+                    setLotNumber(event.target.value);
+                    setExpiryDate(lot?.expiryDate ?? "");
+                  }}
+                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                >
+                  <option value="">Sin lote / automático</option>
+                  {lots.map((lot) => (
+                    <option key={lot.id} value={lot.lotNumber}>
+                      {lot.lotNumber}
+                      {lot.expiryDate ? ` · cad. ${lot.expiryDate}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-1.5">
+                  <span className="text-sm font-medium">
+                    Lote
+                    {selected?.tracksLot || requiresExpiry
+                      ? " (obligatorio)"
+                      : ""}
+                  </span>
+                  <input
+                    value={lotNumber}
+                    disabled={!canWrite}
+                    required={Boolean(
+                      (selected?.tracksLot || requiresExpiry) && mode === "entrada"
+                    )}
+                    onChange={(event) => setLotNumber(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                  />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-sm font-medium">
+                    Caducidad
+                    {selected?.tracksExpiry || requiresExpiry
+                      ? " (obligatoria)"
+                      : ""}
+                  </span>
+                  <input
+                    type="date"
+                    value={expiryDate}
+                    disabled={!canWrite}
+                    required={Boolean(
+                      (selected?.tracksExpiry || requiresExpiry) &&
+                        mode === "entrada"
+                    )}
+                    onChange={(event) => setExpiryDate(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                  />
+                </label>
+              </div>
+            )
+          ) : null}
 
-        {showServiceFields ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Técnico</span>
-              <input
-                value={technician}
-                disabled={!canWrite}
-                onChange={(event) => setTechnician(event.target.value)}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-              />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Serie del equipo relacionado</span>
-              <input
-                value={relatedSerial}
-                disabled={!canWrite}
-                onChange={(event) => setRelatedSerial(event.target.value)}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-              />
-            </label>
-          </div>
-        ) : null}
-
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium">Nota (opcional)</span>
-          <textarea
-            rows={2}
-            value={note}
-            disabled={!canWrite}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder="Motivo, orden de compra, área que solicita..."
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
-          />
-        </label>
-
-        {selected ? (
-          <p className="text-sm text-muted-foreground">
-            Stock actual:{" "}
-            <span className="font-medium text-foreground">
-              {selected.quantity} {selected.unit}
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">
+              Número de serie
+              {selected?.tracksSerial || isEquipmentCatalog
+                ? " (obligatorio)"
+                : ""}
             </span>
-          </p>
-        ) : null}
+            <input
+              value={serialNumber}
+              disabled={!canWrite}
+              required={Boolean(selected?.tracksSerial || isEquipmentCatalog)}
+              onChange={(event) => setSerialNumber(event.target.value)}
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            />
+          </label>
 
-        {error ? (
-          <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        {message ? (
-          <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
-            {message}
-          </p>
-        ) : null}
+          {showServiceFields ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Técnico</span>
+                <input
+                  value={technician}
+                  disabled={!canWrite}
+                  onChange={(event) => setTechnician(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">
+                  Serie del equipo relacionado
+                </span>
+                <input
+                  value={relatedSerial}
+                  disabled={!canWrite}
+                  onChange={(event) => setRelatedSerial(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                />
+              </label>
+            </div>
+          ) : null}
 
-        <Button
-          type="submit"
-          disabled={!canWrite || submitting || items.length === 0}
-          className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Nota (opcional)</span>
+            <textarea
+              rows={2}
+              value={note}
+              disabled={!canWrite}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Motivo, orden de compra, área que solicita..."
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
+            />
+          </label>
+
+          {selected ? (
+            <p className="text-sm text-muted-foreground">
+              {isEquipmentCatalog ? "Existencia actual: " : "Stock actual: "}
+              <span className="font-medium text-foreground">
+                {selected.quantity} {selected.unit}
+              </span>
+              {isEquipmentCatalog && selected.assetStatus
+                ? ` · estado ${selected.assetStatus}`
+                : null}
+            </p>
+          ) : null}
+
+          {error ? (
+            <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
+          {message ? (
+            <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+              {message}
+            </p>
+          ) : null}
+
+          <Button
+            type="submit"
+            disabled={!canWrite || submitting || items.length === 0}
+            className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+          >
+            {submitting
+              ? "Guardando..."
+              : mode === "entrada"
+                ? isEquipmentCatalog
+                  ? "Registrar entrada de equipo"
+                  : "Registrar entrada"
+                : isEquipmentCatalog
+                  ? "Registrar salida de equipo"
+                  : "Registrar salida"}
+          </Button>
+        </form>
+      </section>
+
+      {equipmentFormOpen && canWrite ? (
+        <ModalShell
+          title="Dar de alta equipo"
+          description="Registra un equipo médico nuevo desde entradas o salidas. Quedará disponible de inmediato para el movimiento."
         >
-          {submitting
-            ? "Guardando..."
-            : mode === "entrada"
-              ? "Registrar entrada"
-              : "Registrar salida"}
-        </Button>
-      </form>
-    </section>
+          {creatingEquipment ? (
+            <p className="mb-3 text-sm text-muted-foreground">
+              Guardando equipo...
+            </p>
+          ) : null}
+          {error ? (
+            <p className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
+          <InventoryForm
+            itemKind="equipo"
+            onSubmit={handleCreateEquipment}
+            onCancel={() => {
+              if (!creatingEquipment) setEquipmentFormOpen(false);
+            }}
+          />
+        </ModalShell>
+      ) : null}
+    </>
   );
 }

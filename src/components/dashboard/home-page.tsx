@@ -103,7 +103,11 @@ export function DashboardHomePage() {
                 return (
                   <Link
                     key={category.id}
-                    href={`/dashboard/almacen?tab=productos&category=${category.id}`}
+                    href={
+                      category.id === "equipos"
+                        ? "/dashboard/almacen?tab=equipo"
+                        : `/dashboard/almacen?tab=${category.id}`
+                    }
                     className="rounded-xl border border-border/70 px-3 py-3 transition-colors hover:bg-muted/50"
                   >
                     <p className="text-sm font-medium text-foreground">
