@@ -90,12 +90,21 @@ create trigger tenders_set_updated_at
 before update on public.tenders
 for each row execute function public.set_updated_at();
 
-insert into storage.buckets (id, name, public)
-values ('tender-documents', 'tender-documents', true)
-on conflict (id) do nothing;
+do $$
+begin
+  if to_regclass('storage.buckets') is null then
+    return;
+  end if;
+  insert into storage.buckets (id, name, public)
+  values ('tender-documents', 'tender-documents', true)
+  on conflict (id) do nothing;
+end $$;
 
 do $$
 begin
+  if to_regclass('storage.objects') is null then
+    return;
+  end if;
   if not exists (
     select 1 from pg_policies
     where schemaname = 'storage' and tablename = 'objects' and policyname = 'tender_documents_select'

@@ -142,12 +142,21 @@ create trigger service_orders_set_updated_at
 before update on public.service_orders
 for each row execute function public.set_updated_at();
 
-insert into storage.buckets (id, name, public)
-values ('service-order-media', 'service-order-media', true)
-on conflict (id) do nothing;
+do $$
+begin
+  if to_regclass('storage.buckets') is null then
+    return;
+  end if;
+  insert into storage.buckets (id, name, public)
+  values ('service-order-media', 'service-order-media', true)
+  on conflict (id) do nothing;
+end $$;
 
 do $$
 begin
+  if to_regclass('storage.objects') is null then
+    return;
+  end if;
   if not exists (
     select 1 from pg_policies
     where schemaname = 'storage' and tablename = 'objects' and policyname = 'service_order_media_select'
