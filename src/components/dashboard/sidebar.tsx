@@ -17,14 +17,19 @@ import {
   Settings2,
   ShoppingCart,
   Truck,
+  Building2,
   Users,
   UserMinus,
   UserPlus,
   Warehouse,
   Wrench,
   History,
+  Bookmark,
   BookOpen,
+  Car,
   CalendarDays,
+  Gavel,
+  FileText,
   Shield,
   X,
 } from "lucide-react";
@@ -43,6 +48,7 @@ const TAB_ICONS = {
   reactivos: Beaker,
   entradas: ArrowDownToLine,
   salidas: ArrowUpFromLine,
+  apartados: Bookmark,
   movimientos: History,
   kardex: BookOpen,
   pedidos: ShoppingCart,
@@ -73,6 +79,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const inWarehouse = pathname.startsWith("/dashboard/almacen");
   const inUsers = pathname.startsWith("/dashboard/usuarios");
   const inCalendar = pathname.startsWith("/dashboard/calendario");
+  const inClients = pathname.startsWith("/dashboard/clientes");
+  const inTenders = pathname.startsWith("/dashboard/licitaciones");
+  const inQuotes = pathname.startsWith("/dashboard/cotizaciones");
+  const inServiceOrders = pathname.startsWith("/dashboard/ordenes-servicio");
+  const inFleet = pathname.startsWith("/dashboard/flotilla");
   const [warehouseOpen, setWarehouseOpen] = useState(inWarehouse);
   const [usersOpen, setUsersOpen] = useState(inUsers);
   const [role, setRole] = useState("administrador");
@@ -232,6 +243,86 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
+          {canViewModule(role, "clientes") ? (
+            <Link
+              href="/dashboard/clientes"
+              onClick={onClose}
+              className={cn(
+                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                inClients
+                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Building2 className="size-4 shrink-0" />
+              Clientes
+            </Link>
+          ) : null}
+
+          {canViewModule(role, "licitaciones") ? (
+            <Link
+              href="/dashboard/licitaciones"
+              onClick={onClose}
+              className={cn(
+                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                inTenders
+                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Gavel className="size-4 shrink-0" />
+              Licitaciones
+            </Link>
+          ) : null}
+
+          {canViewModule(role, "cotizaciones") ? (
+            <Link
+              href="/dashboard/cotizaciones"
+              onClick={onClose}
+              className={cn(
+                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                inQuotes
+                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <FileText className="size-4 shrink-0" />
+              Cotizaciones
+            </Link>
+          ) : null}
+
+          {canViewModule(role, "ordenes_servicio") ? (
+            <Link
+              href="/dashboard/ordenes-servicio"
+              onClick={onClose}
+              className={cn(
+                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                inServiceOrders
+                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Wrench className="size-4 shrink-0" />
+              Órdenes de servicio
+            </Link>
+          ) : null}
+
+          {canViewModule(role, "flotilla") ? (
+            <Link
+              href="/dashboard/flotilla"
+              onClick={onClose}
+              className={cn(
+                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                inFleet
+                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Car className="size-4 shrink-0" />
+              Flotilla
+            </Link>
+          ) : null}
+
           {canViewModule(role, "usuarios") ? (
             <div className="mt-2">
               <button
@@ -286,7 +377,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
-            Panel principal, almacén, calendario y usuarios
+            Panel principal, almacén, calendario, clientes, cotizaciones y usuarios
           </p>
         </div>
       </aside>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  Bookmark,
   Boxes,
   CalendarDays,
   ClipboardList,
@@ -29,6 +30,14 @@ import {
   EXPIRY_BUCKETS,
   type ExpiryBucket,
 } from "@/lib/inventory/expiry";
+import { getInventoryHolds } from "@/lib/holds/storage";
+import type { InventoryHold } from "@/lib/holds/types";
+import {
+  buildHoldDueAlerts,
+  holdDueLabel,
+  holdDueTone,
+} from "@/lib/holds/alerts";
+import { cn } from "@/lib/utils";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -45,6 +54,7 @@ export function WarehouseDashboard() {
   const [openOrders, setOpenOrders] = useState(0);
   const [openTransfers, setOpenTransfers] = useState(0);
   const [pendingMaintenance, setPendingMaintenance] = useState(0);
+  const [holds, setHolds] = useState<InventoryHold[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,8 +65,9 @@ export function WarehouseDashboard() {
       getPurchaseOrders(),
       getMaintenances(),
       getOpenTransferCount(),
+      getInventoryHolds(),
     ])
-      .then(([productList, equipmentList, supplierList, orders, maintenances, transferCount]) => {
+      .then(([productList, equipmentList, supplierList, orders, maintenances, transferCount, holdList]) => {
         setProducts(productList);
         setEquipment(equipmentList);
         setSuppliers(supplierList);
@@ -73,6 +84,7 @@ export function WarehouseDashboard() {
               item.status === "programado" || item.status === "en_proceso"
           ).length
         );
+        setHolds(holdList);
       })
       .catch((error) => console.error(error))
       .finally(() => setLoading(false));
@@ -145,6 +157,9 @@ export function WarehouseDashboard() {
     count: expiryAlerts[bucket.id].length,
   }));
 
+  const holdDue = useMemo(() => buildHoldDueAlerts(holds), [holds]);
+  const activeHolds = holds.filter((hold) => hold.status === "activo").length;
+
   const cards = [
     {
       label: "Insumos",
@@ -215,6 +230,13 @@ export function WarehouseDashboard() {
       icon: CalendarDays,
       href: "/dashboard/calendario",
       tone: "text-[#3B46A5]",
+    },
+    {
+      label: "Apartados activos",
+      value: activeHolds,
+      icon: Bookmark,
+      href: "/dashboard/almacen?tab=apartados",
+      tone: "text-amber-600",
     },
     {
       label: "Proveedores activos",
@@ -309,6 +331,65 @@ export function WarehouseDashboard() {
                 </li>
               ))
             )}
+          </ul>
+        )}
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-semibold text-foreground">
+            Apartados · alarmas 5 / 10 / 15 / 30 / 60
+          </h3>
+          <Link
+            href="/dashboard/almacen?tab=apartados"
+            className="text-xs font-medium text-[#00BFFF] hover:underline"
+          >
+            Ver apartados
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          {holdDue.counts.map((bucket) => (
+            <div
+              key={bucket.id}
+              className={cn(
+                "rounded-xl border px-3 py-2",
+                holdDueTone(bucket.id)
+              )}
+            >
+              <p className="text-xs opacity-80">{bucket.label}</p>
+              <p className="mt-1 text-xl font-semibold">{bucket.count}</p>
+            </div>
+          ))}
+        </div>
+        {holdDue.alerts.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            No hay apartados activos por vencer en 60 días.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {holdDue.alerts.slice(0, 6).map((hold) => (
+              <li
+                key={hold.id}
+                className="flex flex-col gap-1 rounded-xl border border-border/70 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    {hold.folio} · {hold.projectName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    requerido {hold.neededBy}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "inline-flex rounded-full border px-2.5 py-1 text-xs font-medium",
+                    holdDueTone(hold.bucket)
+                  )}
+                >
+                  {holdDueLabel(hold.daysUntil, hold.bucket)}
+                </span>
+              </li>
+            ))}
           </ul>
         )}
       </section>

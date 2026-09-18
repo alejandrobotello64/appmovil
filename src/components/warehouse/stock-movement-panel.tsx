@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -29,9 +29,11 @@ import {
   isServiceIssue,
 } from "@/lib/warehouse/reasons";
 import {
+  getEntryExitHistory,
   getProductLots,
   getWarehouseLocations,
   getWarehouses,
+  type KardexRow,
   type ProductLot,
   type Warehouse,
   type WarehouseLocation,
@@ -44,6 +46,9 @@ type StockMovementPanelProps = {
 
 type CatalogKind = SupplyCategoryId | "equipos";
 
+const fieldClass =
+  "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
+
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
   const [catalogKind, setCatalogKind] = useState<CatalogKind>("insumos");
@@ -51,6 +56,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [lots, setLots] = useState<ProductLot[]>([]);
+  const [history, setHistory] = useState<KardexRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [itemId, setItemId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -78,6 +85,19 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const requiresManufactureDate =
     !isEquipmentCatalog && categoryRequiresManufactureDate(catalogKind);
 
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const rows = await getEntryExitHistory(mode, 50);
+      setHistory(rows);
+    } catch (err) {
+      console.error(err);
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [mode]);
+
   async function loadCatalog(kind: CatalogKind) {
     const data =
       kind === "equipos"
@@ -92,7 +112,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   useEffect(() => {
     setLoading(true);
-    void Promise.all([loadCatalog(catalogKind), getWarehouses()])
+    void Promise.all([loadCatalog(catalogKind), getWarehouses(), loadHistory()])
       .then(([, warehouseList]) => {
         setWarehouses(warehouseList);
         const defaultWarehouse =
@@ -105,7 +125,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         );
       })
       .finally(() => setLoading(false));
-  }, [catalogKind]);
+  }, [catalogKind, loadHistory]);
 
   useEffect(() => {
     if (!warehouseId) return;
@@ -282,6 +302,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setExpiryDate("");
         setSerialNumber("");
       }
+      await loadHistory();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo registrar el movimiento."
@@ -308,339 +329,427 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   return (
     <>
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">
-              {mode === "entrada" ? "Registrar entrada" : "Registrar salida"}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {mode === "entrada"
-                ? "Elige la tabla (insumos, medicamentos, refacciones, etc.) o da de alta un equipo."
-                : "Descuenta unidades por tabla. Insumos/medicamentos/reactivos usan caducidad; accesorios, fecha de fabricación."}
-            </p>
-          </div>
-          {canWrite ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setError("");
-                setEquipmentFormOpen(true);
-              }}
-              className="shrink-0"
-            >
-              <Plus className="size-4" />
-              Dar de alta equipo
-            </Button>
-          ) : null}
-        </div>
-
-        <div className="mt-4">
-          <ReadOnlyBanner visible={!canWrite} />
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-1 rounded-xl border border-border bg-muted/40 p-1">
-          {catalogOptions.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => {
-                setCatalogKind(option.id);
-                setError("");
-                setMessage("");
-              }}
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                catalogKind === option.id
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-
-        <form onSubmit={handleSubmit} className="mt-5 grid max-w-2xl gap-4">
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">
-              {isEquipmentCatalog ? "Equipo" : "Artículo"}
-            </span>
-            <select
-              required
-              value={itemId}
-              onChange={(event) => setItemId(event.target.value)}
-              disabled={!canWrite}
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            >
-              {items.length === 0 ? (
-                <option value="">
-                  {isEquipmentCatalog
-                    ? "No hay equipos. Da de alta uno nuevo."
-                    : `No hay ${catalogKind} disponibles.`}
-                </option>
-              ) : (
-                items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.sku} — {item.name}
-                    {isEquipmentCatalog && item.serialNumber
-                      ? ` · S/N ${item.serialNumber}`
-                      : ` (${item.quantity} ${item.unit})`}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Almacén</span>
-              <select
-                required
-                value={warehouseId}
-                onChange={(event) => setWarehouseId(event.target.value)}
-                disabled={!canWrite}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(280px,0.95fr)] lg:items-start">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {mode === "entrada" ? "Registrar entrada" : "Registrar salida"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {mode === "entrada"
+                  ? "Elige categoría y tipo de registro, o da de alta un equipo."
+                  : "Descuenta unidades por categoría. Insumos/medicamentos/reactivos usan caducidad."}
+              </p>
+            </div>
+            {canWrite ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setError("");
+                  setEquipmentFormOpen(true);
+                }}
+                className="shrink-0"
               >
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.code} — {warehouse.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Ubicación</span>
-              <select
-                value={locationId}
-                onChange={(event) => setLocationId(event.target.value)}
-                disabled={!canWrite}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-              >
-                {locations.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.code} — {location.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <Plus className="size-4" />
+                Dar de alta equipo
+              </Button>
+            ) : null}
           </div>
 
-          {!isEquipmentCatalog ? (
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Cantidad</span>
-              <input
-                required
-                type="number"
-                min={1}
-                value={quantity}
-                disabled={!canWrite}
-                onChange={(event) => setQuantity(Number(event.target.value))}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-              />
-            </label>
-          ) : (
-            <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-              Los equipos se mueven de 1 en 1 como activos (serie obligatoria).
-            </p>
-          )}
+          <div className="mt-4">
+            <ReadOnlyBanner visible={!canWrite} />
+          </div>
 
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">Motivo</span>
-            <select
-              value={reason}
-              disabled={!canWrite}
-              onChange={(event) => setReason(event.target.value)}
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            >
-              {reasons.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {!isEquipmentCatalog ? (
-            mode === "salida" && lots.length > 0 ? (
+          <form onSubmit={handleSubmit} className="mt-5 grid gap-4">
+            <div className="grid gap-3 rounded-xl border border-border bg-muted/25 p-3 sm:grid-cols-2">
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Lote (FEFO)</span>
+                <span className="text-sm font-medium">Categoría</span>
                 <select
-                  value={lotNumber}
+                  value={catalogKind}
                   disabled={!canWrite}
                   onChange={(event) => {
-                    const lot = lots.find(
-                      (item) => item.lotNumber === event.target.value
-                    );
-                    setLotNumber(event.target.value);
-                    setExpiryDate(lot?.expiryDate ?? "");
-                    setManufacturedAt(lot?.manufacturedAt ?? "");
+                    setCatalogKind(event.target.value as CatalogKind);
+                    setError("");
+                    setMessage("");
                   }}
-                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                  className={fieldClass}
                 >
-                  <option value="">Sin lote / automático</option>
-                  {lots.map((lot) => (
-                    <option key={lot.id} value={lot.lotNumber}>
-                      {lot.lotNumber}
-                      {requiresManufactureDate
-                        ? lot.manufacturedAt
-                          ? ` · fab. ${lot.manufacturedAt}`
-                          : ""
-                        : lot.expiryDate
-                          ? ` · cad. ${lot.expiryDate}`
-                          : ""}
+                  {catalogOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
               </label>
+
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Tipo de registro</span>
+                <select
+                  value={reason}
+                  disabled={!canWrite}
+                  onChange={(event) => setReason(event.target.value)}
+                  className={cn(
+                    fieldClass,
+                    "border-[#3B46A5]/35 bg-background font-medium"
+                  )}
+                >
+                  {reasons.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">
+                {isEquipmentCatalog ? "Equipo" : "Artículo"}
+              </span>
+              <select
+                required
+                value={itemId}
+                onChange={(event) => setItemId(event.target.value)}
+                disabled={!canWrite}
+                className={fieldClass}
+              >
+                {items.length === 0 ? (
+                  <option value="">
+                    {isEquipmentCatalog
+                      ? "No hay equipos. Da de alta uno nuevo."
+                      : `No hay ${catalogKind} disponibles.`}
+                  </option>
+                ) : (
+                  items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.sku} — {item.name}
+                      {isEquipmentCatalog && item.serialNumber
+                        ? ` · S/N ${item.serialNumber}`
+                        : ` (${item.quantity} ${item.unit})`}
+                    </option>
+                  ))
+                )}
+              </select>
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Almacén</span>
+                <select
+                  required
+                  value={warehouseId}
+                  onChange={(event) => setWarehouseId(event.target.value)}
+                  disabled={!canWrite}
+                  className={fieldClass}
+                >
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.code} — {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Ubicación</span>
+                <select
+                  value={locationId}
+                  onChange={(event) => setLocationId(event.target.value)}
+                  disabled={!canWrite}
+                  className={fieldClass}
+                >
+                  {locations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.code} — {location.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {!isEquipmentCatalog ? (
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Cantidad</span>
+                <input
+                  required
+                  type="number"
+                  min={1}
+                  value={quantity}
+                  disabled={!canWrite}
+                  onChange={(event) => setQuantity(Number(event.target.value))}
+                  className={fieldClass}
+                />
+              </label>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                Los equipos se mueven de 1 en 1 como activos (serie obligatoria).
+              </p>
+            )}
+
+            {!isEquipmentCatalog ? (
+              mode === "salida" && lots.length > 0 ? (
                 <label className="space-y-1.5">
-                  <span className="text-sm font-medium">
-                    Lote
-                    {selected?.tracksLot || requiresExpiry
-                      ? " (obligatorio)"
-                      : ""}
-                  </span>
-                  <input
+                  <span className="text-sm font-medium">Lote (FEFO)</span>
+                  <select
                     value={lotNumber}
                     disabled={!canWrite}
-                    required={Boolean(
-                      (selected?.tracksLot || requiresExpiry) && mode === "entrada"
-                    )}
-                    onChange={(event) => setLotNumber(event.target.value)}
-                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                    onChange={(event) => {
+                      const lot = lots.find(
+                        (item) => item.lotNumber === event.target.value
+                      );
+                      setLotNumber(event.target.value);
+                      setExpiryDate(lot?.expiryDate ?? "");
+                      setManufacturedAt(lot?.manufacturedAt ?? "");
+                    }}
+                    className={fieldClass}
+                  >
+                    <option value="">Sin lote / automático</option>
+                    {lots.map((lot) => (
+                      <option key={lot.id} value={lot.lotNumber}>
+                        {lot.lotNumber}
+                        {requiresManufactureDate
+                          ? lot.manufacturedAt
+                            ? ` · fab. ${lot.manufacturedAt}`
+                            : ""
+                          : lot.expiryDate
+                            ? ` · cad. ${lot.expiryDate}`
+                            : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      Lote
+                      {selected?.tracksLot || requiresExpiry
+                        ? " (obligatorio)"
+                        : ""}
+                    </span>
+                    <input
+                      value={lotNumber}
+                      disabled={!canWrite}
+                      required={Boolean(
+                        (selected?.tracksLot || requiresExpiry) &&
+                          mode === "entrada"
+                      )}
+                      onChange={(event) => setLotNumber(event.target.value)}
+                      className={fieldClass}
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      {requiresManufactureDate
+                        ? "Fecha de fabricación"
+                        : "Caducidad"}
+                      {requiresManufactureDate ||
+                      selected?.tracksExpiry ||
+                      requiresExpiry
+                        ? " (obligatoria)"
+                        : ""}
+                    </span>
+                    <input
+                      type="date"
+                      value={
+                        requiresManufactureDate ? manufacturedAt : expiryDate
+                      }
+                      disabled={!canWrite}
+                      required={Boolean(
+                        mode === "entrada" &&
+                          (requiresManufactureDate ||
+                            selected?.tracksExpiry ||
+                            requiresExpiry)
+                      )}
+                      onChange={(event) =>
+                        requiresManufactureDate
+                          ? setManufacturedAt(event.target.value)
+                          : setExpiryDate(event.target.value)
+                      }
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
+              )
+            ) : null}
+
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">
+                Número de serie
+                {selected?.tracksSerial || isEquipmentCatalog
+                  ? " (obligatorio)"
+                  : ""}
+              </span>
+              <input
+                value={serialNumber}
+                disabled={!canWrite}
+                required={Boolean(selected?.tracksSerial || isEquipmentCatalog)}
+                onChange={(event) => setSerialNumber(event.target.value)}
+                className={fieldClass}
+              />
+            </label>
+
+            {showServiceFields ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-1.5">
+                  <span className="text-sm font-medium">Técnico</span>
+                  <input
+                    value={technician}
+                    disabled={!canWrite}
+                    onChange={(event) => setTechnician(event.target.value)}
+                    className={fieldClass}
                   />
                 </label>
                 <label className="space-y-1.5">
                   <span className="text-sm font-medium">
-                    {requiresManufactureDate
-                      ? "Fecha de fabricación"
-                      : "Caducidad"}
-                    {requiresManufactureDate ||
-                    selected?.tracksExpiry ||
-                    requiresExpiry
-                      ? " (obligatoria)"
-                      : ""}
+                    Serie del equipo relacionado
                   </span>
                   <input
-                    type="date"
-                    value={
-                      requiresManufactureDate ? manufacturedAt : expiryDate
-                    }
+                    value={relatedSerial}
                     disabled={!canWrite}
-                    required={Boolean(
-                      mode === "entrada" &&
-                        (requiresManufactureDate ||
-                          selected?.tracksExpiry ||
-                          requiresExpiry)
-                    )}
-                    onChange={(event) =>
-                      requiresManufactureDate
-                        ? setManufacturedAt(event.target.value)
-                        : setExpiryDate(event.target.value)
-                    }
-                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                    onChange={(event) => setRelatedSerial(event.target.value)}
+                    className={fieldClass}
                   />
                 </label>
               </div>
-            )
-          ) : null}
+            ) : null}
 
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">
-              Número de serie
-              {selected?.tracksSerial || isEquipmentCatalog
-                ? " (obligatorio)"
-                : ""}
-            </span>
-            <input
-              value={serialNumber}
-              disabled={!canWrite}
-              required={Boolean(selected?.tracksSerial || isEquipmentCatalog)}
-              onChange={(event) => setSerialNumber(event.target.value)}
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            />
-          </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">Nota (opcional)</span>
+              <textarea
+                rows={2}
+                value={note}
+                disabled={!canWrite}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Motivo, orden de compra, área que solicita..."
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
+              />
+            </label>
 
-          {showServiceFields ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Técnico</span>
-                <input
-                  value={technician}
-                  disabled={!canWrite}
-                  onChange={(event) => setTechnician(event.target.value)}
-                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">
-                  Serie del equipo relacionado
+            {selected ? (
+              <p className="text-sm text-muted-foreground">
+                {isEquipmentCatalog ? "Existencia actual: " : "Stock actual: "}
+                <span className="font-medium text-foreground">
+                  {selected.quantity} {selected.unit}
                 </span>
-                <input
-                  value={relatedSerial}
-                  disabled={!canWrite}
-                  onChange={(event) => setRelatedSerial(event.target.value)}
-                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-                />
-              </label>
+                {isEquipmentCatalog && selected.assetStatus
+                  ? ` · estado ${selected.assetStatus}`
+                  : null}
+              </p>
+            ) : null}
+
+            {error ? (
+              <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
+            {message ? (
+              <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+                {message}
+              </p>
+            ) : null}
+
+            <Button
+              type="submit"
+              disabled={!canWrite || submitting || items.length === 0}
+              className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+            >
+              {submitting
+                ? "Guardando..."
+                : mode === "entrada"
+                  ? isEquipmentCatalog
+                    ? "Registrar entrada de equipo"
+                    : "Registrar entrada"
+                  : isEquipmentCatalog
+                    ? "Registrar salida de equipo"
+                    : "Registrar salida"}
+            </Button>
+          </form>
+        </section>
+
+        <aside className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-base font-semibold text-foreground">
+                Historial de {mode === "entrada" ? "entradas" : "salidas"}
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Últimos movimientos registrados en esta pantalla.
+              </p>
             </div>
-          ) : null}
+            <button
+              type="button"
+              onClick={() => void loadHistory()}
+              className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              Actualizar
+            </button>
+          </div>
 
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium">Nota (opcional)</span>
-            <textarea
-              rows={2}
-              value={note}
-              disabled={!canWrite}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Motivo, orden de compra, área que solicita..."
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
-            />
-          </label>
-
-          {selected ? (
-            <p className="text-sm text-muted-foreground">
-              {isEquipmentCatalog ? "Existencia actual: " : "Stock actual: "}
-              <span className="font-medium text-foreground">
-                {selected.quantity} {selected.unit}
-              </span>
-              {isEquipmentCatalog && selected.assetStatus
-                ? ` · estado ${selected.assetStatus}`
-                : null}
-            </p>
-          ) : null}
-
-          {error ? (
-            <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
-          {message ? (
-            <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
-              {message}
-            </p>
-          ) : null}
-
-          <Button
-            type="submit"
-            disabled={!canWrite || submitting || items.length === 0}
-            className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
-          >
-            {submitting
-              ? "Guardando..."
-              : mode === "entrada"
-                ? isEquipmentCatalog
-                  ? "Registrar entrada de equipo"
-                  : "Registrar entrada"
-                : isEquipmentCatalog
-                  ? "Registrar salida de equipo"
-                  : "Registrar salida"}
-          </Button>
-        </form>
-      </section>
+          <div className="mt-4 max-h-[70vh] space-y-2 overflow-y-auto pr-1">
+            {historyLoading ? (
+              <p className="text-sm text-muted-foreground">Cargando historial...</p>
+            ) : history.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+                Aún no hay {mode === "entrada" ? "entradas" : "salidas"}{" "}
+                registradas.
+              </p>
+            ) : (
+              history.map((row) => {
+                const qty =
+                  mode === "entrada"
+                    ? row.qtyIn || row.resultingQty
+                    : row.qtyOut || row.resultingQty;
+                return (
+                  <article
+                    key={row.id}
+                    className="rounded-xl border border-border/80 bg-muted/20 px-3 py-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {row.productSku} — {row.productName}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {row.folio}
+                          {row.reason ? ` · ${row.reason}` : ""}
+                        </p>
+                      </div>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold",
+                          mode === "entrada"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                            : "bg-amber-500/10 text-amber-800 dark:text-amber-200"
+                        )}
+                      >
+                        {mode === "entrada" ? "+" : "−"}
+                        {qty}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span>
+                        {new Date(row.occurredAt).toLocaleString("es-MX", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                      <span>Stock: {row.resultingQty}</span>
+                      {row.createdBy ? <span>@{row.createdBy}</span> : null}
+                    </div>
+                    {row.note ? (
+                      <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
+                        {row.note}
+                      </p>
+                    ) : null}
+                  </article>
+                );
+              })
+            )}
+          </div>
+        </aside>
+      </div>
 
       {equipmentFormOpen && canWrite ? (
         <ModalShell

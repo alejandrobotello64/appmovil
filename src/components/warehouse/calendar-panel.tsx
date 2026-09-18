@@ -4,8 +4,11 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays,
   Cake,
+  Award,
   ChevronLeft,
   ChevronRight,
+  Flag,
+  Gavel,
   Mail,
   MapPin,
   Plus,
@@ -23,6 +26,7 @@ import {
   normalizeArea,
   roleToArea,
 } from "@/lib/calendar/areas";
+import { getMexicanHolidaysForYear } from "@/lib/calendar/mexican-holidays";
 import {
   createCalendarEvent,
   createCalendarReminders,
@@ -42,6 +46,7 @@ import type {
   CalendarReminder,
 } from "@/lib/calendar/types";
 import { getInventoryItems } from "@/lib/inventory/storage";
+import { buildTenderCalendarItems, getTenders } from "@/lib/tenders/storage";
 import { getMaintenances } from "@/lib/warehouse/maintenances";
 import { cn } from "@/lib/utils";
 
@@ -64,13 +69,21 @@ const MONTHS = [
 const KIND_LABEL: Record<CalendarItemKind, string> = {
   mantenimiento: "Mantenimiento",
   cumpleanos: "Cumpleaños",
+  aniversario: "Aniversario",
   evento: "Evento",
+  descanso: "Descanso obligatorio",
+  fiesta_patria: "Fiesta patria",
+  licitacion: "Licitación",
 };
 
 const KIND_CLASS: Record<CalendarItemKind, string> = {
   mantenimiento: "bg-sky-500/15 text-sky-800 dark:text-sky-200",
   cumpleanos: "bg-rose-500/15 text-rose-800 dark:text-rose-200",
+  aniversario: "bg-amber-500/15 text-amber-800 dark:text-amber-200",
   evento: "bg-violet-500/15 text-violet-800 dark:text-violet-200",
+  descanso: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200",
+  fiesta_patria: "bg-red-500/15 text-red-800 dark:text-red-200",
+  licitacion: "bg-indigo-500/15 text-indigo-800 dark:text-indigo-200",
 };
 
 const inputClass =
@@ -97,9 +110,9 @@ function formatLongDate(key: string) {
   return `${day} de ${MONTHS[month - 1]} de ${year}`;
 }
 
-function birthdayOnYear(birthDate: string, year: number) {
-  const month = birthDate.slice(5, 7);
-  const day = birthDate.slice(8, 10);
+function annualDateOnYear(sourceDate: string, year: number) {
+  const month = sourceDate.slice(5, 7);
+  const day = sourceDate.slice(8, 10);
   if (!month || !day) return null;
   if (month === "02" && day === "29") {
     const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
@@ -108,10 +121,22 @@ function birthdayOnYear(birthDate: string, year: number) {
   return `${year}-${month}-${day}`;
 }
 
-function ageOnYear(birthDate: string, year: number) {
-  const born = Number(birthDate.slice(0, 4));
-  if (!born) return null;
-  return Math.max(0, year - born);
+function yearsSince(sourceDate: string, year: number) {
+  const started = Number(sourceDate.slice(0, 4));
+  if (!started) return null;
+  return Math.max(0, year - started);
+}
+
+function birthdayMessage(name: string) {
+  return `¡Feliz cumpleaños, ${name}! Te deseamos un excelente día el equipo de Medical Advanced Supplies.`;
+}
+
+function anniversaryMessage(name: string, years: number | null) {
+  const tenure =
+    years && years > 0
+      ? ` por tus ${years} ${years === 1 ? "año" : "años"} con nosotros`
+      : "";
+  return `¡Feliz aniversario en la empresa, ${name}! Gracias${tenure}. El equipo de Medical Advanced Supplies te felicita.`;
 }
 
 function monthGrid(year: number, month: number) {
@@ -161,10 +186,6 @@ function reminderMessage(event: CalendarEvent) {
   return `${lead} — MAS\n\n${event.title}\n${when}${place}${extra}`;
 }
 
-function birthdayMessage(name: string) {
-  return `¡Feliz cumpleaños, ${name}! Te deseamos un excelente día el equipo de Medical Advanced Supplies.`;
-}
-
 export function CalendarPanel() {
   const { canWrite, role } = usePermissions("calendario");
   const userArea = roleToArea(role);
@@ -201,14 +222,21 @@ export function CalendarPanel() {
   );
 
   async function refresh() {
-    const [eventRows, maintenances, collaborators, reminderRows, equipment] =
-      await Promise.all([
-        getCalendarEvents(),
-        getMaintenances(),
-        getCalendarCollaborators(),
-        getCalendarRemindersAll(),
-        getInventoryItems({ kind: "equipo", includeInactive: true }),
-      ]);
+    const [
+      eventRows,
+      maintenances,
+      collaborators,
+      reminderRows,
+      equipment,
+      tenderRows,
+    ] = await Promise.all([
+      getCalendarEvents(),
+      getMaintenances(),
+      getCalendarCollaborators(),
+      getCalendarRemindersAll(),
+      getInventoryItems({ kind: "equipo", includeInactive: true }),
+      getTenders().catch(() => []),
+    ]);
 
     const names = new Map(equipment.map((item) => [item.id, item.name]));
     const visibleEvents = eventRows.filter((event) =>
@@ -245,24 +273,79 @@ export function CalendarPanel() {
     ];
 
     for (const person of collaborators) {
-      if (!person.isActive || !person.birthDate) continue;
-      const date = birthdayOnYear(person.birthDate, cursor.year);
-      if (!date) continue;
-      const years = ageOnYear(person.birthDate, cursor.year);
+      if (!person.isActive) continue;
+      const area = [
+        normalizeArea(person.department) || roleToArea(person.role),
+      ];
+
+      if (person.birthDate) {
+        const date = annualDateOnYear(person.birthDate, cursor.year);
+        if (date) {
+          const years = yearsSince(person.birthDate, cursor.year);
+          built.push({
+            id: `bday-${person.id}-${cursor.year}`,
+            kind: "cumpleanos",
+            date,
+            title: person.fullName,
+            subtitle: [
+              years ? `Cumple ${years} años` : "Cumpleaños",
+              person.department || areaLabel(roleToArea(person.role)),
+            ]
+              .filter(Boolean)
+              .join(" · "),
+            time: "",
+            areas: area,
+            sourceId: person.id,
+          });
+        }
+      }
+
+      if (person.hireDate) {
+        const date = annualDateOnYear(person.hireDate, cursor.year);
+        const years = yearsSince(person.hireDate, cursor.year);
+        // Solo aniversarios a partir del primer año cumplido.
+        if (date && years && years > 0) {
+          built.push({
+            id: `anniv-${person.id}-${cursor.year}`,
+            kind: "aniversario",
+            date,
+            title: person.fullName,
+            subtitle: [
+              `${years} ${years === 1 ? "año" : "años"} en la empresa`,
+              person.department || areaLabel(roleToArea(person.role)),
+            ]
+              .filter(Boolean)
+              .join(" · "),
+            time: "",
+            areas: area,
+            sourceId: person.id,
+          });
+        }
+      }
+    }
+
+    for (const holiday of getMexicanHolidaysForYear(cursor.year)) {
       built.push({
-        id: `bday-${person.id}-${cursor.year}`,
-        kind: "cumpleanos",
-        date,
-        title: person.fullName,
-        subtitle: [
-          years ? `Cumple ${years} años` : "Cumpleaños",
-          person.department || areaLabel(roleToArea(person.role)),
-        ]
-          .filter(Boolean)
-          .join(" · "),
+        id: holiday.id,
+        kind: holiday.kind,
+        date: holiday.date,
+        title: holiday.title,
+        subtitle: holiday.subtitle,
         time: "",
-        areas: [normalizeArea(person.department) || roleToArea(person.role)],
-        sourceId: person.id,
+        areas: [],
+      });
+    }
+
+    for (const hit of buildTenderCalendarItems(tenderRows)) {
+      built.push({
+        id: hit.id,
+        kind: "licitacion",
+        date: hit.date,
+        title: hit.title,
+        subtitle: hit.subtitle,
+        time: "",
+        areas: [],
+        sourceId: hit.tenderId,
       });
     }
 
@@ -444,8 +527,9 @@ export function CalendarPanel() {
           <div>
             <h2 className="text-lg font-semibold">Calendario operativo</h2>
             <p className="text-sm text-muted-foreground">
-              Servicios de mantenimiento, cumpleaños del equipo y eventos con
-              aviso por correo o WhatsApp.
+              Mantenimientos, cumpleaños, aniversarios, fiestas patrias, días de
+              descanso obligatorio (LFT), hitos de licitaciones CompraMX y
+              eventos con aviso por correo o WhatsApp.
             </p>
           </div>
           {canWrite ? (
@@ -465,6 +549,10 @@ export function CalendarPanel() {
               ["todos", "Todos"],
               ["mantenimiento", "Mantenimientos"],
               ["cumpleanos", "Cumpleaños"],
+              ["aniversario", "Aniversarios"],
+              ["descanso", "Descansos LFT"],
+              ["fiesta_patria", "Fiestas patrias"],
+              ["licitacion", "Licitaciones"],
               ["evento", "Eventos"],
             ] as const
           ).map(([id, label]) => (
@@ -544,6 +632,10 @@ export function CalendarPanel() {
               const dayItems = byDay.get(cell.key) ?? [];
               const isSelected = cell.key === selectedDay;
               const isToday = cell.key === todayKey();
+              const hasRest = dayItems.some((item) => item.kind === "descanso");
+              const hasPatria = dayItems.some(
+                (item) => item.kind === "fiesta_patria"
+              );
               return (
                 <button
                   key={cell.key}
@@ -560,6 +652,11 @@ export function CalendarPanel() {
                     cell.inMonth
                       ? "border-border bg-background"
                       : "border-transparent bg-muted/40 text-muted-foreground",
+                    hasRest && cell.inMonth && "border-emerald-500/50 bg-emerald-500/5",
+                    hasPatria &&
+                      !hasRest &&
+                      cell.inMonth &&
+                      "border-red-500/40 bg-red-500/5",
                     isSelected && "ring-2 ring-[#3B46A5]",
                     isToday && "border-[#00BFFF]"
                   )}
@@ -648,8 +745,25 @@ export function CalendarPanel() {
                       </div>
                     ) : null}
                     {item.kind === "cumpleanos" && item.sourceId ? (
-                      <BirthdayActions
+                      <PersonCelebrateActions
+                        kind="cumpleanos"
                         person={people.find((row) => row.id === item.sourceId)}
+                        years={yearsSince(
+                          people.find((row) => row.id === item.sourceId)
+                            ?.birthDate ?? "",
+                          cursor.year
+                        )}
+                      />
+                    ) : null}
+                    {item.kind === "aniversario" && item.sourceId ? (
+                      <PersonCelebrateActions
+                        kind="aniversario"
+                        person={people.find((row) => row.id === item.sourceId)}
+                        years={yearsSince(
+                          people.find((row) => row.id === item.sourceId)
+                            ?.hireDate ?? "",
+                          cursor.year
+                        )}
                       />
                     ) : null}
                   </div>
@@ -677,6 +791,14 @@ export function CalendarPanel() {
                         <Wrench className="mt-0.5 size-4 text-sky-600" />
                       ) : item.kind === "cumpleanos" ? (
                         <Cake className="mt-0.5 size-4 text-rose-600" />
+                      ) : item.kind === "aniversario" ? (
+                        <Award className="mt-0.5 size-4 text-amber-600" />
+                      ) : item.kind === "descanso" ? (
+                        <CalendarDays className="mt-0.5 size-4 text-emerald-600" />
+                      ) : item.kind === "fiesta_patria" ? (
+                        <Flag className="mt-0.5 size-4 text-red-600" />
+                      ) : item.kind === "licitacion" ? (
+                        <Gavel className="mt-0.5 size-4 text-indigo-600" />
                       ) : (
                         <CalendarDays className="mt-0.5 size-4 text-violet-600" />
                       )}
@@ -909,11 +1031,26 @@ export function CalendarPanel() {
   );
 }
 
-function BirthdayActions({ person }: { person?: CalendarCollaborator }) {
+function PersonCelebrateActions({
+  kind,
+  person,
+  years,
+}: {
+  kind: "cumpleanos" | "aniversario";
+  person?: CalendarCollaborator;
+  years: number | null;
+}) {
   if (!person) return null;
-  const message = birthdayMessage(person.fullName);
+  const message =
+    kind === "cumpleanos"
+      ? birthdayMessage(person.fullName)
+      : anniversaryMessage(person.fullName, years);
+  const subject =
+    kind === "cumpleanos"
+      ? `Feliz cumpleaños, ${person.fullName}`
+      : `Feliz aniversario en la empresa, ${person.fullName}`;
   const mail = person.email.includes("@")
-    ? mailtoHref([person.email], `Feliz cumpleaños, ${person.fullName}`, message)
+    ? mailtoHref([person.email], subject, message)
     : "";
   const phone = person.phone.replace(/\D/g, "").length >= 10;
   if (!mail && !phone) return null;
@@ -923,7 +1060,11 @@ function BirthdayActions({ person }: { person?: CalendarCollaborator }) {
         <a
           href={mail}
           className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-          aria-label="Felicitación por correo"
+          aria-label={
+            kind === "cumpleanos"
+              ? "Felicitación por correo"
+              : "Aniversario por correo"
+          }
         >
           <Mail className="size-4" />
         </a>

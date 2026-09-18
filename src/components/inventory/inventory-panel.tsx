@@ -35,6 +35,7 @@ import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { InventoryExcelActions } from "@/components/inventory/inventory-excel-actions";
 import type { WarehouseModule } from "@/lib/auth/permissions";
+import { getReservedQuantities } from "@/lib/holds/storage";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -85,6 +86,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
     ? categoryRequiresManufactureDate(supplyCategory)
     : false;
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [reservedByProduct, setReservedByProduct] = useState<Map<string, number>>(
+    new Map()
+  );
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -154,10 +158,14 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
     try {
       setLoading(true);
       setError("");
-      const data = isEquipment
-        ? await getEquipmentItems()
-        : await getSupplyItemsByCategory(supplyCategory ?? "insumos");
+      const [data, reservedMap] = await Promise.all([
+        isEquipment
+          ? getEquipmentItems()
+          : getSupplyItemsByCategory(supplyCategory ?? "insumos"),
+        isEquipment ? Promise.resolve(new Map<string, number>()) : getReservedQuantities(),
+      ]);
       setItems(data);
+      setReservedByProduct(reservedMap);
     } catch (err) {
       setError(
         err instanceof Error
@@ -338,7 +346,13 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     value:
                       item.itemKind === "equipo"
                         ? item.nextMaintenanceDate || "—"
-                        : `${item.quantity} ${item.unit} (mín. ${item.minStock})`,
+                        : (() => {
+                            const reserved = reservedByProduct.get(item.id) ?? 0;
+                            const available = Math.max(0, item.quantity - reserved);
+                            return reserved > 0
+                              ? `${item.quantity} ${item.unit} · disp. ${available} · apr. ${reserved}`
+                              : `${item.quantity} ${item.unit} (mín. ${item.minStock})`;
+                          })(),
                   },
                   { label: "Ubicación", value: item.location || "—" },
                   {
@@ -457,7 +471,17 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                             <>
                               {item.quantity} {item.unit}
                               <p className="text-xs text-muted-foreground">
-                                mín. {item.minStock}
+                                {(() => {
+                                  const reserved =
+                                    reservedByProduct.get(item.id) ?? 0;
+                                  const available = Math.max(
+                                    0,
+                                    item.quantity - reserved
+                                  );
+                                  return reserved > 0
+                                    ? `disp. ${available} · apr. ${reserved}`
+                                    : `mín. ${item.minStock}`;
+                                })()}
                               </p>
                             </>
                           )}

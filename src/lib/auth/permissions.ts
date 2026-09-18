@@ -19,10 +19,16 @@ export type WarehouseModule =
   | "reactivos"
   | "entradas"
   | "salidas"
+  | "apartados"
   | "movimientos"
   | "kardex"
   | "pedidos"
   | "proveedores"
+  | "clientes"
+  | "licitaciones"
+  | "cotizaciones"
+  | "ordenes_servicio"
+  | "flotilla"
   | "equipo"
   | "mantenimientos"
   | "calendario"
@@ -55,10 +61,16 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     ...CATALOG_MODULES,
     "entradas",
     "salidas",
+    "apartados",
     "movimientos",
     "kardex",
     "pedidos",
     "proveedores",
+    "clientes",
+    "licitaciones",
+    "cotizaciones",
+    "ordenes_servicio",
+    "flotilla",
     "equipo",
     "mantenimientos",
     "calendario",
@@ -70,13 +82,16 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     ...CATALOG_MODULES,
     "entradas",
     "salidas",
+    "apartados",
     "movimientos",
     "kardex",
     "pedidos",
     "proveedores",
+    "clientes",
     "equipo",
     "calendario",
     "reporte",
+    "flotilla",
   ],
   compras: [
     "dashboard",
@@ -87,16 +102,30 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "kardex",
     "calendario",
     "reporte",
+    "licitaciones",
   ],
-  ventas: ["dashboard", ...CATALOG_MODULES, "kardex", "reporte", "calendario"],
+  ventas: [
+    "dashboard",
+    ...CATALOG_MODULES,
+    "kardex",
+    "reporte",
+    "calendario",
+    "clientes",
+    "licitaciones",
+    "cotizaciones",
+  ],
   servicio: [
     "dashboard",
     ...CATALOG_MODULES,
     "salidas",
+    "apartados",
     "equipo",
     "mantenimientos",
+    "clientes",
     "calendario",
     "kardex",
+    "ordenes_servicio",
+    "flotilla",
   ],
   direccion: [
     "dashboard",
@@ -104,7 +133,12 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "kardex",
     "reporte",
     "equipo",
+    "clientes",
     "calendario",
+    "licitaciones",
+    "cotizaciones",
+    "ordenes_servicio",
+    "flotilla",
   ],
 };
 
@@ -119,20 +153,39 @@ export function canViewModule(role: string | null | undefined, module: Warehouse
 
 export function canWriteModule(role: string | null | undefined, module: WarehouseModule) {
   const normalized = normalizeRole(role);
-  if (normalized === "direccion" || normalized === "ventas") {
+  if (normalized === "direccion") {
     return false;
+  }
+  if (normalized === "ventas") {
+    return (
+      module === "clientes" ||
+      module === "licitaciones" ||
+      module === "cotizaciones"
+    );
   }
   if (
     normalized === "servicio" &&
     (module === "salidas" ||
+      module === "apartados" ||
       module === "equipo" ||
       module === "mantenimientos" ||
-      module === "calendario")
+      module === "calendario" ||
+      module === "clientes" ||
+      module === "ordenes_servicio" ||
+      module === "flotilla")
   ) {
     return true;
   }
+  if (normalized === "almacen" && module === "flotilla") {
+    return true;
+  }
   if (normalized === "compras") {
-    return module === "pedidos" || module === "proveedores" || module === "entradas";
+    return (
+      module === "pedidos" ||
+      module === "proveedores" ||
+      module === "entradas" ||
+      module === "licitaciones"
+    );
   }
   return WRITE_MODULES[normalized].includes(module) && module !== "kardex" && module !== "reporte";
 }

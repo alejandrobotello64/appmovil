@@ -13,8 +13,9 @@ export const USERS_TABS = [
   },
   {
     id: "baja",
-    label: "Baja de colaborador",
-    description: "Desactiva o reactiva accesos de colaboradores",
+    label: "Activar / deshabilitar",
+    description:
+      "Habilita o deshabilita el acceso de un colaborador de forma temporal (no borra la ficha)",
     href: "/dashboard/usuarios?tab=baja",
   },
   {

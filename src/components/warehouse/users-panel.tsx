@@ -16,6 +16,7 @@ import {
   DesktopTable,
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
+import { getSession } from "@/lib/auth";
 import { supabase } from "@/lib/supabase/client";
 import { ModulePlaceholder } from "@/components/warehouse/module-placeholder";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -51,6 +52,10 @@ type ListedUser = {
   birth_date: string | null;
   address: string;
   notes: string;
+  blood_type: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  emergency_contact_relation: string;
 };
 
 type AltaFormState = {
@@ -62,6 +67,10 @@ type AltaFormState = {
   phone: string;
   email: string;
   address: string;
+  bloodType: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelation: string;
   jobTitle: string;
   department: string;
   hireDate: string;
@@ -70,6 +79,8 @@ type AltaFormState = {
   password: string;
   notes: string;
 };
+
+const BLOOD_TYPES = ["", "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"] as const;
 
 const EMPTY_ALTA: AltaFormState = {
   fullName: "",
@@ -80,6 +91,10 @@ const EMPTY_ALTA: AltaFormState = {
   phone: "",
   email: "",
   address: "",
+  bloodType: "",
+  emergencyContactName: "",
+  emergencyContactPhone: "",
+  emergencyContactRelation: "",
   jobTitle: "",
   department: "",
   hireDate: "",
@@ -92,12 +107,18 @@ const EMPTY_ALTA: AltaFormState = {
 const MODULE_LABELS: Record<WarehouseModule, string> = {
   ...Object.fromEntries(WAREHOUSE_TABS.map((tab) => [tab.id, tab.label])),
   calendario: "Calendario",
+  clientes: "Clientes",
+  licitaciones: "Licitaciones",
+  cotizaciones: "Cotizaciones",
   usuarios: "Usuarios",
 } as Record<WarehouseModule, string>;
 
 const PERMISSION_MODULES: WarehouseModule[] = [
   ...(WAREHOUSE_TABS.map((tab) => tab.id) as WarehouseModule[]),
   "calendario",
+  "clientes",
+  "licitaciones",
+  "cotizaciones",
   "usuarios",
 ];
 
@@ -124,6 +145,10 @@ function userToAlta(user: ListedUser): AltaFormState {
     phone: user.phone ?? "",
     email: user.email ?? "",
     address: user.address ?? "",
+    bloodType: user.blood_type ?? "",
+    emergencyContactName: user.emergency_contact_name ?? "",
+    emergencyContactPhone: user.emergency_contact_phone ?? "",
+    emergencyContactRelation: user.emergency_contact_relation ?? "",
     jobTitle: user.job_title ?? "",
     department: user.department ?? "",
     hireDate: isoDate(user.hire_date),
@@ -132,6 +157,48 @@ function userToAlta(user: ListedUser): AltaFormState {
     password: "",
     notes: user.notes ?? "",
   };
+}
+
+function AccessToggle({
+  active,
+  disabled,
+  onToggle,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={active ? "Deshabilitar acceso" : "Habilitar acceso"}
+      disabled={disabled}
+      onClick={onToggle}
+      className={cn(
+        "inline-flex h-9 items-center gap-2 rounded-full border px-2.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        active
+          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+          : "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200"
+      )}
+    >
+      <span
+        className={cn(
+          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
+          active ? "bg-emerald-500" : "bg-muted-foreground/40"
+        )}
+      >
+        <span
+          className={cn(
+            "absolute size-4 rounded-full bg-white shadow transition-transform",
+            active ? "translate-x-4" : "translate-x-0.5"
+          )}
+        />
+      </span>
+      {active ? "Acceso activo" : "Deshabilitado"}
+    </button>
+  );
 }
 
 type UsersPanelProps = {
@@ -306,6 +373,10 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
       p_birth_date: emptyToNull(alta.birthDate),
       p_address: alta.address.trim(),
       p_notes: alta.notes.trim(),
+      p_blood_type: alta.bloodType.trim(),
+      p_emergency_contact_name: alta.emergencyContactName.trim(),
+      p_emergency_contact_phone: alta.emergencyContactPhone.trim(),
+      p_emergency_contact_relation: alta.emergencyContactRelation.trim(),
     };
   }
 
@@ -356,9 +427,20 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
 
   async function handleSetActive(user: ListedUser, isActive: boolean) {
     if (!canWrite) return;
-    const action = isActive ? "reactivar" : "dar de baja";
+    const session = getSession();
+    if (!isActive && session?.id === user.id) {
+      setError("No puedes deshabilitar tu propio acceso.");
+      return;
+    }
+
+    const action = isActive
+      ? "habilitar el acceso de"
+      : "deshabilitar temporalmente el acceso de";
     const confirmed = window.confirm(
-      `¿Seguro que quieres ${action} a "${user.full_name || user.username}"?`
+      `¿Seguro que quieres ${action} "${user.full_name || user.username}"?\n\n` +
+        (isActive
+          ? "Podrá iniciar sesión de nuevo."
+          : "No podrá iniciar sesión hasta que lo vuelvas a habilitar. La ficha no se borra.")
     );
     if (!confirmed) return;
 
@@ -374,8 +456,8 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
       await loadUsers();
       setMessage(
         isActive
-          ? `Colaborador ${user.full_name || user.username} reactivado.`
-          : `Colaborador ${user.full_name || user.username} dado de baja.`
+          ? `Acceso habilitado para ${user.full_name || user.username}.`
+          : `Acceso deshabilitado temporalmente para ${user.full_name || user.username}.`
       );
     } catch (err) {
       setError(
@@ -465,11 +547,11 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   tone: "text-emerald-600",
                 },
                 {
-                  label: "Inactivos",
+                  label: "Deshabilitados",
                   value: inactiveUsers.length,
                   icon: UserMinus,
                   href: "/dashboard/usuarios?tab=baja",
-                  tone: "text-destructive",
+                  tone: "text-amber-600",
                 },
                 {
                   label: "Roles usados",
@@ -519,7 +601,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     href="/dashboard/usuarios?tab=baja"
                     className="inline-flex h-8 items-center rounded-lg border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
                   >
-                    Baja
+                    Acceso
                   </Link>
                   <Link
                     href="/dashboard/usuarios?tab=permisos"
@@ -565,7 +647,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           : "bg-muted text-muted-foreground"
                       )}
                     >
-                      {user.is_active ? "Activo" : "Inactivo"}
+                      {user.is_active ? "Activo" : "Deshabilitado"}
                     </span>
                   ),
                   fields: [
@@ -645,7 +727,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                                   : "bg-muted text-muted-foreground"
                               )}
                             >
-                              {user.is_active ? "Activo" : "Inactivo"}
+                              {user.is_active ? "Activo" : "Deshabilitado"}
                             </span>
                           </td>
                           <td className="px-3 py-2">
@@ -706,7 +788,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         (user.employee_number
                           ? ` · ${user.employee_number}`
                           : "")}
-                      {user.is_active ? "" : " (baja)"}
+                      {user.is_active ? "" : " (deshabilitado)"}
                     </option>
                   ))}
                 </select>
@@ -776,6 +858,23 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 />
               </label>
               <label className="space-y-1.5">
+                <span className="text-sm font-medium">Tipo de sangre *</span>
+                <select
+                  required
+                  disabled={!canWrite}
+                  value={alta.bloodType}
+                  onChange={(e) => updateAlta("bloodType", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Selecciona</option>
+                  {BLOOD_TYPES.filter(Boolean).map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-1.5">
                 <span className="text-sm font-medium">Teléfono</span>
                 <input
                   type="tel"
@@ -801,6 +900,51 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   disabled={!canWrite}
                   value={alta.address}
                   onChange={(e) => updateAlta("address", e.target.value)}
+                  className={inputClass}
+                />
+              </label>
+            </section>
+
+            <section className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 sm:grid-cols-2">
+              <h3 className="text-base font-semibold text-foreground sm:col-span-2">
+                Contacto de emergencia
+              </h3>
+              <label className="space-y-1.5 sm:col-span-2">
+                <span className="text-sm font-medium">Nombre completo *</span>
+                <input
+                  required
+                  disabled={!canWrite}
+                  value={alta.emergencyContactName}
+                  onChange={(e) =>
+                    updateAlta("emergencyContactName", e.target.value)
+                  }
+                  placeholder="Nombre de la persona a contactar"
+                  className={inputClass}
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Teléfono *</span>
+                <input
+                  required
+                  type="tel"
+                  disabled={!canWrite}
+                  value={alta.emergencyContactPhone}
+                  onChange={(e) =>
+                    updateAlta("emergencyContactPhone", e.target.value)
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">Parentesco *</span>
+                <input
+                  required
+                  disabled={!canWrite}
+                  value={alta.emergencyContactRelation}
+                  onChange={(e) =>
+                    updateAlta("emergencyContactRelation", e.target.value)
+                  }
+                  placeholder="Ej. Padre, Madre, Cónyuge"
                   className={inputClass}
                 />
               </label>
@@ -920,9 +1064,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
 
         {!loading && activeTab === "baja" ? (
           <div className="space-y-6">
+            <p className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+              Usa el interruptor para{" "}
+              <strong className="text-foreground">habilitar o deshabilitar</strong>{" "}
+              el acceso de forma temporal. Un usuario deshabilitado no puede
+              iniciar sesión; su ficha y permisos se conservan para reactivarlo
+              cuando quieras.
+            </p>
+
             <section className="space-y-3">
               <h3 className="text-base font-semibold text-foreground">
-                Colaboradores activos
+                Colaboradores con acceso activo
               </h3>
               <ResponsiveDataList
                 emptyMessage="No hay colaboradores activos."
@@ -954,14 +1106,11 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         <Pencil className="size-3.5" />
                         Editar ficha
                       </Link>
-                      <button
-                        type="button"
+                      <AccessToggle
+                        active
                         disabled={submitting}
-                        onClick={() => void handleSetActive(user, false)}
-                        className="inline-flex h-9 items-center rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
-                      >
-                        Dar de baja
-                      </button>
+                        onToggle={() => void handleSetActive(user, false)}
+                      />
                     </div>
                   ) : undefined,
                 }))}
@@ -975,6 +1124,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       <th className="px-3 py-2 font-medium">Puesto</th>
                       <th className="px-3 py-2 font-medium">Área</th>
                       <th className="px-3 py-2 font-medium">Rol</th>
+                      <th className="px-3 py-2 font-medium">Acceso</th>
                       <th className="px-3 py-2 font-medium">Acciones</th>
                     </tr>
                   </thead>
@@ -982,7 +1132,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     {activeUsers.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={7}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
                           No hay colaboradores activos.
@@ -1006,24 +1156,24 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           </td>
                           <td className="px-3 py-2">
                             {canWrite ? (
-                              <div className="flex flex-wrap gap-2">
-                                <Link
-                                  href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
-                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
-                                >
-                                  <Pencil className="size-3.5" />
-                                  Editar
-                                </Link>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  disabled={submitting}
-                                  onClick={() => void handleSetActive(user, false)}
-                                  className="h-8 border-destructive/30 text-destructive"
-                                >
-                                  Dar de baja
-                                </Button>
-                              </div>
+                              <AccessToggle
+                                active
+                                disabled={submitting}
+                                onToggle={() => void handleSetActive(user, false)}
+                              />
+                            ) : (
+                              "Activo"
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            {canWrite ? (
+                              <Link
+                                href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
+                              >
+                                <Pencil className="size-3.5" />
+                                Editar
+                              </Link>
                             ) : (
                               "—"
                             )}
@@ -1038,17 +1188,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
 
             <section className="space-y-3">
               <h3 className="text-base font-semibold text-foreground">
-                Colaboradores dados de baja
+                Acceso deshabilitado temporalmente
               </h3>
               <ResponsiveDataList
-                emptyMessage="No hay colaboradores dados de baja."
+                emptyMessage="No hay colaboradores deshabilitados."
                 items={inactiveUsers.map((user) => ({
                   key: user.id,
                   title: user.full_name || user.username,
                   subtitle: `@${user.username}`,
                   badge: (
-                    <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      Inactivo · {roleLabel(user.role)}
+                    <span className="inline-flex rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-800 dark:text-amber-200">
+                      Deshabilitado · {roleLabel(user.role)}
                     </span>
                   ),
                   fields: [
@@ -1064,14 +1214,11 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         <Pencil className="size-3.5" />
                         Editar ficha
                       </Link>
-                      <button
-                        type="button"
+                      <AccessToggle
+                        active={false}
                         disabled={submitting}
-                        onClick={() => void handleSetActive(user, true)}
-                        className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-xs font-medium"
-                      >
-                        Reactivar
-                      </button>
+                        onToggle={() => void handleSetActive(user, true)}
+                      />
                     </div>
                   ) : undefined,
                 }))}
@@ -1085,6 +1232,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       <th className="px-3 py-2 font-medium">Puesto</th>
                       <th className="px-3 py-2 font-medium">Área</th>
                       <th className="px-3 py-2 font-medium">Rol</th>
+                      <th className="px-3 py-2 font-medium">Acceso</th>
                       <th className="px-3 py-2 font-medium">Acciones</th>
                     </tr>
                   </thead>
@@ -1092,10 +1240,10 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     {inactiveUsers.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={7}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
-                          No hay colaboradores dados de baja.
+                          No hay colaboradores deshabilitados.
                         </td>
                       </tr>
                     ) : (
@@ -1116,24 +1264,24 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           </td>
                           <td className="px-3 py-2">
                             {canWrite ? (
-                              <div className="flex flex-wrap gap-2">
-                                <Link
-                                  href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
-                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
-                                >
-                                  <Pencil className="size-3.5" />
-                                  Editar
-                                </Link>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  disabled={submitting}
-                                  onClick={() => void handleSetActive(user, true)}
-                                  className="h-8"
-                                >
-                                  Reactivar
-                                </Button>
-                              </div>
+                              <AccessToggle
+                                active={false}
+                                disabled={submitting}
+                                onToggle={() => void handleSetActive(user, true)}
+                              />
+                            ) : (
+                              "Deshabilitado"
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            {canWrite ? (
+                              <Link
+                                href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
+                              >
+                                <Pencil className="size-3.5" />
+                                Editar
+                              </Link>
                             ) : (
                               "—"
                             )}
@@ -1177,7 +1325,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       </span>
                       <span className="text-xs text-muted-foreground">
                         @{user.username} · {roleLabel(user.role)} ·{" "}
-                        {user.is_active ? "Activo" : "Inactivo"}
+                        {user.is_active ? "Activo" : "Deshabilitado"}
                       </span>
                     </button>
                   ))
@@ -1191,13 +1339,27 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       Datos y permisos
                     </h3>
                     {selectedUser ? (
-                      <Link
-                        href={`/dashboard/usuarios?tab=alta&id=${selectedUser.id}`}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-                      >
-                        <Pencil className="size-3.5" />
-                        Ficha completa
-                      </Link>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {canWrite ? (
+                          <AccessToggle
+                            active={selectedUser.is_active}
+                            disabled={submitting}
+                            onToggle={() =>
+                              void handleSetActive(
+                                selectedUser,
+                                !selectedUser.is_active
+                              )
+                            }
+                          />
+                        ) : null}
+                        <Link
+                          href={`/dashboard/usuarios?tab=alta&id=${selectedUser.id}`}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+                        >
+                          <Pencil className="size-3.5" />
+                          Ficha completa
+                        </Link>
+                      </div>
                     ) : null}
                   </div>
               {selectedUser ? (
@@ -1208,7 +1370,9 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     </p>
                     <p className="text-muted-foreground">
                       @{selectedUser.username} · Estado:{" "}
-                      {selectedUser.is_active ? "Activo" : "Inactivo"}
+                      {selectedUser.is_active
+                        ? "Acceso activo"
+                        : "Deshabilitado temporalmente"}
                     </p>
                   </div>
 
@@ -1331,8 +1495,8 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   </Button>
                   {!selectedUser.is_active ? (
                     <p className="text-xs text-muted-foreground">
-                      Reactiva al colaborador en &quot;Baja de
-                      colaborador&quot; para poder editar sus datos y permisos.
+                      Usa el interruptor de arriba para habilitar el acceso y
+                      poder editar datos y permisos.
                     </p>
                   ) : null}
                 </form>

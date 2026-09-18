@@ -196,16 +196,8 @@ export async function getOpenTransferCount(): Promise<number> {
   return count ?? 0;
 }
 
-export async function getKardex(productId?: string): Promise<KardexRow[]> {
-  let query = db
-    .from("inventory_movements")
-    .select("*")
-    .order("occurred_at", { ascending: false })
-    .limit(400);
-  if (productId) query = query.eq("product_id", productId);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((row: Record<string, unknown>) => ({
+function mapKardexRow(row: Record<string, unknown>): KardexRow {
+  return {
     id: String(row.id),
     occurredAt: String(row.occurred_at),
     folio: String(row.folio),
@@ -219,5 +211,32 @@ export async function getKardex(productId?: string): Promise<KardexRow[]> {
     reason: String(row.reason ?? ""),
     note: String(row.note ?? ""),
     createdBy: String(row.created_by ?? ""),
-  }));
+  };
+}
+
+export async function getKardex(productId?: string): Promise<KardexRow[]> {
+  let query = db
+    .from("inventory_movements")
+    .select("*")
+    .order("occurred_at", { ascending: false })
+    .limit(400);
+  if (productId) query = query.eq("product_id", productId);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapKardexRow);
+}
+
+/** Historial reciente solo de entradas o salidas (para el panel lateral). */
+export async function getEntryExitHistory(
+  mode: "entrada" | "salida",
+  limit = 40
+): Promise<KardexRow[]> {
+  const { data, error } = await db
+    .from("inventory_movements")
+    .select("*")
+    .eq("movement_type", mode)
+    .order("occurred_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapKardexRow);
 }

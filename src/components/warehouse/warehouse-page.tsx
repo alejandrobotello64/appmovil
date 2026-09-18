@@ -6,6 +6,7 @@ import { AppShell } from "@/components/dashboard/app-shell";
 import { InventoryPanel } from "@/components/inventory/inventory-panel";
 import { WarehouseDashboard } from "@/components/warehouse/warehouse-dashboard";
 import { StockMovementPanel } from "@/components/warehouse/stock-movement-panel";
+import { HoldsPanel } from "@/components/warehouse/holds-panel";
 import { SuppliersPanel } from "@/components/warehouse/suppliers-panel";
 import { MovementsPanel } from "@/components/warehouse/movements-panel";
 import { OrdersPanel } from "@/components/warehouse/orders-panel";
@@ -47,6 +48,9 @@ export function WarehousePage() {
     if (tabParam === "calendario") {
       router.replace("/dashboard/calendario");
     }
+    if (tabParam === "clientes") {
+      router.replace("/dashboard/clientes");
+    }
   }, [tabParam, router]);
 
   const activeTabMeta = WAREHOUSE_TABS.find((tab) => tab.id === activeTab);
@@ -83,6 +87,8 @@ export function WarehousePage() {
             {activeTab === "salidas" ? (
               <StockMovementPanel mode="salida" />
             ) : null}
+
+            {activeTab === "apartados" ? <HoldsPanel /> : null}
 
             {activeTab === "movimientos" ? <MovementsPanel /> : null}
 

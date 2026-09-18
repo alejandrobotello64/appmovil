@@ -17,6 +17,7 @@ import {
   transferProductLocation,
   type WarehouseMovement,
 } from "@/lib/warehouse/movements";
+import { getProductLots, type ProductLot } from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -36,11 +37,20 @@ function isExpiredOrNear(item: InventoryItem) {
   return expiry <= limit;
 }
 
+function isLotExpiredOrNear(lot: ProductLot) {
+  if (!lot.expiryDate) return false;
+  const expiry = new Date(lot.expiryDate);
+  const limit = new Date();
+  limit.setDate(limit.getDate() + 30);
+  return expiry <= limit;
+}
+
 export function MovementsPanel() {
   const { canWrite } = usePermissions("movimientos");
   const [movements, setMovements] = useState<WarehouseMovement[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [lots, setLots] = useState<ProductLot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -50,6 +60,8 @@ export function MovementsPanel() {
   const [newLocation, setNewLocation] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [supplierName, setSupplierName] = useState("");
+  const [outgoingLot, setOutgoingLot] = useState("");
+  const [newLot, setNewLot] = useState("");
   const [newExpiry, setNewExpiry] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -84,14 +96,71 @@ export function MovementsPanel() {
     [products, itemId]
   );
 
-  const expiredCandidates = useMemo(
-    () => products.filter((item) => isExpiredOrNear(item)),
+  const insumosProducts = useMemo(
+    () => products.filter((item) => item.category === "insumos"),
     [products]
   );
+
+  const selectableProducts = mode === "canje" ? insumosProducts : products;
+
+  const expiredCandidates = useMemo(
+    () => insumosProducts.filter((item) => isExpiredOrNear(item)),
+    [insumosProducts]
+  );
+
+  useEffect(() => {
+    if (!selectableProducts.some((item) => item.id === itemId)) {
+      setItemId(selectableProducts[0]?.id ?? "");
+    }
+  }, [mode, selectableProducts, itemId]);
+
+  useEffect(() => {
+    if (mode !== "canje" || !itemId) {
+      setLots([]);
+      setOutgoingLot("");
+      return;
+    }
+    let cancelled = false;
+    void getProductLots(itemId)
+      .then((rows) => {
+        if (cancelled) return;
+        setLots(rows);
+        const preferred =
+          rows.find((lot) => isLotExpiredOrNear(lot)) ?? rows[0];
+        setOutgoingLot(preferred?.lotNumber ?? "");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLots([]);
+        setOutgoingLot("");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudieron cargar los lotes del insumo."
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, itemId]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!selected || !canWrite) return;
+    if (mode === "canje" && selected.category !== "insumos") {
+      setError(
+        "El canje de caducados solo aplica para productos del inventario de insumos."
+      );
+      return;
+    }
+    if (mode === "canje" && !outgoingLot.trim()) {
+      setError("Selecciona el lote caducado o por canjear.");
+      return;
+    }
+    if (mode === "canje" && !newLot.trim()) {
+      setError("Indica el lote nuevo del proveedor.");
+      return;
+    }
 
     setSubmitting(true);
     setError("");
@@ -115,14 +184,17 @@ export function MovementsPanel() {
           itemId: selected.id,
           quantity,
           supplierName,
+          outgoingLotNumber: outgoingLot,
+          newLotNumber: newLot,
           newExpiryDate: newExpiry,
           note,
           createdBy: session?.username ?? "",
         });
         setMessage(
-          `Canje registrado: ${quantity} ${selected.unit} de ${selected.name} con ${supplierName}.`
+          `Canje registrado: ${quantity} ${selected.unit} de ${selected.name} · lote ${outgoingLot} → ${newLot}.`
         );
         setQuantity(1);
+        setNewLot("");
         setNewExpiry("");
       }
       setNote("");
@@ -148,7 +220,7 @@ export function MovementsPanel() {
         <h2 className="text-lg font-semibold text-foreground">Movimientos</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Cambia materiales de ubicación o registra canjes con proveedores por
-          insumos/medicamentos caducados o próximos a caducar.
+          insumos caducados o próximos a caducar.
         </p>
 
         <div className="mt-4">
@@ -184,14 +256,23 @@ export function MovementsPanel() {
 
         <form onSubmit={handleSubmit} className="mt-5 grid max-w-2xl gap-4">
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Producto</span>
+            <span className="text-sm font-medium">
+              {mode === "canje" ? "Insumo" : "Producto"}
+            </span>
             <select
               required
               value={itemId}
               onChange={(event) => setItemId(event.target.value)}
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             >
-              {products.map((item) => (
+              {selectableProducts.length === 0 ? (
+                <option value="">
+                  {mode === "canje"
+                    ? "No hay insumos disponibles"
+                    : "No hay productos disponibles"}
+                </option>
+              ) : null}
+              {selectableProducts.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.sku} — {item.name}
                   {item.expiryDate ? ` · cad. ${item.expiryDate}` : ""}
@@ -200,10 +281,12 @@ export function MovementsPanel() {
                 </option>
               ))}
             </select>
-            {mode === "canje" && expiredCandidates.length > 0 ? (
-              <p className="text-xs text-amber-700 dark:text-amber-300">
-                Hay {expiredCandidates.length} producto(s) caducado(s) o por
-                caducar en 30 días.
+            {mode === "canje" ? (
+              <p className="text-xs text-muted-foreground">
+                Solo productos de la categoría Insumos.
+                {expiredCandidates.length > 0
+                  ? ` Hay ${expiredCandidates.length} caducado(s) o por caducar en 30 días.`
+                  : ""}
               </p>
             ) : null}
           </label>
@@ -253,6 +336,48 @@ export function MovementsPanel() {
                   max={selected?.quantity ?? undefined}
                   value={quantity}
                   onChange={(event) => setQuantity(Number(event.target.value))}
+                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">
+                  Lote a canjear (caducado) *
+                </span>
+                {lots.length > 0 ? (
+                  <select
+                    required
+                    value={outgoingLot}
+                    onChange={(event) => setOutgoingLot(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                  >
+                    <option value="">Selecciona el lote</option>
+                    {lots.map((lot) => (
+                      <option key={lot.id} value={lot.lotNumber}>
+                        {lot.lotNumber}
+                        {lot.expiryDate ? ` · cad. ${lot.expiryDate}` : ""}
+                        {isLotExpiredOrNear(lot) ? " · CADUCADO/PRÓXIMO" : ""}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    required
+                    value={outgoingLot}
+                    onChange={(event) => setOutgoingLot(event.target.value)}
+                    placeholder="Número de lote caducado"
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                  />
+                )}
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">
+                  Lote nuevo del proveedor *
+                </span>
+                <input
+                  required
+                  value={newLot}
+                  onChange={(event) => setNewLot(event.target.value)}
+                  placeholder="Número de lote que entrega el proveedor"
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
                 />
               </label>

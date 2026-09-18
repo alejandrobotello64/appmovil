@@ -167,6 +167,8 @@ export async function exchangeExpiredProduct(input: {
   itemId: string;
   quantity: number;
   supplierName: string;
+  outgoingLotNumber: string;
+  newLotNumber: string;
   newExpiryDate: string;
   note?: string;
   createdBy?: string;
@@ -174,6 +176,20 @@ export async function exchangeExpiredProduct(input: {
   const products = await getInventoryItems({ kind: "producto" });
   const product = products.find((item) => item.id === input.itemId);
   if (!product) throw new Error("Producto no encontrado.");
+  if (product.category !== "insumos") {
+    throw new Error(
+      "El canje de caducados solo aplica para productos del inventario de insumos."
+    );
+  }
+
+  const outgoingLot = input.outgoingLotNumber.trim();
+  const newLot = input.newLotNumber.trim();
+  if (!outgoingLot) {
+    throw new Error("Indica el lote caducado o por canjear.");
+  }
+  if (!newLot) {
+    throw new Error("Indica el lote nuevo que entrega el proveedor.");
+  }
 
   if (input.quantity <= 0) {
     throw new Error("La cantidad a canjear debe ser mayor a 0.");
@@ -188,16 +204,50 @@ export async function exchangeExpiredProduct(input: {
     throw new Error("Indica la nueva fecha de caducidad.");
   }
 
-  await applyStockMovement({
-    productId: product.id,
-    movementType: "canje_caducado",
-    quantity: input.quantity,
-    createdBy: input.createdBy || "sistema",
-    note: input.note,
-    supplierName: input.supplierName.trim(),
-    expiryDate: input.newExpiryDate,
-    lotNumber: `CANJE-${new Date().toISOString().slice(0, 10)}`,
-  });
+  const createdBy = input.createdBy || "sistema";
+  const noteBase = [
+    input.note?.trim(),
+    `Lote canjeado: ${outgoingLot}`,
+    `Lote nuevo: ${newLot}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  if (outgoingLot === newLot) {
+    await applyStockMovement({
+      productId: product.id,
+      movementType: "canje_caducado",
+      quantity: input.quantity,
+      createdBy,
+      note: noteBase,
+      supplierName: input.supplierName.trim(),
+      expiryDate: input.newExpiryDate,
+      lotNumber: newLot,
+      reason: "Canje de insumo caducado",
+    });
+  } else {
+    await applyStockMovement({
+      productId: product.id,
+      movementType: "salida",
+      quantity: input.quantity,
+      createdBy,
+      note: noteBase,
+      supplierName: input.supplierName.trim(),
+      lotNumber: outgoingLot,
+      reason: "Canje caducado · salida de lote",
+    });
+    await applyStockMovement({
+      productId: product.id,
+      movementType: "entrada",
+      quantity: input.quantity,
+      createdBy,
+      note: noteBase,
+      supplierName: input.supplierName.trim(),
+      expiryDate: input.newExpiryDate,
+      lotNumber: newLot,
+      reason: "Canje caducado · entrada de lote nuevo",
+    });
+  }
 
   return {
     id: crypto.randomUUID(),
@@ -208,7 +258,7 @@ export async function exchangeExpiredProduct(input: {
     quantity: input.quantity,
     previousQuantity: product.quantity,
     newQuantity: product.quantity,
-    note: input.note ?? "",
+    note: noteBase,
     createdBy: input.createdBy ?? "",
     createdAt: new Date().toISOString(),
     fromLocation: product.location,

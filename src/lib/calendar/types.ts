@@ -41,7 +41,14 @@ export type CalendarReminder = {
   createdAt: string;
 };
 
-export type CalendarItemKind = "mantenimiento" | "cumpleanos" | "evento";
+export type CalendarItemKind =
+  | "mantenimiento"
+  | "cumpleanos"
+  | "aniversario"
+  | "evento"
+  | "descanso"
+  | "fiesta_patria"
+  | "licitacion";
 
 export type CalendarItem = {
   id: string;

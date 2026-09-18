@@ -30,6 +30,10 @@ export type Database = {
           birth_date: string | null;
           address: string;
           notes: string;
+          blood_type: string;
+          emergency_contact_name: string;
+          emergency_contact_phone: string;
+          emergency_contact_relation: string;
         };
         Insert: {
           id?: string;
@@ -51,6 +55,10 @@ export type Database = {
           birth_date?: string | null;
           address?: string;
           notes?: string;
+          blood_type?: string;
+          emergency_contact_name?: string;
+          emergency_contact_phone?: string;
+          emergency_contact_relation?: string;
         };
         Update: {
           id?: string;
@@ -72,6 +80,10 @@ export type Database = {
           birth_date?: string | null;
           address?: string;
           notes?: string;
+          blood_type?: string;
+          emergency_contact_name?: string;
+          emergency_contact_phone?: string;
+          emergency_contact_relation?: string;
         };
         Relationships: [];
       };
@@ -524,6 +536,10 @@ export type Database = {
           birth_date: string | null;
           address: string;
           notes: string;
+          blood_type: string;
+          emergency_contact_name: string;
+          emergency_contact_phone: string;
+          emergency_contact_relation: string;
         }[];
       };
       create_app_user: {
@@ -543,6 +559,10 @@ export type Database = {
           p_birth_date?: string | null;
           p_address?: string;
           p_notes?: string;
+          p_blood_type?: string;
+          p_emergency_contact_name?: string;
+          p_emergency_contact_phone?: string;
+          p_emergency_contact_relation?: string;
         };
         Returns: {
           id: string;
@@ -608,6 +628,10 @@ export type Database = {
           p_address?: string;
           p_notes?: string;
           p_password?: string | null;
+          p_blood_type?: string;
+          p_emergency_contact_name?: string;
+          p_emergency_contact_phone?: string;
+          p_emergency_contact_relation?: string;
         };
         Returns: {
           id: string;

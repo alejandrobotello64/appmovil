@@ -48,6 +48,12 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=salidas",
   },
   {
+    id: "apartados",
+    label: "Apartados",
+    description: "Reservar mercancía para proyectos en puerta",
+    href: "/dashboard/almacen?tab=apartados",
+  },
+  {
     id: "movimientos",
     label: "Movimientos",
     description: "Cambios de ubicación y canjes de materiales caducados",

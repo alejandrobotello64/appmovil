@@ -88,6 +88,7 @@ export type CalendarCollaborator = {
   email: string;
   phone: string;
   birthDate: string;
+  hireDate: string;
   isActive: boolean;
 };
 
@@ -102,6 +103,7 @@ export async function getCalendarCollaborators(): Promise<CalendarCollaborator[]
     email: row.email ?? "",
     phone: row.phone ?? "",
     birthDate: row.birth_date ?? "",
+    hireDate: row.hire_date ?? "",
     isActive: Boolean(row.is_active),
   }));
 }
