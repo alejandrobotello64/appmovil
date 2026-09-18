@@ -33,6 +33,7 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import { WAREHOUSE_TABS } from "@/lib/warehouse/tabs";
 import { USERS_TABS, type UsersTabId } from "@/lib/users/tabs";
 import { cn } from "@/lib/utils";
+import { UsersExcelActions } from "@/components/warehouse/users-excel-actions";
 
 type ListedUser = {
   id: string;
@@ -528,6 +529,28 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
           <p className="text-sm text-muted-foreground">Cargando usuarios...</p>
         ) : null}
 
+        {!loading ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Sube un Excel o CSV para dar de alta o actualizar varios
+              colaboradores a la vez. Los nuevos necesitan columna{" "}
+              <span className="font-medium text-foreground">password</span>{" "}
+              (mínimo 6 caracteres).
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <UsersExcelActions
+                users={users}
+                canWrite={canWrite}
+                onImported={async () => {
+                  await loadUsers();
+                }}
+                onError={setError}
+                onMessage={setMessage}
+              />
+            </div>
+          </div>
+        ) : null}
+
         {!loading && activeTab === "dashboard" ? (
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -762,7 +785,11 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Completa o corrige todos los datos personales, laborales y de
-                  acceso. Puedes cargar una ficha existente para editarla.
+                  acceso. Para varios colaboradores usa{" "}
+                  <span className="font-medium text-foreground">
+                    Carga masiva
+                  </span>{" "}
+                  con la plantilla Excel.
                 </p>
               </div>
               <label className="space-y-1.5">

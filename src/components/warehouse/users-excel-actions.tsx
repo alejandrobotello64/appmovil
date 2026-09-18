@@ -144,33 +144,33 @@ export function UsersExcelActions({
         }}
       />
 
+      {canWrite ? (
+        <Button
+          type="button"
+          disabled={busy}
+          onClick={() => fileRef.current?.click()}
+          className="h-10 border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+        >
+          <Upload className="size-4" />
+          {busy ? "Leyendo..." : "Carga masiva"}
+        </Button>
+      ) : null}
+
       <Button type="button" variant="outline" className="h-10" onClick={handleExport}>
         <Download className="size-4" />
         Descargar Excel
       </Button>
 
       {canWrite ? (
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10"
-            onClick={downloadUserTemplate}
-          >
-            <FileSpreadsheet className="size-4" />
-            Plantilla
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10"
-            disabled={busy}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload className="size-4" />
-            {busy ? "Leyendo..." : "Carga masiva"}
-          </Button>
-        </>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-10"
+          onClick={downloadUserTemplate}
+        >
+          <FileSpreadsheet className="size-4" />
+          Plantilla
+        </Button>
       ) : null}
 
       {open ? (
