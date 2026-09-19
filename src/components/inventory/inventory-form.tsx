@@ -31,8 +31,7 @@ function emptyForm(
     kind === "equipo" ? "equipos" : lockedCategory ?? "insumos";
   const requiresExpiry =
     kind !== "equipo" && categoryRequiresExpiry(category);
-  const requiresManufactureDate =
-    kind !== "equipo" && categoryRequiresManufactureDate(category);
+  const requiresManufactureDate = categoryRequiresManufactureDate(category);
   return {
     sku: "",
     name: "",
@@ -120,7 +119,7 @@ export function InventoryForm({
       category,
       quantity: itemKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
       expiryDate: requiresManufactureDate ? "" : form.expiryDate,
-      manufacturedAt: requiresManufactureDate ? form.manufacturedAt : form.manufacturedAt,
+      manufacturedAt: form.manufacturedAt,
       tracksExpiry: requiresExpiry,
       tracksLot: requiresExpiry || form.tracksLot,
     });
@@ -133,15 +132,15 @@ export function InventoryForm({
   const requiresExpiry =
     !isEquipment &&
     categoryRequiresExpiry(lockedCategory ?? form.category);
-  const requiresManufactureDate =
-    !isEquipment &&
-    categoryRequiresManufactureDate(lockedCategory ?? form.category);
+  const requiresManufactureDate = categoryRequiresManufactureDate(
+    isEquipment ? "equipos" : lockedCategory ?? form.category
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
         {isEquipment
-          ? "Registro de equipo médico (activo): control por serie, estado y mantenimiento."
+          ? "Registro de equipo médico (activo): serie, fecha de fabricación, estado y mantenimiento."
           : requiresExpiry
             ? `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} con caducidad y lote obligatorios.`
             : requiresManufactureDate
@@ -374,7 +373,7 @@ export function InventoryForm({
           />
           Control por número de serie
         </label>
-        {!requiresManufactureDate ? (
+        {!isEquipment && !requiresManufactureDate ? (
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -386,13 +385,13 @@ export function InventoryForm({
             />
             Control de caducidad{requiresExpiry ? " (obligatorio)" : ""}
           </label>
-        ) : (
+        ) : requiresManufactureDate && !isEquipment ? (
           <p className="text-sm text-muted-foreground">
             Los accesorios no controlan caducidad.
           </p>
-        )}
+        ) : null}
 
-        {!isEquipment && requiresManufactureDate ? (
+        {requiresManufactureDate ? (
           <label className="space-y-1.5 md:col-span-2">
             <span className="text-sm font-medium">
               Fecha de fabricación (obligatoria)
@@ -424,7 +423,9 @@ export function InventoryForm({
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             />
           </label>
-        ) : isEquipment ? (
+        ) : null}
+
+        {isEquipment ? (
           <>
             <label className="space-y-1.5">
               <span className="text-sm font-medium">Último mantenimiento</span>

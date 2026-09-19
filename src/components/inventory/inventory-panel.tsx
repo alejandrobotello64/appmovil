@@ -82,9 +82,11 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const requiresExpiry = supplyCategory
     ? categoryRequiresExpiry(supplyCategory)
     : false;
-  const requiresManufactureDate = supplyCategory
-    ? categoryRequiresManufactureDate(supplyCategory)
-    : false;
+  const requiresManufactureDate = isEquipment
+    ? true
+    : supplyCategory
+      ? categoryRequiresManufactureDate(supplyCategory)
+      : false;
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [reservedByProduct, setReservedByProduct] = useState<Map<string, number>>(
     new Map()
@@ -237,7 +239,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               </h2>
               <p className="text-sm text-muted-foreground">
                 {isEquipment
-                  ? "Activos con número de serie, estado operativo y mantenimiento."
+                  ? "Activos con número de serie, fecha de fabricación, estado y mantenimiento."
                   : requiresExpiry
                     ? `${supplyMeta?.description ?? ""}. Caducidad y lote obligatorios.`
                     : requiresManufactureDate
@@ -570,7 +572,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               </h3>
               <p className="text-sm text-muted-foreground">
                 {isEquipment
-                  ? "Los equipos se gestionan como activos, no como stock consumible."
+                  ? "Los equipos se gestionan como activos. La fecha de fabricación es obligatoria."
                   : requiresExpiry
                     ? "Esta tabla exige control de caducidad y lote en entradas."
                     : requiresManufactureDate

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Camera, KeyRound, Settings, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -75,14 +76,51 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState("");
   const [removePhoto, setRemovePhoto] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(
+    null
+  );
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  function updateMenuPosition() {
+    const button = buttonRef.current;
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    setMenuPos({
+      top: rect.bottom + 8,
+      right: Math.max(8, window.innerWidth - rect.right),
+    });
+  }
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPos(null);
+      return;
+    }
+    updateMenuPosition();
+    function onReposition() {
+      updateMenuPosition();
+    }
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     function onPointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (
+        rootRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
       }
+      setOpen(false);
     }
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
@@ -252,6 +290,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
     <>
       <div ref={rootRef} className="relative">
         <button
+          ref={buttonRef}
           type="button"
           onClick={() => setOpen((value) => !value)}
           className="touch-target inline-flex size-11 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted sm:size-9"
@@ -260,44 +299,51 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
         >
           <Settings className="size-4" />
         </button>
-
-        {open ? (
-          <div className="absolute top-full right-0 z-40 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
-            <div className="border-b border-border px-3 py-2">
-              <p className="truncate text-xs text-muted-foreground">Sesión</p>
-              <p className="truncate text-sm font-medium">{username}</p>
-            </div>
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-muted"
-              onClick={() => openPanel("profile")}
-            >
-              <UserRound className="size-4 text-muted-foreground" />
-              Datos personales
-            </button>
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-muted"
-              onClick={() => openPanel("password")}
-            >
-              <KeyRound className="size-4 text-muted-foreground" />
-              Cambiar contraseña
-            </button>
-          </div>
-        ) : null}
       </div>
+
+      {open && menuPos && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className="fixed z-[110] w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg"
+              style={{ top: menuPos.top, right: menuPos.right }}
+            >
+              <div className="border-b border-border px-3 py-2">
+                <p className="truncate text-xs text-muted-foreground">Sesión</p>
+                <p className="truncate text-sm font-medium">{username}</p>
+              </div>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-muted"
+                onClick={() => openPanel("profile")}
+              >
+                <UserRound className="size-4 text-muted-foreground" />
+                Datos personales
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-muted"
+                onClick={() => openPanel("password")}
+              >
+                <KeyRound className="size-4 text-muted-foreground" />
+                Cambiar contraseña
+              </button>
+            </div>,
+            document.body
+          )
+        : null}
 
       {panel === "profile" ? (
         <ModalShell
           title="Mi cuenta"
           description="Actualiza tus datos personales. El usuario de acceso y el rol solo los cambia un administrador."
           className="max-w-2xl"
-        >
-          <div className="mb-3 flex justify-end">
+          headerAction={
             <Button type="button" variant="outline" size="sm" onClick={closePanel}>
               <X className="size-4" /> Cerrar
             </Button>
-          </div>
+          }
+        >
           {error ? (
             <p className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
@@ -312,7 +358,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
             <p className="text-sm text-muted-foreground">Cargando ficha…</p>
           ) : (
             <form onSubmit={handleSaveProfile} className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
+              <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-muted/20 p-3 sm:col-span-2">
                 <UserAvatar
                   name={profile.fullName || username}
                   photoUrl={photoPreview || (removePhoto ? "" : photoUrl)}
@@ -514,12 +560,12 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
           title="Cambiar contraseña"
           description="Ingresa tu contraseña actual y define una nueva de al menos 6 caracteres."
           className="max-w-md"
-        >
-          <div className="mb-3 flex justify-end">
+          headerAction={
             <Button type="button" variant="outline" size="sm" onClick={closePanel}>
               <X className="size-4" /> Cerrar
             </Button>
-          </div>
+          }
+        >
           {error ? (
             <p className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}

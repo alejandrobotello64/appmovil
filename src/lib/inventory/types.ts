@@ -37,8 +37,11 @@ export const EXPIRY_SUPPLY_CATEGORY_IDS = [
 /** Refacciones y accesorios (sin caducidad obligatoria) */
 export const PARTS_SUPPLY_CATEGORY_IDS = ["refacciones", "accesorios"] as const;
 
-/** Accesorios llevan fecha de fabricación, no caducidad */
-export const MANUFACTURE_DATE_CATEGORY_IDS = ["accesorios"] as const;
+/** Accesorios y equipos llevan fecha de fabricación */
+export const MANUFACTURE_DATE_CATEGORY_IDS = [
+  "accesorios",
+  "equipos",
+] as const;
 
 /** Categorías principales para identificar productos en el catálogo */
 export const CATALOG_CATEGORIES = [
@@ -46,7 +49,7 @@ export const CATALOG_CATEGORIES = [
   {
     id: "equipos",
     label: "Equipos",
-    description: "Equipos y dispositivos médicos",
+    description: "Equipos y dispositivos médicos con fecha de fabricación",
   },
 ] as const;
 
@@ -58,7 +61,7 @@ export const PRODUCT_CATEGORIES = [
 export const EQUIPMENT_CATEGORY = {
   id: "equipos",
   label: "Equipos médicos",
-  description: "Equipos y dispositivos activos del almacén",
+  description: "Equipos y dispositivos con fecha de fabricación",
 } as const;
 
 export const INVENTORY_CATEGORIES = [

@@ -63,7 +63,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
       </Suspense>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="app-header sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-background/95 backdrop-blur sm:gap-4">
+        <header className="app-header sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-background/95 backdrop-blur sm:gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"

@@ -368,7 +368,7 @@ function withInstructionSheet(workbook: XLSX.WorkBook) {
     ["4. tipo: producto o equipo. Si la categoria es equipos, se guarda como equipo."],
     ["5. existencia: solo se usa como stock inicial al crear un sku nuevo. No cambia existencias de productos que ya existen."],
     ["6. controla_lote, controla_serie, controla_caducidad y activo: si / no."],
-    ["7. Accesorios: usa fecha_fabricacion (AAAA-MM-DD). No llevan caducidad."],
+    ["7. Accesorios y equipos: usa fecha_fabricacion (AAAA-MM-DD). Los accesorios no llevan caducidad."],
     ["8. Fechas en formato AAAA-MM-DD. unidad: pieza, caja, paquete, litro, ml, kg, g, par, rollo, frasco."],
     ["9. Puedes exportar el catálogo, editarlo en Excel y volver a importarlo. Los sku existentes se actualizan."],
   ];
