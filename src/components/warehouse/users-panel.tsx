@@ -4,20 +4,28 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
+  Camera,
   Pencil,
   Shield,
+  Trash2,
   UserCheck,
   UserMinus,
   UserPlus,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   DesktopTable,
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
 import { getSession } from "@/lib/auth";
 import { supabase } from "@/lib/supabase/client";
+import {
+  removeUserPhoto,
+  setUserPhotoUrl,
+  uploadUserPhoto,
+} from "@/lib/users/photo";
 import { ModulePlaceholder } from "@/components/warehouse/module-placeholder";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import {
@@ -57,6 +65,7 @@ type ListedUser = {
   emergency_contact_name: string;
   emergency_contact_phone: string;
   emergency_contact_relation: string;
+  photo_url: string;
 };
 
 type AltaFormState = {
@@ -219,6 +228,10 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
   const [alta, setAlta] = useState<AltaFormState>(EMPTY_ALTA);
   const [editingId, setEditingId] = useState("");
   const [fichaQuery, setFichaQuery] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [removePhoto, setRemovePhoto] = useState(false);
 
   const [selectedUserId, setSelectedUserId] = useState("");
   const [permissionRole, setPermissionRole] = useState<AppRole>("almacen");
@@ -257,14 +270,36 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
     if (activeTab !== "alta") return;
     const nextId = editUserId ?? "";
     setEditingId(nextId);
-    if (!nextId) setAlta(EMPTY_ALTA);
+    if (!nextId) {
+      setAlta(EMPTY_ALTA);
+      setPhotoUrl("");
+      setPhotoFile(null);
+      setPhotoPreview("");
+      setRemovePhoto(false);
+    }
   }, [activeTab, editUserId]);
 
   useEffect(() => {
     if (!editingId) return;
     const match = users.find((user) => user.id === editingId);
-    if (match) setAlta(userToAlta(match));
+    if (match) {
+      setAlta(userToAlta(match));
+      setPhotoUrl(match.photo_url ?? "");
+      setPhotoFile(null);
+      setPhotoPreview("");
+      setRemovePhoto(false);
+    }
   }, [editingId, users]);
+
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreview("");
+      return;
+    }
+    const url = URL.createObjectURL(photoFile);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoFile]);
 
   const activeUsers = useMemo(
     () => users.filter((user) => user.is_active),
@@ -347,6 +382,10 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
     if (!userId) {
       setEditingId("");
       setAlta(EMPTY_ALTA);
+      setPhotoUrl("");
+      setPhotoFile(null);
+      setPhotoPreview("");
+      setRemovePhoto(false);
       router.replace("/dashboard/usuarios?tab=alta");
       return;
     }
@@ -354,6 +393,10 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
     if (match) {
       setEditingId(match.id);
       setAlta(userToAlta(match));
+      setPhotoUrl(match.photo_url ?? "");
+      setPhotoFile(null);
+      setPhotoPreview("");
+      setRemovePhoto(false);
     }
     router.replace(`/dashboard/usuarios?tab=alta&id=${userId}`);
   }
@@ -381,6 +424,21 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
     };
   }
 
+  async function persistPhoto(userId: string) {
+    if (removePhoto && !photoFile) {
+      await removeUserPhoto(userId);
+      setPhotoUrl("");
+      setRemovePhoto(false);
+      return;
+    }
+    if (!photoFile) return;
+    const url = await uploadUserPhoto(userId, photoFile);
+    await setUserPhotoUrl(userId, url);
+    setPhotoUrl(url);
+    setPhotoFile(null);
+    setRemovePhoto(false);
+  }
+
   async function handleSaveFicha(event: FormEvent) {
     event.preventDefault();
     if (!canWrite) return;
@@ -398,17 +456,26 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
           }
         );
         if (rpcError) throw new Error(rpcError.message);
+        await persistPhoto(editingId);
         await loadUsers();
         setAlta((current) => ({ ...current, password: "" }));
         setMessage("Ficha del colaborador actualizada.");
       } else {
-        const { error: rpcError } = await supabase.rpc("create_app_user", {
+        const { data, error: rpcError } = await supabase.rpc("create_app_user", {
           p_password: alta.password,
           ...profilePayload(),
         });
         if (rpcError) throw new Error(rpcError.message);
+        const createdId = data?.[0]?.id;
+        if (createdId && (photoFile || removePhoto)) {
+          await persistPhoto(createdId);
+        }
         setAlta(EMPTY_ALTA);
         setEditingId("");
+        setPhotoUrl("");
+        setPhotoFile(null);
+        setPhotoPreview("");
+        setRemovePhoto(false);
         await loadUsers();
         setMessage("Colaborador dado de alta correctamente.");
         router.replace("/dashboard/usuarios?tab=alta");
@@ -465,6 +532,44 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
         err instanceof Error
           ? err.message
           : "No se pudo actualizar el estado del usuario."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDeleteUser(user: ListedUser) {
+    if (!canWrite) return;
+    const session = getSession();
+    if (session?.id === user.id) {
+      setError("No puedes eliminar tu propio usuario.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar permanentemente a "${user.full_name || user.username}"?\n\n` +
+        "Esta acción no se puede deshacer. Se borrará la ficha y el acceso."
+    );
+    if (!confirmed) return;
+
+    setSubmitting(true);
+    setError("");
+    setMessage("");
+    try {
+      const { error: rpcError } = await supabase.rpc("delete_app_user", {
+        p_user_id: user.id,
+      });
+      if (rpcError) throw new Error(rpcError.message);
+      if (selectedUserId === user.id) setSelectedUserId("");
+      if (editingId === user.id) {
+        setEditingId("");
+        setAlta(EMPTY_ALTA);
+      }
+      await loadUsers();
+      setMessage(`Usuario ${user.full_name || user.username} eliminado.`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo eliminar el usuario."
       );
     } finally {
       setSubmitting(false);
@@ -659,7 +764,16 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 emptyMessage="No hay colaboradores registrados."
                 items={users.map((user) => ({
                   key: user.id,
-                  title: user.full_name || user.username,
+                  title: (
+                    <span className="inline-flex items-center gap-2">
+                      <UserAvatar
+                        name={user.full_name || user.username}
+                        photoUrl={user.photo_url}
+                        size="sm"
+                      />
+                      {user.full_name || user.username}
+                    </span>
+                  ),
                   subtitle: `@${user.username} · ${roleLabel(user.role)}`,
                   badge: (
                     <span
@@ -724,7 +838,14 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       users.map((user) => (
                         <tr key={user.id} className="border-t border-border/70">
                           <td className="px-3 py-2 font-medium">
-                            {user.full_name || "—"}
+                            <span className="inline-flex items-center gap-2">
+                              <UserAvatar
+                                name={user.full_name || user.username}
+                                photoUrl={user.photo_url}
+                                size="sm"
+                              />
+                              {user.full_name || "—"}
+                            </span>
                           </td>
                           <td className="px-3 py-2">{user.username}</td>
                           <td className="px-3 py-2">
@@ -837,6 +958,51 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               <h3 className="text-base font-semibold text-foreground sm:col-span-2">
                 Datos personales
               </h3>
+              <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
+                <UserAvatar
+                  name={alta.fullName || alta.username}
+                  photoUrl={photoPreview || (removePhoto ? "" : photoUrl)}
+                  size="lg"
+                />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Foto del colaborador</p>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium hover:bg-muted">
+                      <Camera className="size-3.5" />
+                      {photoFile || photoUrl ? "Cambiar foto" : "Agregar foto"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="sr-only"
+                        disabled={!canWrite}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0] ?? null;
+                          setPhotoFile(file);
+                          setRemovePhoto(false);
+                          event.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {(photoUrl || photoFile) && !removePhoto ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9"
+                        disabled={!canWrite}
+                        onClick={() => {
+                          setPhotoFile(null);
+                          setRemovePhoto(true);
+                        }}
+                      >
+                        Quitar foto
+                      </Button>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG o WebP. Máximo 2.5 MB.
+                  </p>
+                </div>
+              </div>
               <label className="space-y-1.5 sm:col-span-2">
                 <span className="text-sm font-medium">Nombre completo *</span>
                 <input
@@ -1096,7 +1262,9 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               <strong className="text-foreground">habilitar o deshabilitar</strong>{" "}
               el acceso de forma temporal. Un usuario deshabilitado no puede
               iniciar sesión; su ficha y permisos se conservan para reactivarlo
-              cuando quieras.
+              cuando quieras. El botón{" "}
+              <strong className="text-foreground">Eliminar</strong> borra la ficha
+              de forma permanente.
             </p>
 
             <section className="space-y-3">
@@ -1107,7 +1275,16 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 emptyMessage="No hay colaboradores activos."
                 items={activeUsers.map((user) => ({
                   key: user.id,
-                  title: user.full_name || user.username,
+                  title: (
+                    <span className="inline-flex items-center gap-2">
+                      <UserAvatar
+                        name={user.full_name || user.username}
+                        photoUrl={user.photo_url}
+                        size="sm"
+                      />
+                      {user.full_name || user.username}
+                    </span>
+                  ),
                   subtitle: `@${user.username}`,
                   badge: (
                     <span className="inline-flex rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-300">
@@ -1138,6 +1315,15 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         disabled={submitting}
                         onToggle={() => void handleSetActive(user, false)}
                       />
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                        onClick={() => void handleDeleteUser(user)}
+                      >
+                        <Trash2 className="size-3.5" />
+                        Eliminar
+                      </button>
                     </div>
                   ) : undefined,
                 }))}
@@ -1169,7 +1355,14 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       activeUsers.map((user) => (
                         <tr key={user.id} className="border-t border-border/70">
                           <td className="px-3 py-2 font-medium">
-                            {user.full_name || "—"}
+                            <span className="inline-flex items-center gap-2">
+                              <UserAvatar
+                                name={user.full_name || user.username}
+                                photoUrl={user.photo_url}
+                                size="sm"
+                              />
+                              {user.full_name || "—"}
+                            </span>
                           </td>
                           <td className="px-3 py-2">{user.username}</td>
                           <td className="px-3 py-2">
@@ -1194,13 +1387,24 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           </td>
                           <td className="px-3 py-2">
                             {canWrite ? (
-                              <Link
-                                href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
-                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
-                              >
-                                <Pencil className="size-3.5" />
-                                Editar
-                              </Link>
+                              <div className="flex flex-wrap gap-2">
+                                <Link
+                                  href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
+                                >
+                                  <Pencil className="size-3.5" />
+                                  Editar
+                                </Link>
+                                <button
+                                  type="button"
+                                  disabled={submitting}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
+                                  onClick={() => void handleDeleteUser(user)}
+                                >
+                                  <Trash2 className="size-3.5" />
+                                  Eliminar
+                                </button>
+                              </div>
                             ) : (
                               "—"
                             )}
@@ -1221,7 +1425,16 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 emptyMessage="No hay colaboradores deshabilitados."
                 items={inactiveUsers.map((user) => ({
                   key: user.id,
-                  title: user.full_name || user.username,
+                  title: (
+                    <span className="inline-flex items-center gap-2">
+                      <UserAvatar
+                        name={user.full_name || user.username}
+                        photoUrl={user.photo_url}
+                        size="sm"
+                      />
+                      {user.full_name || user.username}
+                    </span>
+                  ),
                   subtitle: `@${user.username}`,
                   badge: (
                     <span className="inline-flex rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-800 dark:text-amber-200">
@@ -1246,6 +1459,15 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         disabled={submitting}
                         onToggle={() => void handleSetActive(user, true)}
                       />
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                        onClick={() => void handleDeleteUser(user)}
+                      >
+                        <Trash2 className="size-3.5" />
+                        Eliminar
+                      </button>
                     </div>
                   ) : undefined,
                 }))}
@@ -1277,7 +1499,14 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       inactiveUsers.map((user) => (
                         <tr key={user.id} className="border-t border-border/70">
                           <td className="px-3 py-2 font-medium">
-                            {user.full_name || "—"}
+                            <span className="inline-flex items-center gap-2">
+                              <UserAvatar
+                                name={user.full_name || user.username}
+                                photoUrl={user.photo_url}
+                                size="sm"
+                              />
+                              {user.full_name || "—"}
+                            </span>
                           </td>
                           <td className="px-3 py-2">{user.username}</td>
                           <td className="px-3 py-2">
@@ -1302,13 +1531,24 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           </td>
                           <td className="px-3 py-2">
                             {canWrite ? (
-                              <Link
-                                href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
-                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
-                              >
-                                <Pencil className="size-3.5" />
-                                Editar
-                              </Link>
+                              <div className="flex flex-wrap gap-2">
+                                <Link
+                                  href={`/dashboard/usuarios?tab=alta&id=${user.id}`}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
+                                >
+                                  <Pencil className="size-3.5" />
+                                  Editar
+                                </Link>
+                                <button
+                                  type="button"
+                                  disabled={submitting}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
+                                  onClick={() => void handleDeleteUser(user)}
+                                >
+                                  <Trash2 className="size-3.5" />
+                                  Eliminar
+                                </button>
+                              </div>
                             ) : (
                               "—"
                             )}
@@ -1347,7 +1587,12 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           : "hover:bg-muted/60"
                       )}
                     >
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+                        <UserAvatar
+                          name={user.full_name || user.username}
+                          photoUrl={user.photo_url}
+                          size="sm"
+                        />
                         {user.full_name || user.username}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -1392,7 +1637,12 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               {selectedUser ? (
                 <form onSubmit={handleSavePermissions} className="grid gap-4">
                   <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                    <p className="font-medium text-foreground">
+                    <p className="inline-flex items-center gap-2 font-medium text-foreground">
+                      <UserAvatar
+                        name={selectedUser.full_name || selectedUser.username}
+                        photoUrl={selectedUser.photo_url}
+                        size="sm"
+                      />
                       {selectedUser.full_name || selectedUser.username}
                     </p>
                     <p className="text-muted-foreground">

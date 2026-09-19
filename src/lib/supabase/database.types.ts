@@ -34,6 +34,7 @@ export type Database = {
           emergency_contact_name: string;
           emergency_contact_phone: string;
           emergency_contact_relation: string;
+          photo_url: string;
         };
         Insert: {
           id?: string;
@@ -59,6 +60,7 @@ export type Database = {
           emergency_contact_name?: string;
           emergency_contact_phone?: string;
           emergency_contact_relation?: string;
+          photo_url?: string;
         };
         Update: {
           id?: string;
@@ -84,6 +86,7 @@ export type Database = {
           emergency_contact_name?: string;
           emergency_contact_phone?: string;
           emergency_contact_relation?: string;
+          photo_url?: string;
         };
         Relationships: [];
       };
@@ -514,6 +517,7 @@ export type Database = {
           username: string;
           full_name: string | null;
           role: string;
+          photo_url: string;
         }[];
       };
       list_app_users: {
@@ -540,6 +544,7 @@ export type Database = {
           emergency_contact_name: string;
           emergency_contact_phone: string;
           emergency_contact_relation: string;
+          photo_url: string;
         }[];
       };
       create_app_user: {
@@ -640,6 +645,85 @@ export type Database = {
           role: string;
           is_active: boolean;
         }[];
+      };
+      delete_app_user: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
+      get_app_user_by_id: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+          is_active: boolean;
+          created_at: string;
+          email: string;
+          phone: string;
+          employee_number: string;
+          curp: string;
+          rfc: string;
+          job_title: string;
+          department: string;
+          hire_date: string | null;
+          birth_date: string | null;
+          address: string;
+          notes: string;
+          blood_type: string;
+          emergency_contact_name: string;
+          emergency_contact_phone: string;
+          emergency_contact_relation: string;
+          photo_url: string;
+        }[];
+      };
+      set_app_user_photo: {
+        Args: {
+          p_user_id: string;
+          p_photo_url: string;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+          photo_url: string;
+        }[];
+      };
+      update_own_profile: {
+        Args: {
+          p_user_id: string;
+          p_full_name: string;
+          p_email?: string;
+          p_phone?: string;
+          p_curp?: string;
+          p_rfc?: string;
+          p_birth_date?: string | null;
+          p_address?: string;
+          p_blood_type?: string;
+          p_emergency_contact_name?: string;
+          p_emergency_contact_phone?: string;
+          p_emergency_contact_relation?: string;
+          p_notes?: string;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          role: string;
+        }[];
+      };
+      change_own_password: {
+        Args: {
+          p_user_id: string;
+          p_current_password: string;
+          p_new_password: string;
+        };
+        Returns: undefined;
       };
       apply_stock_movement: {
         Args: {

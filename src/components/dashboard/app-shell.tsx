@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AccountMenu } from "@/components/dashboard/account-menu";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { clearSession, getSession } from "@/lib/auth";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { clearSession, getSession, type SessionData } from "@/lib/auth";
 import { GlobalSearch } from "@/components/dashboard/global-search";
 
 type AppShellProps = {
@@ -17,16 +19,16 @@ type AppShellProps = {
 
 export function AppShell({ title, subtitle, children }: AppShellProps) {
   const router = useRouter();
-  const [username, setUsername] = useState<string | null>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const session = getSession();
-    if (!session) {
+    const current = getSession();
+    if (!current) {
       router.replace("/");
       return;
     }
-    setUsername(session.username);
+    setSession(current);
   }, [router]);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
     router.replace("/");
   }
 
-  if (!username) {
+  if (!session) {
     return (
       <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">
         Cargando...
@@ -88,9 +90,18 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
               showLabel={false}
               className="touch-target size-11 justify-center px-0 py-0 sm:size-auto sm:px-3 sm:py-1.5"
             />
-            <span className="hidden max-w-[140px] truncate text-sm text-muted-foreground lg:inline">
-              {username}
+            <span className="hidden max-w-[180px] items-center gap-2 truncate text-sm text-muted-foreground lg:inline-flex">
+              <UserAvatar
+                name={session.fullName || session.username}
+                photoUrl={session.photoUrl}
+                size="sm"
+              />
+              <span className="truncate">{session.fullName || session.username}</span>
             </span>
+            <AccountMenu
+              username={session.username}
+              onSessionUpdated={setSession}
+            />
             <Button
               variant="outline"
               size="sm"

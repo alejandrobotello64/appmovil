@@ -8,6 +8,7 @@ export type AppUser = {
   username: string;
   fullName: string | null;
   role: string;
+  photoUrl?: string;
 };
 
 export type RememberedCredentials = {
@@ -20,6 +21,7 @@ export type SessionData = {
   username: string;
   fullName: string | null;
   role: string;
+  photoUrl?: string;
   loggedInAt: number;
 };
 
@@ -69,6 +71,7 @@ export async function loginWithCredentials(
     username: user.username,
     fullName: user.full_name,
     role: user.role,
+    photoUrl: user.photo_url ?? "",
   };
 }
 
@@ -79,6 +82,7 @@ export function createSession(user: AppUser) {
     username: user.username,
     fullName: user.fullName,
     role: user.role,
+    photoUrl: user.photoUrl ?? "",
     loggedInAt: Date.now(),
   };
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
