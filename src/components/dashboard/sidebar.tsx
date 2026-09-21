@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  Activity,
   Beaker,
   ChevronDown,
   ClipboardList,
+  ClipboardCheck,
   FileBarChart2,
   LayoutDashboard,
   Package,
@@ -30,14 +32,20 @@ import {
   CalendarDays,
   Gavel,
   FileText,
+  GraduationCap,
   Shield,
   X,
 } from "lucide-react";
 import { WAREHOUSE_TABS, normalizeWarehouseTab } from "@/lib/warehouse/tabs";
 import { USERS_TABS, normalizeUsersTab } from "@/lib/users/tabs";
+import {
+  SERVICE_ORDER_TABS,
+  normalizeServiceOrderTab,
+} from "@/lib/service-orders/tabs";
 import { canViewModule, type WarehouseModule } from "@/lib/auth/permissions";
 import { getSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { AnesthesiaMachineIcon } from "@/components/icons/anesthesia-machine-icon";
 
 const TAB_ICONS = {
   dashboard: LayoutDashboard,
@@ -49,6 +57,7 @@ const TAB_ICONS = {
   entradas: ArrowDownToLine,
   salidas: ArrowUpFromLine,
   apartados: Bookmark,
+  solicitudes: ClipboardCheck,
   movimientos: History,
   kardex: BookOpen,
   pedidos: ShoppingCart,
@@ -65,6 +74,14 @@ const USER_TAB_ICONS = {
   permisos: Shield,
 } as const;
 
+const SERVICE_ORDER_TAB_ICONS = {
+  dashboard: LayoutDashboard,
+  ordenes: Wrench,
+  instrumentos: Activity,
+  solicitudes: Package,
+  plantillas: ClipboardList,
+} as const;
+
 type SidebarProps = {
   open: boolean;
   onClose: () => void;
@@ -76,6 +93,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const searchParams = useSearchParams();
   const activeWarehouseTab = normalizeWarehouseTab(searchParams.get("tab"));
   const activeUsersTab = normalizeUsersTab(searchParams.get("tab"));
+  const activeServiceOrderTab = normalizeServiceOrderTab(searchParams.get("tab"));
   const inWarehouse = pathname.startsWith("/dashboard/almacen");
   const inUsers = pathname.startsWith("/dashboard/usuarios");
   const inCalendar = pathname.startsWith("/dashboard/calendario");
@@ -84,8 +102,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const inQuotes = pathname.startsWith("/dashboard/cotizaciones");
   const inServiceOrders = pathname.startsWith("/dashboard/ordenes-servicio");
   const inFleet = pathname.startsWith("/dashboard/flotilla");
+  const inEducation = pathname.startsWith("/dashboard/educacion");
   const [warehouseOpen, setWarehouseOpen] = useState(inWarehouse);
   const [usersOpen, setUsersOpen] = useState(inUsers);
+  const [biomedicaOpen, setBiomedicaOpen] = useState(
+    inServiceOrders || inEducation
+  );
   const [role, setRole] = useState("administrador");
 
   useEffect(() => {
@@ -99,6 +121,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   useEffect(() => {
     if (inUsers) setUsersOpen(true);
   }, [inUsers]);
+
+  useEffect(() => {
+    if (inServiceOrders || inEducation) setBiomedicaOpen(true);
+  }, [inServiceOrders, inEducation]);
 
   function handleWarehouseClick() {
     const nextOpen = !warehouseOpen;
@@ -115,6 +141,23 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       router.push("/dashboard/usuarios?tab=dashboard");
     }
   }
+
+  function handleBiomedicaClick() {
+    const nextOpen = !biomedicaOpen;
+    setBiomedicaOpen(nextOpen);
+    if (nextOpen) {
+      if (canViewModule(role, "ordenes_servicio")) {
+        router.push("/dashboard/ordenes-servicio?tab=dashboard");
+      } else if (canViewModule(role, "educacion")) {
+        router.push("/dashboard/educacion");
+      }
+    }
+  }
+
+  const showBiomedica =
+    canViewModule(role, "ordenes_servicio") ||
+    canViewModule(role, "educacion");
+  const biomedicaActive = inServiceOrders || inEducation;
 
   return (
     <>
@@ -291,20 +334,74 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
-          {canViewModule(role, "ordenes_servicio") ? (
-            <Link
-              href="/dashboard/ordenes-servicio"
-              onClick={onClose}
-              className={cn(
-                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                inServiceOrders
-                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <Wrench className="size-4 shrink-0" />
-              Órdenes de servicio
-            </Link>
+          {showBiomedica ? (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={handleBiomedicaClick}
+                aria-expanded={biomedicaOpen}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                  biomedicaActive
+                    ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <AnesthesiaMachineIcon className="size-4 shrink-0" />
+                <span className="flex-1">Biomédica</span>
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform",
+                    biomedicaOpen ? "rotate-180" : "rotate-0"
+                  )}
+                />
+              </button>
+
+              {biomedicaOpen ? (
+                <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
+                  {canViewModule(role, "ordenes_servicio")
+                    ? SERVICE_ORDER_TABS.map((tab) => {
+                        const Icon = SERVICE_ORDER_TAB_ICONS[tab.id];
+                        const isActive =
+                          inServiceOrders && activeServiceOrderTab === tab.id;
+
+                        return (
+                          <Link
+                            key={tab.id}
+                            href={tab.href}
+                            onClick={onClose}
+                            className={cn(
+                              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                              isActive
+                                ? "bg-muted font-medium text-foreground"
+                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                            )}
+                          >
+                            <Icon className="size-3.5 shrink-0" />
+                            {tab.label}
+                          </Link>
+                        );
+                      })
+                    : null}
+
+                  {canViewModule(role, "educacion") ? (
+                    <Link
+                      href="/dashboard/educacion"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                        inEducation
+                          ? "bg-muted font-medium text-foreground"
+                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                      )}
+                    >
+                      <GraduationCap className="size-3.5 shrink-0" />
+                      Educación
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           ) : null}
 
           {canViewModule(role, "flotilla") ? (
@@ -377,7 +474,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
-            Panel principal, almacén, calendario, clientes, cotizaciones y usuarios
+            Panel principal, almacén, biomédica, clientes, cotizaciones y usuarios
           </p>
         </div>
       </aside>

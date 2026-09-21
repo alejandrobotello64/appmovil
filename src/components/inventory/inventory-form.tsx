@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ASSET_STATUS_OPTIONS,
@@ -19,7 +20,7 @@ type InventoryFormProps = {
   itemKind?: ItemKind;
   /** Bloquea la categoría a una tabla propia */
   lockedCategory?: SupplyCategoryId;
-  onSubmit: (data: InventoryItemInput) => void;
+  onSubmit: (data: InventoryItemInput, imageFile?: File | null) => void;
   onCancel: () => void;
 };
 
@@ -75,14 +76,27 @@ export function InventoryForm({
   const [form, setForm] = useState<InventoryItemInput>(
     emptyForm(itemKind, lockedCategory)
   );
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [clearExistingImage, setClearExistingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!item) {
       setForm(emptyForm(itemKind, lockedCategory));
+      setImageFile(null);
+      setImagePreview("");
+      setClearExistingImage(false);
       return;
     }
-    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } =
-      item;
+    const {
+      id: _id,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      imagePath: _imagePath,
+      imageUrl: _imageUrl,
+      ...rest
+    } = item;
     const category =
       itemKind === "equipo"
         ? "equipos"
@@ -98,7 +112,17 @@ export function InventoryForm({
       tracksExpiry: requiresExpiry,
       tracksLot: requiresExpiry || Boolean(rest.tracksLot),
     });
+    setImageFile(null);
+    setImagePreview(item.imageUrl || "");
+    setClearExistingImage(false);
   }, [item, itemKind, lockedCategory]);
+
+  useEffect(() => {
+    if (!imageFile) return;
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
 
   function handleChange<K extends keyof InventoryItemInput>(
     key: K,
@@ -107,22 +131,39 @@ export function InventoryForm({
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function handleImagePick(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    setImageFile(file);
+    setClearExistingImage(false);
+  }
+
+  function handleClearImage() {
+    setImageFile(null);
+    setImagePreview("");
+    setClearExistingImage(Boolean(item?.imageUrl));
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const category =
       itemKind === "equipo" ? "equipos" : lockedCategory ?? form.category;
     const requiresExpiry = categoryRequiresExpiry(category);
     const requiresManufactureDate = categoryRequiresManufactureDate(category);
-    onSubmit({
-      ...form,
-      itemKind,
-      category,
-      quantity: itemKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
-      expiryDate: requiresManufactureDate ? "" : form.expiryDate,
-      manufacturedAt: form.manufacturedAt,
-      tracksExpiry: requiresExpiry,
-      tracksLot: requiresExpiry || form.tracksLot,
-    });
+    onSubmit(
+      {
+        ...form,
+        itemKind,
+        category,
+        quantity: itemKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
+        expiryDate: requiresManufactureDate ? "" : form.expiryDate,
+        manufacturedAt: form.manufacturedAt,
+        tracksExpiry: requiresExpiry,
+        tracksLot: requiresExpiry || form.tracksLot,
+      },
+      imageFile ? imageFile : clearExistingImage ? null : undefined
+    );
   }
 
   const isEquipment = itemKind === "equipo";
@@ -135,6 +176,7 @@ export function InventoryForm({
   const requiresManufactureDate = categoryRequiresManufactureDate(
     isEquipment ? "equipos" : lockedCategory ?? form.category
   );
+  const showPreview = Boolean(imagePreview) && !clearExistingImage;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -148,15 +190,87 @@ export function InventoryForm({
               : `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} en tabla propia.`}
       </div>
 
+      <div className="flex flex-wrap items-start gap-4 rounded-xl border border-border bg-background p-3">
+        <div className="flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/30">
+          {showPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imagePreview}
+              alt="Vista previa"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="px-2 text-center text-xs text-muted-foreground">
+              Sin imagen
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          <p className="text-sm font-medium">Imagen del artículo</p>
+          <p className="text-xs text-muted-foreground">
+            Opcional. JPG, PNG o WebP. Se guarda al crear o actualizar el
+            registro.
+          </p>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              handleImagePick(e.target.files?.[0] ?? null);
+              e.target.value = "";
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => imageInputRef.current?.click()}
+            >
+              <Camera className="size-4" />
+              {showPreview ? "Cambiar imagen" : "Elegir imagen"}
+            </Button>
+            {showPreview || (item?.imageUrl && !clearExistingImage) ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="text-destructive"
+                onClick={handleClearImage}
+              >
+                <Trash2 className="size-4" /> Quitar
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1.5">
           <span className="text-sm font-medium">SKU / Código</span>
           <input
-            required
+            required={Boolean(item)}
             value={form.sku}
+            readOnly={!item}
+            placeholder={
+              item
+                ? undefined
+                : "Se asignará al guardar (ej. EQUIPO-000001)"
+            }
             onChange={(event) => handleChange("sku", event.target.value)}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20"
+            className={
+              item
+                ? "h-10 w-full rounded-lg border border-input bg-muted/40 px-3 text-sm outline-none"
+                : "h-10 w-full rounded-lg border border-input bg-muted/30 px-3 text-sm text-muted-foreground outline-none"
+            }
           />
+          {!item ? (
+            <span className="text-xs text-muted-foreground">
+              El SKU se genera solo según la categoría (INSUMOS-, MEDICAMENTOS-,
+              ACCESORIOS-, EQUIPO-, etc.).
+            </span>
+          ) : null}
         </label>
         <label className="space-y-1.5">
           <span className="text-sm font-medium">

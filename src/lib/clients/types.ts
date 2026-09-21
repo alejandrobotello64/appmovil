@@ -46,6 +46,7 @@ export type ClientEquipment = {
   serialNumber: string;
   location: string;
   status: ClientEquipmentStatus;
+  equipmentKind: string;
   installedAt: string;
   notes: string;
   createdAt: string;

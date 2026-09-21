@@ -20,13 +20,10 @@ export const SERVICE_ORDER_KINDS = [
 export type ServiceOrderKind = (typeof SERVICE_ORDER_KINDS)[number]["id"];
 
 export const SERVICE_TYPES = [
-  { id: "levantamiento", label: "Levantamiento" },
+  { id: "diagnostico", label: "Diagnóstico" },
+  { id: "preventivo", label: "Servicio preventivo" },
+  { id: "correctivo", label: "Servicio correctivo" },
   { id: "instalacion", label: "Instalación" },
-  { id: "mantenimiento", label: "Mantenimiento" },
-  { id: "reparacion", label: "Reparación" },
-  { id: "capacitacion", label: "Capacitación" },
-  { id: "calibracion", label: "Calibración" },
-  { id: "otro", label: "Otro" },
 ] as const;
 
 export type ServiceType = (typeof SERVICE_TYPES)[number]["id"];
@@ -71,6 +68,92 @@ export const IMAGE_STAGES = [
 ] as const;
 
 export type ImageStage = (typeof IMAGE_STAGES)[number]["id"];
+
+export const SERVICE_DOCUMENT_TYPES = [
+  { id: "seguridad_electrica", label: "Examen de seguridad eléctrica" },
+  { id: "otro", label: "Otro documento" },
+] as const;
+
+export type ServiceDocumentType = (typeof SERVICE_DOCUMENT_TYPES)[number]["id"];
+
+export type ServiceOrderDocument = {
+  id: string;
+  serviceOrderId: string;
+  docType: ServiceDocumentType;
+  title: string;
+  filePath: string;
+  fileUrl: string;
+  fileName: string;
+  uploadedBy: string;
+  createdAt: string;
+};
+
+export const EQUIPMENT_KINDS = [
+  { id: "general", label: "General" },
+  { id: "monitor", label: "Monitor" },
+  { id: "ventilador", label: "Ventilador" },
+  { id: "desfibrilador", label: "Desfibrilador" },
+  { id: "bomba_infusion", label: "Bomba de infusión" },
+  { id: "autoclave", label: "Autoclave" },
+  { id: "ecg", label: "Electrocardiógrafo" },
+  { id: "imagen", label: "Imagenología" },
+] as const;
+
+export type EquipmentKind = (typeof EQUIPMENT_KINDS)[number]["id"];
+
+export const CALIBRATION_RESULTS = [
+  { id: "pendiente", label: "Pendiente" },
+  { id: "dentro", label: "Dentro de rango" },
+  { id: "fuera", label: "Fuera de rango" },
+  { id: "no_aplica", label: "N/A" },
+] as const;
+
+export type CalibrationResult = (typeof CALIBRATION_RESULTS)[number]["id"];
+
+export const CALIBRATION_OVERALL = [
+  { id: "pendiente", label: "Pendiente" },
+  { id: "aprobada", label: "Aprobada" },
+  { id: "parcial", label: "Parcial" },
+  { id: "rechazada", label: "Rechazada" },
+] as const;
+
+export type CalibrationOverall = (typeof CALIBRATION_OVERALL)[number]["id"];
+
+export type CalibrationTemplateParam = {
+  id: string;
+  templateId: string;
+  label: string;
+  unit: string;
+  nominalValue: string;
+  minValue: number | null;
+  maxValue: number | null;
+  sortOrder: number;
+};
+
+export type CalibrationTemplate = {
+  id: string;
+  code: string;
+  name: string;
+  equipmentKind: string;
+  description: string;
+  isActive: boolean;
+  params: CalibrationTemplateParam[];
+};
+
+export type ServiceOrderCalibrationItem = {
+  id: string;
+  serviceOrderId: string;
+  templateParamId: string | null;
+  label: string;
+  unit: string;
+  nominalValue: string;
+  measuredValue: string;
+  minValue: number | null;
+  maxValue: number | null;
+  result: CalibrationResult;
+  notes: string;
+  sortOrder: number;
+};
 
 export type ChecklistTemplate = {
   id: string;
@@ -136,6 +219,43 @@ export type ServiceOrderEvent = {
   createdAt: string;
 };
 
+export type ServiceOrderLinkedEquipment = {
+  id: string;
+  serviceOrderId: string;
+  equipmentId: string | null;
+  equipmentName: string;
+  equipmentBrand: string;
+  equipmentModel: string;
+  equipmentSerial: string;
+  equipmentLocation: string;
+  relationLabel: string;
+  notes: string;
+  sortOrder: number;
+};
+
+export type ServiceOrderInstrument = {
+  id: string;
+  serviceOrderId: string;
+  instrumentId: string | null;
+  instrumentType: string;
+  instrumentName: string;
+  instrumentBrand: string;
+  instrumentModel: string;
+  instrumentSerial: string;
+  usageNotes: string;
+  sortOrder: number;
+};
+
+export const LINKED_EQUIPMENT_RELATIONS = [
+  { id: "Equipo ligado", label: "Equipo ligado" },
+  { id: "Monitor asociado", label: "Monitor asociado" },
+  { id: "Máquina de anestesia", label: "Máquina de anestesia" },
+  { id: "Ventilador asociado", label: "Ventilador asociado" },
+  { id: "Bomba asociada", label: "Bomba asociada" },
+  { id: "Accesorio / periférico", label: "Accesorio / periférico" },
+  { id: "Otro", label: "Otro" },
+] as const;
+
 export type ServiceOrder = {
   id: string;
   folio: string;
@@ -165,6 +285,7 @@ export type ServiceOrder = {
   generalObservations: string;
   diagnosisNotes: string;
   serviceNotes: string;
+  underWarranty: boolean;
   authorized: boolean;
   closed: boolean;
   currency: string;
@@ -173,11 +294,21 @@ export type ServiceOrder = {
   taxAmount: number;
   discount: number;
   total: number;
+  calibrationTemplateId: string | null;
+  calibrationPerformedAt: string;
+  calibrationInstrument: string;
+  calibrationCertificate: string;
+  calibrationOverall: CalibrationOverall;
+  calibrationNotes: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
   lines: ServiceOrderLine[];
   checklist: ServiceOrderChecklistItem[];
+  calibration: ServiceOrderCalibrationItem[];
+  linkedEquipment: ServiceOrderLinkedEquipment[];
+  instruments: ServiceOrderInstrument[];
+  documents: ServiceOrderDocument[];
   images: ServiceOrderImage[];
   events: ServiceOrderEvent[];
 };
@@ -220,10 +351,17 @@ export type ServiceOrderInput = {
   generalObservations?: string;
   diagnosisNotes?: string;
   serviceNotes?: string;
+  underWarranty?: boolean;
   authorized?: boolean;
   closed?: boolean;
   taxRate?: number;
   discount?: number;
+  calibrationTemplateId?: string | null;
+  calibrationPerformedAt?: string;
+  calibrationInstrument?: string;
+  calibrationCertificate?: string;
+  calibrationOverall?: CalibrationOverall;
+  calibrationNotes?: string;
   createdBy?: string;
   lines?: ServiceOrderLineInput[];
 };
@@ -242,6 +380,62 @@ export function serviceLineKindLabel(kind: string) {
 
 export function checklistResultLabel(result: string) {
   return CHECKLIST_RESULTS.find((s) => s.id === result)?.label ?? result;
+}
+
+export function calibrationResultLabel(result: string) {
+  return CALIBRATION_RESULTS.find((s) => s.id === result)?.label ?? result;
+}
+
+export function calibrationOverallLabel(result: string) {
+  return CALIBRATION_OVERALL.find((s) => s.id === result)?.label ?? result;
+}
+
+export function equipmentKindLabel(kind: string) {
+  return EQUIPMENT_KINDS.find((s) => s.id === kind)?.label ?? kind;
+}
+
+export function inferEquipmentKind(
+  name: string,
+  brand = "",
+  model = ""
+): EquipmentKind {
+  const t = `${name} ${brand} ${model}`.toLowerCase();
+  if (/ventil|respir/.test(t)) return "ventilador";
+  if (/desfibr|dea/.test(t)) return "desfibrilador";
+  if (/bomba|infus/.test(t)) return "bomba_infusion";
+  if (/monitor|multipar|spo2/.test(t)) return "monitor";
+  if (/autocl|esteril/.test(t)) return "autoclave";
+  if (/ecg|electrocard/.test(t)) return "ecg";
+  if (/rayos|ultrason|imagen|rx\b/.test(t)) return "imagen";
+  return "general";
+}
+
+export function evaluateCalibrationResult(
+  measuredValue: string,
+  minValue: number | null,
+  maxValue: number | null
+): CalibrationResult {
+  const raw = measuredValue.trim().replace(",", ".");
+  if (!raw) return "pendiente";
+  if (minValue == null && maxValue == null) return "pendiente";
+  const num = Number(raw.replace(/[^\d.-]/g, ""));
+  if (!Number.isFinite(num)) return "pendiente";
+  if (minValue != null && num < minValue) return "fuera";
+  if (maxValue != null && num > maxValue) return "fuera";
+  return "dentro";
+}
+
+export function computeCalibrationOverall(
+  items: Pick<ServiceOrderCalibrationItem, "result">[]
+): CalibrationOverall {
+  if (!items.length) return "pendiente";
+  const relevant = items.filter((i) => i.result !== "no_aplica");
+  if (!relevant.length) return "pendiente";
+  if (relevant.every((i) => i.result === "pendiente")) return "pendiente";
+  if (relevant.some((i) => i.result === "pendiente")) return "parcial";
+  if (relevant.some((i) => i.result === "fuera")) return "rechazada";
+  if (relevant.every((i) => i.result === "dentro")) return "aprobada";
+  return "parcial";
 }
 
 export function lineAmount(line: Pick<ServiceOrderLine, "quantity" | "unitPrice">) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Eye } from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
 import { InventoryStats } from "@/components/inventory/inventory-stats";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,14 @@ import {
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
 import {
+  clearInventoryItemImage,
   createInventoryItem,
   deleteInventoryItem,
   getEquipmentItems,
   getStockStatus,
   getSupplyItemsByCategory,
   updateInventoryItem,
+  uploadInventoryItemImage,
 } from "@/lib/inventory/storage";
 import {
   ASSET_STATUS_OPTIONS,
@@ -95,12 +97,16 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [viewingItem, setViewingItem] = useState<InventoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const formItemKind: ItemKind = isEquipment ? "equipo" : "producto";
 
-  async function handleSubmit(data: InventoryItemInput) {
+  async function handleSubmit(
+    data: InventoryItemInput,
+    imageFile?: File | null
+  ) {
     try {
       setError("");
       const category = isEquipment
@@ -120,15 +126,29 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           : data.expiryDate,
         manufacturedAt: data.manufacturedAt,
       };
+      let savedId = editingItem?.id ?? "";
       if (editingItem) {
         await updateInventoryItem(editingItem.id, payload);
+        savedId = editingItem.id;
       } else {
         const session = (await import("@/lib/auth")).getSession();
-        await createInventoryItem(payload, session?.username ?? "sistema");
+        const created = await createInventoryItem(
+          payload,
+          session?.username ?? "sistema"
+        );
+        savedId = created.id;
       }
+
+      if (imageFile) {
+        await uploadInventoryItemImage(savedId, imageFile);
+      } else if (imageFile === null && editingItem?.imageUrl) {
+        await clearInventoryItemImage(savedId);
+      }
+
       await refreshItems();
       setFormOpen(false);
       setEditingItem(null);
+      setViewingItem(null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -183,9 +203,42 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
     void refreshItems();
   }, [panelMode, isEquipment, supplyCategory]);
 
+  function handleView(item: InventoryItem) {
+    setViewingItem(item);
+  }
+
   function handleEdit(item: InventoryItem) {
+    setViewingItem(null);
     setEditingItem(item);
     setFormOpen(true);
+  }
+
+  async function handleImageUpload(file: File | null) {
+    if (!viewingItem || !file || !canWrite) return;
+    try {
+      setError("");
+      const updated = await uploadInventoryItemImage(viewingItem.id, file);
+      setViewingItem(updated);
+      await refreshItems();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo subir la imagen."
+      );
+    }
+  }
+
+  async function handleClearImage() {
+    if (!viewingItem || !canWrite) return;
+    try {
+      setError("");
+      const updated = await clearInventoryItemImage(viewingItem.id);
+      setViewingItem(updated);
+      await refreshItems();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo quitar la imagen."
+      );
+    }
   }
 
   async function handleDelete(item: InventoryItem) {
@@ -369,26 +422,38 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     ? [{ label: "Precio", value: formatCurrency(item.unitPrice) }]
                     : []),
                 ],
-                actions: canWrite ? (
+                actions: (
                   <>
                     <button
                       type="button"
-                      onClick={() => handleEdit(item)}
+                      onClick={() => handleView(item)}
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
                     >
-                      <Pencil className="size-3.5" />
-                      Editar
+                      <Eye className="size-3.5" />
+                      Ficha
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(item)}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
-                    >
-                      <Trash2 className="size-3.5" />
-                      Desactivar
-                    </button>
+                    {canWrite ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(item)}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                        >
+                          <Pencil className="size-3.5" />
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item)}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                        >
+                          <Trash2 className="size-3.5" />
+                          Desactivar
+                        </button>
+                      </>
+                    ) : null}
                   </>
-                ) : undefined,
+                ),
               };
             })}
           />
@@ -516,28 +581,36 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                           {formatCurrency(item.unitPrice)}
                         </td>
                         <td className="px-4 py-3">
-                          {canWrite ? (
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => handleEdit(item)}
+                              onClick={() => handleView(item)}
                               className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
-                              aria-label={`Editar ${item.name}`}
+                              aria-label={`Ver ficha ${item.name}`}
                             >
-                              <Pencil className="size-4" />
+                              <Eye className="size-4" />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(item)}
-                              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              aria-label={`Eliminar ${item.name}`}
-                            >
-                              <Trash2 className="size-4" />
-                            </button>
+                            {canWrite ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEdit(item)}
+                                  className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                                  aria-label={`Editar ${item.name}`}
+                                >
+                                  <Pencil className="size-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(item)}
+                                  className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                  aria-label={`Eliminar ${item.name}`}
+                                >
+                                  <Trash2 className="size-4" />
+                                </button>
+                              </>
+                            ) : null}
                           </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Consulta</span>
-                          )}
                         </td>
                       </tr>
                     );
@@ -590,6 +663,142 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 setEditingItem(null);
               }}
             />
+          </div>
+        </div>
+      ) : null}
+
+      {viewingItem ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl"
+          >
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Ficha de consulta
+                </p>
+                <h3 className="text-lg font-semibold">{viewingItem.name}</h3>
+                <p className="font-mono text-sm text-muted-foreground">
+                  {viewingItem.sku}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {canWrite ? (
+                  <Button
+                    type="button"
+                    onClick={() => handleEdit(viewingItem)}
+                    className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                  >
+                    <Pencil className="size-4" /> Editar datos
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setViewingItem(null)}
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+
+            <div className="mb-4 grid gap-4 sm:grid-cols-[160px_1fr]">
+              <div className="space-y-2">
+                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/30">
+                  {viewingItem.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={viewingItem.imageUrl}
+                      alt={viewingItem.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="px-3 text-center text-xs text-muted-foreground">
+                      Sin imagen
+                    </span>
+                  )}
+                </div>
+                {canWrite ? (
+                  <div className="space-y-1">
+                    <label className="block">
+                      <span className="mb-1 block text-xs text-muted-foreground">
+                        Anexar / cambiar imagen
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="block w-full text-xs"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          void handleImageUpload(file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {viewingItem.imageUrl ? (
+                      <button
+                        type="button"
+                        className="text-xs text-destructive hover:underline"
+                        onClick={() => void handleClearImage()}
+                      >
+                        Quitar imagen
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Categoría", getCategoryLabel(viewingItem.category)],
+                  ["Marca", viewingItem.brand || "—"],
+                  ["Modelo", viewingItem.model || "—"],
+                  ["Serie", viewingItem.serialNumber || "—"],
+                  ["Ubicación", viewingItem.location || "—"],
+                  ["Proveedor", viewingItem.supplier || "—"],
+                  ["Precio", formatCurrency(viewingItem.unitPrice)],
+                  [
+                    "Stock",
+                    `${viewingItem.quantity} ${viewingItem.unit}`,
+                  ],
+                  [
+                    "Estado activo",
+                    ASSET_STATUS_OPTIONS.find(
+                      (s) => s.id === viewingItem.assetStatus
+                    )?.label ?? viewingItem.assetStatus,
+                  ],
+                  ["Fabricación", viewingItem.manufacturedAt || "—"],
+                  ["Caducidad", viewingItem.expiryDate || "—"],
+                  ["Próx. mant.", viewingItem.nextMaintenanceDate || "—"],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="text-sm font-medium">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {viewingItem.description ? (
+              <div className="mb-3">
+                <p className="text-xs text-muted-foreground">Descripción</p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {viewingItem.description}
+                </p>
+              </div>
+            ) : null}
+            {viewingItem.notes ? (
+              <div>
+                <p className="text-xs text-muted-foreground">Notas</p>
+                <p className="text-sm whitespace-pre-wrap">{viewingItem.notes}</p>
+              </div>
+            ) : null}
+            <p className="mt-4 text-xs text-muted-foreground">
+              Esta ficha es de solo lectura. Usa &quot;Editar datos&quot; para
+              modificar el registro.
+            </p>
           </div>
         </div>
       ) : null}

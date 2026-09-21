@@ -20,6 +20,7 @@ export type WarehouseModule =
   | "entradas"
   | "salidas"
   | "apartados"
+  | "solicitudes"
   | "movimientos"
   | "kardex"
   | "pedidos"
@@ -29,6 +30,7 @@ export type WarehouseModule =
   | "cotizaciones"
   | "ordenes_servicio"
   | "flotilla"
+  | "educacion"
   | "equipo"
   | "mantenimientos"
   | "calendario"
@@ -62,6 +64,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "entradas",
     "salidas",
     "apartados",
+    "solicitudes",
     "movimientos",
     "kardex",
     "pedidos",
@@ -71,6 +74,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "cotizaciones",
     "ordenes_servicio",
     "flotilla",
+    "educacion",
     "equipo",
     "mantenimientos",
     "calendario",
@@ -83,6 +87,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "entradas",
     "salidas",
     "apartados",
+    "solicitudes",
     "movimientos",
     "kardex",
     "pedidos",
@@ -92,6 +97,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "calendario",
     "reporte",
     "flotilla",
+    "educacion",
   ],
   compras: [
     "dashboard",
@@ -126,6 +132,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "kardex",
     "ordenes_servicio",
     "flotilla",
+    "educacion",
   ],
   direccion: [
     "dashboard",
@@ -139,6 +146,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "cotizaciones",
     "ordenes_servicio",
     "flotilla",
+    "educacion",
   ],
 };
 
@@ -172,11 +180,12 @@ export function canWriteModule(role: string | null | undefined, module: Warehous
       module === "calendario" ||
       module === "clientes" ||
       module === "ordenes_servicio" ||
-      module === "flotilla")
+      module === "flotilla" ||
+      module === "educacion")
   ) {
     return true;
   }
-  if (normalized === "almacen" && module === "flotilla") {
+  if (normalized === "almacen" && (module === "flotilla" || module === "educacion")) {
     return true;
   }
   if (normalized === "compras") {

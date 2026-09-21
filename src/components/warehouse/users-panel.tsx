@@ -120,6 +120,9 @@ const MODULE_LABELS: Record<WarehouseModule, string> = {
   clientes: "Clientes",
   licitaciones: "Licitaciones",
   cotizaciones: "Cotizaciones",
+  ordenes_servicio: "Órdenes de servicio",
+  flotilla: "Flotilla",
+  educacion: "Educación",
   usuarios: "Usuarios",
 } as Record<WarehouseModule, string>;
 
@@ -129,6 +132,9 @@ const PERMISSION_MODULES: WarehouseModule[] = [
   "clientes",
   "licitaciones",
   "cotizaciones",
+  "ordenes_servicio",
+  "flotilla",
+  "educacion",
   "usuarios",
 ];
 

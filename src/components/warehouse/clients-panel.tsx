@@ -82,6 +82,7 @@ const EMPTY_EQUIPMENT: ClientEquipmentInput = {
   serialNumber: "",
   location: "",
   status: "operativo",
+  equipmentKind: "general",
   installedAt: "",
   notes: "",
 };

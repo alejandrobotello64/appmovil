@@ -1,4 +1,6 @@
 import { jsPDF } from "jspdf";
+import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import { biomedicalInstrumentTypeLabel } from "@/lib/biomedical-instruments/types";
 import {
   checklistResultLabel,
   lineAmount,
@@ -24,35 +26,11 @@ function formatDate(value: string) {
   return `${day}/${m}/${y}`;
 }
 
-function drawHeader(doc: jsPDF, title: string, folio: string) {
-  const pageW = doc.internal.pageSize.getWidth();
-  const margin = 14;
-  doc.setFillColor(0, 191, 255);
-  doc.rect(0, 0, pageW, 4, "F");
-  doc.setFillColor(59, 70, 165);
-  doc.rect(0, 4, pageW, 2, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.setTextColor(59, 70, 165);
-  doc.text("Medical Advanced Supplies", margin, 16);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
-  doc.text(title, margin, 22);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 30);
-  doc.text(folio, pageW - margin, 16, { align: "right" });
-  return 30;
-}
-
 function ensureSpace(doc: jsPDF, y: number, need = 20) {
   const pageH = doc.internal.pageSize.getHeight();
   if (y + need < pageH - 14) return y;
   doc.addPage();
-  return 16;
+  return 18;
 }
 
 function drawClientEquipment(doc: jsPDF, order: ServiceOrder, y: number) {
@@ -88,7 +66,59 @@ function drawClientEquipment(doc: jsPDF, order: ServiceOrder, y: number) {
     if (left[i]) doc.text(left[i], margin, y + i * 4.5);
     if (right[i]) doc.text(right[i], pageW / 2, y + i * 4.5);
   }
-  return y + n * 4.5 + 6;
+  y = y + n * 4.5 + 4;
+
+  const linked = order.linkedEquipment ?? [];
+  if (linked.length) {
+    y = ensureSpace(doc, y, 10 + linked.length * 4.5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(30, 30, 30);
+    doc.text("Equipos ligados", margin, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(50, 50, 50);
+    for (const item of linked) {
+      y = ensureSpace(doc, y, 6);
+      const parts = [
+        item.relationLabel,
+        item.equipmentName,
+        [item.equipmentBrand, item.equipmentModel].filter(Boolean).join(" "),
+        item.equipmentSerial ? `Serie ${item.equipmentSerial}` : "",
+      ].filter(Boolean);
+      doc.text(`• ${parts.join(" · ")}`, margin, y);
+      y += 4.5;
+    }
+    y += 2;
+  }
+
+  const instruments = order.instruments ?? [];
+  if (instruments.length) {
+    y = ensureSpace(doc, y, 10 + instruments.length * 4.5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(30, 30, 30);
+    doc.text("Simuladores / analizadores usados", margin, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(50, 50, 50);
+    for (const item of instruments) {
+      y = ensureSpace(doc, y, 6);
+      const parts = [
+        biomedicalInstrumentTypeLabel(item.instrumentType),
+        item.instrumentName,
+        [item.instrumentBrand, item.instrumentModel].filter(Boolean).join(" "),
+        item.instrumentSerial ? `Serie ${item.instrumentSerial}` : "",
+      ].filter(Boolean);
+      doc.text(`• ${parts.join(" · ")}`, margin, y);
+      y += 4.5;
+    }
+    y += 2;
+  }
+
+  return y + 2;
 }
 
 function drawLinesTable(doc: jsPDF, order: ServiceOrder, y: number) {
@@ -137,16 +167,19 @@ function drawLinesTable(doc: jsPDF, order: ServiceOrder, y: number) {
 }
 
 /** Cotización / propuesta económica para el cliente. */
-export function downloadServiceQuotePdf(order: ServiceOrder) {
+export async function downloadServiceQuotePdf(order: ServiceOrder) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const margin = 14;
-  let y = drawHeader(doc, "Cotización de servicio técnico", order.folio);
+  let y = await drawBrandedHeader(doc, {
+    title: "Cotización de servicio técnico",
+    folio: order.folio,
+  });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(70, 70, 70);
   doc.text(
-    `${serviceTypeLabel(order.serviceType)} · ${serviceOrderStatusLabel(order.status)} · ${formatDate(order.receptionAt || order.createdAt)}`,
+    `${serviceTypeLabel(order.serviceType)} · ${serviceOrderStatusLabel(order.status)} · ${formatDate(order.receptionAt || order.createdAt)}${order.underWarranty ? " · Garantía" : ""}`,
     margin,
     y
   );
@@ -180,19 +213,23 @@ export function downloadServiceQuotePdf(order: ServiceOrder) {
     doc.text(notes, margin, y);
   }
 
+  drawBrandedFooter(doc);
   doc.save(`${order.folio}-cotizacion.pdf`);
 }
 
 /** Orden de trabajo / reporte técnico para calidad. */
-export function downloadServiceWorkOrderPdf(order: ServiceOrder) {
+export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const margin = 14;
-  let y = drawHeader(doc, "Orden de trabajo · Control de calidad", order.folio);
+  let y = await drawBrandedHeader(doc, {
+    title: "Orden de trabajo · Control de calidad",
+    folio: order.folio,
+  });
 
   doc.setFontSize(9);
   doc.setTextColor(70, 70, 70);
   doc.text(
-    `Tipo: ${serviceTypeLabel(order.serviceType)} · Estatus: ${serviceOrderStatusLabel(order.status)} · Técnico: ${order.technician || "—"}`,
+    `Tipo: ${serviceTypeLabel(order.serviceType)} · Estatus: ${serviceOrderStatusLabel(order.status)} · Técnico: ${order.technician || "—"}${order.underWarranty ? " · Garantía" : ""}`,
     margin,
     y
   );
@@ -250,14 +287,18 @@ export function downloadServiceWorkOrderPdf(order: ServiceOrder) {
   doc.text("_______________________________", 120, y + 12);
   doc.text("Vo.Bo. calidad", 120, y + 17);
 
+  drawBrandedFooter(doc);
   doc.save(`${order.folio}-orden-trabajo.pdf`);
 }
 
 /** Acta de entrega / conformidad para el cliente. */
-export function downloadServiceDeliveryPdf(order: ServiceOrder) {
+export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const margin = 14;
-  let y = drawHeader(doc, "Acta de entrega de equipo médico", order.folio);
+  let y = await drawBrandedHeader(doc, {
+    title: "Acta de entrega de equipo médico",
+    folio: order.folio,
+  });
 
   doc.setFontSize(9);
   doc.setTextColor(70, 70, 70);
@@ -311,5 +352,6 @@ export function downloadServiceDeliveryPdf(order: ServiceOrder) {
   doc.text("_______________________________", 120, y + 16);
   doc.text("Firma del técnico", 120, y + 21);
 
+  drawBrandedFooter(doc);
   doc.save(`${order.folio}-entrega.pdf`);
 }

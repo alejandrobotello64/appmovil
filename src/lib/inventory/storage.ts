@@ -12,12 +12,15 @@ import type {
 import {
   categoryRequiresExpiry,
   categoryRequiresManufactureDate,
+  skuPrefixForCategory,
   SUPPLY_CATEGORY_IDS,
 } from "./types";
 
 type InventoryRow = Database["public"]["Tables"]["inventory_items"]["Row"];
 type InventoryInsert =
   Database["public"]["Tables"]["inventory_items"]["Insert"];
+
+const INVENTORY_MEDIA_BUCKET = "inventory-media";
 
 export function getStockStatus(
   quantity: number,
@@ -64,6 +67,8 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     partNumber: row.part_number ?? "",
     manufacturer: row.manufacturer ?? "",
     subcategory: row.subcategory ?? "",
+    imagePath: row.image_path ?? "",
+    imageUrl: row.image_url ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -120,7 +125,32 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     part_number: input.partNumber ?? "",
     manufacturer: input.manufacturer ?? "",
     subcategory: input.subcategory ?? "",
+    image_path: input.imagePath ?? "",
+    image_url: input.imageUrl ?? "",
   };
+}
+
+/** Asigna SKU secuencial: EQUIPO-000001, ACCESORIOS-000001, etc. */
+export async function nextInventorySku(
+  category: InventoryCategoryId
+): Promise<string> {
+  const prefix = `${skuPrefixForCategory(category)}-`;
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .select("sku")
+    .ilike("sku", `${prefix}%`)
+    .order("sku", { ascending: false })
+    .limit(50);
+  if (error) throw new Error(error.message);
+
+  let maxSeq = 0;
+  for (const row of data ?? []) {
+    const sku = String(row.sku ?? "");
+    if (!sku.startsWith(prefix)) continue;
+    const seq = Number(sku.slice(prefix.length));
+    if (Number.isFinite(seq) && seq > maxSeq) maxSeq = seq;
+  }
+  return `${prefix}${String(maxSeq + 1).padStart(6, "0")}`;
 }
 
 async function fetchInventoryRows(options?: {
@@ -212,9 +242,15 @@ export async function createInventoryItem(
   input: InventoryItemInput,
   createdBy = "sistema"
 ): Promise<InventoryItem> {
+  const category =
+    input.itemKind === "equipo" || input.category === "equipos"
+      ? ("equipos" as InventoryCategoryId)
+      : input.category;
+  const sku = input.sku.trim() || (await nextInventorySku(category));
+
   const { data, error } = await supabase
     .from("inventory_items")
-    .insert(mapInputToRow(input))
+    .insert(mapInputToRow({ ...input, sku, category }))
     .select("*")
     .single();
 
@@ -396,4 +432,74 @@ export async function adjustInventoryQuantity(
   const current = items.find((item) => item.id === id);
   if (!current) throw new Error("Producto no encontrado.");
   return current;
+}
+
+export async function uploadInventoryItemImage(
+  itemId: string,
+  file: File
+): Promise<InventoryItem> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Solo se permiten archivos de imagen.");
+  }
+  const current = (await getInventoryItems({ includeInactive: true })).find(
+    (item) => item.id === itemId
+  );
+  if (!current) throw new Error("Producto no encontrado.");
+
+  const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+  const path = `${itemId}/${Date.now()}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(INVENTORY_MEDIA_BUCKET)
+    .upload(path, file, { upsert: false });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data: publicData } = supabase.storage
+    .from(INVENTORY_MEDIA_BUCKET)
+    .getPublicUrl(path);
+
+  if (current.imagePath) {
+    await supabase.storage
+      .from(INVENTORY_MEDIA_BUCKET)
+      .remove([current.imagePath]);
+  }
+
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .update({
+      image_path: path,
+      image_url: publicData.publicUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", itemId)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return mapRowToItem(data);
+}
+
+export async function clearInventoryItemImage(
+  itemId: string
+): Promise<InventoryItem> {
+  const current = (await getInventoryItems({ includeInactive: true })).find(
+    (item) => item.id === itemId
+  );
+  if (!current) throw new Error("Producto no encontrado.");
+  if (current.imagePath) {
+    await supabase.storage
+      .from(INVENTORY_MEDIA_BUCKET)
+      .remove([current.imagePath]);
+  }
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .update({
+      image_path: "",
+      image_url: "",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", itemId)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return mapRowToItem(data);
 }

@@ -43,6 +43,7 @@ function mapEquipment(row: Record<string, unknown>): ClientEquipment {
     serialNumber: String(row.serial_number ?? ""),
     location: String(row.location ?? ""),
     status: String(row.status ?? "operativo") as ClientEquipmentStatus,
+    equipmentKind: String(row.equipment_kind ?? "general"),
     installedAt: row.installed_at ? String(row.installed_at).slice(0, 10) : "",
     notes: String(row.notes ?? ""),
     createdAt: String(row.created_at),
@@ -172,6 +173,7 @@ export async function createClientEquipment(
       serial_number: input.serialNumber.trim(),
       location: input.location.trim(),
       status: input.status,
+      equipment_kind: (input.equipmentKind ?? "general").trim() || "general",
       installed_at: input.installedAt || null,
       notes: input.notes.trim(),
     })
@@ -195,6 +197,7 @@ export async function updateClientEquipment(
       serial_number: input.serialNumber.trim(),
       location: input.location.trim(),
       status: input.status,
+      equipment_kind: (input.equipmentKind ?? "general").trim() || "general",
       installed_at: input.installedAt || null,
       notes: input.notes.trim(),
       updated_at: new Date().toISOString(),
@@ -204,6 +207,17 @@ export async function updateClientEquipment(
     .single();
   if (error) throw new Error(error.message);
   return mapEquipment(data);
+}
+
+export async function setClientEquipmentStatus(
+  id: string,
+  status: ClientEquipmentStatus
+): Promise<void> {
+  const { error } = await db
+    .from("client_equipment")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function deleteClientEquipment(id: string): Promise<void> {

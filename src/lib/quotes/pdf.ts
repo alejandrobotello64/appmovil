@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+﻿import { jsPDF } from "jspdf";
 import { lineAmount, type Quote } from "./types";
 
 function money(value: number) {
@@ -10,13 +10,13 @@ function money(value: number) {
 }
 
 function formatDate(value: string) {
-  if (!value) return "—";
+  if (!value) return "ÔÇö";
   const [y, m, d] = value.split("-");
   if (!y || !m || !d) return value;
   return `${d}/${m}/${y}`;
 }
 
-/** Genera y descarga el PDF comercial de una cotización. */
+/** Genera y descarga el PDF comercial de una cotizaci├│n. */
 export function downloadQuotePdf(quote: Quote) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -37,7 +37,7 @@ export function downloadQuotePdf(quote: Quote) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
-  doc.text("Cotización comercial", margin, y);
+  doc.text("Cotizaci├│n comercial", margin, y);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
@@ -63,7 +63,7 @@ export function downloadQuotePdf(quote: Quote) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
-  doc.text(quote.title || "Cotización de productos y servicios", margin, y);
+  doc.text(quote.title || "Cotizaci├│n de productos y servicios", margin, y);
   y += 8;
 
   doc.setFontSize(9);
@@ -75,7 +75,7 @@ export function downloadQuotePdf(quote: Quote) {
   doc.setTextColor(50, 50, 50);
 
   const leftBlock = [
-    quote.clientName || "—",
+    quote.clientName || "ÔÇö",
     [quote.city, quote.state].filter(Boolean).join(", ") || undefined,
   ].filter(Boolean) as string[];
   const rightBlock = [
@@ -107,7 +107,7 @@ export function downloadQuotePdf(quote: Quote) {
   doc.setFontSize(8);
   doc.setTextColor(60, 60, 60);
   doc.text("#", colX.n, y);
-  doc.text("Descripción", colX.desc, y);
+  doc.text("Descripci├│n", colX.desc, y);
   doc.text("Cant.", colX.qty, y, { align: "right" });
   doc.text("P. unit.", colX.price, y, { align: "right" });
   doc.text("Importe", colX.amount, y, { align: "right" });
@@ -186,7 +186,7 @@ export function downloadQuotePdf(quote: Quote) {
   doc.setFontSize(7);
   doc.setTextColor(130, 130, 130);
   doc.text(
-    "Documento generado desde MAS · Cotización sujeta a disponibilidad y confirmación.",
+    "Documento generado desde MAS ┬À Cotizaci├│n sujeta a disponibilidad y confirmaci├│n.",
     margin,
     y
   );

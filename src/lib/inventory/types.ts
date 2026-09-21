@@ -176,20 +176,39 @@ export type InventoryItem = {
   partNumber: string;
   manufacturer: string;
   subcategory: string;
+  imagePath: string;
+  imageUrl: string;
   createdAt: string;
   updatedAt: string;
 };
 
 export type InventoryItemInput = Omit<
   InventoryItem,
-  "id" | "createdAt" | "updatedAt"
->;
+  "id" | "createdAt" | "updatedAt" | "imagePath" | "imageUrl"
+> & {
+  imagePath?: string;
+  imageUrl?: string;
+};
 
 export type InventoryFilters = {
   search: string;
   category: InventoryCategoryId | "all";
   status: StockStatus | "all";
 };
+
+export const SKU_PREFIX_BY_CATEGORY: Record<InventoryCategoryId, string> = {
+  insumos: "INSUMOS",
+  medicamentos: "MEDICAMENTOS",
+  refacciones: "REFACCIONES",
+  accesorios: "ACCESORIOS",
+  reactivos: "REACTIVOS",
+  equipos: "EQUIPO",
+  otros: "OTROS",
+};
+
+export function skuPrefixForCategory(category: InventoryCategoryId) {
+  return SKU_PREFIX_BY_CATEGORY[category] ?? "ITEM";
+}
 
 export function isProductCategory(
   category: InventoryCategoryId

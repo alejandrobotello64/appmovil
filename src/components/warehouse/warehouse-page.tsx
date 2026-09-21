@@ -7,6 +7,7 @@ import { InventoryPanel } from "@/components/inventory/inventory-panel";
 import { WarehouseDashboard } from "@/components/warehouse/warehouse-dashboard";
 import { StockMovementPanel } from "@/components/warehouse/stock-movement-panel";
 import { HoldsPanel } from "@/components/warehouse/holds-panel";
+import { ServiceRequisitionsPanel } from "@/components/warehouse/service-requisitions-panel";
 import { SuppliersPanel } from "@/components/warehouse/suppliers-panel";
 import { MovementsPanel } from "@/components/warehouse/movements-panel";
 import { OrdersPanel } from "@/components/warehouse/orders-panel";
@@ -89,6 +90,8 @@ export function WarehousePage() {
             ) : null}
 
             {activeTab === "apartados" ? <HoldsPanel /> : null}
+
+            {activeTab === "solicitudes" ? <ServiceRequisitionsPanel /> : null}
 
             {activeTab === "movimientos" ? <MovementsPanel /> : null}
 

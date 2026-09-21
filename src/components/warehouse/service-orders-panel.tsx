@@ -9,6 +9,7 @@ import {
   Trash2,
   ArrowLeft,
   MessageSquarePlus,
+  Package,
   Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,22 +26,42 @@ import {
   downloadServiceWorkOrderPdf,
 } from "@/lib/service-orders/pdf";
 import {
+  addLinkedEquipment,
+  addServiceOrderInstrument,
   addServiceOrderNote,
   applyChecklistTemplate,
   createServiceOrder,
   deleteServiceOrder,
+  deleteServiceOrderDocument,
   deleteServiceOrderImage,
   getChecklistTemplates,
   getServiceOrders,
+  removeLinkedEquipment,
+  removeServiceOrderInstrument,
   replaceServiceOrderLines,
   setServiceOrderStatus,
   updateChecklistItem,
   updateServiceOrder,
+  uploadServiceOrderDocument,
   uploadServiceOrderImage,
 } from "@/lib/service-orders/storage";
+import { getBiomedicalInstruments } from "@/lib/biomedical-instruments/storage";
+import {
+  biomedicalInstrumentTypeLabel,
+  type BiomedicalInstrument,
+} from "@/lib/biomedical-instruments/types";
+import {
+  createServiceOrderRequisition,
+  getServiceOrderRequisitions,
+} from "@/lib/service-orders/requisition-storage";
+import {
+  requisitionStatusLabel,
+  type ServiceOrderRequisition,
+} from "@/lib/service-orders/requisitions";
 import {
   CHECKLIST_RESULTS,
   IMAGE_STAGES,
+  LINKED_EQUIPMENT_RELATIONS,
   SERVICE_LINE_KINDS,
   SERVICE_LINE_STATUSES,
   SERVICE_ORDER_STATUSES,
@@ -106,7 +127,7 @@ function emptyForm(): ServiceOrderInput {
     orderKind: "servicio",
     status: "recibido",
     priority: "normal",
-    serviceType: "mantenimiento",
+    serviceType: "diagnostico",
     clientId: null,
     clientName: "",
     contactName: "",
@@ -128,6 +149,7 @@ function emptyForm(): ServiceOrderInput {
     generalObservations: "",
     diagnosisNotes: "",
     serviceNotes: "",
+    underWarranty: false,
     authorized: false,
     taxRate: 16,
     discount: 0,
@@ -154,6 +176,9 @@ export function ServiceOrdersPanel() {
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [equipment, setEquipment] = useState<ClientEquipment[]>([]);
+  const [instrumentsCatalog, setInstrumentsCatalog] = useState<
+    BiomedicalInstrument[]
+  >([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -169,6 +194,16 @@ export function ServiceOrdersPanel() {
   const [note, setNote] = useState("");
   const [imageStage, setImageStage] = useState<ImageStage>("recepcion");
   const [docsOpen, setDocsOpen] = useState(false);
+  const [linkedEqId, setLinkedEqId] = useState("");
+  const [linkedRelation, setLinkedRelation] = useState<string>(
+    LINKED_EQUIPMENT_RELATIONS[1]?.id ?? "Monitor asociado"
+  );
+  const [linkedNotes, setLinkedNotes] = useState("");
+  const [usedInstrumentId, setUsedInstrumentId] = useState("");
+  const [usedInstrumentNotes, setUsedInstrumentNotes] = useState("");
+  const [orderRequisitions, setOrderRequisitions] = useState<
+    ServiceOrderRequisition[]
+  >([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const actor = getSession()?.username ?? "usuario";
 
@@ -181,16 +216,18 @@ export function ServiceOrdersPanel() {
     setLoading(true);
     setError("");
     try {
-      const [list, tpls, clientList, inventory] = await Promise.all([
+      const [list, tpls, clientList, inventory, instruments] = await Promise.all([
         getServiceOrders(),
         getChecklistTemplates(),
         getClients(),
         getInventoryItems({ kind: "producto" }),
+        getBiomedicalInstruments(),
       ]);
       setOrders(list);
       setTemplates(tpls);
       setClients(clientList.filter((c) => c.isActive));
       setProducts(inventory);
+      setInstrumentsCatalog(instruments);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar órdenes.");
     } finally {
@@ -211,6 +248,16 @@ export function ServiceOrdersPanel() {
       .then(setEquipment)
       .catch(() => setEquipment([]));
   }, [form.clientId]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setOrderRequisitions([]);
+      return;
+    }
+    void getServiceOrderRequisitions({ serviceOrderId: selectedId })
+      .then(setOrderRequisitions)
+      .catch(() => setOrderRequisitions([]));
+  }, [selectedId, selected?.updatedAt]);
 
   useEffect(() => {
     if (!selected) return;
@@ -339,6 +386,7 @@ export function ServiceOrdersPanel() {
       generalObservations: order.generalObservations,
       diagnosisNotes: order.diagnosisNotes,
       serviceNotes: order.serviceNotes,
+      underWarranty: order.underWarranty,
       authorized: order.authorized,
       closed: order.closed,
       taxRate: order.taxRate,
@@ -374,6 +422,71 @@ export function ServiceOrdersPanel() {
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudieron guardar partidas.");
+    }
+  }
+
+  async function requestWarehouse() {
+    if (!selected || !canWrite) return;
+    try {
+      setError("");
+      await replaceServiceOrderLines(
+        selected.id,
+        draftLines.filter((l) => l.description.trim())
+      );
+      await reload();
+      const latest = (await getServiceOrders()).find((o) => o.id === selected.id);
+      if (!latest) throw new Error("No se pudo recargar la orden.");
+
+      const requestable = latest.lines.filter(
+        (line) =>
+          Boolean(line.productId) &&
+          (line.lineStatus === "pendiente" || line.lineStatus === "solicitado") &&
+          line.lineKind !== "mano_obra" &&
+          line.lineKind !== "otro"
+      );
+
+      const alreadyOpen = new Set(
+        (
+          await getServiceOrderRequisitions({ serviceOrderId: latest.id })
+        ).flatMap((req) =>
+          req.status === "cancelada" || req.status === "surtida"
+            ? []
+            : req.lines.map((l) => l.serviceOrderLineId).filter(Boolean)
+        )
+      );
+
+      const fresh = requestable.filter((line) => !alreadyOpen.has(line.id));
+      if (!fresh.length) {
+        setError(
+          "No hay partidas nuevas del catálogo para solicitar. Agrega productos y guárdalos primero."
+        );
+        return;
+      }
+
+      const created = await createServiceOrderRequisition({
+        serviceOrderId: latest.id,
+        requestedBy: actor,
+        notes: `Solicitud desde ${latest.folio}`,
+        lines: fresh.map((line) => ({
+          serviceOrderLineId: line.id,
+          productId: line.productId!,
+          description: line.description,
+          quantity: line.quantity,
+          unit: line.unit,
+        })),
+      });
+      setOrderRequisitions(
+        await getServiceOrderRequisitions({ serviceOrderId: latest.id })
+      );
+      await reload();
+      setError("");
+      window.alert(
+        `Solicitud ${created.folio} enviada a almacén (${created.lines.length} línea(s)).`
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo solicitar a almacén."
+      );
     }
   }
 
@@ -425,6 +538,136 @@ export function ServiceOrdersPanel() {
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo eliminar la imagen.");
+    }
+  }
+
+  async function onAddLinkedEquipment() {
+    if (!selected || !canWrite) return;
+    const eq = equipment.find((e) => e.id === linkedEqId);
+    if (!eq && !linkedEqId) {
+      setError("Selecciona un equipo del cliente para ligarlo.");
+      return;
+    }
+    try {
+      setError("");
+      await addLinkedEquipment({
+        orderId: selected.id,
+        equipmentId: eq?.id ?? null,
+        equipmentName: eq?.name ?? "",
+        equipmentBrand: eq?.brand ?? "",
+        equipmentModel: eq?.model ?? "",
+        equipmentSerial: eq?.serialNumber ?? "",
+        equipmentLocation: eq?.location ?? "",
+        relationLabel: linkedRelation,
+        notes: linkedNotes,
+        createdBy: actor,
+      });
+      setLinkedEqId("");
+      setLinkedNotes("");
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo ligar el equipo."
+      );
+    }
+  }
+
+  async function onRemoveLinkedEquipment(linkId: string) {
+    if (!canWrite) return;
+    if (!confirm("¿Quitar este equipo ligado de la orden?")) return;
+    try {
+      setError("");
+      await removeLinkedEquipment(linkId, actor);
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo quitar el equipo ligado."
+      );
+    }
+  }
+
+  async function onAddUsedInstrument() {
+    if (!selected || !canWrite) return;
+    const inst = instrumentsCatalog.find((i) => i.id === usedInstrumentId);
+    if (!inst) {
+      setError("Selecciona un simulador o analizador del catálogo.");
+      return;
+    }
+    if (!inst.serialNumber.trim()) {
+      setError(
+        "El instrumento seleccionado no tiene número de serie. Complétalo en Biomédica → Simuladores y analizadores."
+      );
+      return;
+    }
+    try {
+      setError("");
+      await addServiceOrderInstrument({
+        orderId: selected.id,
+        instrumentId: inst.id,
+        instrumentType: inst.instrumentType,
+        instrumentName: inst.name,
+        instrumentBrand: inst.brand,
+        instrumentModel: inst.model,
+        instrumentSerial: inst.serialNumber,
+        usageNotes: usedInstrumentNotes,
+        createdBy: actor,
+      });
+      setUsedInstrumentId("");
+      setUsedInstrumentNotes("");
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo agregar el instrumento a la orden."
+      );
+    }
+  }
+
+  async function onRemoveUsedInstrument(linkId: string) {
+    if (!canWrite) return;
+    if (!confirm("¿Quitar este instrumento de la orden?")) return;
+    try {
+      setError("");
+      await removeServiceOrderInstrument(linkId, actor);
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo quitar el instrumento."
+      );
+    }
+  }
+
+  async function onUploadSafetyPdf(file: File) {
+    if (!selected || !canWrite) return;
+    try {
+      setError("");
+      await uploadServiceOrderDocument({
+        orderId: selected.id,
+        file,
+        docType: "seguridad_electrica",
+        title: "Examen de seguridad eléctrica",
+        uploadedBy: actor,
+      });
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo subir el PDF de seguridad eléctrica."
+      );
+    }
+  }
+
+  async function onDeleteDocument(docId: string) {
+    if (!selected || !canWrite) return;
+    const doc = selected.documents.find((d) => d.id === docId);
+    if (!doc) return;
+    try {
+      await deleteServiceOrderDocument(doc);
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el PDF.");
     }
   }
 
@@ -652,6 +895,16 @@ export function ServiceOrdersPanel() {
               <option value="urgente">Urgente</option>
             </select>
           </label>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={Boolean(form.underWarranty)}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, underWarranty: e.target.checked }))
+              }
+            />
+            Cubierta por garantía
+          </label>
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1 block text-muted-foreground">
               Falla reportada por el cliente
@@ -688,6 +941,23 @@ export function ServiceOrdersPanel() {
       { id: "entrega", label: "Entrega" },
     ];
 
+    const linkedIds = new Set(
+      selected.linkedEquipment
+        .map((l) => l.equipmentId)
+        .filter((id): id is string => Boolean(id))
+    );
+    const linkableEquipment = equipment.filter(
+      (eq) => eq.id !== selected.equipmentId && !linkedIds.has(eq.id)
+    );
+    const usedInstrumentIds = new Set(
+      (selected.instruments ?? [])
+        .map((i) => i.instrumentId)
+        .filter((id): id is string => Boolean(id))
+    );
+    const availableInstruments = instrumentsCatalog.filter(
+      (inst) => !usedInstrumentIds.has(inst.id)
+    );
+
     return (
       <section className="space-y-4">
         {!canWrite ? <ReadOnlyBanner visible /> : null}
@@ -715,6 +985,17 @@ export function ServiceOrdersPanel() {
                 .join(" · ")}
               {selected.equipmentSerial ? ` · Serie ${selected.equipmentSerial}` : ""}
             </p>
+            {selected.linkedEquipment.length > 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ligados:{" "}
+                {selected.linkedEquipment
+                  .map(
+                    (l) =>
+                      `${l.relationLabel}${l.equipmentName ? ` (${l.equipmentName})` : ""}`
+                  )
+                  .join(" · ")}
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
@@ -867,6 +1148,142 @@ export function ServiceOrdersPanel() {
                     ))}
                   </select>
                 </label>
+                <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.underWarranty)}
+                    disabled={!canWrite}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, underWarranty: e.target.checked }))
+                    }
+                  />
+                  Cubierta por garantía
+                </label>
+
+                <div className="sm:col-span-2 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
+                  <div>
+                    <h3 className="text-sm font-medium">Equipos ligados</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Monitores, ventiladores u otros equipos asociados al principal
+                      (por ejemplo monitor ↔ máquina de anestesia).
+                    </p>
+                  </div>
+
+                  {selected.linkedEquipment.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Ningún equipo ligado aún.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {selected.linkedEquipment.map((link) => (
+                        <li
+                          key={link.id}
+                          className="flex flex-wrap items-start justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                        >
+                          <div>
+                            <p className="font-medium">
+                              {link.relationLabel}
+                              {link.equipmentName ? ` · ${link.equipmentName}` : ""}
+                            </p>
+                            <p className="text-muted-foreground">
+                              {[link.equipmentBrand, link.equipmentModel]
+                                .filter(Boolean)
+                                .join(" ")}
+                              {link.equipmentSerial
+                                ? ` · Serie ${link.equipmentSerial}`
+                                : ""}
+                              {link.equipmentLocation
+                                ? ` · ${link.equipmentLocation}`
+                                : ""}
+                            </p>
+                            {link.notes ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {link.notes}
+                              </p>
+                            ) : null}
+                          </div>
+                          {canWrite ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 text-destructive hover:underline"
+                              onClick={() => void onRemoveLinkedEquipment(link.id)}
+                            >
+                              <Trash2 className="size-3.5" /> Quitar
+                            </button>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {canWrite ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="block text-sm sm:col-span-2">
+                        <span className="mb-1 block text-muted-foreground">
+                          Equipo del cliente
+                        </span>
+                        <select
+                          className={fieldClass}
+                          value={linkedEqId}
+                          onChange={(e) => setLinkedEqId(e.target.value)}
+                          disabled={!form.clientId || linkableEquipment.length === 0}
+                        >
+                          <option value="">
+                            {!form.clientId
+                              ? "La orden necesita un cliente con equipos"
+                              : linkableEquipment.length === 0
+                                ? "No hay más equipos disponibles"
+                                : "Seleccionar equipo a ligar…"}
+                          </option>
+                          {linkableEquipment.map((eq) => (
+                            <option key={eq.id} value={eq.id}>
+                              {eq.name} · {eq.brand} {eq.model} · {eq.serialNumber}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block text-sm">
+                        <span className="mb-1 block text-muted-foreground">
+                          Relación
+                        </span>
+                        <select
+                          className={fieldClass}
+                          value={linkedRelation}
+                          onChange={(e) => setLinkedRelation(e.target.value)}
+                        >
+                          {LINKED_EQUIPMENT_RELATIONS.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block text-sm">
+                        <span className="mb-1 block text-muted-foreground">
+                          Notas (opcional)
+                        </span>
+                        <input
+                          className={fieldClass}
+                          value={linkedNotes}
+                          onChange={(e) => setLinkedNotes(e.target.value)}
+                          placeholder="Ej. cable ECG incluido"
+                        />
+                      </label>
+                      <div className="sm:col-span-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={!linkedEqId}
+                          onClick={() => void onAddLinkedEquipment()}
+                        >
+                          <Plus className="size-4" /> Agregar equipo ligado
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
                 <div className="sm:col-span-2">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <h3 className="text-sm font-medium">Imágenes del equipo</h3>
@@ -1031,6 +1448,156 @@ export function ServiceOrdersPanel() {
                     ))}
                   </div>
                 )}
+
+                <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
+                  <div>
+                    <h3 className="text-sm font-medium">
+                      Simuladores y analizadores usados
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Registra los equipos de prueba utilizados en este servicio
+                      (nombre, marca, modelo y número de serie).
+                    </p>
+                  </div>
+
+                  {(selected.instruments ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Ningún instrumento registrado en esta orden.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {(selected.instruments ?? []).map((inst) => (
+                        <li
+                          key={inst.id}
+                          className="flex flex-wrap items-start justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                        >
+                          <div>
+                            <p className="font-medium">
+                              {biomedicalInstrumentTypeLabel(inst.instrumentType)}
+                              {" · "}
+                              {inst.instrumentName || "Sin nombre"}
+                            </p>
+                            <p className="text-muted-foreground">
+                              {[inst.instrumentBrand, inst.instrumentModel]
+                                .filter(Boolean)
+                                .join(" ")}
+                              {inst.instrumentSerial
+                                ? ` · Serie ${inst.instrumentSerial}`
+                                : " · Sin serie"}
+                            </p>
+                            {inst.usageNotes ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {inst.usageNotes}
+                              </p>
+                            ) : null}
+                          </div>
+                          {canWrite ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 text-destructive hover:underline"
+                              onClick={() => void onRemoveUsedInstrument(inst.id)}
+                            >
+                              <Trash2 className="size-3.5" /> Quitar
+                            </button>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {canWrite ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="block text-sm sm:col-span-2">
+                        <span className="mb-1 block text-muted-foreground">
+                          Instrumento del catálogo
+                        </span>
+                        <select
+                          className={fieldClass}
+                          value={usedInstrumentId}
+                          onChange={(e) => setUsedInstrumentId(e.target.value)}
+                          disabled={availableInstruments.length === 0}
+                        >
+                          <option value="">
+                            {availableInstruments.length === 0
+                              ? "Sin equipos disponibles (alta en Biomédica → Simuladores)"
+                              : "Seleccionar simulador / analizador…"}
+                          </option>
+                          {availableInstruments.map((inst) => (
+                            <option key={inst.id} value={inst.id}>
+                              {biomedicalInstrumentTypeLabel(inst.instrumentType)} ·{" "}
+                              {inst.name}
+                              {inst.brand || inst.model
+                                ? ` · ${[inst.brand, inst.model].filter(Boolean).join(" ")}`
+                                : ""}
+                              {inst.serialNumber
+                                ? ` · Serie ${inst.serialNumber}`
+                                : " · Sin serie"}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {usedInstrumentId ? (
+                        <div className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-muted-foreground sm:col-span-2">
+                          {(() => {
+                            const inst = instrumentsCatalog.find(
+                              (i) => i.id === usedInstrumentId
+                            );
+                            if (!inst) return null;
+                            return (
+                              <>
+                                <p>
+                                  <span className="font-medium text-foreground">
+                                    Datos del equipo:
+                                  </span>{" "}
+                                  {inst.name}
+                                </p>
+                                <p>
+                                  Marca/modelo:{" "}
+                                  {[inst.brand, inst.model]
+                                    .filter(Boolean)
+                                    .join(" ") || "—"}
+                                </p>
+                                <p>Número de serie: {inst.serialNumber || "—"}</p>
+                                <p>
+                                  Certificado:{" "}
+                                  {inst.certificateNumber ||
+                                    (inst.certificateUrl ? "PDF anexado" : "—")}
+                                  {inst.certificateExpiresAt
+                                    ? ` · vig. ${inst.certificateExpiresAt}`
+                                    : ""}
+                                </p>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      ) : null}
+                      <label className="block text-sm sm:col-span-2">
+                        <span className="mb-1 block text-muted-foreground">
+                          Notas de uso (opcional)
+                        </span>
+                        <input
+                          className={fieldClass}
+                          value={usedInstrumentNotes}
+                          onChange={(e) =>
+                            setUsedInstrumentNotes(e.target.value)
+                          }
+                          placeholder="Ej. Prueba de seguridad eléctrica, canal 1"
+                        />
+                      </label>
+                      <div className="sm:col-span-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={!usedInstrumentId}
+                          onClick={() => void onAddUsedInstrument()}
+                        >
+                          <Plus className="size-4" /> Agregar instrumento usado
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ) : null}
 
@@ -1241,6 +1808,41 @@ export function ServiceOrdersPanel() {
                     >
                       Guardar partidas
                     </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void requestWarehouse()}
+                    >
+                      <Package className="size-3.5" /> Solicitar a almacén
+                    </Button>
+                  </div>
+                ) : null}
+                {orderRequisitions.length ? (
+                  <div className="rounded-xl border border-border bg-muted/20 p-3">
+                    <p className="mb-2 text-sm font-medium">
+                      Solicitudes a almacén
+                    </p>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {orderRequisitions.map((req) => (
+                        <li key={req.id} className="flex flex-wrap gap-2">
+                          <span className="font-medium text-foreground">
+                            {req.folio}
+                          </span>
+                          <span>{requisitionStatusLabel(req.status)}</span>
+                          <span>
+                            {req.lines.length} línea(s) ·{" "}
+                            {new Date(req.requestedAt).toLocaleString("es-MX")}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <a
+                      href="/dashboard/almacen?tab=solicitudes"
+                      className="mt-2 inline-block text-xs font-medium text-[#3B46A5] hover:underline"
+                    >
+                      Abrir bandeja de almacén
+                    </a>
                   </div>
                 ) : null}
                 <p className="text-right text-sm font-medium">
@@ -1319,8 +1921,88 @@ export function ServiceOrdersPanel() {
                     <span className="rounded-full bg-muted px-3 py-1">
                       Imágenes: {selected.images.length}
                     </span>
+                    <span className="rounded-full bg-muted px-3 py-1">
+                      PDFs seguridad:{" "}
+                      {
+                        selected.documents.filter(
+                          (d) => d.docType === "seguridad_electrica"
+                        ).length
+                      }
+                    </span>
                   </div>
                 </div>
+
+                <div className="rounded-xl border border-border p-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 className="font-medium">
+                        Examen de seguridad eléctrica (PDF)
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Adjunta el reporte o certificado en PDF.
+                      </p>
+                    </div>
+                    {canWrite ? (
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-muted">
+                        <FileDown className="size-4" />
+                        Subir PDF
+                        <input
+                          type="file"
+                          accept="application/pdf,.pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void onUploadSafetyPdf(file);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    ) : null}
+                  </div>
+                  {selected.documents.filter(
+                    (d) => d.docType === "seguridad_electrica"
+                  ).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Aún no hay PDFs de seguridad eléctrica en esta orden.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {selected.documents
+                        .filter((d) => d.docType === "seguridad_electrica")
+                        .map((doc) => (
+                          <li
+                            key={doc.id}
+                            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                          >
+                            <div>
+                              <a
+                                href={doc.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-medium text-[#3B46A5] hover:underline"
+                              >
+                                {doc.title || doc.fileName}
+                              </a>
+                              <p className="text-xs text-muted-foreground">
+                                {doc.fileName} ·{" "}
+                                {new Date(doc.createdAt).toLocaleString("es-MX")}
+                              </p>
+                            </div>
+                            {canWrite ? (
+                              <button
+                                type="button"
+                                className="text-xs text-destructive hover:underline"
+                                onClick={() => void onDeleteDocument(doc.id)}
+                              >
+                                Eliminar
+                              </button>
+                            ) : null}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
@@ -1398,9 +2080,33 @@ export function ServiceOrdersPanel() {
               />
               Autorizado por cliente
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={Boolean(form.underWarranty)}
+                disabled={!canWrite}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, underWarranty: e.target.checked }));
+                  if (canWrite) {
+                    void updateServiceOrder(selected.id, {
+                      ...formFromOrder(selected),
+                      underWarranty: e.target.checked,
+                      createdBy: actor,
+                      lines: undefined,
+                    }).then(reload);
+                  }
+                }}
+              />
+              Cubierta por garantía
+            </label>
             {selected.priority === "urgente" ? (
               <span className="inline-flex rounded-full bg-rose-600 px-2 py-0.5 text-xs font-medium text-white">
                 Urgente
+              </span>
+            ) : null}
+            {selected.underWarranty ? (
+              <span className="inline-flex rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">
+                Garantía
               </span>
             ) : null}
             <div className="space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
@@ -1561,6 +2267,11 @@ export function ServiceOrdersPanel() {
                     {order.priority === "urgente" ? (
                       <span className="mt-1 inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                         Urgente
+                      </span>
+                    ) : null}
+                    {order.underWarranty ? (
+                      <span className="mt-1 ml-1 inline-flex rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        Garantía
                       </span>
                     ) : null}
                   </td>

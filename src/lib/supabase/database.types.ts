@@ -122,6 +122,8 @@ export type Database = {
           part_number: string;
           manufacturer: string;
           subcategory: string;
+          image_path: string;
+          image_url: string;
           created_at: string;
           updated_at: string;
         };
@@ -156,6 +158,8 @@ export type Database = {
           part_number?: string;
           manufacturer?: string;
           subcategory?: string;
+          image_path?: string;
+          image_url?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -190,6 +194,8 @@ export type Database = {
           part_number?: string;
           manufacturer?: string;
           subcategory?: string;
+          image_path?: string;
+          image_url?: string;
           created_at?: string;
           updated_at?: string;
         };

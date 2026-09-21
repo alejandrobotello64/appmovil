@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase/client";
 import {
+  createClientService,
+  setClientEquipmentStatus,
+} from "@/lib/clients/storage";
+import type { ClientServiceType } from "@/lib/clients/types";
+import {
   computeServiceTotals,
   serviceOrderStatusLabel,
   type ChecklistResult,
@@ -8,22 +13,150 @@ import {
   type ImageStage,
   type ServiceOrder,
   type ServiceOrderChecklistItem,
+  type ServiceOrderDocument,
   type ServiceOrderEvent,
   type ServiceOrderImage,
   type ServiceOrderInput,
   type ServiceOrderKind,
   type ServiceOrderLine,
   type ServiceOrderLineInput,
+  type ServiceOrderLinkedEquipment,
+  type ServiceOrderInstrument,
   type ServiceOrderStatus,
+  type ServiceDocumentType,
   type ServiceLineKind,
   type ServiceLineStatus,
   type ServiceType,
+  type CalibrationOverall,
 } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
 const MEDIA_BUCKET = "service-order-media";
+
+const ACTIVE_REPAIR_STATUSES: ServiceOrderStatus[] = [
+  "recibido",
+  "diagnostico",
+  "en_proceso",
+  "espera_refacciones",
+];
+
+function toClientServiceType(serviceType: ServiceType): ClientServiceType {
+  switch (serviceType) {
+    case "instalacion":
+      return "instalacion";
+    case "preventivo":
+      return "mantenimiento";
+    case "correctivo":
+      return "reparacion";
+    case "diagnostico":
+    default:
+      return "otro";
+  }
+}
+
+async function resolveRelatedFields(input: ServiceOrderInput) {
+  const next = { ...input };
+
+  if (input.clientId) {
+    const { data: client, error } = await db
+      .from("clients")
+      .select("id, name, contact_name, phone, email")
+      .eq("id", input.clientId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (client) {
+      next.clientName = String(client.name ?? next.clientName ?? "");
+      if (!next.contactName?.trim()) {
+        next.contactName = String(client.contact_name ?? "");
+      }
+      if (!next.contactPhone?.trim()) {
+        next.contactPhone = String(client.phone ?? "");
+      }
+      if (!next.contactEmail?.trim()) {
+        next.contactEmail = String(client.email ?? "");
+      }
+    }
+  }
+
+  if (input.equipmentId) {
+    const { data: equipment, error } = await db
+      .from("client_equipment")
+      .select("id, client_id, name, brand, model, serial_number, location")
+      .eq("id", input.equipmentId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (equipment) {
+      if (input.clientId && String(equipment.client_id) !== input.clientId) {
+        throw new Error("El equipo no pertenece al cliente seleccionado.");
+      }
+      next.clientId = input.clientId || String(equipment.client_id);
+      next.equipmentName = String(equipment.name ?? "");
+      next.equipmentBrand = String(equipment.brand ?? "");
+      next.equipmentModel = String(equipment.model ?? "");
+      next.equipmentSerial = String(equipment.serial_number ?? "");
+      next.equipmentLocation = String(equipment.location ?? "");
+    }
+  }
+
+  return next;
+}
+
+async function syncLinkedEquipmentStatus(
+  equipmentId: string | null | undefined,
+  status: ServiceOrderStatus
+) {
+  if (!equipmentId) return;
+
+  if (ACTIVE_REPAIR_STATUSES.includes(status)) {
+    await setClientEquipmentStatus(equipmentId, "en_reparacion");
+    return;
+  }
+
+  if (status === "terminado" || status === "entregado" || status === "cancelado") {
+    const { data, error } = await db
+      .from("service_orders")
+      .select("id")
+      .eq("equipment_id", equipmentId)
+      .in("status", ACTIVE_REPAIR_STATUSES)
+      .limit(1);
+    if (error) throw new Error(error.message);
+    if (!(data ?? []).length) {
+      await setClientEquipmentStatus(equipmentId, "operativo");
+    }
+  }
+}
+
+async function mirrorToClientHistory(
+  order: ServiceOrder,
+  createdBy: string
+) {
+  if (!order.clientId) return;
+  const { data: existing, error } = await db
+    .from("client_services")
+    .select("id")
+    .eq("folio", order.folio)
+    .limit(1);
+  if (error) throw new Error(error.message);
+  if ((existing ?? []).length) return;
+
+  await createClientService({
+    clientId: order.clientId,
+    equipmentId: order.equipmentId,
+    serviceType: toClientServiceType(order.serviceType),
+    title: `${serviceOrderStatusLabel(order.status)} · ${order.equipmentName || order.serviceType}`,
+    description: order.faultReported || order.diagnosisNotes || order.serviceNotes,
+    performedAt: (order.deliveredAt || order.updatedAt || order.createdAt).slice(
+      0,
+      10
+    ),
+    technician: order.technician,
+    folio: order.folio,
+    notes: order.underWarranty ? "Cubierto por garantía" : "",
+    createdBy,
+  });
+}
 
 function dateOrEmpty(value: unknown) {
   if (!value) return "";
@@ -92,6 +225,55 @@ function mapImage(row: Record<string, unknown>): ServiceOrderImage {
   };
 }
 
+function mapDocument(row: Record<string, unknown>): ServiceOrderDocument {
+  return {
+    id: String(row.id),
+    serviceOrderId: String(row.service_order_id),
+    docType: String(row.doc_type ?? "seguridad_electrica") as ServiceDocumentType,
+    title: String(row.title ?? ""),
+    filePath: String(row.file_path ?? ""),
+    fileUrl: String(row.file_url ?? ""),
+    fileName: String(row.file_name ?? ""),
+    uploadedBy: String(row.uploaded_by ?? ""),
+    createdAt: String(row.created_at),
+  };
+}
+
+function mapLinkedEquipment(
+  row: Record<string, unknown>
+): ServiceOrderLinkedEquipment {
+  return {
+    id: String(row.id),
+    serviceOrderId: String(row.service_order_id),
+    equipmentId: row.equipment_id ? String(row.equipment_id) : null,
+    equipmentName: String(row.equipment_name ?? ""),
+    equipmentBrand: String(row.equipment_brand ?? ""),
+    equipmentModel: String(row.equipment_model ?? ""),
+    equipmentSerial: String(row.equipment_serial ?? ""),
+    equipmentLocation: String(row.equipment_location ?? ""),
+    relationLabel: String(row.relation_label ?? "Equipo ligado"),
+    notes: String(row.notes ?? ""),
+    sortOrder: Number(row.sort_order ?? 0),
+  };
+}
+
+function mapOrderInstrument(
+  row: Record<string, unknown>
+): ServiceOrderInstrument {
+  return {
+    id: String(row.id),
+    serviceOrderId: String(row.service_order_id),
+    instrumentId: row.instrument_id ? String(row.instrument_id) : null,
+    instrumentType: String(row.instrument_type ?? "simulador"),
+    instrumentName: String(row.instrument_name ?? ""),
+    instrumentBrand: String(row.instrument_brand ?? ""),
+    instrumentModel: String(row.instrument_model ?? ""),
+    instrumentSerial: String(row.instrument_serial ?? ""),
+    usageNotes: String(row.usage_notes ?? ""),
+    sortOrder: Number(row.sort_order ?? 0),
+  };
+}
+
 function mapEvent(row: Record<string, unknown>): ServiceOrderEvent {
   return {
     id: String(row.id),
@@ -109,7 +291,10 @@ function mapOrder(
   lines: ServiceOrderLine[],
   checklist: ServiceOrderChecklistItem[],
   images: ServiceOrderImage[],
-  events: ServiceOrderEvent[]
+  events: ServiceOrderEvent[],
+  documents: ServiceOrderDocument[] = [],
+  linkedEquipment: ServiceOrderLinkedEquipment[] = [],
+  instruments: ServiceOrderInstrument[] = []
 ): ServiceOrder {
   return {
     id: String(row.id),
@@ -119,7 +304,7 @@ function mapOrder(
     priority: (String(row.priority ?? "normal") === "urgente"
       ? "urgente"
       : "normal") as "normal" | "urgente",
-    serviceType: String(row.service_type ?? "mantenimiento") as ServiceType,
+    serviceType: String(row.service_type ?? "diagnostico") as ServiceType,
     clientId: row.client_id ? String(row.client_id) : null,
     clientName: String(row.client_name ?? ""),
     contactName: String(row.contact_name ?? ""),
@@ -144,6 +329,7 @@ function mapOrder(
     generalObservations: String(row.general_observations ?? ""),
     diagnosisNotes: String(row.diagnosis_notes ?? ""),
     serviceNotes: String(row.service_notes ?? ""),
+    underWarranty: Boolean(row.under_warranty),
     authorized: Boolean(row.authorized),
     closed: Boolean(row.closed),
     currency: String(row.currency ?? "MXN"),
@@ -152,11 +338,25 @@ function mapOrder(
     taxAmount: Number(row.tax_amount ?? 0),
     discount: Number(row.discount ?? 0),
     total: Number(row.total ?? 0),
+    calibrationTemplateId: row.calibration_template_id
+      ? String(row.calibration_template_id)
+      : null,
+    calibrationPerformedAt: dateOrEmpty(row.calibration_performed_at),
+    calibrationInstrument: String(row.calibration_instrument ?? ""),
+    calibrationCertificate: String(row.calibration_certificate ?? ""),
+    calibrationOverall: String(
+      row.calibration_overall ?? "pendiente"
+    ) as CalibrationOverall,
+    calibrationNotes: String(row.calibration_notes ?? ""),
     createdBy: String(row.created_by ?? ""),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
     lines,
     checklist,
+    calibration: [],
+    linkedEquipment,
+    instruments,
+    documents,
     images,
     events,
   };
@@ -223,7 +423,7 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
     order_kind: input.orderKind ?? "servicio",
     status: input.status ?? "borrador",
     priority: input.priority ?? "normal",
-    service_type: input.serviceType ?? "mantenimiento",
+    service_type: input.serviceType ?? "diagnostico",
     client_id: input.clientId || null,
     client_name: (input.clientName ?? "").trim(),
     contact_name: (input.contactName ?? "").trim(),
@@ -246,6 +446,7 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
     general_observations: (input.generalObservations ?? "").trim(),
     diagnosis_notes: (input.diagnosisNotes ?? "").trim(),
     service_notes: (input.serviceNotes ?? "").trim(),
+    under_warranty: Boolean(input.underWarranty),
     authorized: Boolean(input.authorized),
     closed: Boolean(input.closed),
     tax_rate: input.taxRate ?? 16,
@@ -256,12 +457,17 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
   };
 }
 
-export async function getChecklistTemplates(): Promise<ChecklistTemplate[]> {
-  const { data, error } = await db
+export async function getChecklistTemplates(options?: {
+  includeInactive?: boolean;
+}): Promise<ChecklistTemplate[]> {
+  let query = db
     .from("service_checklist_templates")
     .select("*")
-    .eq("is_active", true)
     .order("name", { ascending: true });
+  if (!options?.includeInactive) {
+    query = query.eq("is_active", true);
+  }
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
 
   const templates = data ?? [];
@@ -294,13 +500,132 @@ export async function getChecklistTemplates(): Promise<ChecklistTemplate[]> {
   }));
 }
 
+function slugCode(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 40);
+}
+
+export async function createChecklistTemplate(input: {
+  name: string;
+  equipmentKind?: string;
+  description?: string;
+  points?: string[];
+}): Promise<ChecklistTemplate> {
+  const name = input.name.trim();
+  if (!name) throw new Error("El nombre de la plantilla es obligatorio.");
+
+  const kind = (input.equipmentKind ?? "general").trim() || "general";
+  const base = slugCode(name) || "plantilla";
+  let code = base;
+  let attempt = 1;
+  while (attempt < 20) {
+    const { data: existing } = await db
+      .from("service_checklist_templates")
+      .select("id")
+      .eq("code", code)
+      .maybeSingle();
+    if (!existing) break;
+    attempt += 1;
+    code = `${base}_${attempt}`;
+  }
+
+  const { data, error } = await db
+    .from("service_checklist_templates")
+    .insert({
+      code,
+      name,
+      equipment_kind: kind,
+      description: (input.description ?? "").trim(),
+      is_active: true,
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+
+  const templateId = String(data.id);
+  const points = (input.points ?? [])
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (points.length) {
+    const { error: pointsError } = await db
+      .from("service_checklist_template_points")
+      .insert(
+        points.map((label, index) => ({
+          template_id: templateId,
+          label,
+          sort_order: index,
+        }))
+      );
+    if (pointsError) throw new Error(pointsError.message);
+  }
+
+  const list = await getChecklistTemplates({ includeInactive: true });
+  const created = list.find((t) => t.id === templateId);
+  if (!created) throw new Error("No se pudo recargar la plantilla.");
+  return created;
+}
+
+export async function updateChecklistTemplateMeta(
+  templateId: string,
+  patch: { name?: string; description?: string; isActive?: boolean }
+): Promise<void> {
+  const payload: Record<string, unknown> = {};
+  if (patch.name != null) payload.name = patch.name.trim();
+  if (patch.description != null) payload.description = patch.description.trim();
+  if (patch.isActive != null) payload.is_active = patch.isActive;
+  if (!Object.keys(payload).length) return;
+  const { error } = await db
+    .from("service_checklist_templates")
+    .update(payload)
+    .eq("id", templateId);
+  if (error) throw new Error(error.message);
+}
+
+export async function addChecklistTemplatePoint(
+  templateId: string,
+  label: string
+): Promise<void> {
+  const trimmed = label.trim();
+  if (!trimmed) throw new Error("El punto no puede estar vacío.");
+  const { data: existing, error: countError } = await db
+    .from("service_checklist_template_points")
+    .select("sort_order")
+    .eq("template_id", templateId)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  if (countError) throw new Error(countError.message);
+  const nextOrder = Number(existing?.[0]?.sort_order ?? 0) + 1;
+  const { error } = await db.from("service_checklist_template_points").insert({
+    template_id: templateId,
+    label: trimmed,
+    sort_order: nextOrder,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteChecklistTemplatePoint(
+  pointId: string
+): Promise<void> {
+  const { error } = await db
+    .from("service_checklist_template_points")
+    .delete()
+    .eq("id", pointId);
+  if (error) throw new Error(error.message);
+}
+
 async function hydrateOrders(
   orderRows: Record<string, unknown>[]
 ): Promise<ServiceOrder[]> {
   if (!orderRows.length) return [];
   const ids = orderRows.map((row) => row.id);
 
-  const [linesRes, checkRes, imagesRes, eventsRes] = await Promise.all([
+  const [linesRes, checkRes, imagesRes, eventsRes, docsRes, linkedRes, instRes] =
+    await Promise.all([
     db
       .from("service_order_lines")
       .select("*, product:inventory_items(sku, name)")
@@ -321,12 +646,30 @@ async function hydrateOrders(
       .select("*")
       .in("service_order_id", ids)
       .order("created_at", { ascending: false }),
+    db
+      .from("service_order_documents")
+      .select("*")
+      .in("service_order_id", ids)
+      .order("created_at", { ascending: false }),
+    db
+      .from("service_order_linked_equipment")
+      .select("*")
+      .in("service_order_id", ids)
+      .order("sort_order", { ascending: true }),
+    db
+      .from("service_order_instruments")
+      .select("*")
+      .in("service_order_id", ids)
+      .order("sort_order", { ascending: true }),
   ]);
 
   if (linesRes.error) throw new Error(linesRes.error.message);
   if (checkRes.error) throw new Error(checkRes.error.message);
   if (imagesRes.error) throw new Error(imagesRes.error.message);
   if (eventsRes.error) throw new Error(eventsRes.error.message);
+  if (docsRes.error) throw new Error(docsRes.error.message);
+  if (linkedRes.error) throw new Error(linkedRes.error.message);
+  if (instRes.error) throw new Error(instRes.error.message);
 
   const linesBy = new Map<string, ServiceOrderLine[]>();
   for (const row of linesRes.data ?? []) {
@@ -365,6 +708,30 @@ async function hydrateOrders(
     eventsBy.set(oid, list);
   }
 
+  const docsBy = new Map<string, ServiceOrderDocument[]>();
+  for (const row of docsRes.data ?? []) {
+    const oid = String(row.service_order_id);
+    const list = docsBy.get(oid) ?? [];
+    list.push(mapDocument(row));
+    docsBy.set(oid, list);
+  }
+
+  const linkedBy = new Map<string, ServiceOrderLinkedEquipment[]>();
+  for (const row of linkedRes.data ?? []) {
+    const oid = String(row.service_order_id);
+    const list = linkedBy.get(oid) ?? [];
+    list.push(mapLinkedEquipment(row));
+    linkedBy.set(oid, list);
+  }
+
+  const instrumentsBy = new Map<string, ServiceOrderInstrument[]>();
+  for (const row of instRes.data ?? []) {
+    const oid = String(row.service_order_id);
+    const list = instrumentsBy.get(oid) ?? [];
+    list.push(mapOrderInstrument(row));
+    instrumentsBy.set(oid, list);
+  }
+
   return orderRows.map((row) => {
     const id = String(row.id);
     return mapOrder(
@@ -372,7 +739,10 @@ async function hydrateOrders(
       linesBy.get(id) ?? [],
       checkBy.get(id) ?? [],
       imagesBy.get(id) ?? [],
-      eventsBy.get(id) ?? []
+      eventsBy.get(id) ?? [],
+      docsBy.get(id) ?? [],
+      linkedBy.get(id) ?? [],
+      instrumentsBy.get(id) ?? []
     );
   });
 }
@@ -529,7 +899,10 @@ export async function setServiceOrderStatus(
 export async function deleteServiceOrder(id: string): Promise<void> {
   const order = await getServiceOrder(id);
   if (order) {
-    const paths = order.images.map((img) => img.filePath).filter(Boolean);
+    const paths = [
+      ...order.images.map((img) => img.filePath),
+      ...order.documents.map((doc) => doc.filePath),
+    ].filter(Boolean);
     if (paths.length) {
       await supabase.storage.from(MEDIA_BUCKET).remove(paths);
     }
@@ -687,4 +1060,222 @@ export async function deleteServiceOrderImage(
     .delete()
     .eq("id", image.id);
   if (error) throw new Error(error.message);
+}
+
+export async function uploadServiceOrderDocument(input: {
+  orderId: string;
+  file: File;
+  docType?: ServiceDocumentType;
+  title?: string;
+  uploadedBy?: string;
+}): Promise<ServiceOrderDocument> {
+  if (input.file.type !== "application/pdf" && !input.file.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error("Solo se permiten archivos PDF.");
+  }
+  const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
+  const docType = input.docType ?? "seguridad_electrica";
+  const path = `${input.orderId}/docs/${docType}/${Date.now()}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, input.file, {
+      upsert: false,
+      contentType: "application/pdf",
+    });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data: publicData } = supabase.storage
+    .from(MEDIA_BUCKET)
+    .getPublicUrl(path);
+
+  const { data, error } = await db
+    .from("service_order_documents")
+    .insert({
+      service_order_id: input.orderId,
+      doc_type: docType,
+      title:
+        (input.title ?? "").trim() ||
+        (docType === "seguridad_electrica"
+          ? "Examen de seguridad eléctrica"
+          : input.file.name),
+      file_path: path,
+      file_url: publicData.publicUrl,
+      file_name: input.file.name,
+      uploaded_by: (input.uploadedBy ?? "").trim(),
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+
+  await addEvent(
+    input.orderId,
+    `PDF subido (${docType}): ${input.file.name}`,
+    input.uploadedBy ?? "",
+    "documento"
+  );
+
+  return mapDocument(data);
+}
+
+export async function deleteServiceOrderDocument(
+  doc: ServiceOrderDocument
+): Promise<void> {
+  if (doc.filePath) {
+    await supabase.storage.from(MEDIA_BUCKET).remove([doc.filePath]);
+  }
+  const { error } = await db
+    .from("service_order_documents")
+    .delete()
+    .eq("id", doc.id);
+  if (error) throw new Error(error.message);
+}
+
+export async function addLinkedEquipment(input: {
+  orderId: string;
+  equipmentId?: string | null;
+  equipmentName?: string;
+  equipmentBrand?: string;
+  equipmentModel?: string;
+  equipmentSerial?: string;
+  equipmentLocation?: string;
+  relationLabel?: string;
+  notes?: string;
+  createdBy?: string;
+}): Promise<ServiceOrderLinkedEquipment> {
+  const order = await getServiceOrder(input.orderId);
+  if (!order) throw new Error("Orden no encontrada.");
+
+  const nextOrder =
+    order.linkedEquipment.reduce(
+      (max, item) => Math.max(max, item.sortOrder),
+      -1
+    ) + 1;
+
+  const { data, error } = await db
+    .from("service_order_linked_equipment")
+    .insert({
+      service_order_id: input.orderId,
+      equipment_id: input.equipmentId || null,
+      equipment_name: (input.equipmentName ?? "").trim(),
+      equipment_brand: (input.equipmentBrand ?? "").trim(),
+      equipment_model: (input.equipmentModel ?? "").trim(),
+      equipment_serial: (input.equipmentSerial ?? "").trim(),
+      equipment_location: (input.equipmentLocation ?? "").trim(),
+      relation_label: (input.relationLabel ?? "Equipo ligado").trim() || "Equipo ligado",
+      notes: (input.notes ?? "").trim(),
+      sort_order: nextOrder,
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+
+  const name =
+    (input.equipmentName ?? "").trim() ||
+    "Equipo ligado";
+  await addEvent(
+    input.orderId,
+    `Equipo ligado agregado: ${name} (${(input.relationLabel ?? "Equipo ligado").trim()})`,
+    input.createdBy ?? "",
+    "equipo_ligado"
+  );
+
+  return mapLinkedEquipment(data);
+}
+
+export async function removeLinkedEquipment(
+  linkId: string,
+  createdBy?: string
+): Promise<void> {
+  const { data, error: fetchError } = await db
+    .from("service_order_linked_equipment")
+    .select("service_order_id, equipment_name, relation_label")
+    .eq("id", linkId)
+    .maybeSingle();
+  if (fetchError) throw new Error(fetchError.message);
+  if (!data) throw new Error("Equipo ligado no encontrado.");
+
+  const { error } = await db
+    .from("service_order_linked_equipment")
+    .delete()
+    .eq("id", linkId);
+  if (error) throw new Error(error.message);
+
+  await addEvent(
+    String(data.service_order_id),
+    `Equipo ligado eliminado: ${String(data.equipment_name || "Equipo")} (${String(data.relation_label || "ligado")})`,
+    createdBy ?? "",
+    "equipo_ligado"
+  );
+}
+
+export async function addServiceOrderInstrument(input: {
+  orderId: string;
+  instrumentId?: string | null;
+  instrumentType?: string;
+  instrumentName?: string;
+  instrumentBrand?: string;
+  instrumentModel?: string;
+  instrumentSerial?: string;
+  usageNotes?: string;
+  createdBy?: string;
+}): Promise<ServiceOrderInstrument> {
+  const order = await getServiceOrder(input.orderId);
+  if (!order) throw new Error("Orden no encontrada.");
+
+  const nextOrder =
+    order.instruments.reduce((max, item) => Math.max(max, item.sortOrder), -1) +
+    1;
+
+  const { data, error } = await db
+    .from("service_order_instruments")
+    .insert({
+      service_order_id: input.orderId,
+      instrument_id: input.instrumentId || null,
+      instrument_type: (input.instrumentType ?? "simulador").trim() || "simulador",
+      instrument_name: (input.instrumentName ?? "").trim(),
+      instrument_brand: (input.instrumentBrand ?? "").trim(),
+      instrument_model: (input.instrumentModel ?? "").trim(),
+      instrument_serial: (input.instrumentSerial ?? "").trim(),
+      usage_notes: (input.usageNotes ?? "").trim(),
+      sort_order: nextOrder,
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+
+  const name = (input.instrumentName ?? "").trim() || "Instrumento";
+  await addEvent(
+    input.orderId,
+    `Instrumento usado: ${name}`,
+    input.createdBy ?? "",
+    "instrumento"
+  );
+
+  return mapOrderInstrument(data);
+}
+
+export async function removeServiceOrderInstrument(
+  linkId: string,
+  createdBy?: string
+): Promise<void> {
+  const { data, error: fetchError } = await db
+    .from("service_order_instruments")
+    .select("service_order_id, instrument_name, instrument_type")
+    .eq("id", linkId)
+    .maybeSingle();
+  if (fetchError) throw new Error(fetchError.message);
+  if (!data) throw new Error("Instrumento no encontrado en la orden.");
+
+  const { error } = await db
+    .from("service_order_instruments")
+    .delete()
+    .eq("id", linkId);
+  if (error) throw new Error(error.message);
+
+  await addEvent(
+    String(data.service_order_id),
+    `Instrumento quitado: ${String(data.instrument_name || "Instrumento")}`,
+    createdBy ?? "",
+    "instrumento"
+  );
 }
