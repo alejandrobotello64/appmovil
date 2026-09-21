@@ -203,6 +203,7 @@ export function ClientsPanel() {
       serialNumber: editingEquipment.serialNumber,
       location: editingEquipment.location,
       status: editingEquipment.status,
+      equipmentKind: editingEquipment.equipmentKind || "general",
       installedAt: editingEquipment.installedAt,
       notes: editingEquipment.notes,
     });
