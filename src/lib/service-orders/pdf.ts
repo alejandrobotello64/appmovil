@@ -409,7 +409,13 @@ function drawClientEquipment(doc: jsPDF, order: ServiceOrder, y: number) {
   return y + 2;
 }
 
-function drawLinesTable(doc: jsPDF, order: ServiceOrder, y: number) {
+function drawLinesTable(
+  doc: jsPDF,
+  order: ServiceOrder,
+  y: number,
+  options?: { includePrices?: boolean }
+) {
+  const includePrices = options?.includePrices !== false;
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
   y = ensureSpace(doc, y, 16);
@@ -421,23 +427,39 @@ function drawLinesTable(doc: jsPDF, order: ServiceOrder, y: number) {
   doc.text("#", margin + 1, y);
   doc.text("Tipo", margin + 8, y);
   doc.text("Descripción", margin + 32, y);
-  doc.text("Cant", pageW - margin - 48, y);
-  doc.text("P. unit.", pageW - margin - 32, y);
-  doc.text("Importe", pageW - margin, y, { align: "right" });
+  doc.text("Cant", pageW - margin - (includePrices ? 48 : 8), y, {
+    align: includePrices ? "left" : "right",
+  });
+  if (includePrices) {
+    doc.text("P. unit.", pageW - margin - 32, y);
+    doc.text("Importe", pageW - margin, y, { align: "right" });
+  }
   y += 7;
 
   doc.setFont("helvetica", "normal");
   order.lines.forEach((line, idx) => {
     y = ensureSpace(doc, y, 10);
-    const desc = doc.splitTextToSize(line.description || "—", 70);
+    const desc = doc.splitTextToSize(
+      line.description || "—",
+      includePrices ? 70 : 110
+    );
     doc.text(String(idx + 1), margin + 1, y);
     doc.text(serviceLineKindLabel(line.lineKind).slice(0, 10), margin + 8, y);
     doc.text(desc, margin + 32, y);
-    doc.text(String(line.quantity), pageW - margin - 48, y);
-    doc.text(money(line.unitPrice), pageW - margin - 32, y);
-    doc.text(money(lineAmount(line)), pageW - margin, y, { align: "right" });
+    doc.text(
+      String(line.quantity),
+      pageW - margin - (includePrices ? 48 : 8),
+      y,
+      { align: includePrices ? "left" : "right" }
+    );
+    if (includePrices) {
+      doc.text(money(line.unitPrice), pageW - margin - 32, y);
+      doc.text(money(lineAmount(line)), pageW - margin, y, { align: "right" });
+    }
     y += Math.max(desc.length * 4, 5) + 2;
   });
+
+  if (!includePrices) return y + 6;
 
   y += 2;
   doc.setFont("helvetica", "bold");
@@ -452,6 +474,57 @@ function drawLinesTable(doc: jsPDF, order: ServiceOrder, y: number) {
   doc.setFontSize(11);
   doc.text(`Total: ${money(order.total)}`, pageW - margin, y, { align: "right" });
   return y + 8;
+}
+
+function drawBlankField(doc: jsPDF, label: string, x: number, y: number, width: number) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(70, 70, 70);
+  doc.text(label, x, y);
+  doc.setDrawColor(180, 180, 188);
+  doc.line(x + 22, y + 0.8, x + width, y + 0.8);
+}
+
+function drawHospitalSignatures(doc: jsPDF, y: number) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 14;
+  const gap = 6;
+  const boxW = (pageW - margin * 2 - gap) / 2;
+  const boxH = 46;
+
+  y = ensureSpace(doc, y, boxH + 16);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Firmas del personal del hospital", margin, y);
+  y += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(90, 90, 90);
+  doc.text(
+    "Espacios en blanco para llenado manuscrito. No se imprimen nombres, cargos ni fechas.",
+    margin,
+    y
+  );
+  y += 6;
+
+  const titles = ["Recibido / autorizado", "Vo.Bo. biomédica / mantenimiento"];
+  titles.forEach((title, index) => {
+    const x = margin + index * (boxW + gap);
+    doc.setDrawColor(210, 214, 222);
+    doc.setFillColor(252, 252, 254);
+    doc.roundedRect(x, y, boxW, boxH, 1.5, 1.5, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(50, 50, 50);
+    doc.text(title, x + 4, y + 6);
+    drawBlankField(doc, "Nombre", x + 4, y + 14, boxW - 8);
+    drawBlankField(doc, "Cargo", x + 4, y + 22, boxW - 8);
+    drawBlankField(doc, "Firma", x + 4, y + 30, boxW - 8);
+    drawBlankField(doc, "Fecha", x + 4, y + 38, boxW - 8);
+  });
+
+  return y + boxH + 8;
 }
 
 /** Cotización / propuesta económica para el cliente. */
@@ -688,4 +761,80 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
 
   drawBrandedFooter(doc);
   doc.save(`${order.folio}-entrega.pdf`);
+}
+
+/** Orden de servicio para el hospital: sin precios y firmas en blanco. */
+export async function downloadServiceHospitalPdf(order: ServiceOrder) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const margin = 14;
+  let y = await drawBrandedHeader(doc, {
+    title: "Orden de servicio (sin precios)",
+    folio: order.folio,
+  });
+
+  doc.setFontSize(9);
+  doc.setTextColor(70, 70, 70);
+  doc.text(
+    `Tipo: ${serviceTypeLabel(order.serviceType)} · Estatus: ${serviceOrderStatusLabel(order.status)} · Técnico: ${order.technician || "—"}${order.advisor ? ` · Asesor: ${order.advisor}` : ""}${order.underWarranty ? " · Garantía" : ""}`,
+    margin,
+    y
+  );
+  y += 8;
+  y = drawClientEquipment(doc, order, y);
+  y = await drawOrderPhotos(doc, order, y, {
+    stages: ["recepcion"],
+    title: "Fotos de recepción del equipo",
+  });
+
+  const blocks = [
+    ["Falla reportada", order.faultReported],
+    ["Diagnóstico", order.diagnosisNotes],
+    ["Observaciones generales", order.generalObservations],
+    ["Notas de servicio", order.serviceNotes],
+  ] as const;
+
+  for (const [label, text] of blocks) {
+    if (!text) continue;
+    y = ensureSpace(doc, y, 16);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(30, 30, 30);
+    doc.text(label, margin, y);
+    y += 4;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(50, 50, 50);
+    const lines = doc.splitTextToSize(text, 180);
+    doc.text(lines, margin, y);
+    y += lines.length * 4 + 4;
+  }
+
+  if (order.checklist.length) {
+    y = drawChecklistSection(
+      doc,
+      y,
+      "Checklist de verificación",
+      checklistItemsByKind(order.checklist, "verificacion")
+    );
+    y = drawChecklistSection(
+      doc,
+      y,
+      "Pruebas de funcionamiento",
+      checklistItemsByKind(order.checklist, "funcionamiento")
+    );
+  }
+
+  if (order.lines.length) {
+    y = drawLinesTable(doc, order, y, { includePrices: false });
+  }
+
+  y = await drawOrderPhotos(doc, order, y, {
+    stages: ["diagnostico", "servicio", "entrega", "calidad", "otro"],
+    title: "Otras evidencias fotográficas",
+    showStage: true,
+  });
+
+  y = drawHospitalSignatures(doc, y);
+
+  drawBrandedFooter(doc);
+  doc.save(`${order.folio}-orden-sin-precios.pdf`);
 }

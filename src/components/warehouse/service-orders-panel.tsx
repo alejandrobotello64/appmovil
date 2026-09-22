@@ -26,6 +26,7 @@ import { getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
 import {
   downloadServiceDeliveryPdf,
+  downloadServiceHospitalPdf,
   downloadServiceQuotePdf,
   downloadServiceWorkOrderPdf,
 } from "@/lib/service-orders/pdf";
@@ -829,11 +830,19 @@ export function ServiceOrdersPanel({
   }
 
   async function removeOrder(id: string) {
-    if (!canEdit) return;
-    if (!confirm("¿Eliminar esta orden de servicio?")) return;
+    if (!canWrite) return;
+    const order = orders.find((item) => item.id === id);
+    if (order?.locked) {
+      setError("Esta orden está cerrado y ya no se puede modificar.");
+      return;
+    }
+    const folio = order?.folio ? ` ${order.folio}` : "";
+    if (!confirm(`¿Eliminar la orden de servicio${folio}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
     try {
       await deleteServiceOrder(id);
-      setSelectedId(null);
+      if (selectedId === id) setSelectedId(null);
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo eliminar.");
@@ -1208,7 +1217,7 @@ export function ServiceOrdersPanel({
                 <FileDown className="size-4" /> Opciones PDF
               </Button>
               {docsOpen ? (
-                <div className="absolute right-0 z-20 mt-1 w-64 rounded-xl border border-border bg-card p-2 shadow-lg">
+                <div className="absolute right-0 z-20 mt-1 w-72 rounded-xl border border-border bg-card p-2 shadow-lg">
                   <button
                     type="button"
                     className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
@@ -1228,6 +1237,19 @@ export function ServiceOrdersPanel({
                     }}
                   >
                     Orden de trabajo / calidad
+                  </button>
+                  <button
+                    type="button"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                    onClick={() => {
+                      void downloadServiceHospitalPdf(selected);
+                      setDocsOpen(false);
+                    }}
+                  >
+                    <span className="block">Orden de servicio sin precios</span>
+                    <span className="block text-[11px] font-normal text-muted-foreground">
+                      Para el hospital · firmas en blanco
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -2744,13 +2766,24 @@ export function ServiceOrdersPanel({
                   <td className="px-3 py-3">{money(order.total)}</td>
                   <td className="px-3 py-3 text-xs">{order.technician || "—"}</td>
                   <td className="px-3 py-3">
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-[#3B46A5] hover:underline"
-                      onClick={() => openDetail(order)}
-                    >
-                      Detalles
-                    </button>
+                    <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-[#3B46A5] hover:underline"
+                        onClick={() => openDetail(order)}
+                      >
+                        Detalles
+                      </button>
+                      {canWrite && !order.locked ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:underline"
+                          onClick={() => void removeOrder(order.id)}
+                        >
+                          <Trash2 className="size-3.5" /> Borrar
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))
