@@ -79,7 +79,7 @@ async function drawSourceToCanvas(
   height: number
 ): Promise<PreparedPhoto | null> {
   const canvas = document.createElement("canvas");
-  const maxSide = 2000;
+  const maxSide = 1400;
   const scale = Math.min(1, maxSide / Math.max(width, height, 1));
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
@@ -91,7 +91,7 @@ async function drawSourceToCanvas(
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
   return {
-    dataUrl: canvas.toDataURL("image/jpeg", 0.92),
+    dataUrl: canvas.toDataURL("image/jpeg", 0.86),
     width: canvas.width,
     height: canvas.height,
   };
@@ -133,8 +133,8 @@ function containSize(
 ) {
   const scale = Math.min(maxW / Math.max(srcW, 1), maxH / Math.max(srcH, 1));
   return {
-    width: Math.max(12, srcW * scale),
-    height: Math.max(12, srcH * scale),
+    width: Math.max(10, srcW * scale),
+    height: Math.max(10, srcH * scale),
   };
 }
 
@@ -142,79 +142,71 @@ function imageStageLabel(stage: string) {
   return IMAGE_STAGES.find((item) => item.id === stage)?.label ?? stage;
 }
 
-async function drawPhotoBlock(
-  doc: jsPDF,
-  image: ServiceOrderImage,
-  y: number,
-  options?: { showStage?: boolean }
-) {
-  const margin = 14;
-  const pageW = doc.internal.pageSize.getWidth();
-  const pageH = doc.internal.pageSize.getHeight();
-  const usableW = pageW - margin * 2;
-  const maxH = Math.min(118, pageH - 36);
-  const prepared = await loadPdfJpeg(image.fileUrl);
-  const captionParts = [
-    options?.showStage ? imageStageLabel(image.stage) : "",
+function photoCaption(image: ServiceOrderImage, showStage?: boolean) {
+  return [
+    showStage ? imageStageLabel(image.stage) : "",
     image.caption,
-  ].filter(Boolean);
-  const caption = captionParts.join(" · ");
-  const captionH = caption ? 6 : 0;
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
 
+function drawPhotoCell(
+  doc: jsPDF,
+  prepared: PreparedPhoto | null,
+  caption: string,
+  x: number,
+  y: number,
+  maxW: number,
+  maxH: number
+) {
+  const captionH = caption ? 5 : 0;
   if (!prepared) {
-    y = ensureSpace(doc, y, 18 + captionH);
     doc.setDrawColor(220, 224, 232);
     doc.setFillColor(248, 249, 252);
-    doc.rect(margin, y, usableW, 16, "FD");
+    doc.rect(x, y, maxW, 18, "FD");
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setTextColor(90, 90, 90);
-    doc.text("Foto no disponible", margin + 4, y + 10);
-    y += 20;
+    doc.text("Foto no disponible", x + 3, y + 11);
     if (caption) {
-      doc.text(caption, margin, y);
-      y += 5;
+      doc.text(caption, x, y + 22);
+      return 18 + captionH + 3;
     }
-    return y;
+    return 21;
   }
 
-  const fitted = containSize(
-    prepared.width,
-    prepared.height,
-    usableW,
-    maxH
-  );
-  y = ensureSpace(doc, y, fitted.height + 8 + captionH);
-  const x = margin + (usableW - fitted.width) / 2;
+  const fitted = containSize(prepared.width, prepared.height, maxW, maxH);
+  const xPad = x + (maxW - fitted.width) / 2;
   doc.setDrawColor(226, 230, 238);
   doc.setFillColor(252, 252, 254);
-  doc.rect(x - 1, y - 1, fitted.width + 2, fitted.height + 2, "FD");
+  doc.rect(xPad - 0.6, y - 0.6, fitted.width + 1.2, fitted.height + 1.2, "FD");
   try {
     doc.addImage(
       prepared.dataUrl,
       "JPEG",
-      x,
+      xPad,
       y,
       fitted.width,
       fitted.height,
       undefined,
-      "NONE"
+      "FAST"
     );
   } catch {
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setTextColor(90, 90, 90);
-    doc.text("No se pudo incrustar la foto", x + 4, y + fitted.height / 2);
+    doc.text("No se pudo incrustar la foto", xPad + 2, y + fitted.height / 2);
   }
-  y += fitted.height + 4;
   if (caption) {
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setTextColor(70, 70, 70);
-    doc.text(caption, margin, y);
-    y += 5;
+    const lines = doc.splitTextToSize(caption, maxW);
+    doc.text(lines, x, y + fitted.height + 4);
+    return fitted.height + 4 + lines.length * 3.2 + 2;
   }
-  return y + 2;
+  return fitted.height + 4;
 }
 
 async function drawOrderPhotos(
@@ -230,6 +222,13 @@ async function drawOrderPhotos(
   if (!photos.length) return y;
 
   const margin = 14;
+  const pageW = doc.internal.pageSize.getWidth();
+  const usableW = pageW - margin * 2;
+  const cols = 2;
+  const gap = 5;
+  const cellW = (usableW - gap) / cols;
+  const maxPhotoH = 48;
+
   y = ensureSpace(doc, y, 16);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -237,10 +236,35 @@ async function drawOrderPhotos(
   doc.text(options?.title ?? "Evidencia fotográfica", margin, y);
   y += 6;
 
-  for (const photo of photos) {
-    y = await drawPhotoBlock(doc, photo, y, {
-      showStage: options?.showStage,
+  for (let i = 0; i < photos.length; i += cols) {
+    const row = photos.slice(i, i + cols);
+    const prepared = await Promise.all(
+      row.map(async (photo) => ({
+        photo,
+        image: await loadPdfJpeg(photo.fileUrl),
+        caption: photoCaption(photo, options?.showStage),
+      }))
+    );
+    const heights = prepared.map((item) => {
+      if (!item.image) return item.caption ? 26 : 21;
+      const fitted = containSize(
+        item.image.width,
+        item.image.height,
+        cellW,
+        maxPhotoH
+      );
+      const captionLines = item.caption
+        ? Math.max(1, Math.ceil(item.caption.length / 42))
+        : 0;
+      return fitted.height + (captionLines ? 4 + captionLines * 3.2 : 0) + 4;
     });
+    const rowH = Math.max(...heights);
+    y = ensureSpace(doc, y, rowH + 4);
+    prepared.forEach((item, index) => {
+      const x = margin + index * (cellW + gap);
+      drawPhotoCell(doc, item.image, item.caption, x, y, cellW, maxPhotoH);
+    });
+    y += rowH + 3;
   }
 
   doc.setFont("helvetica", "normal");
