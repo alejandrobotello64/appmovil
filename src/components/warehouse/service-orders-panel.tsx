@@ -13,6 +13,8 @@ import {
   Wrench,
   Activity,
   ClipboardCheck,
+  Lock,
+  LockOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -48,10 +50,12 @@ import {
   updateServiceOrder,
   uploadServiceOrderDocument,
   uploadServiceOrderImage,
+  setServiceOrderLock,
 } from "@/lib/service-orders/storage";
 import { getBiomedicalInstruments } from "@/lib/biomedical-instruments/storage";
-import { listStaffMembers, type StaffMember } from "@/lib/users/staff";
+import { isActorServiceAdvisor, listStaffMembers, type StaffMember } from "@/lib/users/staff";
 import { StaffSelect } from "@/components/warehouse/staff-select";
+import { ServiceImageLightbox } from "@/components/warehouse/service-image-lightbox";
 import {
   biomedicalInstrumentTypeLabel,
   type BiomedicalInstrument,
@@ -224,11 +228,13 @@ export function ServiceOrdersPanel() {
   const [newTestMin, setNewTestMin] = useState("");
   const [newTestMax, setNewTestMax] = useState("");
   const [newTestUnit, setNewTestUnit] = useState("");
+  const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(null);
   const [orderRequisitions, setOrderRequisitions] = useState<
     ServiceOrderRequisition[]
   >([]);
   const fileRef = useRef<HTMLInputElement>(null);
-  const actor = getSession()?.username ?? "usuario";
+  const session = getSession();
+  const actor = session?.username ?? "usuario";
 
   const selected = useMemo(
     () => orders.find((o) => o.id === selectedId) ?? null,
@@ -243,6 +249,8 @@ export function ServiceOrdersPanel() {
     () => staff.filter((member) => member.isServiceAdvisor),
     [staff]
   );
+  const isAdvisor = isActorServiceAdvisor(staff, session);
+  const canEdit = canWrite && !selected?.locked;
 
   async function reload() {
     setLoading(true);
@@ -367,7 +375,7 @@ export function ServiceOrdersPanel() {
 
   async function onCreate(e: FormEvent) {
     e.preventDefault();
-    if (!canWrite) return;
+    if (!canEdit) return;
     if (!form.clientName?.trim() && !form.clientId) {
       setError("Selecciona o escribe un cliente.");
       return;
@@ -389,7 +397,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function saveReceptionFields() {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     try {
       await updateServiceOrder(selected.id, {
         ...formFromOrder(selected),
@@ -446,10 +454,33 @@ export function ServiceOrdersPanel() {
     setForm(formFromOrder(order));
     setDetailTab("recepcion");
     setDocsOpen(false);
+    setPreviewImageIndex(null);
+  }
+
+  async function onToggleLock() {
+    if (!selected || !isAdvisor) return;
+    const next = !selected.locked;
+    if (
+      next &&
+      !window.confirm(
+        "Al candar la orden ya no se podrá modificar. ¿Continuar?"
+      )
+    ) {
+      return;
+    }
+    try {
+      setError("");
+      await setServiceOrderLock(selected.id, next, actor);
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo actualizar el candado."
+      );
+    }
   }
 
   async function changeStatus(status: ServiceOrderStatus) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     try {
       await setServiceOrderStatus(selected.id, status, actor);
       await reload();
@@ -459,7 +490,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function saveLines() {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     try {
       await replaceServiceOrderLines(
         selected.id,
@@ -472,7 +503,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function requestWarehouse() {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     try {
       setError("");
       await replaceServiceOrderLines(
@@ -540,7 +571,7 @@ export function ServiceOrdersPanel() {
     itemId: string,
     result: ChecklistResult
   ) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     try {
       await updateChecklistItem(itemId, result);
       await reload();
@@ -553,7 +584,7 @@ export function ServiceOrdersPanel() {
     itemId: string,
     measuredValue: string
   ) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     const item = selected.checklist.find((c) => c.id === itemId);
     if (!item) return;
     try {
@@ -567,7 +598,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onAddFunctionTestPoint() {
-    if (!selected || !canWrite || !newTestLabel.trim()) return;
+    if (!selected || !canEdit || !newTestLabel.trim()) return;
     try {
       const minValue = parseOptionalNumber(newTestMin);
       const maxValue = parseOptionalNumber(newTestMax);
@@ -601,7 +632,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onApplyTemplate(templateId: string) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     try {
       const tpl = templates.find((item) => item.id === templateId);
       await applyChecklistTemplate(selected.id, templateId, actor);
@@ -617,7 +648,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onUploadImage(file: File) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     try {
       await uploadServiceOrderImage({
         orderId: selected.id,
@@ -632,7 +663,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onDeleteImage(imageId: string) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     const image = selected.images.find((i) => i.id === imageId);
     if (!image) return;
     try {
@@ -644,7 +675,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onAddLinkedEquipment() {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     const eq = equipment.find((e) => e.id === linkedEqId);
     if (!eq && !linkedEqId) {
       setError("Selecciona un equipo del cliente para ligarlo.");
@@ -675,7 +706,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onRemoveLinkedEquipment(linkId: string) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     if (!confirm("¿Quitar este equipo ligado de la orden?")) return;
     try {
       setError("");
@@ -689,7 +720,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onAddUsedInstrument() {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     const inst = instrumentsCatalog.find((i) => i.id === usedInstrumentId);
     if (!inst) {
       setError("Selecciona un simulador o analizador del catálogo.");
@@ -727,7 +758,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onRemoveUsedInstrument(linkId: string) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     if (!confirm("¿Quitar este instrumento de la orden?")) return;
     try {
       setError("");
@@ -741,7 +772,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onUploadSafetyPdf(file: File) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     try {
       setError("");
       await uploadServiceOrderDocument({
@@ -762,7 +793,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function onDeleteDocument(docId: string) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEdit) return;
     const doc = selected.documents.find((d) => d.id === docId);
     if (!doc) return;
     try {
@@ -774,7 +805,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function sendNote() {
-    if (!selected || !canWrite || !note.trim()) return;
+    if (!selected || !canEdit || !note.trim()) return;
     try {
       await addServiceOrderNote(selected.id, note, actor, true);
       setNote("");
@@ -785,7 +816,7 @@ export function ServiceOrdersPanel() {
   }
 
   async function removeOrder(id: string) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     if (!confirm("¿Eliminar esta orden de servicio?")) return;
     try {
       await deleteServiceOrder(id);
@@ -1061,7 +1092,7 @@ export function ServiceOrdersPanel() {
             </Button>
             <Button
               type="submit"
-              disabled={!canWrite}
+              disabled={!canEdit}
               className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
             >
               Guardar
@@ -1112,7 +1143,16 @@ export function ServiceOrdersPanel() {
 
     return (
       <section className="space-y-4">
-        {!canWrite ? <ReadOnlyBanner visible /> : null}
+        {!canEdit ? (
+          <ReadOnlyBanner
+            visible
+            message={
+              selected.locked
+                ? "Esta orden está candada por el asesor de servicios. Ya no se puede modificar."
+                : undefined
+            }
+          />
+        ) : null}
         {error ? (
           <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
             {error}
@@ -1189,7 +1229,7 @@ export function ServiceOrdersPanel() {
                 </div>
               ) : null}
             </div>
-            {canWrite ? (
+            {canEdit ? (
               <Button
                 type="button"
                 variant="outline"
@@ -1229,7 +1269,7 @@ export function ServiceOrdersPanel() {
                   <textarea
                     className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     value={form.faultReported ?? ""}
-                    disabled={!canWrite}
+                    disabled={!canEdit}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, faultReported: e.target.value }))
                     }
@@ -1242,7 +1282,7 @@ export function ServiceOrdersPanel() {
                   <textarea
                     className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     value={form.generalObservations ?? ""}
-                    disabled={!canWrite}
+                    disabled={!canEdit}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, generalObservations: e.target.value }))
                     }
@@ -1252,7 +1292,7 @@ export function ServiceOrdersPanel() {
                   label="Técnico"
                   value={form.technician ?? ""}
                   options={technicians}
-                  disabled={!canWrite}
+                  disabled={!canEdit}
                   emptyLabel="Seleccionar técnico…"
                   onChange={(value) =>
                     setForm((f) => ({ ...f, technician: value }))
@@ -1262,7 +1302,7 @@ export function ServiceOrdersPanel() {
                   label="Asesor de servicios"
                   value={form.advisor ?? ""}
                   options={advisors}
-                  disabled={!canWrite}
+                  disabled={!canEdit}
                   emptyLabel="Seleccionar asesor…"
                   onChange={(value) =>
                     setForm((f) => ({ ...f, advisor: value }))
@@ -1274,7 +1314,7 @@ export function ServiceOrdersPanel() {
                     type="date"
                     className={fieldClass}
                     value={form.promisedAt ?? ""}
-                    disabled={!canWrite}
+                    disabled={!canEdit}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, promisedAt: e.target.value }))
                     }
@@ -1285,7 +1325,7 @@ export function ServiceOrdersPanel() {
                   <select
                     className={fieldClass}
                     value={form.serviceType}
-                    disabled={!canWrite}
+                    disabled={!canEdit}
                     onChange={(e) =>
                       setForm((f) => ({
                         ...f,
@@ -1304,7 +1344,7 @@ export function ServiceOrdersPanel() {
                   <input
                     type="checkbox"
                     checked={Boolean(form.underWarranty)}
-                    disabled={!canWrite}
+                    disabled={!canEdit}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, underWarranty: e.target.checked }))
                     }
@@ -1354,7 +1394,7 @@ export function ServiceOrdersPanel() {
                               </p>
                             ) : null}
                           </div>
-                          {canWrite ? (
+                          {canEdit ? (
                             <button
                               type="button"
                               className="inline-flex items-center gap-1 text-destructive hover:underline"
@@ -1368,7 +1408,7 @@ export function ServiceOrdersPanel() {
                     </ul>
                   )}
 
-                  {canWrite ? (
+                  {canEdit ? (
                     <div className="grid gap-2 sm:grid-cols-2">
                       <label className="block text-sm sm:col-span-2">
                         <span className="mb-1 block text-muted-foreground">
@@ -1438,11 +1478,17 @@ export function ServiceOrdersPanel() {
 
                 <div className="sm:col-span-2">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-sm font-medium">Imágenes del equipo</h3>
+                    <div>
+                      <h3 className="text-sm font-medium">Imágenes del equipo</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Haz clic en una foto para verla en grande.
+                      </p>
+                    </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <select
                         className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
                         value={imageStage}
+                        disabled={!canEdit}
                         onChange={(e) => setImageStage(e.target.value as ImageStage)}
                       >
                         {IMAGE_STAGES.map((s) => (
@@ -1465,7 +1511,7 @@ export function ServiceOrdersPanel() {
                       <Button
                         type="button"
                         size="sm"
-                        disabled={!canWrite}
+                        disabled={!canEdit}
                         onClick={() => fileRef.current?.click()}
                       >
                         <Camera className="size-4" /> Subir imagen
@@ -1476,22 +1522,28 @@ export function ServiceOrdersPanel() {
                     <p className="text-sm text-muted-foreground">Sin imágenes aún.</p>
                   ) : (
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                      {selected.images.map((img) => (
+                      {selected.images.map((img, index) => (
                         <div
                           key={img.id}
                           className="overflow-hidden rounded-xl border border-border"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={img.fileUrl}
-                            alt={img.caption || img.stage}
-                            className="aspect-square w-full object-cover"
-                          />
+                          <button
+                            type="button"
+                            className="block w-full"
+                            onClick={() => setPreviewImageIndex(index)}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={img.fileUrl}
+                              alt={img.caption || img.stage}
+                              className="aspect-square w-full object-cover transition hover:opacity-90"
+                            />
+                          </button>
                           <div className="flex items-center justify-between gap-1 px-2 py-1 text-xs">
                             <span className="truncate text-muted-foreground">
                               {IMAGE_STAGES.find((s) => s.id === img.stage)?.label}
                             </span>
-                            {canWrite ? (
+                            {canEdit ? (
                               <button
                                 type="button"
                                 className="text-destructive"
@@ -1506,7 +1558,7 @@ export function ServiceOrdersPanel() {
                     </div>
                   )}
                 </div>
-                {canWrite ? (
+                {canEdit ? (
                   <div className="sm:col-span-2">
                     <Button
                       type="button"
@@ -1530,7 +1582,7 @@ export function ServiceOrdersPanel() {
                     <select
                       className={fieldClass}
                       value={form.checklistTemplateId ?? ""}
-                      disabled={!canWrite}
+                      disabled={!canEdit}
                       onChange={(e) => {
                         const id = e.target.value;
                         setForm((f) => ({ ...f, checklistTemplateId: id || null }));
@@ -1551,12 +1603,12 @@ export function ServiceOrdersPanel() {
                   <textarea
                     className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     value={form.diagnosisNotes ?? ""}
-                    disabled={!canWrite}
+                    disabled={!canEdit}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, diagnosisNotes: e.target.value }))
                     }
                     onBlur={() => {
-                      if (canWrite) void saveReceptionFields();
+                      if (canEdit) void saveReceptionFields();
                     }}
                   />
                 </label>
@@ -1579,7 +1631,7 @@ export function ServiceOrdersPanel() {
                               <button
                                 key={r.id}
                                 type="button"
-                                disabled={!canWrite}
+                                disabled={!canEdit}
                                 onClick={() => void onChecklistResult(item.id, r.id)}
                                 className={cn(
                                   "rounded-md px-2 py-1 text-xs",
@@ -1644,7 +1696,7 @@ export function ServiceOrdersPanel() {
                               </p>
                             ) : null}
                           </div>
-                          {canWrite ? (
+                          {canEdit ? (
                             <button
                               type="button"
                               className="inline-flex items-center gap-1 text-destructive hover:underline"
@@ -1658,7 +1710,7 @@ export function ServiceOrdersPanel() {
                     </ul>
                   )}
 
-                  {canWrite ? (
+                  {canEdit ? (
                     <div className="grid gap-2 sm:grid-cols-2">
                       <label className="block text-sm sm:col-span-2">
                         <span className="mb-1 block text-muted-foreground">
@@ -1776,7 +1828,7 @@ export function ServiceOrdersPanel() {
                     <select
                       className={fieldClass}
                       value={form.functionTestTemplateId ?? ""}
-                      disabled={!canWrite}
+                      disabled={!canEdit}
                       onChange={(e) => {
                         const id = e.target.value;
                         setForm((f) => ({
@@ -1827,7 +1879,7 @@ export function ServiceOrdersPanel() {
                           <input
                             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
                             defaultValue={item.measuredValue}
-                            disabled={!canWrite}
+                            disabled={!canEdit}
                             inputMode="decimal"
                             placeholder={
                               ranged ? "Escribe la medición" : "Valor u observación"
@@ -1853,7 +1905,7 @@ export function ServiceOrdersPanel() {
                             <button
                               key={r.id}
                               type="button"
-                              disabled={!canWrite}
+                              disabled={!canEdit}
                               onClick={() => void onChecklistResult(item.id, r.id)}
                               className={cn(
                                 "rounded-md px-2 py-1 text-xs",
@@ -1876,7 +1928,7 @@ export function ServiceOrdersPanel() {
                   </div>
                 )}
 
-                {canWrite ? (
+                {canEdit ? (
                   <div className="space-y-2 rounded-xl border border-dashed border-teal-300 bg-teal-50/40 p-3 dark:border-teal-800 dark:bg-teal-950/10">
                     <h4 className="text-sm font-medium">Agregar punto a revisar</h4>
                     <p className="text-xs text-muted-foreground">
@@ -1947,7 +1999,7 @@ export function ServiceOrdersPanel() {
                             <select
                               className="h-9 rounded-md border border-input bg-background px-2 text-xs"
                               value={line.lineKind}
-                              disabled={!canWrite}
+                              disabled={!canEdit}
                               onChange={(e) =>
                                 setDraftLines((rows) =>
                                   rows.map((r) =>
@@ -1975,7 +2027,7 @@ export function ServiceOrdersPanel() {
                                 <select
                                   className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
                                   value={line.productId ?? ""}
-                                  disabled={!canWrite}
+                                  disabled={!canEdit}
                                   onChange={(e) => {
                                     const product = products.find(
                                       (p) => p.id === e.target.value
@@ -2009,7 +2061,7 @@ export function ServiceOrdersPanel() {
                               <input
                                 className="h-9 w-full min-w-[180px] rounded-md border border-input bg-background px-2 text-xs"
                                 value={line.description}
-                                disabled={!canWrite}
+                                disabled={!canEdit}
                                 onChange={(e) =>
                                   setDraftLines((rows) =>
                                     rows.map((r) =>
@@ -2029,7 +2081,7 @@ export function ServiceOrdersPanel() {
                               step="any"
                               className="h-9 w-20 rounded-md border border-input bg-background px-2 text-xs"
                               value={line.quantity}
-                              disabled={!canWrite}
+                              disabled={!canEdit}
                               onChange={(e) =>
                                 setDraftLines((rows) =>
                                   rows.map((r) =>
@@ -2048,7 +2100,7 @@ export function ServiceOrdersPanel() {
                               step="any"
                               className="h-9 w-24 rounded-md border border-input bg-background px-2 text-xs"
                               value={line.unitPrice}
-                              disabled={!canWrite}
+                              disabled={!canEdit}
                               onChange={(e) =>
                                 setDraftLines((rows) =>
                                   rows.map((r) =>
@@ -2064,7 +2116,7 @@ export function ServiceOrdersPanel() {
                             <select
                               className="h-9 rounded-md border border-input bg-background px-2 text-xs"
                               value={line.lineStatus}
-                              disabled={!canWrite}
+                              disabled={!canEdit}
                               onChange={(e) =>
                                 setDraftLines((rows) =>
                                   rows.map((r) =>
@@ -2090,7 +2142,7 @@ export function ServiceOrdersPanel() {
                             {money(lineAmount(line))}
                           </td>
                           <td className="px-2 py-2">
-                            {canWrite ? (
+                            {canEdit ? (
                               <button
                                 type="button"
                                 className="text-destructive"
@@ -2109,7 +2161,7 @@ export function ServiceOrdersPanel() {
                     </tbody>
                   </table>
                 </div>
-                {canWrite ? (
+                {canEdit ? (
                   <div className="flex flex-wrap gap-2">
                     {SERVICE_LINE_KINDS.filter((k) => k.id !== "otro").map((k) => (
                       <Button
@@ -2179,12 +2231,12 @@ export function ServiceOrdersPanel() {
                   <textarea
                     className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     value={form.serviceNotes ?? ""}
-                    disabled={!canWrite}
+                    disabled={!canEdit}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, serviceNotes: e.target.value }))
                     }
                     onBlur={() => {
-                      if (canWrite) void saveReceptionFields();
+                      if (canEdit) void saveReceptionFields();
                     }}
                   />
                 </label>
@@ -2193,7 +2245,7 @@ export function ServiceOrdersPanel() {
 
             {detailTab === "mensajes" ? (
               <div className="space-y-3">
-                {canWrite ? (
+                {canEdit ? (
                   <div className="space-y-2">
                     <textarea
                       className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
@@ -2274,7 +2326,7 @@ export function ServiceOrdersPanel() {
                         Adjunta el reporte o certificado en PDF.
                       </p>
                     </div>
-                    {canWrite ? (
+                    {canEdit ? (
                       <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-muted">
                         <FileDown className="size-4" />
                         Subir PDF
@@ -2320,7 +2372,7 @@ export function ServiceOrdersPanel() {
                                 {new Date(doc.createdAt).toLocaleString("es-MX")}
                               </p>
                             </div>
-                            {canWrite ? (
+                            {canEdit ? (
                               <button
                                 type="button"
                                 className="text-xs text-destructive hover:underline"
@@ -2350,7 +2402,7 @@ export function ServiceOrdersPanel() {
                   >
                     PDF calidad
                   </Button>
-                  {canWrite && selected.status !== "entregado" ? (
+                  {canEdit && selected.status !== "entregado" ? (
                     <Button
                       type="button"
                       className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
@@ -2378,7 +2430,7 @@ export function ServiceOrdersPanel() {
               <select
                 className={fieldClass}
                 value={selected.status}
-                disabled={!canWrite}
+                disabled={!canEdit}
                 onChange={(e) =>
                   void changeStatus(e.target.value as ServiceOrderStatus)
                 }
@@ -2397,10 +2449,10 @@ export function ServiceOrdersPanel() {
               <input
                 type="checkbox"
                 checked={Boolean(form.authorized)}
-                disabled={!canWrite}
+                disabled={!canEdit}
                 onChange={(e) => {
                   setForm((f) => ({ ...f, authorized: e.target.checked }));
-                  if (canWrite) {
+                  if (canEdit) {
                     void updateServiceOrder(selected.id, {
                       ...formFromOrder(selected),
                       authorized: e.target.checked,
@@ -2416,10 +2468,10 @@ export function ServiceOrdersPanel() {
               <input
                 type="checkbox"
                 checked={Boolean(form.underWarranty)}
-                disabled={!canWrite}
+                disabled={!canEdit}
                 onChange={(e) => {
                   setForm((f) => ({ ...f, underWarranty: e.target.checked }));
-                  if (canWrite) {
+                  if (canEdit) {
                     void updateServiceOrder(selected.id, {
                       ...formFromOrder(selected),
                       underWarranty: e.target.checked,
@@ -2431,6 +2483,50 @@ export function ServiceOrdersPanel() {
               />
               Cubierta por garantía
             </label>
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-900 dark:bg-amber-950/20">
+              <div className="flex items-start gap-2">
+                {selected.locked ? (
+                  <Lock className="mt-0.5 size-4 shrink-0 text-amber-800 dark:text-amber-200" />
+                ) : (
+                  <LockOpen className="mt-0.5 size-4 shrink-0 text-amber-800 dark:text-amber-200" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-amber-950 dark:text-amber-100">
+                    {selected.locked ? "Orden candada" : "Candado del asesor"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-200/80">
+                    {selected.locked
+                      ? `Candada por ${selected.lockedBy || "asesor"}${
+                          selected.lockedAt
+                            ? ` · ${selected.lockedAt}`
+                            : ""
+                        }. Nadie más puede editarla.`
+                      : isAdvisor
+                        ? "Al colocar el candado, la orden queda solo de consulta."
+                        : "Solo el asesor de servicios puede candar esta orden."}
+                  </p>
+                  {isAdvisor ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={selected.locked ? "outline" : "default"}
+                      className="mt-2"
+                      onClick={() => void onToggleLock()}
+                    >
+                      {selected.locked ? (
+                        <>
+                          <LockOpen className="size-3.5" /> Quitar candado
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="size-3.5" /> Candar orden
+                        </>
+                      )}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
             {selected.priority === "urgente" ? (
               <span className="inline-flex rounded-full bg-rose-600 px-2 py-0.5 text-xs font-medium text-white">
                 Urgente
@@ -2449,6 +2545,14 @@ export function ServiceOrdersPanel() {
             </div>
           </aside>
         </div>
+        {previewImageIndex != null && selected.images[previewImageIndex] ? (
+          <ServiceImageLightbox
+            images={selected.images}
+            index={previewImageIndex}
+            onClose={() => setPreviewImageIndex(null)}
+            onIndexChange={setPreviewImageIndex}
+          />
+        ) : null}
       </section>
     );
   }
@@ -2472,7 +2576,7 @@ export function ServiceOrdersPanel() {
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            disabled={!canWrite}
+            disabled={!canEdit}
             className="bg-emerald-600 text-white hover:bg-emerald-700"
             onClick={() => openReception(false)}
           >
@@ -2480,7 +2584,7 @@ export function ServiceOrdersPanel() {
           </Button>
           <Button
             type="button"
-            disabled={!canWrite}
+            disabled={!canEdit}
             className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
             onClick={() => openReception(true)}
           >
@@ -2604,6 +2708,11 @@ export function ServiceOrdersPanel() {
                     {order.underWarranty ? (
                       <span className="mt-1 ml-1 inline-flex rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                         Garantía
+                      </span>
+                    ) : null}
+                    {order.locked ? (
+                      <span className="mt-1 ml-1 inline-flex items-center gap-0.5 rounded bg-amber-700 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        <Lock className="size-2.5" /> Candada
                       </span>
                     ) : null}
                   </td>

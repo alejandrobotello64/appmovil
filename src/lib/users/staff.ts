@@ -13,6 +13,21 @@ export function staffDisplayName(fullName: string | null | undefined, username: 
   return (fullName ?? "").trim() || username;
 }
 
+export function isActorServiceAdvisor(
+  staff: StaffMember[],
+  actor: { id?: string; username?: string; fullName?: string | null } | null
+) {
+  if (!actor) return false;
+  const fullName = (actor.fullName ?? "").trim();
+  return staff.some(
+    (member) =>
+      member.isServiceAdvisor &&
+      (member.id === actor.id ||
+        member.username === actor.username ||
+        (fullName !== "" && member.fullName === fullName))
+  );
+}
+
 export async function listStaffMembers(): Promise<StaffMember[]> {
   const { data, error } = await supabase.rpc("list_app_users");
   if (error) throw new Error(error.message);

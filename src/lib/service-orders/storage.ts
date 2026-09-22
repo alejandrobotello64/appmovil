@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
+import { listStaffMembers } from "@/lib/users/staff";
 import {
   createClientService,
   setClientEquipmentStatus,
@@ -36,6 +36,19 @@ import {
 const db = supabase as any;
 
 const MEDIA_BUCKET = "service-order-media";
+
+const ORDER_LOCKED_MESSAGE =
+  "La orden está candada por el asesor de servicios y ya no se puede modificar.";
+
+async function ensureOrderUnlocked(orderId: string) {
+  const { data, error } = await db
+    .from("service_orders")
+    .select("locked")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (data?.locked) throw new Error(ORDER_LOCKED_MESSAGE);
+}
 
 const ACTIVE_REPAIR_STATUSES: ServiceOrderStatus[] = [
   "recibido",
@@ -355,6 +368,9 @@ function mapOrder(
     underWarranty: Boolean(row.under_warranty),
     authorized: Boolean(row.authorized),
     closed: Boolean(row.closed),
+    locked: Boolean(row.locked),
+    lockedAt: dateOrEmpty(row.locked_at),
+    lockedBy: String(row.locked_by ?? ""),
     currency: String(row.currency ?? "MXN"),
     subtotal: Number(row.subtotal ?? 0),
     taxRate: Number(row.tax_rate ?? 16),
@@ -905,6 +921,7 @@ export async function updateServiceOrder(
   id: string,
   input: ServiceOrderInput
 ): Promise<ServiceOrder> {
+  await ensureOrderUnlocked(id);
   const current = await getServiceOrder(id);
   if (!current) throw new Error("Orden no encontrada.");
 
@@ -973,6 +990,7 @@ export async function setServiceOrderStatus(
   status: ServiceOrderStatus,
   createdBy: string
 ): Promise<void> {
+  await ensureOrderUnlocked(id);
   const current = await getServiceOrder(id);
   if (!current) throw new Error("Orden no encontrada.");
 
@@ -995,7 +1013,46 @@ export async function setServiceOrderStatus(
   );
 }
 
+export async function setServiceOrderLock(
+  orderId: string,
+  locked: boolean,
+  actor: string
+): Promise<void> {
+  const staff = await listStaffMembers();
+  const me = staff.find(
+    (member) =>
+      member.isServiceAdvisor &&
+      (member.username === actor || member.fullName === actor)
+  );
+  if (!me) {
+    throw new Error(
+      "Solo el asesor de servicios puede candar o quitar el candado de la orden."
+    );
+  }
+
+  const { error } = await db
+    .from("service_orders")
+    .update({
+      locked,
+      locked_at: locked ? new Date().toISOString() : null,
+      locked_by: locked ? me.fullName : "",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orderId);
+  if (error) throw new Error(error.message);
+
+  await addEvent(
+    orderId,
+    locked
+      ? `Orden candada por el asesor ${me.fullName}`
+      : `Candado retirado por el asesor ${me.fullName}`,
+    actor,
+    "candado"
+  );
+}
+
 export async function deleteServiceOrder(id: string): Promise<void> {
+  await ensureOrderUnlocked(id);
   const order = await getServiceOrder(id);
   if (order) {
     const paths = [
@@ -1014,6 +1071,7 @@ export async function replaceServiceOrderLines(
   orderId: string,
   lines: ServiceOrderLineInput[]
 ): Promise<void> {
+  await ensureOrderUnlocked(orderId);
   const { error: delError } = await db
     .from("service_order_lines")
     .delete()
@@ -1044,6 +1102,7 @@ export async function applyChecklistTemplate(
   templateId: string,
   createdBy: string
 ): Promise<void> {
+  await ensureOrderUnlocked(orderId);
   const { data: template, error: templateError } = await db
     .from("service_checklist_templates")
     .select("id, name, list_kind")
@@ -1114,6 +1173,14 @@ export async function updateChecklistItem(
   notes?: string,
   extra?: { measuredValue?: string }
 ): Promise<void> {
+  const { data: item, error: fetchError } = await db
+    .from("service_order_checklist")
+    .select("service_order_id")
+    .eq("id", itemId)
+    .maybeSingle();
+  if (fetchError) throw new Error(fetchError.message);
+  if (!item) throw new Error("Punto no encontrado.");
+  await ensureOrderUnlocked(String(item.service_order_id));
   const payload: Record<string, unknown> = { result };
   if (notes != null) payload.notes = notes.trim();
   if (extra?.measuredValue != null) payload.measured_value = extra.measuredValue.trim();
@@ -1143,6 +1210,7 @@ export async function addServiceOrderFunctionTest(input: {
   maxValue?: number | null;
   createdBy?: string;
 }): Promise<void> {
+  await ensureOrderUnlocked(input.orderId);
   const label = input.label.trim();
   if (!label) throw new Error("El punto a revisar no puede estar vacío.");
   const interval = intervalPayload(input);
@@ -1182,6 +1250,7 @@ export async function addServiceOrderNote(
   createdBy: string,
   isInternal = true
 ): Promise<void> {
+  await ensureOrderUnlocked(orderId);
   if (!message.trim()) throw new Error("Escribe un mensaje.");
   await addEvent(orderId, message.trim(), createdBy, "nota", isInternal);
 }
@@ -1193,6 +1262,7 @@ export async function uploadServiceOrderImage(input: {
   caption?: string;
   uploadedBy?: string;
 }): Promise<ServiceOrderImage> {
+  await ensureOrderUnlocked(input.orderId);
   const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
   const path = `${input.orderId}/${input.stage}/${Date.now()}-${safeName}`;
 
@@ -1232,6 +1302,7 @@ export async function uploadServiceOrderImage(input: {
 export async function deleteServiceOrderImage(
   image: ServiceOrderImage
 ): Promise<void> {
+  await ensureOrderUnlocked(image.serviceOrderId);
   if (image.filePath) {
     await supabase.storage.from(MEDIA_BUCKET).remove([image.filePath]);
   }
@@ -1249,6 +1320,7 @@ export async function uploadServiceOrderDocument(input: {
   title?: string;
   uploadedBy?: string;
 }): Promise<ServiceOrderDocument> {
+  await ensureOrderUnlocked(input.orderId);
   if (input.file.type !== "application/pdf" && !input.file.name.toLowerCase().endsWith(".pdf")) {
     throw new Error("Solo se permiten archivos PDF.");
   }
@@ -1300,6 +1372,7 @@ export async function uploadServiceOrderDocument(input: {
 export async function deleteServiceOrderDocument(
   doc: ServiceOrderDocument
 ): Promise<void> {
+  await ensureOrderUnlocked(doc.serviceOrderId);
   if (doc.filePath) {
     await supabase.storage.from(MEDIA_BUCKET).remove([doc.filePath]);
   }
@@ -1322,6 +1395,7 @@ export async function addLinkedEquipment(input: {
   notes?: string;
   createdBy?: string;
 }): Promise<ServiceOrderLinkedEquipment> {
+  await ensureOrderUnlocked(input.orderId);
   const order = await getServiceOrder(input.orderId);
   if (!order) throw new Error("Orden no encontrada.");
 
@@ -1373,6 +1447,7 @@ export async function removeLinkedEquipment(
     .maybeSingle();
   if (fetchError) throw new Error(fetchError.message);
   if (!data) throw new Error("Equipo ligado no encontrado.");
+  await ensureOrderUnlocked(String(data.service_order_id));
 
   const { error } = await db
     .from("service_order_linked_equipment")
@@ -1399,6 +1474,7 @@ export async function addServiceOrderInstrument(input: {
   usageNotes?: string;
   createdBy?: string;
 }): Promise<ServiceOrderInstrument> {
+  await ensureOrderUnlocked(input.orderId);
   const order = await getServiceOrder(input.orderId);
   if (!order) throw new Error("Orden no encontrada.");
 
@@ -1445,6 +1521,7 @@ export async function removeServiceOrderInstrument(
     .maybeSingle();
   if (fetchError) throw new Error(fetchError.message);
   if (!data) throw new Error("Instrumento no encontrado en la orden.");
+  await ensureOrderUnlocked(String(data.service_order_id));
 
   const { error } = await db
     .from("service_order_instruments")

@@ -314,6 +314,9 @@ export type ServiceOrder = {
   underWarranty: boolean;
   authorized: boolean;
   closed: boolean;
+  locked: boolean;
+  lockedAt: string;
+  lockedBy: string;
   currency: string;
   subtotal: number;
   taxRate: number;
