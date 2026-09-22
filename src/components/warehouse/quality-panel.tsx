@@ -128,14 +128,25 @@ export function QualityPanel() {
 
   const clientOrders = useMemo(() => {
     const q = orderQuery.trim().toLowerCase();
-    return orders.filter((order) => {
-      if (clientId && order.clientId && order.clientId !== clientId) return false;
-      if (!q) return true;
-      return [order.folio, order.clientName, order.equipmentName, order.contactName]
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
-    });
+    return orders
+      .filter((order) => {
+        if (!q) return true;
+        return [
+          order.folio,
+          order.clientName,
+          order.equipmentName,
+          order.contactName,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      })
+      .sort((a, b) => {
+        if (!clientId) return 0;
+        const aMatch = a.clientId === clientId ? 0 : 1;
+        const bMatch = b.clientId === clientId ? 0 : 1;
+        return aMatch - bMatch;
+      });
   }, [orders, clientId, orderQuery]);
 
   const stats = useMemo(() => {
