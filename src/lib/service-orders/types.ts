@@ -279,6 +279,7 @@ export const LINKED_EQUIPMENT_RELATIONS = [
   { id: "Equipo ligado", label: "Equipo ligado" },
   { id: "Monitor asociado", label: "Monitor asociado" },
   { id: "Máquina de anestesia", label: "Máquina de anestesia" },
+  { id: "Vaporizador", label: "Vaporizador" },
   { id: "Ventilador asociado", label: "Ventilador asociado" },
   { id: "Bomba asociada", label: "Bomba asociada" },
   { id: "Accesorio / periférico", label: "Accesorio / periférico" },
@@ -326,6 +327,7 @@ export type ServiceOrder = {
   functionTestTemplateId: string | null;
   receptionAt: string;
   promisedAt: string;
+  nextServiceAt: string;
   deliveredAt: string;
   faultReported: string;
   generalObservations: string;
@@ -396,6 +398,7 @@ export type ServiceOrderInput = {
   functionTestTemplateId?: string | null;
   receptionAt?: string;
   promisedAt?: string;
+  nextServiceAt?: string;
   deliveredAt?: string;
   faultReported?: string;
   generalObservations?: string;

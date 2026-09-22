@@ -171,6 +171,7 @@ function emptyForm(): ServiceOrderInput {
     functionTestTemplateId: null,
     receptionAt: new Date().toISOString().slice(0, 10),
     promisedAt: "",
+    nextServiceAt: "",
     faultReported: "",
     generalObservations: "",
     diagnosisNotes: "",
@@ -444,6 +445,7 @@ export function ServiceOrdersPanel({
       functionTestTemplateId: order.functionTestTemplateId,
       receptionAt: order.receptionAt.slice(0, 10),
       promisedAt: order.promisedAt.slice(0, 10),
+      nextServiceAt: (order.nextServiceAt ?? "").slice(0, 10),
       deliveredAt: order.deliveredAt.slice(0, 10),
       faultReported: order.faultReported,
       generalObservations: order.generalObservations,
@@ -1030,6 +1032,15 @@ export function ServiceOrdersPanel({
             />
           </label>
           <label className="block text-sm">
+            <span className="mb-1 block text-muted-foreground">Próximo servicio</span>
+            <input
+              type="date"
+              className={fieldClass}
+              value={form.nextServiceAt ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, nextServiceAt: e.target.value }))}
+            />
+          </label>
+          <label className="block text-sm">
             <span className="mb-1 block text-muted-foreground">Tipo de servicio</span>
             <select
               className={fieldClass}
@@ -1274,7 +1285,7 @@ export function ServiceOrdersPanel({
                       setDocsOpen(false);
                     }}
                   >
-                    <span className="block">Orden de servicio sin precios</span>
+                    <span className="block">Orden de servicio</span>
                     <span className="block text-[11px] font-normal text-muted-foreground">
                       Para el hospital · firmas en blanco
                     </span>
@@ -1382,6 +1393,23 @@ export function ServiceOrdersPanel({
                       setForm((f) => ({ ...f, promisedAt: e.target.value }))
                     }
                   />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-muted-foreground">
+                    Fecha de próximo servicio
+                  </span>
+                  <input
+                    type="date"
+                    className={fieldClass}
+                    value={form.nextServiceAt ?? ""}
+                    disabled={!canEdit}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, nextServiceAt: e.target.value }))
+                    }
+                  />
+                  <span className="mt-1 block text-[11px] text-muted-foreground">
+                    Se agenda sola en el calendario de servicio.
+                  </span>
                 </label>
                 <label className="block text-sm">
                   <span className="mb-1 block text-muted-foreground">Tipo</span>
@@ -2704,6 +2732,7 @@ export function ServiceOrdersPanel({
             <div className="space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
               <p>Recepción: {selected.receptionAt || "—"}</p>
               <p>Promesa: {selected.promisedAt || "—"}</p>
+              <p>Próximo servicio: {selected.nextServiceAt || "—"}</p>
               <p>Creada: {new Date(selected.createdAt).toLocaleString("es-MX")}</p>
               <p>Total: {money(selected.total)}</p>
             </div>

@@ -413,6 +413,7 @@ function mapOrder(
       : null,
     receptionAt: dateOrEmpty(row.reception_at),
     promisedAt: dateOrEmpty(row.promised_at),
+    nextServiceAt: dateOrEmpty(row.next_service_at).slice(0, 10),
     deliveredAt: dateOrEmpty(row.delivered_at),
     faultReported: String(row.fault_reported ?? ""),
     generalObservations: String(row.general_observations ?? ""),
@@ -534,6 +535,7 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
     function_test_template_id: input.functionTestTemplateId || null,
     reception_at: isoOrNull(input.receptionAt),
     promised_at: isoOrNull(input.promisedAt),
+    next_service_at: input.nextServiceAt?.trim().slice(0, 10) || null,
     delivered_at: isoOrNull(input.deliveredAt),
     fault_reported: (input.faultReported ?? "").trim(),
     general_observations: (input.generalObservations ?? "").trim(),
@@ -548,6 +550,49 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
     tax_amount: totals.taxAmount,
     total: totals.total,
   };
+}
+
+function withoutNextServiceColumn<T extends Record<string, unknown>>(payload: T) {
+  const next = { ...payload };
+  delete next.next_service_at;
+  return next;
+}
+
+export type ServiceOrderCalendarHit = {
+  id: string;
+  date: string;
+  folio: string;
+  clientName: string;
+  equipmentName: string;
+  technician: string;
+  status: ServiceOrderStatus;
+};
+
+export async function listServiceOrderCalendarItems(): Promise<
+  ServiceOrderCalendarHit[]
+> {
+  const { data, error } = await db
+    .from("service_orders")
+    .select(
+      "id, folio, next_service_at, client_name, equipment_name, technician, status"
+    )
+    .not("next_service_at", "is", null)
+    .neq("status", "cancelado");
+  if (error) {
+    if (isMissingColumnError(error)) return [];
+    throw new Error(error.message);
+  }
+  return (data ?? [])
+    .map((row: Record<string, unknown>) => ({
+      id: String(row.id),
+      date: dateOrEmpty(row.next_service_at).slice(0, 10),
+      folio: String(row.folio ?? ""),
+      clientName: String(row.client_name ?? ""),
+      equipmentName: String(row.equipment_name ?? ""),
+      technician: String(row.technician ?? ""),
+      status: String(row.status ?? "borrador") as ServiceOrderStatus,
+    }))
+    .filter((row: ServiceOrderCalendarHit) => Boolean(row.date));
 }
 
 export async function getChecklistTemplates(options?: {
@@ -1059,19 +1104,31 @@ export async function createServiceOrder(
   const folio = await nextFolio(kind);
   const lines = input.lines ?? [];
 
-  const { data, error } = await db
+  const insertPayload = {
+    folio,
+    ...payloadFromInput(input, lines),
+    created_by: createdBy,
+    reception_at:
+      isoOrNull(input.receptionAt) ??
+      (kind === "servicio" ? new Date().toISOString() : null),
+  };
+
+  let { data, error } = await db
     .from("service_orders")
-    .insert({
-      folio,
-      ...payloadFromInput(input, lines),
-      created_by: createdBy,
-      reception_at:
-        isoOrNull(input.receptionAt) ??
-        (kind === "servicio" ? new Date().toISOString() : null),
-    })
+    .insert(insertPayload)
     .select("*")
     .single();
+  if (error && isMissingColumnError(error)) {
+    const retry = await db
+      .from("service_orders")
+      .insert(withoutNextServiceColumn(insertPayload))
+      .select("*")
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
   if (error) throw new Error(error.message);
+  if (!data) throw new Error("No se pudo crear la orden.");
 
   if (lines.length) {
     const { error: linesError } = await db
@@ -1097,6 +1154,14 @@ export async function createServiceOrder(
     createdBy,
     "creacion"
   );
+  if (input.nextServiceAt?.trim()) {
+    await addEvent(
+      data.id,
+      `Próximo servicio agendado: ${input.nextServiceAt.trim().slice(0, 10)}`,
+      createdBy,
+      "nota"
+    );
+  }
 
   const created = await getServiceOrder(data.id);
   if (!created) throw new Error("No se pudo recargar la orden.");
@@ -1122,13 +1187,24 @@ export async function updateServiceOrder(
     notes: line.notes,
   }));
 
-  const { error } = await db
+  const updatePayload = {
+    ...payloadFromInput(
+      { ...input, orderKind: input.orderKind ?? current.orderKind },
+      lines
+    ),
+    updated_at: new Date().toISOString(),
+  };
+  let { error } = await db
     .from("service_orders")
-    .update({
-      ...payloadFromInput({ ...input, orderKind: input.orderKind ?? current.orderKind }, lines),
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", id);
+  if (error && isMissingColumnError(error)) {
+    const retry = await db
+      .from("service_orders")
+      .update(withoutNextServiceColumn(updatePayload))
+      .eq("id", id);
+    error = retry.error;
+  }
   if (error) throw new Error(error.message);
 
   if (input.lines) {
@@ -1163,6 +1239,19 @@ export async function updateServiceOrder(
       `Estatus: ${serviceOrderStatusLabel(current.status)} → ${serviceOrderStatusLabel(input.status)}`,
       input.createdBy ?? "",
       "estatus"
+    );
+  }
+
+  const nextDate = (input.nextServiceAt ?? "").trim().slice(0, 10);
+  const currentDate = (current.nextServiceAt ?? "").slice(0, 10);
+  if (nextDate !== currentDate) {
+    await addEvent(
+      id,
+      nextDate
+        ? `Próximo servicio agendado: ${nextDate}`
+        : "Se quitó la fecha de próximo servicio",
+      input.createdBy ?? "",
+      "nota"
     );
   }
 

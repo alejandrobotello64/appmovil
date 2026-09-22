@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import {
   CalendarDays,
   Cake,
@@ -12,6 +13,7 @@ import {
   Mail,
   MapPin,
   Plus,
+  Stethoscope,
   Trash2,
   Wrench,
 } from "lucide-react";
@@ -46,6 +48,7 @@ import type {
   CalendarReminder,
 } from "@/lib/calendar/types";
 import { getInventoryItems } from "@/lib/inventory/storage";
+import { listServiceOrderCalendarItems } from "@/lib/service-orders/storage";
 import { buildTenderCalendarItems, getTenders } from "@/lib/tenders/storage";
 import { getMaintenances } from "@/lib/warehouse/maintenances";
 import { cn } from "@/lib/utils";
@@ -68,6 +71,7 @@ const MONTHS = [
 
 const KIND_LABEL: Record<CalendarItemKind, string> = {
   mantenimiento: "Mantenimiento",
+  servicio: "Próximo servicio",
   cumpleanos: "Cumpleaños",
   aniversario: "Aniversario",
   evento: "Evento",
@@ -78,6 +82,7 @@ const KIND_LABEL: Record<CalendarItemKind, string> = {
 
 const KIND_CLASS: Record<CalendarItemKind, string> = {
   mantenimiento: "bg-sky-500/15 text-sky-800 dark:text-sky-200",
+  servicio: "bg-cyan-500/15 text-cyan-800 dark:text-cyan-200",
   cumpleanos: "bg-rose-500/15 text-rose-800 dark:text-rose-200",
   aniversario: "bg-amber-500/15 text-amber-800 dark:text-amber-200",
   evento: "bg-violet-500/15 text-violet-800 dark:text-violet-200",
@@ -229,6 +234,7 @@ export function CalendarPanel() {
       reminderRows,
       equipment,
       tenderRows,
+      serviceHits,
     ] = await Promise.all([
       getCalendarEvents(),
       getMaintenances(),
@@ -236,6 +242,7 @@ export function CalendarPanel() {
       getCalendarRemindersAll(),
       getInventoryItems({ kind: "equipo", includeInactive: true }),
       getTenders().catch(() => []),
+      listServiceOrderCalendarItems().catch(() => []),
     ]);
 
     const names = new Map(equipment.map((item) => [item.id, item.name]));
@@ -270,6 +277,22 @@ export function CalendarPanel() {
           areas: ["servicio", "almacen"],
           sourceId: row.id,
         })),
+      ...serviceHits.map((row) => ({
+        id: `os-${row.id}`,
+        kind: "servicio" as const,
+        date: row.date,
+        title: `Próximo servicio · ${row.folio}`,
+        subtitle: [
+          row.equipmentName || "Equipo",
+          row.clientName,
+          row.technician,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        time: "",
+        areas: ["servicio"],
+        sourceId: row.id,
+      })),
     ];
 
     for (const person of collaborators) {
@@ -527,9 +550,10 @@ export function CalendarPanel() {
           <div>
             <h2 className="text-lg font-semibold">Calendario operativo</h2>
             <p className="text-sm text-muted-foreground">
-              Mantenimientos, cumpleaños, aniversarios, fiestas patrias, días de
-              descanso obligatorio (LFT), hitos de licitaciones CompraMX y
-              eventos con aviso por correo o WhatsApp.
+              Mantenimientos, próximos servicios de órdenes, cumpleaños,
+              aniversarios, fiestas patrias, días de descanso obligatorio (LFT),
+              hitos de licitaciones CompraMX y eventos con aviso por correo o
+              WhatsApp.
             </p>
           </div>
           {canWrite ? (
@@ -548,6 +572,7 @@ export function CalendarPanel() {
             [
               ["todos", "Todos"],
               ["mantenimiento", "Mantenimientos"],
+              ["servicio", "Próx. servicio"],
               ["cumpleanos", "Cumpleaños"],
               ["aniversario", "Aniversarios"],
               ["descanso", "Descansos LFT"],
@@ -744,6 +769,14 @@ export function CalendarPanel() {
                         ) : null}
                       </div>
                     ) : null}
+                    {item.kind === "servicio" && item.sourceId ? (
+                      <Link
+                        href={`/dashboard/ordenes-servicio?tab=ordenes&order=${item.sourceId}`}
+                        className="shrink-0 text-[11px] font-medium text-[#3B46A5] hover:underline"
+                      >
+                        Abrir orden
+                      </Link>
+                    ) : null}
                     {item.kind === "cumpleanos" && item.sourceId ? (
                       <PersonCelebrateActions
                         kind="cumpleanos"
@@ -789,6 +822,8 @@ export function CalendarPanel() {
                     >
                       {item.kind === "mantenimiento" ? (
                         <Wrench className="mt-0.5 size-4 text-sky-600" />
+                      ) : item.kind === "servicio" ? (
+                        <Stethoscope className="mt-0.5 size-4 text-cyan-600" />
                       ) : item.kind === "cumpleanos" ? (
                         <Cake className="mt-0.5 size-4 text-rose-600" />
                       ) : item.kind === "aniversario" ? (

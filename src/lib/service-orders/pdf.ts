@@ -603,7 +603,12 @@ export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
     margin,
     y
   );
-  y += 8;
+  y += 5;
+  if (order.nextServiceAt) {
+    doc.text(`Próximo servicio: ${formatDate(order.nextServiceAt)}`, margin, y);
+    y += 5;
+  }
+  y += 3;
   y = drawClientEquipment(doc, order, y);
   y = await drawOrderPhotos(doc, order, y, {
     stages: ["recepcion"],
@@ -763,12 +768,12 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
   doc.save(`${order.folio}-entrega.pdf`);
 }
 
-/** Orden de servicio para el hospital: sin precios y firmas en blanco. */
+/** Orden de servicio para el hospital: sin importes y firmas en blanco. */
 export async function downloadServiceHospitalPdf(order: ServiceOrder) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const margin = 14;
   let y = await drawBrandedHeader(doc, {
-    title: "Orden de servicio (sin precios)",
+    title: "Orden de servicio",
     folio: order.folio,
   });
 
@@ -779,7 +784,12 @@ export async function downloadServiceHospitalPdf(order: ServiceOrder) {
     margin,
     y
   );
-  y += 8;
+  y += 5;
+  if (order.nextServiceAt) {
+    doc.text(`Próximo servicio: ${formatDate(order.nextServiceAt)}`, margin, y);
+    y += 5;
+  }
+  y += 3;
   y = drawClientEquipment(doc, order, y);
   y = await drawOrderPhotos(doc, order, y, {
     stages: ["recepcion"],
@@ -836,5 +846,5 @@ export async function downloadServiceHospitalPdf(order: ServiceOrder) {
   y = drawHospitalSignatures(doc, y);
 
   drawBrandedFooter(doc);
-  doc.save(`${order.folio}-orden-sin-precios.pdf`);
+  doc.save(`${order.folio}-orden.pdf`);
 }
