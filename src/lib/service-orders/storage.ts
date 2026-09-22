@@ -1047,7 +1047,7 @@ export async function listServiceOrderSummaries(): Promise<ServiceOrderSummary[]
     db
       .from("service_orders")
       .select(
-        "id, folio, status, service_type, technician, reception_at, created_at, client_id, client_name, equipment_id, equipment_name, equipment_serial"
+        "id, folio, status, service_type, technician, reception_at, created_at, client_id, client_name, equipment_id, equipment_name, equipment_serial, contact_name, contact_phone"
       )
       .order("created_at", { ascending: false }),
     db
@@ -1080,6 +1080,8 @@ export async function listServiceOrderSummaries(): Promise<ServiceOrderSummary[]
     equipmentId: row.equipment_id ? String(row.equipment_id) : null,
     equipmentName: String(row.equipment_name ?? ""),
     equipmentSerial: String(row.equipment_serial ?? ""),
+    contactName: String(row.contact_name ?? ""),
+    contactPhone: String(row.contact_phone ?? ""),
     linkedEquipmentIds: linkedBy.get(String(row.id)) ?? [],
   }));
 }

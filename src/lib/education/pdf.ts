@@ -1,5 +1,4 @@
 import { jsPDF } from "jspdf";
-import { COMPANY_BRAND } from "@/lib/brand/company";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import {
   trainingShiftLabel,
@@ -195,9 +194,6 @@ export async function downloadTrainingPdf(training: EducationTraining) {
   doc.text("_______________________________", pageW / 2 + 10, y + 12);
   doc.text("Vo.Bo. cliente / responsable", pageW / 2 + 10, y + 17);
 
-  drawBrandedFooter(
-    doc,
-    `${COMPANY_BRAND.legalName} · ${COMPANY_BRAND.email || COMPANY_BRAND.address}`
-  );
+  drawBrandedFooter(doc);
   doc.save(`${training.folio || "capacitacion"}-asistencia.pdf`);
 }

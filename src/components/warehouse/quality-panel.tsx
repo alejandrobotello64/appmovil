@@ -28,6 +28,7 @@ import {
   createQualitySurvey,
   deleteQualitySurvey,
   getQualitySurveys,
+  linkQualitySurveyToOrder,
   markSurveySent,
   surveyWhatsAppHref,
 } from "@/lib/quality/storage";
@@ -40,6 +41,7 @@ import {
   type QualitySurvey,
 } from "@/lib/quality/types";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 const inputClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20";
@@ -84,6 +86,7 @@ export function QualityPanel() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [serviceOrderId, setServiceOrderId] = useState("");
+  const [orderQuery, setOrderQuery] = useState("");
 
   async function refresh() {
     const rows = await getQualitySurveys();
@@ -123,13 +126,17 @@ export function QualityPanel() {
       .catch(() => setContacts([]));
   }, [clientId]);
 
-  const clientOrders = useMemo(
-    () =>
-      orders.filter((order) =>
-        clientId ? order.clientId === clientId : true
-      ),
-    [orders, clientId]
-  );
+  const clientOrders = useMemo(() => {
+    const q = orderQuery.trim().toLowerCase();
+    return orders.filter((order) => {
+      if (clientId && order.clientId && order.clientId !== clientId) return false;
+      if (!q) return true;
+      return [order.folio, order.clientName, order.equipmentName, order.contactName]
+        .join(" ")
+        .toLowerCase()
+        .includes(q);
+    });
+  }, [orders, clientId, orderQuery]);
 
   const stats = useMemo(() => {
     const answered = items.filter((item) => item.status === "respondida");
@@ -163,6 +170,7 @@ export function QualityPanel() {
     setContactName("");
     setContactPhone("");
     setServiceOrderId("");
+    setOrderQuery("");
   }
 
   function applyClient(nextId: string, keepOrder = false) {
@@ -194,7 +202,9 @@ export function QualityPanel() {
     if (order.clientId && order.clientId !== clientId) {
       applyClient(order.clientId, true);
     }
-    if (!clientName && order.clientName) setClientName(order.clientName);
+    if (order.clientName) setClientName(order.clientName);
+    if (order.contactName) setContactName(order.contactName);
+    if (order.contactPhone) setContactPhone(order.contactPhone);
   }
 
   async function handleCreate(event: FormEvent) {
@@ -306,6 +316,29 @@ export function QualityPanel() {
     }
   }
 
+  async function handleLinkOrder(survey: QualitySurvey, orderId: string) {
+    if (!canWrite || !orderId) return;
+    const order = orders.find((row) => row.id === orderId);
+    if (!order) return;
+    try {
+      const updated = await linkQualitySurveyToOrder(survey.id, {
+        id: order.id,
+        folio: order.folio,
+        clientId: order.clientId,
+        clientName: order.clientName,
+        contactName: order.contactName || survey.contactName,
+        contactPhone: order.contactPhone || survey.contactPhone,
+      });
+      setDetail(updated);
+      await refresh();
+      setMessage(`${survey.folio} ligada a ${order.folio}.`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo ligar la orden."
+      );
+    }
+  }
+
   const selectedOrder = orders.find((row) => row.id === serviceOrderId);
 
   return (
@@ -398,7 +431,17 @@ export function QualityPanel() {
                     { label: "Folio", value: item.folio },
                     {
                       label: "Orden",
-                      value: item.serviceOrderFolio || "—",
+                      value: item.serviceOrderFolio ? (
+                        <Link
+                          href={`/dashboard/ordenes-servicio?tab=ordenes&order=${item.serviceOrderId ?? ""}`}
+                          className="text-[#3B46A5] hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {item.serviceOrderFolio}
+                        </Link>
+                      ) : (
+                        "Sin ligar"
+                      ),
                     },
                     {
                       label: "Promedio",
@@ -456,7 +499,16 @@ export function QualityPanel() {
                           </td>
                           <td className="px-3 py-2">{item.contactPhone || "—"}</td>
                           <td className="px-3 py-2">
-                            {item.serviceOrderFolio || "—"}
+                            {item.serviceOrderId && item.serviceOrderFolio ? (
+                              <Link
+                                href={`/dashboard/ordenes-servicio?tab=ordenes&order=${item.serviceOrderId}`}
+                                className="text-[#3B46A5] hover:underline"
+                              >
+                                {item.serviceOrderFolio}
+                              </Link>
+                            ) : (
+                              "Sin ligar"
+                            )}
                           </td>
                           <td className="px-3 py-2">
                             <span
@@ -574,29 +626,44 @@ export function QualityPanel() {
                 />
               </label>
             </div>
-            <label className="block space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-sm font-medium">
-                Orden de servicio (opcional)
+                Ligar a orden de servicio
               </span>
+              <input
+                className={inputClass}
+                value={orderQuery}
+                onChange={(event) => setOrderQuery(event.target.value)}
+                placeholder="Buscar folio, cliente o equipo"
+              />
               <select
                 className={inputClass}
                 value={serviceOrderId}
                 onChange={(event) => applyOrder(event.target.value)}
               >
-                <option value="">Sin ligar a una OS</option>
+                <option value="">Selecciona la orden atendida</option>
                 {clientOrders.map((order) => (
                   <option key={order.id} value={order.id}>
-                    {order.folio} · {order.clientName || "Sin cliente"}
+                    {order.folio} · {order.clientName || "Sin cliente"} ·{" "}
+                    {order.equipmentName || "Sin equipo"}
                   </option>
                 ))}
               </select>
               {selectedOrder ? (
                 <p className="text-xs text-muted-foreground">
-                  {selectedOrder.equipmentName || "Sin equipo"} ·{" "}
-                  {selectedOrder.technician || "Sin técnico"}
+                  {selectedOrder.equipmentName || "Sin equipo"}
+                  {selectedOrder.equipmentSerial
+                    ? ` · Serie ${selectedOrder.equipmentSerial}`
+                    : ""}{" "}
+                  · {selectedOrder.technician || "Sin técnico"}
                 </p>
-              ) : null}
-            </label>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  La encuesta queda ligada a la OS para verla desde biomédica y
+                  mencionarla en WhatsApp.
+                </p>
+              )}
+            </div>
             <div className="flex flex-wrap justify-end gap-2 pt-2">
               <Button
                 type="button"
@@ -642,11 +709,36 @@ export function QualityPanel() {
                 <dt className="text-muted-foreground">WhatsApp</dt>
                 <dd className="font-medium">{detail.contactPhone || "—"}</dd>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Orden</dt>
+              <div className="sm:col-span-2">
+                <dt className="text-muted-foreground">Orden de servicio</dt>
                 <dd className="font-medium">
-                  {detail.serviceOrderFolio || "Sin ligar"}
+                  {detail.serviceOrderId && detail.serviceOrderFolio ? (
+                    <Link
+                      href={`/dashboard/ordenes-servicio?tab=ordenes&order=${detail.serviceOrderId}`}
+                      className="text-[#3B46A5] hover:underline"
+                    >
+                      {detail.serviceOrderFolio}
+                    </Link>
+                  ) : (
+                    "Sin ligar"
+                  )}
                 </dd>
+                {canWrite && !detail.serviceOrderId ? (
+                  <select
+                    className={`${inputClass} mt-2`}
+                    defaultValue=""
+                    onChange={(event) =>
+                      void handleLinkOrder(detail, event.target.value)
+                    }
+                  >
+                    <option value="">Ligar a una orden existente</option>
+                    {orders.map((order) => (
+                      <option key={order.id} value={order.id}>
+                        {order.folio} · {order.clientName || "Sin cliente"}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
               </div>
               <div>
                 <dt className="text-muted-foreground">Enviada</dt>

@@ -8,4 +8,7 @@ export const COMPANY_BRAND = {
   address: "México",
   logoPath: "/assets/logo.png",
   logoAltPath: "/assets/logo.jpg",
+  isoLogoPath: "/assets/iso-9001-2015.png",
+  isoLabel: "ISO 9001:2015",
+  documentCode: "SV-EC-23",
 } as const;

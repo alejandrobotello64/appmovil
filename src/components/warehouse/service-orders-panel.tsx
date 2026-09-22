@@ -16,6 +16,8 @@ import {
   Lock,
   LockOpen,
   Stamp,
+  BadgeCheck,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -57,6 +59,17 @@ import {
 import { getBiomedicalInstruments } from "@/lib/biomedical-instruments/storage";
 import { isActorServiceAdvisor, listStaffMembers, type StaffMember } from "@/lib/users/staff";
 import { StaffSelect } from "@/components/warehouse/staff-select";
+import {
+  createQualitySurveyFromOrder,
+  getQualitySurveysForOrder,
+  markSurveySent,
+  surveyWhatsAppHref,
+} from "@/lib/quality/storage";
+import {
+  surveyAverage,
+  surveyStatusLabel,
+  type QualitySurvey,
+} from "@/lib/quality/types";
 import { ServiceImageLightbox } from "@/components/warehouse/service-image-lightbox";
 import {
   biomedicalInstrumentTypeLabel,
@@ -203,6 +216,7 @@ export function ServiceOrdersPanel({
   initialOrderId?: string | null;
 }) {
   const { canWrite } = usePermissions("ordenes_servicio");
+  const { canWrite: canWriteQuality } = usePermissions("calidad");
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -241,6 +255,7 @@ export function ServiceOrdersPanel({
   const [orderRequisitions, setOrderRequisitions] = useState<
     ServiceOrderRequisition[]
   >([]);
+  const [orderSurveys, setOrderSurveys] = useState<QualitySurvey[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const openedFromQuery = useRef<string | null>(null);
   const session = getSession();
@@ -305,11 +320,15 @@ export function ServiceOrdersPanel({
   useEffect(() => {
     if (!selectedId) {
       setOrderRequisitions([]);
+      setOrderSurveys([]);
       return;
     }
     void getServiceOrderRequisitions({ serviceOrderId: selectedId })
       .then(setOrderRequisitions)
       .catch(() => setOrderRequisitions([]));
+    void getQualitySurveysForOrder(selectedId)
+      .then(setOrderSurveys)
+      .catch(() => setOrderSurveys([]));
   }, [selectedId, selected?.updatedAt]);
 
   useEffect(() => {
@@ -505,6 +524,38 @@ export function ServiceOrdersPanel({
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo cambiar estatus.");
+    }
+  }
+
+  async function sendQualitySurveyForOrder() {
+    if (!selected || !canWriteQuality) return;
+    setError("");
+    try {
+      const client = clients.find((row) => row.id === selected.clientId);
+      const created = await createQualitySurveyFromOrder(
+        {
+          id: selected.id,
+          folio: selected.folio,
+          clientId: selected.clientId,
+          clientName: selected.clientName || client?.name || "",
+          contactName:
+            selected.contactName || client?.contactName || "",
+          contactPhone: selected.contactPhone || client?.phone || "",
+        },
+        session?.fullName || actor
+      );
+      const sent = await markSurveySent(created.id);
+      setOrderSurveys((rows) => [
+        sent,
+        ...rows.filter((row) => row.id !== sent.id),
+      ]);
+      window.open(surveyWhatsAppHref(sent), "_blank");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo crear la encuesta de calidad."
+      );
     }
   }
 
@@ -2729,6 +2780,52 @@ export function ServiceOrdersPanel({
                 Garantía
               </span>
             ) : null}
+            <div className="space-y-2 border-t border-border pt-3">
+              <p className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                <BadgeCheck className="size-3.5 text-[#3B46A5]" />
+                Encuesta de calidad
+              </p>
+              {orderSurveys.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Esta orden todavía no tiene encuesta ligada.
+                </p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {orderSurveys.map((survey) => (
+                    <li
+                      key={survey.id}
+                      className="rounded-lg border border-border/70 px-2 py-1.5 text-xs"
+                    >
+                      <a
+                        href="/dashboard/calidad"
+                        className="font-medium text-[#3B46A5] hover:underline"
+                      >
+                        {survey.folio}
+                      </a>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        · {surveyStatusLabel(survey.status)}
+                        {surveyAverage(survey) != null
+                          ? ` · ${surveyAverage(survey)}/5`
+                          : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {canWriteQuality ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => void sendQualitySurveyForOrder()}
+                >
+                  <MessageCircle className="size-3.5" />
+                  Enviar encuesta WhatsApp
+                </Button>
+              ) : null}
+            </div>
             <div className="space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
               <p>Recepción: {selected.receptionAt || "—"}</p>
               <p>Promesa: {selected.promisedAt || "—"}</p>

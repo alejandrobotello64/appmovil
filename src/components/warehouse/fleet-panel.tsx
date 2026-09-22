@@ -1449,7 +1449,7 @@ export function FleetPanel() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => downloadVehicleServicePdf(selectedService)}
+                      onClick={() => void downloadVehicleServicePdf(selectedService)}
                     >
                       <FileDown className="size-4" /> PDF
                     </Button>

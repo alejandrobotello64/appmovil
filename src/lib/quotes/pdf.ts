@@ -1,4 +1,5 @@
 ﻿import { jsPDF } from "jspdf";
+import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import { lineAmount, type Quote } from "./types";
 
 function money(value: number) {
@@ -10,60 +11,30 @@ function money(value: number) {
 }
 
 function formatDate(value: string) {
-  if (!value) return "ÔÇö";
+  if (!value) return "—";
   const [y, m, d] = value.split("-");
   if (!y || !m || !d) return value;
   return `${d}/${m}/${y}`;
 }
 
-/** Genera y descarga el PDF comercial de una cotizaci├│n. */
-export function downloadQuotePdf(quote: Quote) {
+/** Genera y descarga el PDF comercial de una cotización. */
+export async function downloadQuotePdf(quote: Quote) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
-  let y = 16;
-
-  // Header brand bar
-  doc.setFillColor(0, 191, 255);
-  doc.rect(0, 0, pageW, 4, "F");
-  doc.setFillColor(59, 70, 165);
-  doc.rect(0, 4, pageW, 2, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.setTextColor(59, 70, 165);
-  doc.text("Medical Advanced Supplies", margin, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
-  doc.text("Cotizaci├│n comercial", margin, y);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(30, 30, 30);
-  doc.text(quote.folio, pageW - margin, 16, { align: "right" });
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(90, 90, 90);
-  doc.text(`Fecha: ${formatDate(quote.quoteDate)}`, pageW - margin, 22, {
-    align: "right",
+  let y = await drawBrandedHeader(doc, {
+    title: "Cotización comercial",
+    folio: quote.folio,
+    rightLines: [
+      `Fecha: ${formatDate(quote.quoteDate)}`,
+      quote.validUntil ? `Vigencia: ${formatDate(quote.validUntil)}` : "",
+    ].filter(Boolean),
   });
-  if (quote.validUntil) {
-    doc.text(`Vigencia: ${formatDate(quote.validUntil)}`, pageW - margin, 27, {
-      align: "right",
-    });
-  }
-
-  y = 36;
-  doc.setDrawColor(220, 220, 220);
-  doc.line(margin, y, pageW - margin, y);
-  y += 8;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
-  doc.text(quote.title || "Cotizaci├│n de productos y servicios", margin, y);
+  doc.text(quote.title || "Cotización de productos y servicios", margin, y);
   y += 8;
 
   doc.setFontSize(9);
@@ -75,7 +46,7 @@ export function downloadQuotePdf(quote: Quote) {
   doc.setTextColor(50, 50, 50);
 
   const leftBlock = [
-    quote.clientName || "ÔÇö",
+    quote.clientName || "—",
     [quote.city, quote.state].filter(Boolean).join(", ") || undefined,
   ].filter(Boolean) as string[];
   const rightBlock = [
@@ -107,7 +78,7 @@ export function downloadQuotePdf(quote: Quote) {
   doc.setFontSize(8);
   doc.setTextColor(60, 60, 60);
   doc.text("#", colX.n, y);
-  doc.text("Descripci├│n", colX.desc, y);
+  doc.text("Descripción", colX.desc, y);
   doc.text("Cant.", colX.qty, y, { align: "right" });
   doc.text("P. unit.", colX.price, y, { align: "right" });
   doc.text("Importe", colX.amount, y, { align: "right" });
@@ -182,19 +153,10 @@ export function downloadQuotePdf(quote: Quote) {
     y += noteLines.length * 4 + 4;
   }
 
-  y = Math.max(y + 10, 275);
-  doc.setFontSize(7);
-  doc.setTextColor(130, 130, 130);
-  doc.text(
-    "Documento generado desde MAS ┬À Cotizaci├│n sujeta a disponibilidad y confirmaci├│n.",
-    margin,
-    y
-  );
-  doc.text(
-    "Medical Advanced Supplies",
-    pageW - margin,
-    y,
-    { align: "right" }
+  y = Math.max(y + 10, 270);
+  drawBrandedFooter(
+    doc,
+    "Documento generado desde MAS · Cotización sujeta a disponibilidad y confirmación."
   );
 
   doc.save(`${quote.folio}.pdf`);

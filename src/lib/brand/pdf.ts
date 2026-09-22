@@ -17,14 +17,33 @@ async function fetchAsDataUrl(path: string): Promise<string | null> {
   }
 }
 
+function formatFromDataUrl(dataUrl: string): "PNG" | "JPEG" {
+  if (
+    dataUrl.startsWith("data:image/jpeg") ||
+    dataUrl.startsWith("data:image/jpg")
+  ) {
+    return "JPEG";
+  }
+  return "PNG";
+}
+
 export async function loadCompanyLogoDataUrl(): Promise<{
   dataUrl: string;
   format: "PNG" | "JPEG";
 } | null> {
   const png = await fetchAsDataUrl(COMPANY_BRAND.logoPath);
-  if (png) return { dataUrl: png, format: "PNG" };
+  if (png) return { dataUrl: png, format: formatFromDataUrl(png) };
   const jpg = await fetchAsDataUrl(COMPANY_BRAND.logoAltPath);
-  if (jpg) return { dataUrl: jpg, format: "JPEG" };
+  if (jpg) return { dataUrl: jpg, format: formatFromDataUrl(jpg) };
+  return null;
+}
+
+export async function loadIsoLogoDataUrl(): Promise<{
+  dataUrl: string;
+  format: "PNG" | "JPEG";
+} | null> {
+  const png = await fetchAsDataUrl(COMPANY_BRAND.isoLogoPath);
+  if (png) return { dataUrl: png, format: formatFromDataUrl(png) };
   return null;
 }
 
@@ -33,22 +52,28 @@ type BrandedHeaderOptions = {
   folio?: string;
   rightLines?: string[];
   margin?: number;
+  documentCode?: string;
 };
 
-/** Dibuja barra de marca + logo + nombre y devuelve la Y siguiente. */
+/** Dibuja barra de marca + logos MAS/ISO + código de formato y devuelve la Y siguiente. */
 export async function drawBrandedHeader(
   doc: jsPDF,
   options: BrandedHeaderOptions
 ): Promise<number> {
   const pageW = doc.internal.pageSize.getWidth();
   const margin = options.margin ?? 14;
+  const documentCode = options.documentCode ?? COMPANY_BRAND.documentCode;
 
   doc.setFillColor(0, 191, 255);
   doc.rect(0, 0, pageW, 4, "F");
   doc.setFillColor(59, 70, 165);
   doc.rect(0, 4, pageW, 2, "F");
 
-  const logo = await loadCompanyLogoDataUrl();
+  const [logo, iso] = await Promise.all([
+    loadCompanyLogoDataUrl(),
+    loadIsoLogoDataUrl(),
+  ]);
+
   let hasLogo = false;
   if (logo) {
     try {
@@ -59,16 +84,37 @@ export async function drawBrandedHeader(
     }
   }
 
+  const isoSize = 18;
+  let hasIso = false;
+  if (iso) {
+    try {
+      doc.addImage(
+        iso.dataUrl,
+        iso.format,
+        pageW - margin - isoSize,
+        9,
+        isoSize,
+        isoSize
+      );
+      hasIso = true;
+    } catch {
+      hasIso = false;
+    }
+  }
+
   const textX = hasLogo ? margin + 22 : margin;
+  const rightX = hasIso ? pageW - margin - isoSize - 3 : pageW - margin;
+
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setTextColor(59, 70, 165);
-  doc.text(COMPANY_BRAND.legalName, textX, 16);
+  doc.text(COMPANY_BRAND.legalName, textX, 15);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(90, 90, 90);
-  doc.text(COMPANY_BRAND.tagline, textX, 21);
+  doc.text(COMPANY_BRAND.tagline, textX, 20);
+  doc.text(`${COMPANY_BRAND.isoLabel} · Cód. formato: ${documentCode}`, textX, 24.5);
 
   const contactBits = [
     COMPANY_BRAND.email,
@@ -76,32 +122,37 @@ export async function drawBrandedHeader(
     COMPANY_BRAND.address,
   ].filter(Boolean);
   if (contactBits.length) {
-    doc.text(contactBits.join(" · "), textX, 25.5);
+    doc.text(contactBits.join(" · "), textX, 29);
   }
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   if (options.folio) {
-    doc.text(options.folio, pageW - margin, 16, { align: "right" });
+    doc.text(options.folio, rightX, 14, { align: "right" });
   }
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
-  doc.text(options.title, textX, 30);
-
-  let rightY = 22;
   doc.setFontSize(8);
-  doc.setTextColor(90, 90, 90);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Cód. ${documentCode}`, rightX, options.folio ? 19 : 14, {
+    align: "right",
+  });
+
+  let rightY = options.folio ? 23.5 : 18.5;
   for (const line of options.rightLines ?? []) {
-    doc.text(line, pageW - margin, rightY, { align: "right" });
-    rightY += 4.5;
+    doc.text(line, rightX, rightY, { align: "right" });
+    rightY += 4;
   }
 
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(30, 30, 30);
+  doc.text(options.title, textX, 35);
+
   doc.setDrawColor(220, 220, 220);
-  doc.line(margin, 34, pageW - margin, 34);
-  return 40;
+  doc.line(margin, 39, pageW - margin, 39);
+  return 45;
 }
 
 export function drawBrandedFooter(doc: jsPDF, note?: string) {
@@ -117,7 +168,7 @@ export function drawBrandedFooter(doc: jsPDF, note?: string) {
     doc.setTextColor(120, 120, 120);
     doc.text(
       note ||
-        `${COMPANY_BRAND.legalName} · ${COMPANY_BRAND.email || COMPANY_BRAND.address}`,
+        `${COMPANY_BRAND.legalName} · ${COMPANY_BRAND.isoLabel} · Cód. ${COMPANY_BRAND.documentCode}`,
       14,
       pageH - 7
     );

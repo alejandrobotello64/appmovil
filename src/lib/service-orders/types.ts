@@ -299,6 +299,8 @@ export type ServiceOrderSummary = {
   equipmentId: string | null;
   equipmentName: string;
   equipmentSerial: string;
+  contactName: string;
+  contactPhone: string;
   linkedEquipmentIds: string[];
 };
 

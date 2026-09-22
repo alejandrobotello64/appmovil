@@ -1,4 +1,5 @@
 ﻿import { jsPDF } from "jspdf";
+import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import {
   vehicleServiceStatusLabel,
   vehicleServiceTypeLabel,
@@ -14,48 +15,22 @@ function money(value: number) {
 }
 
 function formatDate(value: string) {
-  if (!value) return "ÔÇö";
+  if (!value) return "—";
   const [y, m, d] = value.slice(0, 10).split("-");
   if (!y || !m || !d) return value;
   return `${d}/${m}/${y}`;
 }
 
-/** PDF de registro de servicio a veh├¡culo de la empresa. */
-export function downloadVehicleServicePdf(service: VehicleService) {
+/** PDF de registro de servicio a vehículo de la empresa. */
+export async function downloadVehicleServicePdf(service: VehicleService) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
-  let y = 16;
-
-  doc.setFillColor(0, 191, 255);
-  doc.rect(0, 0, pageW, 4, "F");
-  doc.setFillColor(59, 70, 165);
-  doc.rect(0, 4, pageW, 2, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.setTextColor(59, 70, 165);
-  doc.text("Medical Advanced Supplies", margin, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
-  doc.text("Registro de servicio ┬À Flotilla empresarial", margin, y);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(30, 30, 30);
-  doc.text(service.folio, pageW - margin, 16, { align: "right" });
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(`Estatus: ${vehicleServiceStatusLabel(service.status)}`, pageW - margin, 22, {
-    align: "right",
+  let y = await drawBrandedHeader(doc, {
+    title: "Registro de servicio · Flotilla empresarial",
+    folio: service.folio,
+    rightLines: [`Estatus: ${vehicleServiceStatusLabel(service.status)}`],
   });
-
-  y = 34;
-  doc.setDrawColor(220, 220, 220);
-  doc.line(margin, y, pageW - margin, y);
-  y += 8;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
@@ -64,21 +39,21 @@ export function downloadVehicleServicePdf(service: VehicleService) {
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.text("Veh├¡culo", margin, y);
-  doc.text("Taller / t├®cnico", pageW / 2, y);
+  doc.text("Vehículo", margin, y);
+  doc.text("Taller / técnico", pageW / 2, y);
   y += 5;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(50, 50, 50);
 
   const left = [
-    `${service.vehiclePlate} ┬À ${service.vehicleCode}`,
+    `${service.vehiclePlate} · ${service.vehicleCode}`,
     service.vehicleLabel || undefined,
     service.odometerKm != null ? `Od├│metro: ${service.odometerKm} km` : undefined,
   ].filter(Boolean) as string[];
   const right = [
     service.workshop || undefined,
     service.technician ? `T├®cnico: ${service.technician}` : undefined,
-    service.requestedBy ? `Solicit├│: ${service.requestedBy}` : undefined,
+    service.requestedBy ? `Solicitó: ${service.requestedBy}` : undefined,
   ].filter(Boolean) as string[];
 
   const n = Math.max(left.length, right.length, 1);
@@ -95,7 +70,7 @@ export function downloadVehicleServicePdf(service: VehicleService) {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(50, 50, 50);
   doc.text(
-    `Programado: ${formatDate(service.scheduledAt)} ┬À Inicio: ${formatDate(service.startedAt)} ┬À Fin: ${formatDate(service.completedAt)}`,
+    `Programado: ${formatDate(service.scheduledAt)} · Inicio: ${formatDate(service.startedAt)} · Fin: ${formatDate(service.completedAt)}`,
     margin,
     y
   );
@@ -104,7 +79,7 @@ export function downloadVehicleServicePdf(service: VehicleService) {
   if (service.description) {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30, 30, 30);
-    doc.text("Descripci├│n del trabajo", margin, y);
+    doc.text("Descripción del trabajo", margin, y);
     y += 5;
     doc.setFont("helvetica", "normal");
     doc.setTextColor(50, 50, 50);
@@ -122,9 +97,9 @@ export function downloadVehicleServicePdf(service: VehicleService) {
     doc.setFontSize(8);
     for (const line of service.lines) {
       const amount = Number(line.quantity) * Number(line.unitCost);
-      doc.text(`ÔÇó ${line.description}`, margin, y);
+      doc.text(`• ${line.description}`, margin, y);
       doc.text(
-        `${line.quantity} ├ù ${money(line.unitCost)} = ${money(amount)}`,
+        `${line.quantity} × ${money(line.unitCost)} = ${money(amount)}`,
         pageW - margin,
         y,
         { align: "right" }
@@ -165,5 +140,6 @@ export function downloadVehicleServicePdf(service: VehicleService) {
     doc.text(notes, margin, y);
   }
 
+  drawBrandedFooter(doc);
   doc.save(`${service.folio}-servicio-flotilla.pdf`);
 }

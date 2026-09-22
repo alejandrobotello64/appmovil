@@ -359,14 +359,13 @@ export function QuotesPanel() {
   }
 
   function handlePdf(quote: Quote) {
-    try {
-      downloadQuotePdf(quote);
-      setMessage(`PDF ${quote.folio} descargado.`);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo generar el PDF."
+    void downloadQuotePdf(quote)
+      .then(() => setMessage(`PDF ${quote.folio} descargado.`))
+      .catch((err) =>
+        setError(
+          err instanceof Error ? err.message : "No se pudo generar el PDF."
+        )
       );
-    }
   }
 
   return (

@@ -78,6 +78,19 @@ export async function getQualitySurveys(): Promise<QualitySurvey[]> {
   return ((data ?? []) as Record<string, unknown>[]).map(mapSurvey);
 }
 
+export async function getQualitySurveysForOrder(
+  serviceOrderId: string
+): Promise<QualitySurvey[]> {
+  if (!serviceOrderId) return [];
+  const { data, error } = await db
+    .from("quality_surveys")
+    .select("*")
+    .eq("service_order_id", serviceOrderId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as Record<string, unknown>[]).map(mapSurvey);
+}
+
 export async function getQualitySurveyByToken(
   token: string
 ): Promise<QualitySurvey | null> {
@@ -119,6 +132,65 @@ export async function createQualitySurvey(
     .single();
   if (error) throw new Error(error.message);
   return mapSurvey(data as Record<string, unknown>);
+}
+
+export async function linkQualitySurveyToOrder(
+  surveyId: string,
+  order: {
+    id: string;
+    folio: string;
+    clientId?: string | null;
+    clientName?: string;
+    contactName?: string;
+    contactPhone?: string;
+  }
+): Promise<QualitySurvey> {
+  const patch: Record<string, unknown> = {
+    service_order_id: order.id,
+    service_order_folio: order.folio,
+  };
+  if (order.clientId) patch.client_id = order.clientId;
+  if (order.clientName?.trim()) patch.client_name = order.clientName.trim();
+  if (order.contactName?.trim()) patch.contact_name = order.contactName.trim();
+  if (order.contactPhone?.trim()) patch.contact_phone = order.contactPhone.trim();
+
+  const { data, error } = await db
+    .from("quality_surveys")
+    .update(patch)
+    .eq("id", surveyId)
+    .select("*")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("No se pudo ligar la encuesta a la orden.");
+  return mapSurvey(data as Record<string, unknown>);
+}
+
+export async function createQualitySurveyFromOrder(
+  order: {
+    id: string;
+    folio: string;
+    clientId: string | null;
+    clientName: string;
+    contactName: string;
+    contactPhone: string;
+  },
+  createdBy?: string
+): Promise<QualitySurvey> {
+  const phone = order.contactPhone.trim();
+  if (!phone) {
+    throw new Error(
+      "La orden no tiene teléfono de WhatsApp. Complétalo en el contacto de la orden."
+    );
+  }
+  return createQualitySurvey({
+    clientId: order.clientId,
+    clientName: order.clientName.trim() || "Cliente",
+    contactName: order.contactName,
+    contactPhone: phone,
+    serviceOrderId: order.id,
+    serviceOrderFolio: order.folio,
+    createdBy,
+  });
 }
 
 export async function markSurveySent(id: string): Promise<QualitySurvey> {
