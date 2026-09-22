@@ -14,6 +14,7 @@ export type DataListItem = {
   badge?: ReactNode;
   fields?: DataField[];
   actions?: ReactNode;
+  onSelect?: () => void;
 };
 
 type ResponsiveDataListProps = {
@@ -40,7 +41,13 @@ export function ResponsiveDataList({
       {items.map((item) => (
         <article
           key={item.key}
-          className="rounded-xl border border-border/80 bg-background/60 p-4 shadow-sm"
+          className={cn(
+            "rounded-xl border border-border/80 bg-background/60 p-4 shadow-sm",
+            item.onSelect
+              ? "cursor-pointer hover:border-[#3B46A5]/40 hover:bg-muted/40"
+              : ""
+          )}
+          onClick={item.onSelect}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -74,7 +81,10 @@ export function ResponsiveDataList({
           ) : null}
 
           {item.actions ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
+            <div
+              className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/70 pt-3"
+              onClick={(event) => event.stopPropagation()}
+            >
               {item.actions}
             </div>
           ) : null}

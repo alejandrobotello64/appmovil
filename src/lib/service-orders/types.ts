@@ -284,6 +284,22 @@ export const LINKED_EQUIPMENT_RELATIONS = [
   { id: "Otro", label: "Otro" },
 ] as const;
 
+export type ServiceOrderSummary = {
+  id: string;
+  folio: string;
+  status: ServiceOrderStatus;
+  serviceType: ServiceType;
+  technician: string;
+  receptionAt: string;
+  createdAt: string;
+  clientId: string | null;
+  clientName: string;
+  equipmentId: string | null;
+  equipmentName: string;
+  equipmentSerial: string;
+  linkedEquipmentIds: string[];
+};
+
 export type ServiceOrder = {
   id: string;
   folio: string;

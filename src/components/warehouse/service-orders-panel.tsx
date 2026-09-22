@@ -192,7 +192,11 @@ function newDraftLine(kind: ServiceLineKind = "insumos"): DraftLine {
   };
 }
 
-export function ServiceOrdersPanel() {
+export function ServiceOrdersPanel({
+  initialOrderId = null,
+}: {
+  initialOrderId?: string | null;
+}) {
   const { canWrite } = usePermissions("ordenes_servicio");
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
@@ -233,6 +237,7 @@ export function ServiceOrdersPanel() {
     ServiceOrderRequisition[]
   >([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const openedFromQuery = useRef<string | null>(null);
   const session = getSession();
   const actor = session?.username ?? "usuario";
 
@@ -456,6 +461,14 @@ export function ServiceOrdersPanel() {
     setDocsOpen(false);
     setPreviewImageIndex(null);
   }
+
+  useEffect(() => {
+    if (!initialOrderId || openedFromQuery.current === initialOrderId) return;
+    const order = orders.find((item) => item.id === initialOrderId);
+    if (!order) return;
+    openedFromQuery.current = initialOrderId;
+    openDetail(order);
+  }, [initialOrderId, orders]);
 
   async function onToggleLock() {
     if (!selected || !isAdvisor) return;

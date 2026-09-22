@@ -14,6 +14,7 @@ import {
   type ImageStage,
   type ServiceOrder,
   type ServiceOrderChecklistItem,
+  type ServiceOrderSummary,
   type ServiceOrderDocument,
   type ServiceOrderEvent,
   type ServiceOrderImage,
@@ -921,6 +922,48 @@ export async function getServiceOrders(): Promise<ServiceOrder[]> {
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
   return hydrateOrders(data ?? []);
+}
+
+export async function listServiceOrderSummaries(): Promise<ServiceOrderSummary[]> {
+  const [ordersRes, linkedRes] = await Promise.all([
+    db
+      .from("service_orders")
+      .select(
+        "id, folio, status, service_type, technician, reception_at, created_at, client_id, client_name, equipment_id, equipment_name, equipment_serial"
+      )
+      .order("created_at", { ascending: false }),
+    db
+      .from("service_order_linked_equipment")
+      .select("service_order_id, equipment_id"),
+  ]);
+  if (ordersRes.error) throw new Error(ordersRes.error.message);
+  if (linkedRes.error) throw new Error(linkedRes.error.message);
+
+  const linkedBy = new Map<string, string[]>();
+  for (const row of linkedRes.data ?? []) {
+    const orderId = String(row.service_order_id);
+    const equipmentId = row.equipment_id ? String(row.equipment_id) : "";
+    if (!equipmentId) continue;
+    const list = linkedBy.get(orderId) ?? [];
+    list.push(equipmentId);
+    linkedBy.set(orderId, list);
+  }
+
+  return (ordersRes.data ?? []).map((row: Record<string, unknown>) => ({
+    id: String(row.id),
+    folio: String(row.folio ?? ""),
+    status: String(row.status ?? "borrador") as ServiceOrderSummary["status"],
+    serviceType: String(row.service_type ?? "diagnostico") as ServiceOrderSummary["serviceType"],
+    technician: String(row.technician ?? ""),
+    receptionAt: dateOrEmpty(row.reception_at),
+    createdAt: String(row.created_at ?? ""),
+    clientId: row.client_id ? String(row.client_id) : null,
+    clientName: String(row.client_name ?? ""),
+    equipmentId: row.equipment_id ? String(row.equipment_id) : null,
+    equipmentName: String(row.equipment_name ?? ""),
+    equipmentSerial: String(row.equipment_serial ?? ""),
+    linkedEquipmentIds: linkedBy.get(String(row.id)) ?? [],
+  }));
 }
 
 export async function getServiceOrder(id: string): Promise<ServiceOrder | null> {

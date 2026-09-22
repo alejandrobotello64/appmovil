@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, BookUser, History, Pencil, Plus, Search, Trash2, Wrench, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  BookUser,
+  Building2,
+  ChevronRight,
+  History,
+  Monitor,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Wrench,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DesktopTable,
@@ -45,6 +58,13 @@ import {
   type ClientServiceType,
 } from "@/lib/clients/types";
 import { MEXICO_STATES } from "@/lib/location/mexico-states";
+import { listServiceOrderSummaries } from "@/lib/service-orders/storage";
+import {
+  equipmentKindLabel,
+  serviceOrderStatusLabel,
+  serviceTypeLabel,
+  type ServiceOrderSummary,
+} from "@/lib/service-orders/types";
 import { cn } from "@/lib/utils";
 
 type ViewId = "clientes" | "equipos" | "historial";
@@ -104,13 +124,18 @@ const fieldClass =
 
 export function ClientsPanel() {
   const { canWrite } = usePermissions("clientes");
+  const router = useRouter();
   const [view, setView] = useState<ViewId>("clientes");
   const [clients, setClients] = useState<Client[]>([]);
   const [contacts, setContacts] = useState<ClientContact[]>([]);
   const [equipment, setEquipment] = useState<ClientEquipment[]>([]);
   const [services, setServices] = useState<ClientService[]>([]);
+  const [orderSummaries, setOrderSummaries] = useState<ServiceOrderSummary[]>(
+    []
+  );
   const [search, setSearch] = useState("");
   const [filterClientId, setFilterClientId] = useState("");
+  const [filterEquipmentId, setFilterEquipmentId] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -139,17 +164,19 @@ export function ClientsPanel() {
     setLoading(true);
     setError("");
     try {
-      const [clientRows, contactRows, equipmentRows, serviceRows] =
+      const [clientRows, contactRows, equipmentRows, serviceRows, orderRows] =
         await Promise.all([
           getClients(),
           getClientContacts(),
           getClientEquipment(),
           getClientServices(),
+          listServiceOrderSummaries().catch(() => [] as ServiceOrderSummary[]),
         ]);
       setClients(clientRows);
       setContacts(contactRows);
       setEquipment(equipmentRows);
       setServices(serviceRows);
+      setOrderSummaries(orderRows);
       setFichaClient((current) =>
         current
           ? clientRows.find((c) => c.id === current.id) ?? null
@@ -265,6 +292,9 @@ export function ClientsPanel() {
     if (filterClientId) {
       rows = rows.filter((item) => item.clientId === filterClientId);
     }
+    if (filterEquipmentId) {
+      rows = rows.filter((item) => item.equipmentId === filterEquipmentId);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter((item) =>
@@ -281,7 +311,7 @@ export function ClientsPanel() {
       );
     }
     return rows;
-  }, [services, filterClientId, search, clientNameById]);
+  }, [services, filterClientId, filterEquipmentId, search, clientNameById]);
 
   const equipmentForServiceForm = useMemo(
     () =>
@@ -435,6 +465,93 @@ export function ClientsPanel() {
     [contacts, fichaClient]
   );
 
+  const fichaEquipment = useMemo(
+    () =>
+      fichaClient
+        ? equipment.filter((item) => item.clientId === fichaClient.id)
+        : [],
+    [equipment, fichaClient]
+  );
+
+  const selectedEquipment =
+    equipment.find((item) => item.id === filterEquipmentId) ?? null;
+
+  const historyEntries = useMemo(() => {
+    const equipmentName = (equipmentId: string | null, fallback = "") => {
+      if (!equipmentId) return fallback || "—";
+      const match = equipment.find((item) => item.id === equipmentId);
+      if (!match) return fallback || "—";
+      return [match.name, match.serialNumber].filter(Boolean).join(" · ");
+    };
+
+    const manual = filteredServices.map((item) => ({
+      key: `servicio-${item.id}`,
+      source: "servicio" as const,
+      date: item.performedAt || item.createdAt.slice(0, 10),
+      title: item.title,
+      typeLabel: clientServiceTypeLabel(item.serviceType),
+      clientId: item.clientId,
+      equipmentLabel: equipmentName(item.equipmentId),
+      technician: item.technician,
+      folio: item.folio,
+      service: item,
+      orderId: undefined as string | undefined,
+    }));
+
+    let orders = orderSummaries;
+    if (filterClientId) {
+      orders = orders.filter((item) => item.clientId === filterClientId);
+    }
+    if (filterEquipmentId) {
+      orders = orders.filter(
+        (item) =>
+          item.equipmentId === filterEquipmentId ||
+          item.linkedEquipmentIds.includes(filterEquipmentId)
+      );
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      orders = orders.filter((item) =>
+        [
+          item.folio,
+          item.technician,
+          item.equipmentName,
+          item.equipmentSerial,
+          item.clientName,
+          item.serviceType,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(q)
+      );
+    }
+
+    const fromOrders = orders.map((item) => ({
+      key: `orden-${item.id}`,
+      source: "orden" as const,
+      date: item.receptionAt || item.createdAt.slice(0, 10),
+      title: `${item.folio} · ${serviceTypeLabel(item.serviceType)}`,
+      typeLabel: serviceOrderStatusLabel(item.status),
+      clientId: item.clientId ?? "",
+      equipmentLabel: equipmentName(item.equipmentId, item.equipmentName),
+      technician: item.technician,
+      folio: item.folio,
+      service: undefined as ClientService | undefined,
+      orderId: item.id,
+    }));
+
+    return [...manual, ...fromOrders].sort((a, b) =>
+      String(b.date).localeCompare(String(a.date))
+    );
+  }, [
+    filteredServices,
+    orderSummaries,
+    filterClientId,
+    filterEquipmentId,
+    search,
+    equipment,
+  ]);
+
   const contactCountByClient = useMemo(() => {
     const map = new Map<string, number>();
     for (const contact of contacts) {
@@ -451,6 +568,24 @@ export function ClientsPanel() {
     setClientFormOpen(false);
     setEquipmentFormOpen(false);
     setServiceFormOpen(false);
+  }
+
+  function openEquipmentHistory(item: ClientEquipment) {
+    setFichaClient(null);
+    setContactFormOpen(false);
+    setClientFormOpen(false);
+    setEquipmentFormOpen(false);
+    setServiceFormOpen(false);
+    setEditingEquipment(null);
+    setFilterClientId(item.clientId);
+    setFilterEquipmentId(item.id);
+    setSearch("");
+    setServiceForm({
+      ...EMPTY_SERVICE,
+      clientId: item.clientId,
+      equipmentId: item.id,
+    });
+    setView("historial");
   }
 
   function openNewContact() {
@@ -613,6 +748,7 @@ export function ClientsPanel() {
                   setClientFormOpen(false);
                   setEquipmentFormOpen(false);
                   setServiceFormOpen(false);
+                  if (item.id !== "historial") setFilterEquipmentId("");
                 }}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
@@ -647,7 +783,18 @@ export function ClientsPanel() {
           {view !== "clientes" ? (
             <select
               value={filterClientId}
-              onChange={(event) => setFilterClientId(event.target.value)}
+              onChange={(event) => {
+                const next = event.target.value;
+                setFilterClientId(next);
+                if (filterEquipmentId) {
+                  const current = equipment.find(
+                    (item) => item.id === filterEquipmentId
+                  );
+                  if (next && current && current.clientId !== next) {
+                    setFilterEquipmentId("");
+                  }
+                }
+              }}
               className={fieldClass}
             >
               <option value="">Todos los clientes</option>
@@ -1360,6 +1507,50 @@ export function ClientsPanel() {
               </div>
             )}
           </div>
+
+          <div>
+            <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <Monitor className="size-4" />
+              Equipos dados de alta ({fichaEquipment.length})
+            </h4>
+            {fichaEquipment.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                Este cliente aún no tiene equipos dados de alta.
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {fichaEquipment.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => openEquipmentHistory(item)}
+                    className="rounded-xl border border-border bg-background p-4 text-left transition hover:border-[#3B46A5]/40 hover:bg-muted/40"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {[item.brand, item.model].filter(Boolean).join(" ") ||
+                            equipmentKindLabel(item.equipmentKind)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-800 dark:text-sky-200">
+                        {clientEquipmentStatusLabel(item.status)}
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-1 text-sm">
+                      <p>Serie: {item.serialNumber || "—"}</p>
+                      <p>Ubicación: {item.location || "—"}</p>
+                    </div>
+                    <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#3B46A5]">
+                      Ver historial de servicio
+                      <ChevronRight className="size-3.5" />
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       ) : null}
 
@@ -1550,29 +1741,42 @@ export function ClientsPanel() {
                   },
                   { label: "Ubicación", value: item.location || "—" },
                 ],
-                actions: canWrite ? (
+                onSelect: () => openEquipmentHistory(item),
+                actions: (
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
-                      onClick={() => {
-                        setEditingEquipment(item);
-                        setEquipmentFormOpen(true);
-                      }}
+                      onClick={() => openEquipmentHistory(item)}
                     >
-                      <Pencil className="size-3.5" />
-                      Editar
+                      <History className="size-3.5" />
+                      Historial
                     </button>
-                    <button
-                      type="button"
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
-                      onClick={() => void handleDeleteEquipment(item)}
-                    >
-                      <Trash2 className="size-3.5" />
-                      Eliminar
-                    </button>
+                    {canWrite ? (
+                      <>
+                        <button
+                          type="button"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
+                          onClick={() => {
+                            setEditingEquipment(item);
+                            setEquipmentFormOpen(true);
+                          }}
+                        >
+                          <Pencil className="size-3.5" />
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
+                          onClick={() => void handleDeleteEquipment(item)}
+                        >
+                          <Trash2 className="size-3.5" />
+                          Eliminar
+                        </button>
+                      </>
+                    ) : null}
                   </div>
-                ) : undefined,
+                ),
               }))}
             />
             <DesktopTable>
@@ -1599,8 +1803,14 @@ export function ClientsPanel() {
                     </tr>
                   ) : (
                     filteredEquipment.map((item) => (
-                      <tr key={item.id} className="border-t border-border/70">
-                        <td className="px-3 py-2 font-medium">{item.name}</td>
+                      <tr
+                        key={item.id}
+                        className="cursor-pointer border-t border-border/70 hover:bg-muted/40"
+                        onClick={() => openEquipmentHistory(item)}
+                      >
+                        <td className="px-3 py-2 font-medium text-[#3B46A5]">
+                          {item.name}
+                        </td>
                         <td className="px-3 py-2">
                           {clientNameById.get(item.clientId) ?? "—"}
                         </td>
@@ -1611,32 +1821,43 @@ export function ClientsPanel() {
                           {clientEquipmentStatusLabel(item.status)}
                         </td>
                         <td className="px-3 py-2">{item.location || "—"}</td>
-                        <td className="px-3 py-2">
-                          {canWrite ? (
-                            <div className="flex flex-wrap gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="h-8"
-                                onClick={() => {
-                                  setEditingEquipment(item);
-                                  setEquipmentFormOpen(true);
-                                }}
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="h-8 text-destructive"
-                                onClick={() => void handleDeleteEquipment(item)}
-                              >
-                                Eliminar
-                              </Button>
-                            </div>
-                          ) : (
-                            "—"
-                          )}
+                        <td
+                          className="px-3 py-2"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-8"
+                              onClick={() => openEquipmentHistory(item)}
+                            >
+                              Historial
+                            </Button>
+                            {canWrite ? (
+                              <>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="h-8"
+                                  onClick={() => {
+                                    setEditingEquipment(item);
+                                    setEquipmentFormOpen(true);
+                                  }}
+                                >
+                                  Editar
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="h-8 text-destructive"
+                                  onClick={() => void handleDeleteEquipment(item)}
+                                >
+                                  Eliminar
+                                </Button>
+                              </>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1649,37 +1870,96 @@ export function ClientsPanel() {
 
         {!loading && view === "historial" ? (
           <>
+            {selectedEquipment ? (
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-xl border border-[#3B46A5]/20 bg-[#3B46A5]/5 px-4 py-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Historial de servicio
+                  </p>
+                  <p className="font-medium text-foreground">
+                    {selectedEquipment.name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {[
+                      clientNameById.get(selectedEquipment.clientId),
+                      selectedEquipment.serialNumber
+                        ? `Serie ${selectedEquipment.serialNumber}`
+                        : null,
+                      selectedEquipment.location,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setFilterEquipmentId("")}
+                >
+                  Ver todos
+                </Button>
+              </div>
+            ) : null}
             <ResponsiveDataList
-              emptyMessage="No hay servicios registrados."
-              items={filteredServices.map((item) => ({
-                key: item.id,
+              emptyMessage={
+                selectedEquipment
+                  ? "Este equipo aún no tiene historial de servicio."
+                  : "No hay servicios registrados."
+              }
+              items={historyEntries.map((item) => ({
+                key: item.key,
                 title: item.title,
-                subtitle: `${clientNameById.get(item.clientId) ?? "Cliente"} · ${clientServiceTypeLabel(item.serviceType)}`,
+                subtitle: `${clientNameById.get(item.clientId) || "Cliente"} · ${item.typeLabel}`,
                 badge: (
-                  <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-800 dark:text-violet-200">
-                    {item.performedAt || "Sin fecha"}
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-xs",
+                      item.source === "orden"
+                        ? "bg-teal-500/10 text-teal-800 dark:text-teal-200"
+                        : "bg-violet-500/10 text-violet-800 dark:text-violet-200"
+                    )}
+                  >
+                    {item.date || "Sin fecha"}
                   </span>
                 ),
                 fields: [
-                  { label: "Folio", value: item.folio || "—" },
-                  { label: "Técnico", value: item.technician || "—" },
                   {
-                    label: "Equipo",
-                    value:
-                      equipment.find((eq) => eq.id === item.equipmentId)
-                        ?.name || "—",
+                    label: item.source === "orden" ? "Orden" : "Folio",
+                    value: item.folio || "—",
                   },
+                  { label: "Técnico", value: item.technician || "—" },
+                  { label: "Equipo", value: item.equipmentLabel },
                 ],
-                actions: canWrite ? (
-                  <button
-                    type="button"
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
-                    onClick={() => void handleDeleteService(item)}
-                  >
-                    <Trash2 className="size-3.5" />
-                    Eliminar
-                  </button>
-                ) : undefined,
+                onSelect: item.orderId
+                  ? () =>
+                      router.push(
+                        `/dashboard/ordenes-servicio?tab=ordenes&order=${item.orderId}`
+                      )
+                  : undefined,
+                actions:
+                  item.source === "orden" && item.orderId ? (
+                    <button
+                      type="button"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
+                      onClick={() =>
+                        router.push(
+                          `/dashboard/ordenes-servicio?tab=ordenes&order=${item.orderId}`
+                        )
+                      }
+                    >
+                      Ver orden
+                    </button>
+                  ) : canWrite && item.service ? (
+                    <button
+                      type="button"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
+                      onClick={() => void handleDeleteService(item.service!)}
+                    >
+                      <Trash2 className="size-3.5" />
+                      Eliminar
+                    </button>
+                  ) : undefined,
               }))}
             />
             <DesktopTable>
@@ -1688,45 +1968,85 @@ export function ClientsPanel() {
                   <tr>
                     <th className="px-3 py-2 font-medium">Fecha</th>
                     <th className="px-3 py-2 font-medium">Cliente</th>
-                    <th className="px-3 py-2 font-medium">Tipo</th>
+                    <th className="px-3 py-2 font-medium">Origen</th>
+                    <th className="px-3 py-2 font-medium">Tipo / estatus</th>
                     <th className="px-3 py-2 font-medium">Título</th>
+                    <th className="px-3 py-2 font-medium">Equipo</th>
                     <th className="px-3 py-2 font-medium">Técnico</th>
                     <th className="px-3 py-2 font-medium">Folio</th>
                     <th className="px-3 py-2 font-medium">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredServices.length === 0 ? (
+                  {historyEntries.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={9}
                         className="px-3 py-8 text-center text-muted-foreground"
                       >
-                        No hay servicios registrados.
+                        {selectedEquipment
+                          ? "Este equipo aún no tiene historial de servicio."
+                          : "No hay servicios registrados."}
                       </td>
                     </tr>
                   ) : (
-                    filteredServices.map((item) => (
-                      <tr key={item.id} className="border-t border-border/70">
-                        <td className="px-3 py-2">{item.performedAt || "—"}</td>
+                    historyEntries.map((item) => (
+                      <tr
+                        key={item.key}
+                        className={cn(
+                          "border-t border-border/70",
+                          item.orderId
+                            ? "cursor-pointer hover:bg-muted/40"
+                            : ""
+                        )}
+                        onClick={
+                          item.orderId
+                            ? () =>
+                                router.push(
+                                  `/dashboard/ordenes-servicio?tab=ordenes&order=${item.orderId}`
+                                )
+                            : undefined
+                        }
+                      >
+                        <td className="px-3 py-2">{item.date || "—"}</td>
                         <td className="px-3 py-2">
-                          {clientNameById.get(item.clientId) ?? "—"}
+                          {clientNameById.get(item.clientId) || "—"}
                         </td>
                         <td className="px-3 py-2">
-                          {clientServiceTypeLabel(item.serviceType)}
+                          {item.source === "orden" ? "Orden" : "Servicio"}
                         </td>
+                        <td className="px-3 py-2">{item.typeLabel}</td>
                         <td className="px-3 py-2 font-medium">{item.title}</td>
+                        <td className="px-3 py-2">{item.equipmentLabel}</td>
                         <td className="px-3 py-2">
                           {item.technician || "—"}
                         </td>
                         <td className="px-3 py-2">{item.folio || "—"}</td>
-                        <td className="px-3 py-2">
-                          {canWrite ? (
+                        <td
+                          className="px-3 py-2"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {item.source === "orden" && item.orderId ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-8"
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/ordenes-servicio?tab=ordenes&order=${item.orderId}`
+                                )
+                              }
+                            >
+                              Ver orden
+                            </Button>
+                          ) : canWrite && item.service ? (
                             <Button
                               type="button"
                               variant="outline"
                               className="h-8 text-destructive"
-                              onClick={() => void handleDeleteService(item)}
+                              onClick={() =>
+                                void handleDeleteService(item.service!)
+                              }
                             >
                               Eliminar
                             </Button>

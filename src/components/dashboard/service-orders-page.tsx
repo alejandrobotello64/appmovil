@@ -43,7 +43,11 @@ export function ServiceOrdersPage() {
         ) : allowed ? (
           <>
             {activeTab === "dashboard" ? <ServiceOrdersDashboard /> : null}
-            {activeTab === "ordenes" ? <ServiceOrdersPanel /> : null}
+            {activeTab === "ordenes" ? (
+              <ServiceOrdersPanel
+                initialOrderId={searchParams.get("order")}
+              />
+            ) : null}
             {activeTab === "instrumentos" ? (
               <BiomedicalInstrumentsPanel />
             ) : null}
