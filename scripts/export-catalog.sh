@@ -67,7 +67,7 @@ def lit(value):
 update_set = ",\n  ".join(
     f"{column} = excluded.{column}"
     for column in columns
-    if column != "sku"
+    if column not in ("sku", "quantity")
 )
 
 chunks = []
@@ -91,6 +91,7 @@ for start in range(0, len(rows), batch_size):
 
 header = f"""-- Catálogo real de MAS. Generado desde la base local ({len(rows)} productos).
 -- Idempotente: inserta o actualiza por sku. No borra filas extra.
+-- La existencia (quantity) solo se carga en SKU nuevos; no pisa stock ya existente.
 -- Regenerar: bash scripts/export-catalog.sh
 
 begin;
