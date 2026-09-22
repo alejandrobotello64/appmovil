@@ -1,3 +1,4 @@
+import { supabase } from "@/lib/supabase/client";
 import { listStaffMembers } from "@/lib/users/staff";
 import {
   createClientService,
