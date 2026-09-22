@@ -46,6 +46,8 @@ import {
   uploadServiceOrderImage,
 } from "@/lib/service-orders/storage";
 import { getBiomedicalInstruments } from "@/lib/biomedical-instruments/storage";
+import { listStaffMembers, type StaffMember } from "@/lib/users/staff";
+import { StaffSelect } from "@/components/warehouse/staff-select";
 import {
   biomedicalInstrumentTypeLabel,
   type BiomedicalInstrument,
@@ -179,6 +181,7 @@ export function ServiceOrdersPanel() {
   const [instrumentsCatalog, setInstrumentsCatalog] = useState<
     BiomedicalInstrument[]
   >([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -212,22 +215,34 @@ export function ServiceOrdersPanel() {
     [orders, selectedId]
   );
 
+  const technicians = useMemo(
+    () => staff.filter((member) => member.isTechnician),
+    [staff]
+  );
+  const advisors = useMemo(
+    () => staff.filter((member) => member.isServiceAdvisor),
+    [staff]
+  );
+
   async function reload() {
     setLoading(true);
     setError("");
     try {
-      const [list, tpls, clientList, inventory, instruments] = await Promise.all([
-        getServiceOrders(),
-        getChecklistTemplates(),
-        getClients(),
-        getInventoryItems({ kind: "producto" }),
-        getBiomedicalInstruments(),
-      ]);
+      const [list, tpls, clientList, inventory, instruments, staffList] =
+        await Promise.all([
+          getServiceOrders(),
+          getChecklistTemplates(),
+          getClients(),
+          getInventoryItems({ kind: "producto" }),
+          getBiomedicalInstruments(),
+          listStaffMembers().catch(() => [] as StaffMember[]),
+        ]);
       setOrders(list);
       setTemplates(tpls);
       setClients(clientList.filter((c) => c.isActive));
       setProducts(inventory);
       setInstrumentsCatalog(instruments);
+      setStaff(staffList);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar órdenes.");
     } finally {
@@ -879,6 +894,20 @@ export function ServiceOrdersPanel() {
               ))}
             </select>
           </label>
+          <StaffSelect
+            label="Técnico"
+            value={form.technician ?? ""}
+            options={technicians}
+            emptyLabel="Seleccionar técnico…"
+            onChange={(value) => setForm((f) => ({ ...f, technician: value }))}
+          />
+          <StaffSelect
+            label="Asesor de servicios"
+            value={form.advisor ?? ""}
+            options={advisors}
+            emptyLabel="Seleccionar asesor…"
+            onChange={(value) => setForm((f) => ({ ...f, advisor: value }))}
+          />
           <label className="block text-sm">
             <span className="mb-1 block text-muted-foreground">Prioridad</span>
             <select
@@ -1096,26 +1125,26 @@ export function ServiceOrdersPanel() {
                     }
                   />
                 </label>
-                <label className="block text-sm">
-                  <span className="mb-1 block text-muted-foreground">Técnico</span>
-                  <input
-                    className={fieldClass}
-                    value={form.technician ?? ""}
-                    disabled={!canWrite}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, technician: e.target.value }))
-                    }
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1 block text-muted-foreground">Asesor</span>
-                  <input
-                    className={fieldClass}
-                    value={form.advisor ?? ""}
-                    disabled={!canWrite}
-                    onChange={(e) => setForm((f) => ({ ...f, advisor: e.target.value }))}
-                  />
-                </label>
+                <StaffSelect
+                  label="Técnico"
+                  value={form.technician ?? ""}
+                  options={technicians}
+                  disabled={!canWrite}
+                  emptyLabel="Seleccionar técnico…"
+                  onChange={(value) =>
+                    setForm((f) => ({ ...f, technician: value }))
+                  }
+                />
+                <StaffSelect
+                  label="Asesor de servicios"
+                  value={form.advisor ?? ""}
+                  options={advisors}
+                  disabled={!canWrite}
+                  emptyLabel="Seleccionar asesor…"
+                  onChange={(value) =>
+                    setForm((f) => ({ ...f, advisor: value }))
+                  }
+                />
                 <label className="block text-sm">
                   <span className="mb-1 block text-muted-foreground">Entrega aproximada</span>
                   <input

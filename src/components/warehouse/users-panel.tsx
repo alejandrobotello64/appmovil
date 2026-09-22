@@ -42,6 +42,7 @@ import { WAREHOUSE_TABS } from "@/lib/warehouse/tabs";
 import { USERS_TABS, type UsersTabId } from "@/lib/users/tabs";
 import { cn } from "@/lib/utils";
 import { UsersExcelActions } from "@/components/warehouse/users-excel-actions";
+import { FlagCheckbox } from "@/components/ui/flag-checkbox";
 
 type ListedUser = {
   id: string;
@@ -66,6 +67,8 @@ type ListedUser = {
   emergency_contact_phone: string;
   emergency_contact_relation: string;
   photo_url: string;
+  is_technician: boolean;
+  is_service_advisor: boolean;
 };
 
 type AltaFormState = {
@@ -88,6 +91,8 @@ type AltaFormState = {
   username: string;
   password: string;
   notes: string;
+  isTechnician: boolean;
+  isServiceAdvisor: boolean;
 };
 
 const BLOOD_TYPES = ["", "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"] as const;
@@ -112,6 +117,8 @@ const EMPTY_ALTA: AltaFormState = {
   username: "",
   password: "",
   notes: "",
+  isTechnician: false,
+  isServiceAdvisor: false,
 };
 
 const MODULE_LABELS: Record<WarehouseModule, string> = {
@@ -172,6 +179,8 @@ function userToAlta(user: ListedUser): AltaFormState {
     username: user.username ?? "",
     password: "",
     notes: user.notes ?? "",
+    isTechnician: Boolean(user.is_technician),
+    isServiceAdvisor: Boolean(user.is_service_advisor),
   };
 }
 
@@ -252,7 +261,11 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
   async function loadUsers() {
     const { data, error: rpcError } = await supabase.rpc("list_app_users");
     if (rpcError) throw new Error(rpcError.message);
-    const list = (data as ListedUser[]) ?? [];
+    const list = ((data as ListedUser[]) ?? []).map((user) => ({
+      ...user,
+      is_technician: Boolean(user.is_technician),
+      is_service_advisor: Boolean(user.is_service_advisor),
+    }));
     setUsers(list);
     return list;
   }
@@ -427,6 +440,8 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
       p_emergency_contact_name: alta.emergencyContactName.trim(),
       p_emergency_contact_phone: alta.emergencyContactPhone.trim(),
       p_emergency_contact_relation: alta.emergencyContactRelation.trim(),
+      p_is_technician: alta.isTechnician,
+      p_is_service_advisor: alta.isServiceAdvisor,
     };
   }
 
@@ -611,6 +626,47 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
       );
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleToggleStaffFlag(
+    user: ListedUser,
+    field: "is_technician" | "is_service_advisor",
+    value: boolean
+  ) {
+    if (!canWrite) return;
+    setError("");
+    setMessage("");
+    try {
+      const { error: rpcError } = await supabase.rpc(
+        "set_app_user_service_flags",
+        {
+          p_user_id: user.id,
+          p_is_technician:
+            field === "is_technician" ? value : user.is_technician,
+          p_is_service_advisor:
+            field === "is_service_advisor" ? value : user.is_service_advisor,
+        }
+      );
+      if (rpcError) throw new Error(rpcError.message);
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === user.id ? { ...item, [field]: value } : item
+        )
+      );
+      if (editingId === user.id) {
+        setAlta((current) =>
+          field === "is_technician"
+            ? { ...current, isTechnician: value }
+            : { ...current, isServiceAdvisor: value }
+        );
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar la marca de técnico o asesor."
+      );
     }
   }
 
@@ -802,6 +858,15 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     { label: "Área", value: user.department || "—" },
                     { label: "Teléfono", value: user.phone || "—" },
                     { label: "Correo", value: user.email || "—" },
+                    {
+                      label: "Servicio",
+                      value: [
+                        user.is_technician ? "Técnico" : null,
+                        user.is_service_advisor ? "Asesor" : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "—",
+                    },
                   ],
                   actions: canWrite ? (
                     <Link
@@ -824,6 +889,8 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       <th className="px-3 py-2 font-medium">Puesto</th>
                       <th className="px-3 py-2 font-medium">Área</th>
                       <th className="px-3 py-2 font-medium">Rol</th>
+                      <th className="px-3 py-2 font-medium">Técnico</th>
+                      <th className="px-3 py-2 font-medium">Asesor</th>
                       <th className="px-3 py-2 font-medium">Teléfono</th>
                       <th className="px-3 py-2 font-medium">Correo</th>
                       <th className="px-3 py-2 font-medium">Estado</th>
@@ -834,7 +901,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     {users.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={10}
+                          colSpan={12}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
                           No hay colaboradores registrados.
@@ -865,6 +932,38 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           </td>
                           <td className="px-3 py-2">
                             {roleLabel(user.role)}
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="checkbox"
+                              className="size-4 accent-[#3B46A5]"
+                              checked={Boolean(user.is_technician)}
+                              disabled={!canWrite || submitting}
+                              aria-label={`Marcar técnico a ${user.full_name || user.username}`}
+                              onChange={(event) =>
+                                void handleToggleStaffFlag(
+                                  user,
+                                  "is_technician",
+                                  event.target.checked
+                                )
+                              }
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="checkbox"
+                              className="size-4 accent-[#3B46A5]"
+                              checked={Boolean(user.is_service_advisor)}
+                              disabled={!canWrite || submitting}
+                              aria-label={`Marcar asesor a ${user.full_name || user.username}`}
+                              onChange={(event) =>
+                                void handleToggleStaffFlag(
+                                  user,
+                                  "is_service_advisor",
+                                  event.target.checked
+                                )
+                              }
+                            />
                           </td>
                           <td className="px-3 py-2">{user.phone || "—"}</td>
                           <td className="px-3 py-2">{user.email || "—"}</td>
@@ -1198,6 +1297,24 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   ))}
                 </select>
               </label>
+              <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+                <FlagCheckbox
+                  checked={alta.isTechnician}
+                  disabled={!canWrite}
+                  label="Es técnico"
+                  hint="Aparece en el selector rápido de técnico en órdenes de servicio."
+                  onChange={(checked) => updateAlta("isTechnician", checked)}
+                />
+                <FlagCheckbox
+                  checked={alta.isServiceAdvisor}
+                  disabled={!canWrite}
+                  label="Es asesor de servicios"
+                  hint="Aparece en el selector rápido de asesor en órdenes de servicio."
+                  onChange={(checked) =>
+                    updateAlta("isServiceAdvisor", checked)
+                  }
+                />
+              </div>
             </section>
 
             <section className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 sm:grid-cols-2">
@@ -1710,6 +1827,35 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         className={inputClass}
                       />
                     </label>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <FlagCheckbox
+                      checked={Boolean(selectedUser.is_technician)}
+                      disabled={!canWrite}
+                      label="Es técnico"
+                      hint="Se puede elegir en órdenes de servicio."
+                      onChange={(checked) =>
+                        void handleToggleStaffFlag(
+                          selectedUser,
+                          "is_technician",
+                          checked
+                        )
+                      }
+                    />
+                    <FlagCheckbox
+                      checked={Boolean(selectedUser.is_service_advisor)}
+                      disabled={!canWrite}
+                      label="Es asesor de servicios"
+                      hint="Se puede elegir en órdenes de servicio."
+                      onChange={(checked) =>
+                        void handleToggleStaffFlag(
+                          selectedUser,
+                          "is_service_advisor",
+                          checked
+                        )
+                      }
+                    />
                   </div>
 
                   <label className="space-y-1.5">

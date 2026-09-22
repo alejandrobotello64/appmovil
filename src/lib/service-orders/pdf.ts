@@ -33,6 +33,115 @@ function ensureSpace(doc: jsPDF, y: number, need = 20) {
   return 18;
 }
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+function loadHtmlImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("No se pudo leer la imagen."));
+    image.src = src;
+  });
+}
+
+async function loadPdfJpeg(url: string): Promise<string | null> {
+  if (!url || typeof document === "undefined") return null;
+  try {
+    let dataUrl = "";
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) throw new Error("fetch");
+      dataUrl = await blobToDataUrl(await response.blob());
+    } catch {
+      dataUrl = url;
+    }
+    const image = await loadHtmlImage(dataUrl);
+    const canvas = document.createElement("canvas");
+    const maxW = 1400;
+    const scale = Math.min(1, maxW / Math.max(image.width, 1));
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.82);
+  } catch {
+    return null;
+  }
+}
+
+async function drawReceptionPhotos(doc: jsPDF, order: ServiceOrder, y: number) {
+  const reception = (order.images ?? []).filter((image) => image.stage === "recepcion");
+  if (!reception.length) return y;
+
+  const margin = 14;
+  const pageW = doc.internal.pageSize.getWidth();
+  y = ensureSpace(doc, y, 18);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Fotos de recepción del equipo", margin, y);
+  y += 6;
+
+  const gap = 4;
+  const cellW = (pageW - margin * 2 - gap) / 2;
+  const cellH = 52;
+  let col = 0;
+
+  for (let index = 0; index < reception.length; index++) {
+    if (col === 0) y = ensureSpace(doc, y, cellH + 8);
+    const x = margin + col * (cellW + gap);
+    const jpeg = await loadPdfJpeg(reception[index].fileUrl);
+    doc.setDrawColor(220, 224, 232);
+    doc.setFillColor(248, 249, 252);
+    doc.rect(x, y, cellW, cellH, "FD");
+    if (jpeg) {
+      try {
+        doc.addImage(jpeg, "JPEG", x + 1.5, y + 1.5, cellW - 3, cellH - 3, undefined, "FAST");
+      } catch {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(90, 90, 90);
+        doc.text("No se pudo incrustar la foto", x + 4, y + cellH / 2);
+      }
+    } else {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(90, 90, 90);
+      doc.text("Foto no disponible", x + 4, y + cellH / 2);
+    }
+    col += 1;
+    if (col === 2 || index === reception.length - 1) {
+      y += cellH + 4;
+      col = 0;
+    }
+  }
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(70, 70, 70);
+  doc.text(`${reception.length} foto(s) tomada(s) en recepción.`, margin, y);
+  return y + 6;
+}
+
+function staffLine(order: ServiceOrder) {
+  const parts = [
+    order.technician ? `Técnico: ${order.technician}` : null,
+    order.advisor ? `Asesor: ${order.advisor}` : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "";
+}
+
 function drawClientEquipment(doc: jsPDF, order: ServiceOrder, y: number) {
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -183,8 +292,14 @@ export async function downloadServiceQuotePdf(order: ServiceOrder) {
     margin,
     y
   );
-  y += 8;
+  y += 5;
+  if (staffLine(order)) {
+    doc.text(staffLine(order), margin, y);
+    y += 5;
+  }
+  y += 3;
   y = drawClientEquipment(doc, order, y);
+  y = await drawReceptionPhotos(doc, order, y);
 
   if (order.faultReported) {
     y = ensureSpace(doc, y, 18);
@@ -229,12 +344,13 @@ export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
   doc.setFontSize(9);
   doc.setTextColor(70, 70, 70);
   doc.text(
-    `Tipo: ${serviceTypeLabel(order.serviceType)} · Estatus: ${serviceOrderStatusLabel(order.status)} · Técnico: ${order.technician || "—"}${order.underWarranty ? " · Garantía" : ""}`,
+    `Tipo: ${serviceTypeLabel(order.serviceType)} · Estatus: ${serviceOrderStatusLabel(order.status)} · Técnico: ${order.technician || "—"}${order.advisor ? ` · Asesor: ${order.advisor}` : ""}${order.underWarranty ? " · Garantía" : ""}`,
     margin,
     y
   );
   y += 8;
   y = drawClientEquipment(doc, order, y);
+  y = await drawReceptionPhotos(doc, order, y);
 
   const blocks = [
     ["Falla reportada", order.faultReported],
@@ -303,12 +419,13 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
   doc.setFontSize(9);
   doc.setTextColor(70, 70, 70);
   doc.text(
-    `Recepción: ${formatDate(order.receptionAt)} · Entrega: ${formatDate(order.deliveredAt || order.updatedAt)}`,
+    `Recepción: ${formatDate(order.receptionAt)} · Entrega: ${formatDate(order.deliveredAt || order.updatedAt)}${staffLine(order) ? ` · ${staffLine(order)}` : ""}`,
     margin,
     y
   );
   y += 8;
   y = drawClientEquipment(doc, order, y);
+  y = await drawReceptionPhotos(doc, order, y);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -338,10 +455,17 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
   }
 
   if (order.images.length) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text(`Evidencia fotográfica registrada: ${order.images.length} imagen(es)`, margin, y);
-    y += 8;
+    const others = order.images.filter((image) => image.stage !== "recepcion");
+    if (others.length) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(
+        `Otras evidencias fotográficas: ${others.length} imagen(es)`,
+        margin,
+        y
+      );
+      y += 8;
+    }
   }
 
   y = ensureSpace(doc, y, 40);

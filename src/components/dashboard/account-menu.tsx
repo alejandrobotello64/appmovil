@@ -18,6 +18,7 @@ import {
   uploadUserPhoto,
 } from "@/lib/users/photo";
 import { cn } from "@/lib/utils";
+import { FlagCheckbox } from "@/components/ui/flag-checkbox";
 
 const BLOOD_TYPES = ["", "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"] as const;
 
@@ -37,6 +38,8 @@ type ProfileForm = {
   emergencyContactPhone: string;
   emergencyContactRelation: string;
   notes: string;
+  isTechnician: boolean;
+  isServiceAdvisor: boolean;
 };
 
 const EMPTY_PROFILE: ProfileForm = {
@@ -52,6 +55,8 @@ const EMPTY_PROFILE: ProfileForm = {
   emergencyContactPhone: "",
   emergencyContactRelation: "",
   notes: "",
+  isTechnician: false,
+  isServiceAdvisor: false,
 };
 
 type AccountMenuProps = {
@@ -163,6 +168,8 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
         emergencyContactPhone: row.emergency_contact_phone ?? "",
         emergencyContactRelation: row.emergency_contact_relation ?? "",
         notes: row.notes ?? "",
+        isTechnician: Boolean(row.is_technician),
+        isServiceAdvisor: Boolean(row.is_service_advisor),
       });
       setPhotoUrl(row.photo_url ?? "");
     } catch (err) {
@@ -211,6 +218,8 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
         p_emergency_contact_phone: profile.emergencyContactPhone.trim(),
         p_emergency_contact_relation: profile.emergencyContactRelation.trim(),
         p_notes: profile.notes.trim(),
+        p_is_technician: profile.isTechnician,
+        p_is_service_advisor: profile.isServiceAdvisor,
       });
       if (rpcError) throw new Error(rpcError.message);
       let nextPhoto = session.photoUrl ?? "";
@@ -528,6 +537,24 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                   }
                 />
               </label>
+              <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+                <FlagCheckbox
+                  checked={profile.isTechnician}
+                  label="Soy técnico"
+                  hint="Te podrán elegir al asignar técnico en una orden de servicio."
+                  onChange={(checked) =>
+                    setProfile((f) => ({ ...f, isTechnician: checked }))
+                  }
+                />
+                <FlagCheckbox
+                  checked={profile.isServiceAdvisor}
+                  label="Soy asesor de servicios"
+                  hint="Te podrán elegir al asignar asesor en una orden de servicio."
+                  onChange={(checked) =>
+                    setProfile((f) => ({ ...f, isServiceAdvisor: checked }))
+                  }
+                />
+              </div>
               <label className="block text-sm sm:col-span-2">
                 <span className="mb-1 block text-muted-foreground">Notas</span>
                 <textarea

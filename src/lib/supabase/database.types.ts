@@ -35,6 +35,8 @@ export type Database = {
           emergency_contact_phone: string;
           emergency_contact_relation: string;
           photo_url: string;
+          is_technician: boolean;
+          is_service_advisor: boolean;
         };
         Insert: {
           id?: string;
@@ -61,6 +63,8 @@ export type Database = {
           emergency_contact_phone?: string;
           emergency_contact_relation?: string;
           photo_url?: string;
+          is_technician?: boolean;
+          is_service_advisor?: boolean;
         };
         Update: {
           id?: string;
@@ -87,6 +91,8 @@ export type Database = {
           emergency_contact_phone?: string;
           emergency_contact_relation?: string;
           photo_url?: string;
+          is_technician?: boolean;
+          is_service_advisor?: boolean;
         };
         Relationships: [];
       };
@@ -551,6 +557,8 @@ export type Database = {
           emergency_contact_phone: string;
           emergency_contact_relation: string;
           photo_url: string;
+          is_technician: boolean;
+          is_service_advisor: boolean;
         }[];
       };
       create_app_user: {
@@ -574,6 +582,8 @@ export type Database = {
           p_emergency_contact_name?: string;
           p_emergency_contact_phone?: string;
           p_emergency_contact_relation?: string;
+          p_is_technician?: boolean;
+          p_is_service_advisor?: boolean;
         };
         Returns: {
           id: string;
@@ -643,6 +653,8 @@ export type Database = {
           p_emergency_contact_name?: string;
           p_emergency_contact_phone?: string;
           p_emergency_contact_relation?: string;
+          p_is_technician?: boolean;
+          p_is_service_advisor?: boolean;
         };
         Returns: {
           id: string;
@@ -685,6 +697,22 @@ export type Database = {
           emergency_contact_phone: string;
           emergency_contact_relation: string;
           photo_url: string;
+          is_technician: boolean;
+          is_service_advisor: boolean;
+        }[];
+      };
+      set_app_user_service_flags: {
+        Args: {
+          p_user_id: string;
+          p_is_technician?: boolean | null;
+          p_is_service_advisor?: boolean | null;
+        };
+        Returns: {
+          id: string;
+          username: string;
+          full_name: string | null;
+          is_technician: boolean;
+          is_service_advisor: boolean;
         }[];
       };
       set_app_user_photo: {
@@ -715,6 +743,8 @@ export type Database = {
           p_emergency_contact_phone?: string;
           p_emergency_contact_relation?: string;
           p_notes?: string;
+          p_is_technician?: boolean | null;
+          p_is_service_advisor?: boolean | null;
         };
         Returns: {
           id: string;
