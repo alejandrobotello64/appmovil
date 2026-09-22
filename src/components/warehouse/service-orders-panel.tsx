@@ -11,6 +11,8 @@ import {
   MessageSquarePlus,
   Package,
   Wrench,
+  Activity,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -62,12 +64,14 @@ import {
 } from "@/lib/service-orders/requisitions";
 import {
   CHECKLIST_RESULTS,
+  FUNCTION_TEST_RESULTS,
   IMAGE_STAGES,
   LINKED_EQUIPMENT_RELATIONS,
   SERVICE_LINE_KINDS,
   SERVICE_LINE_STATUSES,
   SERVICE_ORDER_STATUSES,
   SERVICE_TYPES,
+  checklistItemsByKind,
   computeServiceTotals,
   lineAmount,
   serviceLineKindLabel,
@@ -89,7 +93,13 @@ import { cn } from "@/lib/utils";
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
 
-type DetailTab = "recepcion" | "diagnostico" | "servicios" | "mensajes" | "entrega";
+type DetailTab =
+  | "recepcion"
+  | "diagnostico"
+  | "pruebas"
+  | "servicios"
+  | "mensajes"
+  | "entrega";
 
 type DraftLine = ServiceOrderLineInput & { key: string };
 
@@ -145,6 +155,7 @@ function emptyForm(): ServiceOrderInput {
     technician: "",
     advisor: "",
     checklistTemplateId: null,
+    functionTestTemplateId: null,
     receptionAt: new Date().toISOString().slice(0, 10),
     promisedAt: "",
     faultReported: "",
@@ -323,12 +334,22 @@ export function ServiceOrdersPanel() {
     [draftLines, form.discount, form.taxRate]
   );
 
+  const verificationTemplates = useMemo(
+    () => templates.filter((tpl) => tpl.listKind !== "funcionamiento"),
+    [templates]
+  );
+  const functionTemplates = useMemo(
+    () => templates.filter((tpl) => tpl.listKind === "funcionamiento"),
+    [templates]
+  );
+
   function openReception(asQuote: boolean) {
     setForm({
       ...emptyForm(),
       orderKind: asQuote ? "cotizacion" : "servicio",
       status: asQuote ? "cotizacion" : "recibido",
-      checklistTemplateId: templates[0]?.id ?? null,
+      checklistTemplateId: verificationTemplates[0]?.id ?? null,
+      functionTestTemplateId: functionTemplates[0]?.id ?? null,
       createdBy: actor,
     });
     setShowReception(true);
@@ -394,6 +415,7 @@ export function ServiceOrdersPanel() {
       technician: order.technician,
       advisor: order.advisor,
       checklistTemplateId: order.checklistTemplateId,
+      functionTestTemplateId: order.functionTestTemplateId,
       receptionAt: order.receptionAt.slice(0, 10),
       promisedAt: order.promisedAt.slice(0, 10),
       deliveredAt: order.deliveredAt.slice(0, 10),
@@ -521,8 +543,13 @@ export function ServiceOrdersPanel() {
   async function onApplyTemplate(templateId: string) {
     if (!selected || !canWrite) return;
     try {
+      const tpl = templates.find((item) => item.id === templateId);
       await applyChecklistTemplate(selected.id, templateId, actor);
-      setForm((f) => ({ ...f, checklistTemplateId: templateId }));
+      if (tpl?.listKind === "funcionamiento") {
+        setForm((f) => ({ ...f, functionTestTemplateId: templateId }));
+      } else {
+        setForm((f) => ({ ...f, checklistTemplateId: templateId }));
+      }
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo aplicar plantilla.");
@@ -878,7 +905,9 @@ export function ServiceOrdersPanel() {
             </select>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Plantilla de revisión</span>
+            <span className="mb-1 block text-muted-foreground">
+              Checklist de verificación
+            </span>
             <select
               className={fieldClass}
               value={form.checklistTemplateId ?? ""}
@@ -886,8 +915,30 @@ export function ServiceOrdersPanel() {
                 setForm((f) => ({ ...f, checklistTemplateId: e.target.value || null }))
               }
             >
-              <option value="">Sin plantilla</option>
-              {templates.map((t) => (
+              <option value="">Sin checklist de verificación</option>
+              {verificationTemplates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-muted-foreground">
+              Pruebas de funcionamiento
+            </span>
+            <select
+              className={fieldClass}
+              value={form.functionTestTemplateId ?? ""}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  functionTestTemplateId: e.target.value || null,
+                }))
+              }
+            >
+              <option value="">Sin pruebas de funcionamiento</option>
+              {functionTemplates.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
                 </option>
@@ -962,9 +1013,21 @@ export function ServiceOrdersPanel() {
   }
 
   if (selected) {
+    const verificationItems = checklistItemsByKind(
+      selected.checklist,
+      "verificacion"
+    );
+    const functionItems = checklistItemsByKind(
+      selected.checklist,
+      "funcionamiento"
+    );
     const tabs: { id: DetailTab; label: string }[] = [
       { id: "recepcion", label: "Recepción" },
-      { id: "diagnostico", label: `Diagnóstico (${selected.checklist.length})` },
+      { id: "diagnostico", label: `Diagnóstico (${verificationItems.length})` },
+      {
+        id: "pruebas",
+        label: `Pruebas de funcionamiento (${functionItems.length})`,
+      },
       { id: "servicios", label: `Servicios (${selected.lines.length})` },
       { id: "mensajes", label: `Mensajes (${selected.events.length})` },
       { id: "entrega", label: "Entrega" },
@@ -1402,7 +1465,7 @@ export function ServiceOrdersPanel() {
                 <div className="flex flex-wrap items-end gap-2">
                   <label className="block min-w-[220px] flex-1 text-sm">
                     <span className="mb-1 block text-muted-foreground">
-                      Plantilla de revisión de puntos
+                      Plantilla de checklist de verificación
                     </span>
                     <select
                       className={fieldClass}
@@ -1415,7 +1478,7 @@ export function ServiceOrdersPanel() {
                       }}
                     >
                       <option value="">Seleccionar…</option>
-                      {templates.map((t) => (
+                      {verificationTemplates.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.name}
                         </option>
@@ -1437,13 +1500,14 @@ export function ServiceOrdersPanel() {
                     }}
                   />
                 </label>
-                {selected.checklist.length === 0 ? (
+                {verificationItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Aplica una plantilla para llenar la revisión de puntos del equipo.
+                    Aplica una plantilla de verificación para revisar el estado físico
+                    del equipo (carcasa, cables, accesorios).
                   </p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {selected.checklist.map((item) => (
+                    {verificationItems.map((item) => (
                       <div
                         key={item.id}
                         className="rounded-xl border border-border bg-background p-3"
@@ -1627,6 +1691,91 @@ export function ServiceOrdersPanel() {
                     </div>
                   ) : null}
                 </div>
+              </div>
+            ) : null}
+
+            {detailTab === "pruebas" ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-teal-200 bg-teal-50/60 p-4 dark:border-teal-900 dark:bg-teal-950/20">
+                  <div className="mb-1 flex items-center gap-2">
+                    <Activity className="size-4 text-teal-700" />
+                    <h3 className="font-medium text-teal-900 dark:text-teal-100">
+                      Pruebas de funcionamiento
+                    </h3>
+                  </div>
+                  <p className="text-sm text-teal-800/80 dark:text-teal-200/80">
+                    Confirma que el equipo opera correctamente al terminar el
+                    servicio. Es independiente del checklist de verificación física.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-end gap-2">
+                  <label className="block min-w-[220px] flex-1 text-sm">
+                    <span className="mb-1 block text-muted-foreground">
+                      Plantilla de pruebas de funcionamiento
+                    </span>
+                    <select
+                      className={fieldClass}
+                      value={form.functionTestTemplateId ?? ""}
+                      disabled={!canWrite}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setForm((f) => ({
+                          ...f,
+                          functionTestTemplateId: id || null,
+                        }));
+                        if (id) void onApplyTemplate(id);
+                      }}
+                    >
+                      <option value="">Seleccionar…</option>
+                      {functionTemplates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                {functionItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Aplica una plantilla de pruebas de funcionamiento. Puedes
+                    crearlas en Biomédica → Checklist.
+                  </p>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {functionItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-teal-200 bg-background p-3 dark:border-teal-900"
+                      >
+                        <p className="mb-2 text-sm font-medium">{item.label}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {FUNCTION_TEST_RESULTS.filter(
+                            (r) => r.id !== "pendiente"
+                          ).map((r) => (
+                            <button
+                              key={r.id}
+                              type="button"
+                              disabled={!canWrite}
+                              onClick={() => void onChecklistResult(item.id, r.id)}
+                              className={cn(
+                                "rounded-md px-2 py-1 text-xs",
+                                item.result === r.id
+                                  ? r.id === "pasa"
+                                    ? "bg-emerald-600 text-white"
+                                    : r.id === "no_pasa"
+                                      ? "bg-rose-600 text-white"
+                                      : "bg-slate-600 text-white"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              )}
+                            >
+                              {r.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : null}
 
@@ -1935,17 +2084,25 @@ export function ServiceOrdersPanel() {
                 <div className="rounded-xl border border-border p-4">
                   <h3 className="font-medium">Verificación de entrega</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Revisa checklist, evidencia fotográfica y genera el acta para el cliente
-                    y calidad.
+                    Revisa el checklist de verificación, las pruebas de
+                    funcionamiento, la evidencia fotográfica y genera el acta para
+                    el cliente y calidad.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-sm">
-                    <span className="rounded-full bg-muted px-3 py-1">
-                      Puntos:{" "}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200">
+                      <ClipboardCheck className="size-3.5" />
+                      Verificación:{" "}
                       {
-                        selected.checklist.filter((c) => c.result !== "pendiente")
+                        verificationItems.filter((c) => c.result !== "pendiente")
                           .length
                       }
-                      /{selected.checklist.length}
+                      /{verificationItems.length}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-3 py-1 text-teal-800 dark:bg-teal-950/40 dark:text-teal-200">
+                      <Activity className="size-3.5" />
+                      Pruebas:{" "}
+                      {functionItems.filter((c) => c.result !== "pendiente").length}
+                      /{functionItems.length}
                     </span>
                     <span className="rounded-full bg-muted px-3 py-1">
                       Imágenes: {selected.images.length}

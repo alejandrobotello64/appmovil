@@ -26,7 +26,8 @@ export const SERVICE_ORDER_TABS = [
   {
     id: "plantillas",
     label: "Checklist",
-    description: "Plantillas de revisión por tipo de equipo",
+    description:
+      "Plantillas de verificación y de pruebas de funcionamiento por tipo de equipo",
     href: "/dashboard/ordenes-servicio?tab=plantillas",
   },
 ] as const;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronDown, ListChecks, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, ChevronDown, ClipboardCheck, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -14,9 +14,12 @@ import {
 } from "@/lib/service-orders/storage";
 import {
   EQUIPMENT_KINDS,
+  LIST_KINDS,
   equipmentKindLabel,
+  listKindLabel,
   type ChecklistTemplate,
   type EquipmentKind,
+  type ListKind,
 } from "@/lib/service-orders/types";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +37,9 @@ export function ChecklistTemplatesPanel() {
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createKind, setCreateKind] = useState<EquipmentKind>("general");
+  const [createListKind, setCreateListKind] = useState<ListKind>("verificacion");
   const [createDescription, setCreateDescription] = useState("");
+  const [kindFilter, setKindFilter] = useState<ListKind | "todas">("todas");
 
   async function reload() {
     setLoading(true);
@@ -60,7 +65,21 @@ export function ChecklistTemplatesPanel() {
     void reload();
   }, []);
 
+  const visible = useMemo(
+    () =>
+      kindFilter === "todas"
+        ? templates
+        : templates.filter((tpl) => tpl.listKind === kindFilter),
+    [templates, kindFilter]
+  );
+
   const selected = templates.find((t) => t.id === openId) ?? null;
+  const verificationCount = templates.filter(
+    (tpl) => tpl.listKind === "verificacion"
+  ).length;
+  const functionCount = templates.filter(
+    (tpl) => tpl.listKind === "funcionamiento"
+  ).length;
 
   async function saveMeta(patch: {
     name?: string;
@@ -118,12 +137,15 @@ export function ChecklistTemplatesPanel() {
       const created = await createChecklistTemplate({
         name: createName.trim(),
         equipmentKind: createKind,
+        listKind: createListKind,
         description: createDescription.trim(),
       });
       setCreateName("");
       setCreateDescription("");
       setCreateKind("general");
+      setCreateListKind("verificacion");
       setShowCreate(false);
+      setKindFilter(created.listKind);
       setOpenId(created.id);
       await reload();
     } catch (err) {
@@ -141,11 +163,12 @@ export function ChecklistTemplatesPanel() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-[#3B46A5]">
-            Plantillas de checklist
+            Plantillas de checklist y pruebas
           </h2>
           <p className="text-sm text-muted-foreground">
-            Crea y edita puntos de revisión por tipo de equipo. Se aplican al
-            diagnosticar una orden de servicio.
+            Crea listas de dos tipos: checklist de verificación (estado físico del
+            equipo) y pruebas de funcionamiento (pasa / no pasa). Cada una se
+            aplica por separado en la orden de servicio.
           </p>
         </div>
         {canWrite ? (
@@ -159,15 +182,64 @@ export function ChecklistTemplatesPanel() {
         ) : null}
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            ["todas", `Todas (${templates.length})`],
+            ["verificacion", `Verificación (${verificationCount})`],
+            ["funcionamiento", `Pruebas de funcionamiento (${functionCount})`],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setKindFilter(id)}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-xs font-medium",
+              kindFilter === id
+                ? id === "funcionamiento"
+                  ? "bg-teal-600 text-white"
+                  : "bg-[#3B46A5] text-white"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {showCreate && canWrite ? (
         <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:grid-cols-2">
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block text-muted-foreground">Tipo de lista</span>
+            <select
+              className={fieldClass}
+              value={createListKind}
+              onChange={(e) => setCreateListKind(e.target.value as ListKind)}
+            >
+              {LIST_KINDS.map((kind) => (
+                <option key={kind.id} value={kind.id}>
+                  {kind.label}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {createListKind === "funcionamiento"
+                ? "Se llena en el apartado Pruebas de funcionamiento de la orden (Pasa / No pasa / No aplica)."
+                : "Se llena en Diagnóstico como checklist de verificación (Bien / Dañado / No tiene)."}
+            </span>
+          </label>
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1 block text-muted-foreground">Nombre</span>
             <input
               className={fieldClass}
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
-              placeholder="Ej. Revisión de ventilador"
+              placeholder={
+                createListKind === "funcionamiento"
+                  ? "Ej. Pruebas de ventilador"
+                  : "Ej. Revisión de ventilador"
+              }
             />
           </label>
           <label className="block text-sm">
@@ -223,28 +295,57 @@ export function ChecklistTemplatesPanel() {
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Cargando plantillas…</p>
-      ) : templates.length === 0 ? (
+      ) : visible.length === 0 ? (
         <p className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          No hay plantillas registradas. Usa «Nueva plantilla» para crear la
-          primera.
+          No hay plantillas
+          {kindFilter === "todas"
+            ? " registradas"
+            : kindFilter === "funcionamiento"
+              ? " de pruebas de funcionamiento"
+              : " de verificación"}
+          . Usa «Nueva plantilla» para crear la primera.
         </p>
       ) : (
         <div className="space-y-2">
-          {templates.map((tpl) => {
+          {visible.map((tpl) => {
             const isOpen = openId === tpl.id;
+            const isFunction = tpl.listKind === "funcionamiento";
+            const Icon = isFunction ? Activity : ClipboardCheck;
             return (
               <div
                 key={tpl.id}
-                className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+                className={cn(
+                  "overflow-hidden rounded-2xl border bg-card shadow-sm",
+                  isFunction
+                    ? "border-teal-200 dark:border-teal-900"
+                    : "border-border"
+                )}
               >
                 <button
                   type="button"
                   onClick={() => setOpenId(isOpen ? null : tpl.id)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/40"
                 >
-                  <ListChecks className="size-4 shrink-0 text-[#3B46A5]" />
+                  <Icon
+                    className={cn(
+                      "size-4 shrink-0",
+                      isFunction ? "text-teal-600" : "text-[#3B46A5]"
+                    )}
+                  />
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-foreground">{tpl.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-foreground">{tpl.name}</p>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                          isFunction
+                            ? "bg-teal-100 text-teal-800 dark:bg-teal-950/50 dark:text-teal-200"
+                            : "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200"
+                        )}
+                      >
+                        {listKindLabel(tpl.listKind)}
+                      </span>
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {equipmentKindLabel(tpl.equipmentKind)} · {tpl.code} ·{" "}
                       {tpl.points.length} puntos
@@ -345,7 +446,11 @@ export function ChecklistTemplatesPanel() {
                       <div className="flex flex-wrap gap-2">
                         <input
                           className="h-10 min-w-[220px] flex-1 rounded-lg border border-input bg-background px-3 text-sm"
-                          placeholder="Nuevo punto de revisión…"
+                          placeholder={
+                            isFunction
+                              ? "Nueva prueba de funcionamiento…"
+                              : "Nuevo punto de verificación…"
+                          }
                           value={openId === tpl.id ? newPoint : ""}
                           onChange={(e) => setNewPoint(e.target.value)}
                           onKeyDown={(e) => {

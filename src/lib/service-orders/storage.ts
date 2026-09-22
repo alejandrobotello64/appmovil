@@ -28,6 +28,7 @@ import {
   type ServiceLineStatus,
   type ServiceType,
   type CalibrationOverall,
+  type ListKind,
 } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,12 +201,17 @@ function mapLine(
   };
 }
 
+function parseListKind(value: unknown): ListKind {
+  return value === "funcionamiento" ? "funcionamiento" : "verificacion";
+}
+
 function mapChecklist(row: Record<string, unknown>): ServiceOrderChecklistItem {
   return {
     id: String(row.id),
     serviceOrderId: String(row.service_order_id),
     templatePointId: row.template_point_id ? String(row.template_point_id) : null,
     label: String(row.label ?? ""),
+    listKind: parseListKind(row.list_kind),
     result: String(row.result ?? "pendiente") as ChecklistResult,
     notes: String(row.notes ?? ""),
     sortOrder: Number(row.sort_order ?? 0),
@@ -321,6 +327,9 @@ function mapOrder(
     advisor: String(row.advisor ?? ""),
     checklistTemplateId: row.checklist_template_id
       ? String(row.checklist_template_id)
+      : null,
+    functionTestTemplateId: row.function_test_template_id
+      ? String(row.function_test_template_id)
       : null,
     receptionAt: dateOrEmpty(row.reception_at),
     promisedAt: dateOrEmpty(row.promised_at),
@@ -439,6 +448,7 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
     technician: (input.technician ?? "").trim(),
     advisor: (input.advisor ?? "").trim(),
     checklist_template_id: input.checklistTemplateId || null,
+    function_test_template_id: input.functionTestTemplateId || null,
     reception_at: isoOrNull(input.receptionAt),
     promised_at: isoOrNull(input.promisedAt),
     delivered_at: isoOrNull(input.deliveredAt),
@@ -494,6 +504,7 @@ export async function getChecklistTemplates(options?: {
     code: String(row.code),
     name: String(row.name),
     equipmentKind: String(row.equipment_kind ?? "general"),
+    listKind: parseListKind(row.list_kind),
     description: String(row.description ?? ""),
     isActive: Boolean(row.is_active),
     points: byTpl.get(String(row.id)) ?? [],
@@ -513,6 +524,7 @@ function slugCode(value: string) {
 export async function createChecklistTemplate(input: {
   name: string;
   equipmentKind?: string;
+  listKind?: ListKind;
   description?: string;
   points?: string[];
 }): Promise<ChecklistTemplate> {
@@ -520,6 +532,8 @@ export async function createChecklistTemplate(input: {
   if (!name) throw new Error("El nombre de la plantilla es obligatorio.");
 
   const kind = (input.equipmentKind ?? "general").trim() || "general";
+  const listKind: ListKind =
+    input.listKind === "funcionamiento" ? "funcionamiento" : "verificacion";
   const base = slugCode(name) || "plantilla";
   let code = base;
   let attempt = 1;
@@ -540,6 +554,7 @@ export async function createChecklistTemplate(input: {
       code,
       name,
       equipment_kind: kind,
+      list_kind: listKind,
       description: (input.description ?? "").trim(),
       is_active: true,
     })
@@ -800,6 +815,13 @@ export async function createServiceOrder(
   if (input.checklistTemplateId) {
     await applyChecklistTemplate(data.id, input.checklistTemplateId, createdBy);
   }
+  if (input.functionTestTemplateId) {
+    await applyChecklistTemplate(
+      data.id,
+      input.functionTestTemplateId,
+      createdBy
+    );
+  }
 
   await addEvent(
     data.id,
@@ -851,6 +873,17 @@ export async function updateServiceOrder(
     await applyChecklistTemplate(
       id,
       input.checklistTemplateId,
+      input.createdBy ?? ""
+    );
+  }
+
+  if (
+    input.functionTestTemplateId &&
+    input.functionTestTemplateId !== current.functionTestTemplateId
+  ) {
+    await applyChecklistTemplate(
+      id,
+      input.functionTestTemplateId,
       input.createdBy ?? ""
     );
   }
@@ -945,6 +978,16 @@ export async function applyChecklistTemplate(
   templateId: string,
   createdBy: string
 ): Promise<void> {
+  const { data: template, error: templateError } = await db
+    .from("service_checklist_templates")
+    .select("id, name, list_kind")
+    .eq("id", templateId)
+    .maybeSingle();
+  if (templateError) throw new Error(templateError.message);
+  if (!template) throw new Error("Plantilla no encontrada.");
+
+  const listKind = parseListKind(template.list_kind);
+
   const { data: points, error } = await db
     .from("service_checklist_template_points")
     .select("*")
@@ -952,10 +995,12 @@ export async function applyChecklistTemplate(
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
 
-  await db
+  const { error: deleteError } = await db
     .from("service_order_checklist")
     .delete()
-    .eq("service_order_id", orderId);
+    .eq("service_order_id", orderId)
+    .eq("list_kind", listKind);
+  if (deleteError) throw new Error(deleteError.message);
 
   if (points?.length) {
     const { error: insertError } = await db.from("service_order_checklist").insert(
@@ -963,6 +1008,7 @@ export async function applyChecklistTemplate(
         service_order_id: orderId,
         template_point_id: row.id,
         label: row.label,
+        list_kind: listKind,
         result: "pendiente",
         sort_order: Number(row.sort_order ?? index),
       }))
@@ -970,15 +1016,26 @@ export async function applyChecklistTemplate(
     if (insertError) throw new Error(insertError.message);
   }
 
-  await db
-    .from("service_orders")
-    .update({
-      checklist_template_id: templateId,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", orderId);
+  const patch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (listKind === "funcionamiento") {
+    patch.function_test_template_id = templateId;
+  } else {
+    patch.checklist_template_id = templateId;
+  }
 
-  await addEvent(orderId, "Plantilla de revisión de puntos aplicada", createdBy, "checklist");
+  const { error: updateError } = await db
+    .from("service_orders")
+    .update(patch)
+    .eq("id", orderId);
+  if (updateError) throw new Error(updateError.message);
+
+  const eventLabel =
+    listKind === "funcionamiento"
+      ? `Plantilla de pruebas de funcionamiento aplicada: ${String(template.name)}`
+      : `Plantilla de checklist de verificación aplicada: ${String(template.name)}`;
+  await addEvent(orderId, eventLabel, createdBy, "checklist");
 }
 
 export async function updateChecklistItem(

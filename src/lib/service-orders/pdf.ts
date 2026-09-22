@@ -2,12 +2,16 @@ import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import { biomedicalInstrumentTypeLabel } from "@/lib/biomedical-instruments/types";
 import {
+  checklistItemsByKind,
   checklistResultLabel,
+  IMAGE_STAGES,
   lineAmount,
   serviceLineKindLabel,
   serviceOrderStatusLabel,
   serviceTypeLabel,
   type ServiceOrder,
+  type ServiceOrderChecklistItem,
+  type ServiceOrderImage,
 } from "./types";
 
 function money(value: number) {
@@ -52,86 +56,223 @@ function loadHtmlImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-async function loadPdfJpeg(url: string): Promise<string | null> {
-  if (!url || typeof document === "undefined") return null;
+type PreparedPhoto = {
+  dataUrl: string;
+  width: number;
+  height: number;
+};
+
+async function fetchImageBlob(url: string): Promise<Blob | null> {
   try {
-    let dataUrl = "";
-    try {
-      const response = await fetch(url, { mode: "cors" });
-      if (!response.ok) throw new Error("fetch");
-      dataUrl = await blobToDataUrl(await response.blob());
-    } catch {
-      dataUrl = url;
-    }
-    const image = await loadHtmlImage(dataUrl);
-    const canvas = document.createElement("canvas");
-    const maxW = 1400;
-    const scale = Math.min(1, maxW / Math.max(image.width, 1));
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/jpeg", 0.82);
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) return null;
+    return await response.blob();
   } catch {
     return null;
   }
 }
 
-async function drawReceptionPhotos(doc: jsPDF, order: ServiceOrder, y: number) {
-  const reception = (order.images ?? []).filter((image) => image.stage === "recepcion");
-  if (!reception.length) return y;
+async function drawSourceToCanvas(
+  source: CanvasImageSource,
+  width: number,
+  height: number
+): Promise<PreparedPhoto | null> {
+  const canvas = document.createElement("canvas");
+  const maxSide = 2000;
+  const scale = Math.min(1, maxSide / Math.max(width, height, 1));
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  return {
+    dataUrl: canvas.toDataURL("image/jpeg", 0.92),
+    width: canvas.width,
+    height: canvas.height,
+  };
+}
 
+async function loadPdfJpeg(url: string): Promise<PreparedPhoto | null> {
+  if (!url || typeof document === "undefined") return null;
+  try {
+    const blob = await fetchImageBlob(url);
+    if (blob && typeof createImageBitmap === "function") {
+      try {
+        const bitmap = await createImageBitmap(blob, {
+          imageOrientation: "from-image",
+        } as ImageBitmapOptions);
+        const prepared = await drawSourceToCanvas(
+          bitmap,
+          bitmap.width,
+          bitmap.height
+        );
+        bitmap.close();
+        if (prepared) return prepared;
+      } catch {
+        // Fallback to HTMLImageElement below.
+      }
+    }
+    const src = blob ? await blobToDataUrl(blob) : url;
+    const image = await loadHtmlImage(src);
+    return drawSourceToCanvas(image, image.width, image.height);
+  } catch {
+    return null;
+  }
+}
+
+function containSize(
+  srcW: number,
+  srcH: number,
+  maxW: number,
+  maxH: number
+) {
+  const scale = Math.min(maxW / Math.max(srcW, 1), maxH / Math.max(srcH, 1));
+  return {
+    width: Math.max(12, srcW * scale),
+    height: Math.max(12, srcH * scale),
+  };
+}
+
+function imageStageLabel(stage: string) {
+  return IMAGE_STAGES.find((item) => item.id === stage)?.label ?? stage;
+}
+
+async function drawPhotoBlock(
+  doc: jsPDF,
+  image: ServiceOrderImage,
+  y: number,
+  options?: { showStage?: boolean }
+) {
   const margin = 14;
   const pageW = doc.internal.pageSize.getWidth();
-  y = ensureSpace(doc, y, 18);
+  const pageH = doc.internal.pageSize.getHeight();
+  const usableW = pageW - margin * 2;
+  const maxH = Math.min(118, pageH - 36);
+  const prepared = await loadPdfJpeg(image.fileUrl);
+  const captionParts = [
+    options?.showStage ? imageStageLabel(image.stage) : "",
+    image.caption,
+  ].filter(Boolean);
+  const caption = captionParts.join(" · ");
+  const captionH = caption ? 6 : 0;
+
+  if (!prepared) {
+    y = ensureSpace(doc, y, 18 + captionH);
+    doc.setDrawColor(220, 224, 232);
+    doc.setFillColor(248, 249, 252);
+    doc.rect(margin, y, usableW, 16, "FD");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(90, 90, 90);
+    doc.text("Foto no disponible", margin + 4, y + 10);
+    y += 20;
+    if (caption) {
+      doc.text(caption, margin, y);
+      y += 5;
+    }
+    return y;
+  }
+
+  const fitted = containSize(
+    prepared.width,
+    prepared.height,
+    usableW,
+    maxH
+  );
+  y = ensureSpace(doc, y, fitted.height + 8 + captionH);
+  const x = margin + (usableW - fitted.width) / 2;
+  doc.setDrawColor(226, 230, 238);
+  doc.setFillColor(252, 252, 254);
+  doc.rect(x - 1, y - 1, fitted.width + 2, fitted.height + 2, "FD");
+  try {
+    doc.addImage(
+      prepared.dataUrl,
+      "JPEG",
+      x,
+      y,
+      fitted.width,
+      fitted.height,
+      undefined,
+      "NONE"
+    );
+  } catch {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(90, 90, 90);
+    doc.text("No se pudo incrustar la foto", x + 4, y + fitted.height / 2);
+  }
+  y += fitted.height + 4;
+  if (caption) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(70, 70, 70);
+    doc.text(caption, margin, y);
+    y += 5;
+  }
+  return y + 2;
+}
+
+async function drawOrderPhotos(
+  doc: jsPDF,
+  order: ServiceOrder,
+  y: number,
+  options?: { stages?: string[]; title?: string; showStage?: boolean }
+) {
+  const wanted = options?.stages;
+  const photos = (order.images ?? []).filter((image) =>
+    wanted ? wanted.includes(image.stage) : true
+  );
+  if (!photos.length) return y;
+
+  const margin = 14;
+  y = ensureSpace(doc, y, 16);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(30, 30, 30);
-  doc.text("Fotos de recepción del equipo", margin, y);
+  doc.text(options?.title ?? "Evidencia fotográfica", margin, y);
   y += 6;
 
-  const gap = 4;
-  const cellW = (pageW - margin * 2 - gap) / 2;
-  const cellH = 52;
-  let col = 0;
-
-  for (let index = 0; index < reception.length; index++) {
-    if (col === 0) y = ensureSpace(doc, y, cellH + 8);
-    const x = margin + col * (cellW + gap);
-    const jpeg = await loadPdfJpeg(reception[index].fileUrl);
-    doc.setDrawColor(220, 224, 232);
-    doc.setFillColor(248, 249, 252);
-    doc.rect(x, y, cellW, cellH, "FD");
-    if (jpeg) {
-      try {
-        doc.addImage(jpeg, "JPEG", x + 1.5, y + 1.5, cellW - 3, cellH - 3, undefined, "FAST");
-      } catch {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(90, 90, 90);
-        doc.text("No se pudo incrustar la foto", x + 4, y + cellH / 2);
-      }
-    } else {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(90, 90, 90);
-      doc.text("Foto no disponible", x + 4, y + cellH / 2);
-    }
-    col += 1;
-    if (col === 2 || index === reception.length - 1) {
-      y += cellH + 4;
-      col = 0;
-    }
+  for (const photo of photos) {
+    y = await drawPhotoBlock(doc, photo, y, {
+      showStage: options?.showStage,
+    });
   }
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(70, 70, 70);
-  doc.text(`${reception.length} foto(s) tomada(s) en recepción.`, margin, y);
+  doc.text(`${photos.length} foto(s).`, margin, y);
   return y + 6;
+}
+
+function drawChecklistSection(
+  doc: jsPDF,
+  y: number,
+  title: string,
+  items: ServiceOrderChecklistItem[]
+) {
+  if (!items.length) return y;
+  const margin = 14;
+  y = ensureSpace(doc, y, 18);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text(title, margin, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  for (const item of items) {
+    y = ensureSpace(doc, y, 6);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`• ${item.label}`, margin, y);
+    doc.text(checklistResultLabel(item.result), 160, y);
+    y += 4.5;
+  }
+  return y + 4;
 }
 
 function staffLine(order: ServiceOrder) {
@@ -299,7 +440,10 @@ export async function downloadServiceQuotePdf(order: ServiceOrder) {
   }
   y += 3;
   y = drawClientEquipment(doc, order, y);
-  y = await drawReceptionPhotos(doc, order, y);
+  y = await drawOrderPhotos(doc, order, y, {
+    stages: ["recepcion"],
+    title: "Fotos de recepción del equipo",
+  });
 
   if (order.faultReported) {
     y = ensureSpace(doc, y, 18);
@@ -350,7 +494,10 @@ export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
   );
   y += 8;
   y = drawClientEquipment(doc, order, y);
-  y = await drawReceptionPhotos(doc, order, y);
+  y = await drawOrderPhotos(doc, order, y, {
+    stages: ["recepcion"],
+    title: "Fotos de recepción del equipo",
+  });
 
   const blocks = [
     ["Falla reportada", order.faultReported],
@@ -375,25 +522,29 @@ export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
   }
 
   if (order.checklist.length) {
-    y = ensureSpace(doc, y, 20);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("Revisión de puntos", margin, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    for (const item of order.checklist) {
-      y = ensureSpace(doc, y, 6);
-      doc.text(`• ${item.label}`, margin, y);
-      doc.text(checklistResultLabel(item.result), 160, y);
-      y += 4.5;
-    }
-    y += 4;
+    y = drawChecklistSection(
+      doc,
+      y,
+      "Checklist de verificación",
+      checklistItemsByKind(order.checklist, "verificacion")
+    );
+    y = drawChecklistSection(
+      doc,
+      y,
+      "Pruebas de funcionamiento",
+      checklistItemsByKind(order.checklist, "funcionamiento")
+    );
   }
 
   if (order.lines.length) {
     y = drawLinesTable(doc, order, y);
   }
+
+  y = await drawOrderPhotos(doc, order, y, {
+    stages: ["diagnostico", "servicio", "entrega", "calidad", "otro"],
+    title: "Otras evidencias fotográficas",
+    showStage: true,
+  });
 
   y = ensureSpace(doc, y, 30);
   doc.setFont("helvetica", "normal");
@@ -425,7 +576,10 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
   );
   y += 8;
   y = drawClientEquipment(doc, order, y);
-  y = await drawReceptionPhotos(doc, order, y);
+  y = await drawOrderPhotos(doc, order, y, {
+    stages: ["recepcion"],
+    title: "Fotos de recepción del equipo",
+  });
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -436,36 +590,54 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
   );
   y += 8;
 
-  if (order.checklist.length) {
+  const verification = checklistItemsByKind(order.checklist, "verificacion");
+  const functionTests = checklistItemsByKind(order.checklist, "funcionamiento");
+  if (verification.length || functionTests.length) {
     doc.setFont("helvetica", "bold");
-    doc.text("Resumen de revisión de puntos", margin, y);
-    y += 5;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    const ok = order.checklist.filter((c) => c.result === "bien").length;
-    const bad = order.checklist.filter((c) => c.result === "danado").length;
-    const na = order.checklist.filter((c) => c.result === "no_tiene").length;
-    const pending = order.checklist.filter((c) => c.result === "pendiente").length;
-    doc.text(
-      `Bien: ${ok} · Dañado: ${bad} · No tiene: ${na} · Pendiente: ${pending}`,
-      margin,
-      y
-    );
-    y += 8;
-  }
-
-  if (order.images.length) {
-    const others = order.images.filter((image) => image.stage !== "recepcion");
-    if (others.length) {
+    doc.setFontSize(9);
+    if (verification.length) {
+      const ok = verification.filter((c) => c.result === "bien").length;
+      const bad = verification.filter((c) => c.result === "danado").length;
+      const missing = verification.filter((c) => c.result === "no_tiene").length;
+      const pending = verification.filter((c) => c.result === "pendiente").length;
+      doc.text("Checklist de verificación", margin, y);
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(
+        `Bien: ${ok} · Dañado: ${bad} · No tiene: ${missing} · Pendiente: ${pending}`,
+        margin,
+        y
+      );
+      y += 7;
+    }
+    if (functionTests.length) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
+      const pass = functionTests.filter((c) => c.result === "pasa").length;
+      const fail = functionTests.filter((c) => c.result === "no_pasa").length;
+      const na = functionTests.filter((c) => c.result === "no_aplica").length;
+      const pending = functionTests.filter((c) => c.result === "pendiente").length;
+      doc.text("Pruebas de funcionamiento", margin, y);
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
       doc.text(
-        `Otras evidencias fotográficas: ${others.length} imagen(es)`,
+        `Pasa: ${pass} · No pasa: ${fail} · No aplica: ${na} · Pendiente: ${pending}`,
         margin,
         y
       );
       y += 8;
     }
+  }
+
+  const otherPhotos = order.images.filter((image) => image.stage !== "recepcion");
+  if (otherPhotos.length) {
+    y = await drawOrderPhotos(doc, order, y, {
+      stages: ["diagnostico", "servicio", "entrega", "calidad", "otro"],
+      title: "Otras evidencias fotográficas",
+      showStage: true,
+    });
   }
 
   y = ensureSpace(doc, y, 40);

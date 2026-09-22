@@ -49,6 +49,13 @@ export const SERVICE_LINE_STATUSES = [
 
 export type ServiceLineStatus = (typeof SERVICE_LINE_STATUSES)[number]["id"];
 
+export const LIST_KINDS = [
+  { id: "verificacion", label: "Checklist de verificación" },
+  { id: "funcionamiento", label: "Pruebas de funcionamiento" },
+] as const;
+
+export type ListKind = (typeof LIST_KINDS)[number]["id"];
+
 export const CHECKLIST_RESULTS = [
   { id: "pendiente", label: "Pendiente" },
   { id: "bien", label: "Bien" },
@@ -56,7 +63,16 @@ export const CHECKLIST_RESULTS = [
   { id: "no_tiene", label: "No tiene" },
 ] as const;
 
-export type ChecklistResult = (typeof CHECKLIST_RESULTS)[number]["id"];
+export const FUNCTION_TEST_RESULTS = [
+  { id: "pendiente", label: "Pendiente" },
+  { id: "pasa", label: "Pasa" },
+  { id: "no_pasa", label: "No pasa" },
+  { id: "no_aplica", label: "No aplica" },
+] as const;
+
+export type ChecklistResult =
+  | (typeof CHECKLIST_RESULTS)[number]["id"]
+  | (typeof FUNCTION_TEST_RESULTS)[number]["id"];
 
 export const IMAGE_STAGES = [
   { id: "recepcion", label: "Recepción" },
@@ -160,6 +176,7 @@ export type ChecklistTemplate = {
   code: string;
   name: string;
   equipmentKind: string;
+  listKind: ListKind;
   description: string;
   isActive: boolean;
   points: ChecklistTemplatePoint[];
@@ -193,6 +210,7 @@ export type ServiceOrderChecklistItem = {
   serviceOrderId: string;
   templatePointId: string | null;
   label: string;
+  listKind: ListKind;
   result: ChecklistResult;
   notes: string;
   sortOrder: number;
@@ -278,6 +296,7 @@ export type ServiceOrder = {
   technician: string;
   advisor: string;
   checklistTemplateId: string | null;
+  functionTestTemplateId: string | null;
   receptionAt: string;
   promisedAt: string;
   deliveredAt: string;
@@ -344,6 +363,7 @@ export type ServiceOrderInput = {
   technician?: string;
   advisor?: string;
   checklistTemplateId?: string | null;
+  functionTestTemplateId?: string | null;
   receptionAt?: string;
   promisedAt?: string;
   deliveredAt?: string;
@@ -378,8 +398,23 @@ export function serviceLineKindLabel(kind: string) {
   return SERVICE_LINE_KINDS.find((s) => s.id === kind)?.label ?? kind;
 }
 
+export function listKindLabel(kind: string) {
+  return LIST_KINDS.find((s) => s.id === kind)?.label ?? kind;
+}
+
 export function checklistResultLabel(result: string) {
-  return CHECKLIST_RESULTS.find((s) => s.id === result)?.label ?? result;
+  return (
+    CHECKLIST_RESULTS.find((s) => s.id === result)?.label ??
+    FUNCTION_TEST_RESULTS.find((s) => s.id === result)?.label ??
+    result
+  );
+}
+
+export function checklistItemsByKind(
+  items: ServiceOrderChecklistItem[],
+  kind: ListKind
+) {
+  return items.filter((item) => (item.listKind ?? "verificacion") === kind);
 }
 
 export function calibrationResultLabel(result: string) {
