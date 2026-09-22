@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { normalizeRole } from "@/lib/auth/permissions";
 import { listStaffMembers } from "@/lib/users/staff";
 import {
   createClientService,
@@ -44,14 +45,34 @@ const ORDER_LOCKED_MESSAGE =
 const TEMPLATE_LOCKED_MESSAGE =
   "Esta plantilla está cerrado y ya no se puede modificar.";
 
+function isMissingColumnError(error: {
+  message?: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+} | null) {
+  if (!error) return false;
+  const code = String(error.code ?? "");
+  const text = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    text.includes("does not exist") ||
+    text.includes("schema cache") ||
+    text.includes("could not find the")
+  );
+}
+
 async function requireServiceAdvisor(actor: string, message?: string) {
   const staff = await listStaffMembers();
   const me = staff.find(
-    (member) =>
-      member.isServiceAdvisor &&
-      (member.username === actor || member.fullName === actor)
+    (member) => member.username === actor || member.fullName === actor
   );
-  if (!me) {
+  const catalogHasAdvisor = staff.some((member) => member.isServiceAdvisor);
+  const allowed =
+    Boolean(me?.isServiceAdvisor) ||
+    (!catalogHasAdvisor && normalizeRole(me?.role) === "administrador");
+  if (!me || !allowed) {
     throw new Error(
       message ??
         "Solo el asesor de servicios puede candar o quitar el candado."
@@ -63,21 +84,23 @@ async function requireServiceAdvisor(actor: string, message?: string) {
 async function ensureTemplateUnlocked(templateId: string) {
   const { data, error } = await db
     .from("service_checklist_templates")
-    .select("locked")
+    .select("*")
     .eq("id", templateId)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (data?.locked) throw new Error(TEMPLATE_LOCKED_MESSAGE);
+  if (!data) throw new Error("Plantilla no encontrada.");
+  if (data.locked) throw new Error(TEMPLATE_LOCKED_MESSAGE);
 }
 
 async function ensureOrderUnlocked(orderId: string) {
   const { data, error } = await db
     .from("service_orders")
-    .select("locked")
+    .select("*")
     .eq("id", orderId)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (data?.locked) throw new Error(ORDER_LOCKED_MESSAGE);
+  if (!data) throw new Error("Orden no encontrada.");
+  if (data.locked) throw new Error(ORDER_LOCKED_MESSAGE);
 }
 
 const ACTIVE_REPAIR_STATUSES: ServiceOrderStatus[] = [
@@ -675,11 +698,22 @@ function intervalPayload(input: {
   if (minValue != null && maxValue != null && minValue > maxValue) {
     throw new Error("El mínimo del intervalo no puede ser mayor que el máximo.");
   }
-  return {
-    unit: (input.unit ?? "").trim(),
-    min_value: minValue,
-    max_value: maxValue,
-  };
+  const payload: Record<string, unknown> = {};
+  const unit = (input.unit ?? "").trim();
+  if (unit) payload.unit = unit;
+  if (minValue != null) payload.min_value = minValue;
+  if (maxValue != null) payload.max_value = maxValue;
+  return payload;
+}
+
+const INTERVAL_COLUMNS = ["unit", "min_value", "max_value"] as const;
+
+function withoutIntervalColumns(row: Record<string, unknown>) {
+  const next = { ...row };
+  for (const key of INTERVAL_COLUMNS) {
+    delete next[key];
+  }
+  return next;
 }
 
 export async function addChecklistTemplatePoint(
@@ -705,13 +739,20 @@ export async function addChecklistTemplatePoint(
     .limit(1);
   if (countError) throw new Error(countError.message);
   const nextOrder = Number(existing?.[0]?.sort_order ?? 0) + 1;
-  const { error } = await db.from("service_checklist_template_points").insert({
+  const row = {
     template_id: templateId,
     label: trimmed,
     sort_order: nextOrder,
     ...intervalPayload(payload),
-  });
-  if (error) throw new Error(error.message);
+  };
+  const { error } = await db.from("service_checklist_template_points").insert(row);
+  if (error) {
+    if (!isMissingColumnError(error)) throw new Error(error.message);
+    const { error: retryError } = await db
+      .from("service_checklist_template_points")
+      .insert(withoutIntervalColumns(row));
+    if (retryError) throw new Error(retryError.message);
+  }
 }
 
 export async function updateChecklistTemplatePoint(
@@ -730,7 +771,10 @@ export async function updateChecklistTemplatePoint(
     payload.label = trimmed;
   }
   if (patch.unit != null || patch.minValue !== undefined || patch.maxValue !== undefined) {
-    Object.assign(payload, intervalPayload(patch));
+    intervalPayload(patch);
+    if (patch.unit != null) payload.unit = patch.unit.trim();
+    if (patch.minValue !== undefined) payload.min_value = patch.minValue ?? null;
+    if (patch.maxValue !== undefined) payload.max_value = patch.maxValue ?? null;
   }
   if (!Object.keys(payload).length) return;
   const { data: point, error: fetchError } = await db
@@ -745,7 +789,16 @@ export async function updateChecklistTemplatePoint(
     .from("service_checklist_template_points")
     .update(payload)
     .eq("id", pointId);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (!isMissingColumnError(error)) throw new Error(error.message);
+    const stripped = withoutIntervalColumns(payload);
+    if (!Object.keys(stripped).length) return;
+    const { error: retryError } = await db
+      .from("service_checklist_template_points")
+      .update(stripped)
+      .eq("id", pointId);
+    if (retryError) throw new Error(retryError.message);
+  }
 }
 
 export async function deleteChecklistTemplatePoint(
@@ -763,6 +816,26 @@ export async function deleteChecklistTemplatePoint(
     .from("service_checklist_template_points")
     .delete()
     .eq("id", pointId);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteChecklistTemplate(
+  templateId: string,
+  actor: string
+): Promise<void> {
+  await requireServiceAdvisor(
+    actor,
+    "Solo el asesor de servicios puede eliminar plantillas."
+  );
+  const { error: pointsError } = await db
+    .from("service_checklist_template_points")
+    .delete()
+    .eq("template_id", templateId);
+  if (pointsError) throw new Error(pointsError.message);
+  const { error } = await db
+    .from("service_checklist_templates")
+    .delete()
+    .eq("id", templateId);
   if (error) throw new Error(error.message);
 }
 
@@ -1234,21 +1307,28 @@ export async function applyChecklistTemplate(
   if (deleteError) throw new Error(deleteError.message);
 
   if (points?.length) {
-    const { error: insertError } = await db.from("service_order_checklist").insert(
-      points.map((row: Record<string, unknown>, index: number) => ({
-        service_order_id: orderId,
-        template_point_id: row.id,
-        label: row.label,
-        list_kind: listKind,
-        unit: String(row.unit ?? ""),
-        min_value: optionalNumber(row.min_value),
-        max_value: optionalNumber(row.max_value),
-        measured_value: "",
-        result: "pendiente",
-        sort_order: Number(row.sort_order ?? index),
-      }))
-    );
-    if (insertError) throw new Error(insertError.message);
+    const rows = points.map((row: Record<string, unknown>, index: number) => ({
+      service_order_id: orderId,
+      template_point_id: row.id,
+      label: row.label,
+      list_kind: listKind,
+      unit: String(row.unit ?? ""),
+      min_value: optionalNumber(row.min_value),
+      max_value: optionalNumber(row.max_value),
+      measured_value: "",
+      result: "pendiente",
+      sort_order: Number(row.sort_order ?? index),
+    }));
+    const { error: insertError } = await db
+      .from("service_order_checklist")
+      .insert(rows);
+    if (insertError) {
+      if (!isMissingColumnError(insertError)) throw new Error(insertError.message);
+      const { error: retryError } = await db
+        .from("service_order_checklist")
+        .insert(rows.map((row: Record<string, unknown>) => withoutIntervalColumns(row)));
+      if (retryError) throw new Error(retryError.message);
+    }
   }
 
   const patch: Record<string, unknown> = {
@@ -1340,7 +1420,18 @@ export async function addServiceOrderFunctionTest(input: {
     sort_order: nextOrder,
     ...interval,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (!isMissingColumnError(error)) throw new Error(error.message);
+    const { error: retryError } = await db.from("service_order_checklist").insert({
+      service_order_id: input.orderId,
+      label,
+      list_kind: "funcionamiento",
+      measured_value: "",
+      result: "pendiente",
+      sort_order: nextOrder,
+    });
+    if (retryError) throw new Error(retryError.message);
+  }
 
   await addEvent(
     input.orderId,

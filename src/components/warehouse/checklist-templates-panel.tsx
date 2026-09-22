@@ -17,6 +17,7 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   addChecklistTemplatePoint,
   createChecklistTemplate,
+  deleteChecklistTemplate,
   deleteChecklistTemplatePoint,
   getChecklistTemplates,
   setChecklistTemplateLock,
@@ -250,6 +251,30 @@ export function ChecklistTemplatesPanel() {
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo actualizar el candado."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeTemplate(tpl: ChecklistTemplate) {
+    if (!isAdvisor) return;
+    if (
+      !window.confirm(
+        `¿Eliminar la plantilla «${tpl.name}» y todos sus puntos? Esta acción no se puede deshacer.`
+      )
+    ) {
+      return;
+    }
+    try {
+      setSaving(true);
+      setError("");
+      await deleteChecklistTemplate(tpl.id, actor);
+      if (openId === tpl.id) setOpenId(null);
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo eliminar la plantilla."
       );
     } finally {
       setSaving(false);
@@ -497,29 +522,44 @@ export function ChecklistTemplatesPanel() {
                                 : "Solo el asesor de servicios puede candar esta plantilla."}
                           </p>
                           {isAdvisor ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={tpl.locked ? "outline" : "default"}
-                              className="mt-2"
-                              disabled={saving}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                void toggleLock(tpl);
-                              }}
-                            >
-                              {tpl.locked ? (
-                                <>
-                                  <LockOpen className="size-3.5" /> Quitar
-                                  candado
-                                </>
-                              ) : (
-                                <>
-                                  <Lock className="size-3.5" /> Candar
-                                  plantilla
-                                </>
-                              )}
-                            </Button>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={tpl.locked ? "outline" : "default"}
+                                disabled={saving}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void toggleLock(tpl);
+                                }}
+                              >
+                                {tpl.locked ? (
+                                  <>
+                                    <LockOpen className="size-3.5" /> Quitar
+                                    candado
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="size-3.5" /> Candar
+                                    plantilla
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                                disabled={saving}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void removeTemplate(tpl);
+                                }}
+                              >
+                                <Trash2 className="size-3.5" /> Eliminar
+                                plantilla
+                              </Button>
+                            </div>
                           ) : null}
                         </div>
                       </div>
