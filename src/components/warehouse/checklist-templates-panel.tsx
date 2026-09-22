@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
+  Check,
   ChevronDown,
   ClipboardCheck,
   Lock,
   LockOpen,
+  Pencil,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -28,9 +31,11 @@ import {
   EQUIPMENT_KINDS,
   LIST_KINDS,
   equipmentKindLabel,
+  formatValidInterval,
   listKindLabel,
   parseOptionalNumber,
   type ChecklistTemplate,
+  type ChecklistTemplatePoint,
   type EquipmentKind,
   type ListKind,
 } from "@/lib/service-orders/types";
@@ -64,10 +69,15 @@ export function ChecklistTemplatesPanel() {
   const [createListKind, setCreateListKind] = useState<ListKind>("verificacion");
   const [createDescription, setCreateDescription] = useState("");
   const [kindFilter, setKindFilter] = useState<ListKind | "todas">("todas");
+  const [editingPointId, setEditingPointId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editMin, setEditMin] = useState("");
+  const [editMax, setEditMax] = useState("");
+  const [editUnit, setEditUnit] = useState("");
   const isAdvisor = isActorServiceAdvisor(staff, session);
 
-  async function reload() {
-    setLoading(true);
+  async function reload(quiet = false) {
+    if (!quiet) setLoading(true);
     setError("");
     try {
       const [list, staffList] = await Promise.all([
@@ -93,6 +103,14 @@ export function ChecklistTemplatesPanel() {
   useEffect(() => {
     void reload();
   }, []);
+
+  useEffect(() => {
+    setEditingPointId(null);
+    setEditLabel("");
+    setEditMin("");
+    setEditMax("");
+    setEditUnit("");
+  }, [openId]);
 
   const visible = useMemo(
     () =>
@@ -121,7 +139,7 @@ export function ChecklistTemplatesPanel() {
       setSaving(true);
       setError("");
       await updateChecklistTemplateMeta(selected.id, patch);
-      await reload();
+      await reload(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar.");
     } finally {
@@ -152,7 +170,7 @@ export function ChecklistTemplatesPanel() {
       setNewPointMin("");
       setNewPointMax("");
       setNewPointUnit("");
-      await reload();
+      await reload(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo agregar el punto.");
     } finally {
@@ -160,30 +178,56 @@ export function ChecklistTemplatesPanel() {
     }
   }
 
-  async function savePointInterval(
-    pointId: string,
-    minRaw: string,
-    maxRaw: string,
-    unit: string
-  ) {
+  function startEditPoint(point: ChecklistTemplatePoint) {
     if (!canEditSelected) return;
-    const minValue = parseOptionalNumber(minRaw);
-    const maxValue = parseOptionalNumber(maxRaw);
-    if (minRaw.trim() && minValue == null) {
+    setEditingPointId(point.id);
+    setEditLabel(point.label);
+    setEditMin(point.minValue == null ? "" : String(point.minValue));
+    setEditMax(point.maxValue == null ? "" : String(point.maxValue));
+    setEditUnit(point.unit ?? "");
+    setError("");
+  }
+
+  function cancelEditPoint() {
+    setEditingPointId(null);
+    setEditLabel("");
+    setEditMin("");
+    setEditMax("");
+    setEditUnit("");
+  }
+
+  async function saveEditedPoint(isFunction: boolean) {
+    if (!canEditSelected || !editingPointId) return;
+    const label = editLabel.trim();
+    if (!label) {
+      setError("El punto no puede estar vacío.");
+      return;
+    }
+    const minValue = parseOptionalNumber(editMin);
+    const maxValue = parseOptionalNumber(editMax);
+    if (editMin.trim() && minValue == null) {
       setError("El mínimo del intervalo no es un número válido.");
       return;
     }
-    if (maxRaw.trim() && maxValue == null) {
+    if (editMax.trim() && maxValue == null) {
       setError("El máximo del intervalo no es un número válido.");
       return;
     }
     try {
       setSaving(true);
       setError("");
-      await updateChecklistTemplatePoint(pointId, { unit, minValue, maxValue });
-      await reload();
+      await updateChecklistTemplatePoint(editingPointId, {
+        label,
+        ...(isFunction
+          ? { unit: editUnit, minValue, maxValue }
+          : {}),
+      });
+      cancelEditPoint();
+      await reload(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar el intervalo.");
+      setError(
+        err instanceof Error ? err.message : "No se pudo guardar el punto."
+      );
     } finally {
       setSaving(false);
     }
@@ -196,7 +240,7 @@ export function ChecklistTemplatesPanel() {
       setSaving(true);
       setError("");
       await deleteChecklistTemplatePoint(pointId);
-      await reload();
+      await reload(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo eliminar.");
     } finally {
@@ -619,13 +663,105 @@ export function ChecklistTemplatesPanel() {
                       </div>
                     ) : null}
 
+                    {canEditTpl ? (
+                      <p className="text-xs text-muted-foreground">
+                        Usa el lápiz para editar un punto. El cambio aplica a la
+                        plantilla; las órdenes ya abiertas conservan el texto
+                        original.
+                      </p>
+                    ) : null}
                     <ol className="space-y-1.5">
                       {tpl.points.map((point, index) => {
+                        const interval = formatValidInterval(
+                          point.minValue,
+                          point.maxValue,
+                          point.unit
+                        );
+                        const isEditing = editingPointId === point.id;
                         return (
                         <li
                           key={point.id}
                           className="flex items-start justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm"
                         >
+                          {isEditing ? (
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <label className="block text-xs">
+                                <span className="mb-1 block text-muted-foreground">
+                                  {isFunction
+                                    ? "Prueba de funcionamiento"
+                                    : "Punto de verificación"}
+                                </span>
+                                <input
+                                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                                  value={editLabel}
+                                  autoFocus
+                                  disabled={saving}
+                                  onChange={(e) => setEditLabel(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      void saveEditedPoint(isFunction);
+                                    }
+                                    if (e.key === "Escape") {
+                                      e.preventDefault();
+                                      cancelEditPoint();
+                                    }
+                                  }}
+                                />
+                              </label>
+                              {isFunction ? (
+                                <div className="grid gap-2 sm:grid-cols-3">
+                                  <label className="block text-[11px] text-muted-foreground">
+                                    Mín
+                                    <input
+                                      className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                      value={editMin}
+                                      disabled={saving}
+                                      onChange={(e) => setEditMin(e.target.value)}
+                                    />
+                                  </label>
+                                  <label className="block text-[11px] text-muted-foreground">
+                                    Máx
+                                    <input
+                                      className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                      value={editMax}
+                                      disabled={saving}
+                                      onChange={(e) => setEditMax(e.target.value)}
+                                    />
+                                  </label>
+                                  <label className="block text-[11px] text-muted-foreground">
+                                    Unidad
+                                    <input
+                                      className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                      value={editUnit}
+                                      disabled={saving}
+                                      onChange={(e) => setEditUnit(e.target.value)}
+                                    />
+                                  </label>
+                                </div>
+                              ) : null}
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={saving || !editLabel.trim()}
+                                  onClick={() => void saveEditedPoint(isFunction)}
+                                >
+                                  <Check className="size-3.5" /> Guardar
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={saving}
+                                  onClick={cancelEditPoint}
+                                >
+                                  <X className="size-3.5" /> Cancelar
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
                           <div className="min-w-0 flex-1">
                             <p>
                               <span className="mr-2 text-xs text-muted-foreground">
@@ -633,75 +769,38 @@ export function ChecklistTemplatesPanel() {
                               </span>
                               {point.label}
                             </p>
-                            {isFunction ? (
-                              <div className="mt-2 grid max-w-md gap-2 sm:grid-cols-3">
-                                <label className="block text-[11px] text-muted-foreground">
-                                  Mín
-                                  <input
-                                    className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
-                                    defaultValue={point.minValue ?? ""}
-                                    disabled={saving || !canEditTpl}
-                                    onBlur={(e) => {
-                                      const next = e.target.value;
-                                      if (String(point.minValue ?? "") === next.trim()) return;
-                                      void savePointInterval(
-                                        point.id,
-                                        next,
-                                        String(point.maxValue ?? ""),
-                                        point.unit
-                                      );
-                                    }}
-                                  />
-                                </label>
-                                <label className="block text-[11px] text-muted-foreground">
-                                  Máx
-                                  <input
-                                    className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
-                                    defaultValue={point.maxValue ?? ""}
-                                    disabled={saving || !canEditTpl}
-                                    onBlur={(e) => {
-                                      const next = e.target.value;
-                                      if (String(point.maxValue ?? "") === next.trim()) return;
-                                      void savePointInterval(
-                                        point.id,
-                                        String(point.minValue ?? ""),
-                                        next,
-                                        point.unit
-                                      );
-                                    }}
-                                  />
-                                </label>
-                                <label className="block text-[11px] text-muted-foreground">
-                                  Unidad
-                                  <input
-                                    className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
-                                    defaultValue={point.unit}
-                                    disabled={saving || !canEditTpl}
-                                    onBlur={(e) => {
-                                      const next = e.target.value;
-                                      if (point.unit === next.trim()) return;
-                                      void savePointInterval(
-                                        point.id,
-                                        String(point.minValue ?? ""),
-                                        String(point.maxValue ?? ""),
-                                        next
-                                      );
-                                    }}
-                                  />
-                                </label>
-                              </div>
+                            {isFunction && interval ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Intervalo válido: {interval}
+                              </p>
+                            ) : isFunction ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Sin intervalo · pasa / no pasa
+                              </p>
                             ) : null}
                           </div>
                           {canEditTpl ? (
+                            <div className="flex shrink-0 items-center gap-1">
+                              <button
+                                type="button"
+                                className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                onClick={() => startEditPoint(point)}
+                                aria-label={`Editar ${point.label}`}
+                              >
+                                <Pencil className="size-3.5" />
+                              </button>
                             <button
                               type="button"
-                              className="text-destructive hover:underline"
+                              className="rounded-md p-1 text-destructive hover:bg-destructive/10"
                               onClick={() => void removePoint(point.id)}
                               aria-label={`Eliminar ${point.label}`}
                             >
                               <Trash2 className="size-3.5" />
                             </button>
+                            </div>
                           ) : null}
+                            </>
+                          )}
                         </li>
                         );
                       })}
