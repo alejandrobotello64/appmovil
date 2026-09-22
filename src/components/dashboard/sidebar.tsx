@@ -33,6 +33,7 @@ import {
   Gavel,
   FileText,
   GraduationCap,
+  BadgeCheck,
   Shield,
   X,
 } from "lucide-react";
@@ -103,6 +104,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const inServiceOrders = pathname.startsWith("/dashboard/ordenes-servicio");
   const inFleet = pathname.startsWith("/dashboard/flotilla");
   const inEducation = pathname.startsWith("/dashboard/educacion");
+  const inQuality = pathname.startsWith("/dashboard/calidad");
   const [warehouseOpen, setWarehouseOpen] = useState(inWarehouse);
   const [usersOpen, setUsersOpen] = useState(inUsers);
   const [biomedicaOpen, setBiomedicaOpen] = useState(
@@ -302,6 +304,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
+          {canViewModule(role, "calidad") ? (
+            <Link
+              href="/dashboard/calidad"
+              onClick={onClose}
+              className={cn(
+                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                inQuality
+                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <BadgeCheck className="size-4 shrink-0" />
+              Calidad
+            </Link>
+          ) : null}
+
           {canViewModule(role, "licitaciones") ? (
             <Link
               href="/dashboard/licitaciones"
@@ -474,7 +492,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
-            Panel principal, almacén, biomédica, clientes, cotizaciones y usuarios
+            Panel principal, almacén, biomédica, clientes, calidad, cotizaciones y usuarios
           </p>
         </div>
       </aside>

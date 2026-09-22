@@ -31,6 +31,7 @@ export type WarehouseModule =
   | "ordenes_servicio"
   | "flotilla"
   | "educacion"
+  | "calidad"
   | "equipo"
   | "mantenimientos"
   | "calendario"
@@ -75,6 +76,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "ordenes_servicio",
     "flotilla",
     "educacion",
+    "calidad",
     "equipo",
     "mantenimientos",
     "calendario",
@@ -119,6 +121,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "clientes",
     "licitaciones",
     "cotizaciones",
+    "calidad",
   ],
   servicio: [
     "dashboard",
@@ -133,6 +136,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "ordenes_servicio",
     "flotilla",
     "educacion",
+    "calidad",
   ],
   direccion: [
     "dashboard",
@@ -147,6 +151,7 @@ const WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "ordenes_servicio",
     "flotilla",
     "educacion",
+    "calidad",
   ],
 };
 
@@ -168,7 +173,8 @@ export function canWriteModule(role: string | null | undefined, module: Warehous
     return (
       module === "clientes" ||
       module === "licitaciones" ||
-      module === "cotizaciones"
+      module === "cotizaciones" ||
+      module === "calidad"
     );
   }
   if (
@@ -181,7 +187,8 @@ export function canWriteModule(role: string | null | undefined, module: Warehous
       module === "clientes" ||
       module === "ordenes_servicio" ||
       module === "flotilla" ||
-      module === "educacion")
+      module === "educacion" ||
+      module === "calidad")
   ) {
     return true;
   }
