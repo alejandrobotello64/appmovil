@@ -29,6 +29,7 @@ import {
 } from "@/lib/service-orders/pdf";
 import {
   addLinkedEquipment,
+  addServiceOrderFunctionTest,
   addServiceOrderInstrument,
   addServiceOrderNote,
   applyChecklistTemplate,
@@ -43,6 +44,7 @@ import {
   replaceServiceOrderLines,
   setServiceOrderStatus,
   updateChecklistItem,
+  updateFunctionTestMeasurement,
   updateServiceOrder,
   uploadServiceOrderDocument,
   uploadServiceOrderImage,
@@ -73,7 +75,10 @@ import {
   SERVICE_TYPES,
   checklistItemsByKind,
   computeServiceTotals,
+  formatValidInterval,
+  hasValidInterval,
   lineAmount,
+  parseOptionalNumber,
   serviceLineKindLabel,
   serviceOrderStatusLabel,
   serviceTypeLabel,
@@ -215,6 +220,10 @@ export function ServiceOrdersPanel() {
   const [linkedNotes, setLinkedNotes] = useState("");
   const [usedInstrumentId, setUsedInstrumentId] = useState("");
   const [usedInstrumentNotes, setUsedInstrumentNotes] = useState("");
+  const [newTestLabel, setNewTestLabel] = useState("");
+  const [newTestMin, setNewTestMin] = useState("");
+  const [newTestMax, setNewTestMax] = useState("");
+  const [newTestUnit, setNewTestUnit] = useState("");
   const [orderRequisitions, setOrderRequisitions] = useState<
     ServiceOrderRequisition[]
   >([]);
@@ -537,6 +546,57 @@ export function ServiceOrdersPanel() {
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo actualizar el punto.");
+    }
+  }
+
+  async function onFunctionTestValue(
+    itemId: string,
+    measuredValue: string
+  ) {
+    if (!selected || !canWrite) return;
+    const item = selected.checklist.find((c) => c.id === itemId);
+    if (!item) return;
+    try {
+      await updateFunctionTestMeasurement(item, measuredValue);
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo guardar el valor."
+      );
+    }
+  }
+
+  async function onAddFunctionTestPoint() {
+    if (!selected || !canWrite || !newTestLabel.trim()) return;
+    try {
+      const minValue = parseOptionalNumber(newTestMin);
+      const maxValue = parseOptionalNumber(newTestMax);
+      if (newTestMin.trim() && minValue == null) {
+        setError("El mínimo del intervalo no es un número válido.");
+        return;
+      }
+      if (newTestMax.trim() && maxValue == null) {
+        setError("El máximo del intervalo no es un número válido.");
+        return;
+      }
+      setError("");
+      await addServiceOrderFunctionTest({
+        orderId: selected.id,
+        label: newTestLabel.trim(),
+        unit: newTestUnit,
+        minValue,
+        maxValue,
+        createdBy: actor,
+      });
+      setNewTestLabel("");
+      setNewTestMin("");
+      setNewTestMax("");
+      setNewTestUnit("");
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo agregar el punto."
+      );
     }
   }
 
@@ -1737,17 +1797,55 @@ export function ServiceOrdersPanel() {
                 </div>
                 {functionItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Aplica una plantilla de pruebas de funcionamiento. Puedes
-                    crearlas en Biomédica → Checklist.
+                    Aplica una plantilla o agrega un punto con su intervalo válido.
                   </p>
                 ) : (
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {functionItems.map((item) => (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {functionItems.map((item) => {
+                      const interval = formatValidInterval(
+                        item.minValue,
+                        item.maxValue,
+                        item.unit
+                      );
+                      const ranged = hasValidInterval(item.minValue, item.maxValue);
+                      return (
                       <div
                         key={item.id}
                         className="rounded-xl border border-teal-200 bg-background p-3 dark:border-teal-900"
                       >
-                        <p className="mb-2 text-sm font-medium">{item.label}</p>
+                        <p className="mb-1 text-sm font-medium">{item.label}</p>
+                        <p className="mb-2 text-xs text-teal-700 dark:text-teal-300">
+                          {ranged
+                            ? `Intervalo válido: ${interval}`
+                            : "Sin intervalo numérico (pasa / no pasa)"}
+                        </p>
+                        <label className="mb-2 block text-xs">
+                          <span className="mb-1 block text-muted-foreground">
+                            Valor obtenido
+                            {item.unit ? ` (${item.unit})` : ""}
+                          </span>
+                          <input
+                            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                            defaultValue={item.measuredValue}
+                            disabled={!canWrite}
+                            inputMode="decimal"
+                            placeholder={
+                              ranged ? "Escribe la medición" : "Valor u observación"
+                            }
+                            key={`${item.id}-${item.measuredValue}`}
+                            onBlur={(e) => {
+                              const next = e.target.value.trim();
+                              if (next === item.measuredValue) return;
+                              void onFunctionTestValue(item.id, next);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                          />
+                        </label>
                         <div className="flex flex-wrap gap-1">
                           {FUNCTION_TEST_RESULTS.filter(
                             (r) => r.id !== "pendiente"
@@ -1773,9 +1871,57 @@ export function ServiceOrdersPanel() {
                           ))}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
+
+                {canWrite ? (
+                  <div className="space-y-2 rounded-xl border border-dashed border-teal-300 bg-teal-50/40 p-3 dark:border-teal-800 dark:bg-teal-950/10">
+                    <h4 className="text-sm font-medium">Agregar punto a revisar</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Define el parámetro y el intervalo válido. En la orden se
+                      captura el valor obtenido.
+                    </p>
+                    <input
+                      className={fieldClass}
+                      placeholder="Nombre del punto (ej. SpO2)"
+                      value={newTestLabel}
+                      onChange={(e) => setNewTestLabel(e.target.value)}
+                    />
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <input
+                        className={fieldClass}
+                        inputMode="decimal"
+                        placeholder="Mínimo"
+                        value={newTestMin}
+                        onChange={(e) => setNewTestMin(e.target.value)}
+                      />
+                      <input
+                        className={fieldClass}
+                        inputMode="decimal"
+                        placeholder="Máximo"
+                        value={newTestMax}
+                        onChange={(e) => setNewTestMax(e.target.value)}
+                      />
+                      <input
+                        className={fieldClass}
+                        placeholder="Unidad (mmHg, %, …)"
+                        value={newTestUnit}
+                        onChange={(e) => setNewTestUnit(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!newTestLabel.trim()}
+                      onClick={() => void onAddFunctionTestPoint()}
+                    >
+                      <Plus className="size-4" /> Agregar punto
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 

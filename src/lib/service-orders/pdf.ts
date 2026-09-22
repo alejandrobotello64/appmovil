@@ -4,6 +4,7 @@ import { biomedicalInstrumentTypeLabel } from "@/lib/biomedical-instruments/type
 import {
   checklistItemsByKind,
   checklistResultLabel,
+  formatValidInterval,
   IMAGE_STAGES,
   lineAmount,
   serviceLineKindLabel,
@@ -266,11 +267,24 @@ function drawChecklistSection(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   for (const item of items) {
-    y = ensureSpace(doc, y, 6);
+    const interval = formatValidInterval(item.minValue, item.maxValue, item.unit);
+    const measured = item.measuredValue.trim();
+    const extra = [
+      interval ? `Intervalo ${interval}` : "",
+      measured ? `Valor ${measured}${item.unit ? ` ${item.unit}` : ""}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    y = ensureSpace(doc, y, extra ? 10 : 6);
     doc.setTextColor(40, 40, 40);
     doc.text(`• ${item.label}`, margin, y);
     doc.text(checklistResultLabel(item.result), 160, y);
     y += 4.5;
+    if (extra) {
+      doc.setTextColor(90, 90, 90);
+      doc.text(extra, margin + 4, y);
+      y += 4.5;
+    }
   }
   return y + 4;
 }

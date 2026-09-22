@@ -11,12 +11,14 @@ import {
   deleteChecklistTemplatePoint,
   getChecklistTemplates,
   updateChecklistTemplateMeta,
+  updateChecklistTemplatePoint,
 } from "@/lib/service-orders/storage";
 import {
   EQUIPMENT_KINDS,
   LIST_KINDS,
   equipmentKindLabel,
   listKindLabel,
+  parseOptionalNumber,
   type ChecklistTemplate,
   type EquipmentKind,
   type ListKind,
@@ -33,6 +35,9 @@ export function ChecklistTemplatesPanel() {
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [newPoint, setNewPoint] = useState("");
+  const [newPointMin, setNewPointMin] = useState("");
+  const [newPointMax, setNewPointMax] = useState("");
+  const [newPointUnit, setNewPointUnit] = useState("");
   const [saving, setSaving] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -104,11 +109,56 @@ export function ChecklistTemplatesPanel() {
     try {
       setSaving(true);
       setError("");
-      await addChecklistTemplatePoint(selected.id, newPoint.trim());
+      const minValue = parseOptionalNumber(newPointMin);
+      const maxValue = parseOptionalNumber(newPointMax);
+      if (newPointMin.trim() && minValue == null) {
+        throw new Error("El mínimo del intervalo no es un número válido.");
+      }
+      if (newPointMax.trim() && maxValue == null) {
+        throw new Error("El máximo del intervalo no es un número válido.");
+      }
+      await addChecklistTemplatePoint(selected.id, {
+        label: newPoint.trim(),
+        unit: newPointUnit,
+        minValue,
+        maxValue,
+      });
       setNewPoint("");
+      setNewPointMin("");
+      setNewPointMax("");
+      setNewPointUnit("");
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo agregar el punto.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function savePointInterval(
+    pointId: string,
+    minRaw: string,
+    maxRaw: string,
+    unit: string
+  ) {
+    if (!canWrite) return;
+    const minValue = parseOptionalNumber(minRaw);
+    const maxValue = parseOptionalNumber(maxRaw);
+    if (minRaw.trim() && minValue == null) {
+      setError("El mínimo del intervalo no es un número válido.");
+      return;
+    }
+    if (maxRaw.trim() && maxValue == null) {
+      setError("El máximo del intervalo no es un número válido.");
+      return;
+    }
+    try {
+      setSaving(true);
+      setError("");
+      await updateChecklistTemplatePoint(pointId, { unit, minValue, maxValue });
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo guardar el intervalo.");
     } finally {
       setSaving(false);
     }
@@ -417,17 +467,78 @@ export function ChecklistTemplatesPanel() {
                     ) : null}
 
                     <ol className="space-y-1.5">
-                      {tpl.points.map((point, index) => (
+                      {tpl.points.map((point, index) => {
+                        return (
                         <li
                           key={point.id}
-                          className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                          className="flex items-start justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm"
                         >
-                          <span>
-                            <span className="mr-2 text-xs text-muted-foreground">
-                              {index + 1}.
-                            </span>
-                            {point.label}
-                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p>
+                              <span className="mr-2 text-xs text-muted-foreground">
+                                {index + 1}.
+                              </span>
+                              {point.label}
+                            </p>
+                            {isFunction ? (
+                              <div className="mt-2 grid max-w-md gap-2 sm:grid-cols-3">
+                                <label className="block text-[11px] text-muted-foreground">
+                                  Mín
+                                  <input
+                                    className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                    defaultValue={point.minValue ?? ""}
+                                    disabled={saving || !canWrite}
+                                    onBlur={(e) => {
+                                      const next = e.target.value;
+                                      if (String(point.minValue ?? "") === next.trim()) return;
+                                      void savePointInterval(
+                                        point.id,
+                                        next,
+                                        String(point.maxValue ?? ""),
+                                        point.unit
+                                      );
+                                    }}
+                                  />
+                                </label>
+                                <label className="block text-[11px] text-muted-foreground">
+                                  Máx
+                                  <input
+                                    className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                    defaultValue={point.maxValue ?? ""}
+                                    disabled={saving || !canWrite}
+                                    onBlur={(e) => {
+                                      const next = e.target.value;
+                                      if (String(point.maxValue ?? "") === next.trim()) return;
+                                      void savePointInterval(
+                                        point.id,
+                                        String(point.minValue ?? ""),
+                                        next,
+                                        point.unit
+                                      );
+                                    }}
+                                  />
+                                </label>
+                                <label className="block text-[11px] text-muted-foreground">
+                                  Unidad
+                                  <input
+                                    className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                    defaultValue={point.unit}
+                                    disabled={saving || !canWrite}
+                                    onBlur={(e) => {
+                                      const next = e.target.value;
+                                      if (point.unit === next.trim()) return;
+                                      void savePointInterval(
+                                        point.id,
+                                        String(point.minValue ?? ""),
+                                        String(point.maxValue ?? ""),
+                                        next
+                                      );
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            ) : null}
+                          </div>
                           {canWrite ? (
                             <button
                               type="button"
@@ -439,34 +550,80 @@ export function ChecklistTemplatesPanel() {
                             </button>
                           ) : null}
                         </li>
-                      ))}
+                        );
+                      })}
                     </ol>
 
                     {canWrite ? (
-                      <div className="flex flex-wrap gap-2">
-                        <input
-                          className="h-10 min-w-[220px] flex-1 rounded-lg border border-input bg-background px-3 text-sm"
-                          placeholder={
-                            isFunction
-                              ? "Nueva prueba de funcionamiento…"
-                              : "Nuevo punto de verificación…"
-                          }
-                          value={openId === tpl.id ? newPoint : ""}
-                          onChange={(e) => setNewPoint(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              void addPoint();
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          <input
+                            className="h-10 min-w-[220px] flex-1 rounded-lg border border-input bg-background px-3 text-sm"
+                            placeholder={
+                              isFunction
+                                ? "Nueva prueba de funcionamiento…"
+                                : "Nuevo punto de verificación…"
                             }
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          disabled={saving || !newPoint.trim()}
-                          onClick={() => void addPoint()}
-                        >
-                          <Plus className="size-4" /> Agregar punto
-                        </Button>
+                            value={openId === tpl.id ? newPoint : ""}
+                            onChange={(e) => setNewPoint(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                void addPoint();
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            disabled={saving || !newPoint.trim()}
+                            onClick={() => void addPoint()}
+                          >
+                            <Plus className="size-4" /> Agregar punto
+                          </Button>
+                        </div>
+                        {isFunction ? (
+                          <div className="grid gap-2 sm:grid-cols-3">
+                            <label className="block text-xs">
+                              <span className="mb-1 block text-muted-foreground">
+                                Mínimo válido
+                              </span>
+                              <input
+                                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                                inputMode="decimal"
+                                placeholder="Ej. 90"
+                                value={openId === tpl.id ? newPointMin : ""}
+                                onChange={(e) => setNewPointMin(e.target.value)}
+                              />
+                            </label>
+                            <label className="block text-xs">
+                              <span className="mb-1 block text-muted-foreground">
+                                Máximo válido
+                              </span>
+                              <input
+                                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                                inputMode="decimal"
+                                placeholder="Ej. 140"
+                                value={openId === tpl.id ? newPointMax : ""}
+                                onChange={(e) => setNewPointMax(e.target.value)}
+                              />
+                            </label>
+                            <label className="block text-xs">
+                              <span className="mb-1 block text-muted-foreground">
+                                Unidad
+                              </span>
+                              <input
+                                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                                placeholder="mmHg, %, lpm…"
+                                value={openId === tpl.id ? newPointUnit : ""}
+                                onChange={(e) => setNewPointUnit(e.target.value)}
+                              />
+                            </label>
+                            <p className="text-xs text-muted-foreground sm:col-span-3">
+                              El intervalo se muestra al técnico al llenar la orden.
+                              Deja vacío si la prueba es solo pasa / no pasa.
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

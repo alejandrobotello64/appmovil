@@ -29,6 +29,7 @@ import {
   type ServiceType,
   type CalibrationOverall,
   type ListKind,
+  evaluateFunctionTestResult,
 } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -171,11 +172,20 @@ function isoOrNull(value?: string) {
   return new Date(v).toISOString();
 }
 
+function optionalNumber(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
 function mapTemplatePoint(row: Record<string, unknown>): ChecklistTemplatePoint {
   return {
     id: String(row.id),
     templateId: String(row.template_id),
     label: String(row.label ?? ""),
+    unit: String(row.unit ?? ""),
+    minValue: optionalNumber(row.min_value),
+    maxValue: optionalNumber(row.max_value),
     sortOrder: Number(row.sort_order ?? 0),
   };
 }
@@ -212,6 +222,10 @@ function mapChecklist(row: Record<string, unknown>): ServiceOrderChecklistItem {
     templatePointId: row.template_point_id ? String(row.template_point_id) : null,
     label: String(row.label ?? ""),
     listKind: parseListKind(row.list_kind),
+    unit: String(row.unit ?? ""),
+    minValue: optionalNumber(row.min_value),
+    maxValue: optionalNumber(row.max_value),
+    measuredValue: String(row.measured_value ?? ""),
     result: String(row.result ?? "pendiente") as ChecklistResult,
     notes: String(row.notes ?? ""),
     sortOrder: Number(row.sort_order ?? 0),
@@ -601,11 +615,36 @@ export async function updateChecklistTemplateMeta(
   if (error) throw new Error(error.message);
 }
 
+function intervalPayload(input: {
+  unit?: string;
+  minValue?: number | null;
+  maxValue?: number | null;
+}) {
+  const minValue = input.minValue ?? null;
+  const maxValue = input.maxValue ?? null;
+  if (minValue != null && maxValue != null && minValue > maxValue) {
+    throw new Error("El mínimo del intervalo no puede ser mayor que el máximo.");
+  }
+  return {
+    unit: (input.unit ?? "").trim(),
+    min_value: minValue,
+    max_value: maxValue,
+  };
+}
+
 export async function addChecklistTemplatePoint(
   templateId: string,
-  label: string
+  input:
+    | string
+    | {
+        label: string;
+        unit?: string;
+        minValue?: number | null;
+        maxValue?: number | null;
+      }
 ): Promise<void> {
-  const trimmed = label.trim();
+  const payload = typeof input === "string" ? { label: input } : input;
+  const trimmed = payload.label.trim();
   if (!trimmed) throw new Error("El punto no puede estar vacío.");
   const { data: existing, error: countError } = await db
     .from("service_checklist_template_points")
@@ -619,7 +658,34 @@ export async function addChecklistTemplatePoint(
     template_id: templateId,
     label: trimmed,
     sort_order: nextOrder,
+    ...intervalPayload(payload),
   });
+  if (error) throw new Error(error.message);
+}
+
+export async function updateChecklistTemplatePoint(
+  pointId: string,
+  patch: {
+    label?: string;
+    unit?: string;
+    minValue?: number | null;
+    maxValue?: number | null;
+  }
+): Promise<void> {
+  const payload: Record<string, unknown> = {};
+  if (patch.label != null) {
+    const trimmed = patch.label.trim();
+    if (!trimmed) throw new Error("El punto no puede estar vacío.");
+    payload.label = trimmed;
+  }
+  if (patch.unit != null || patch.minValue !== undefined || patch.maxValue !== undefined) {
+    Object.assign(payload, intervalPayload(patch));
+  }
+  if (!Object.keys(payload).length) return;
+  const { error } = await db
+    .from("service_checklist_template_points")
+    .update(payload)
+    .eq("id", pointId);
   if (error) throw new Error(error.message);
 }
 
@@ -1009,6 +1075,10 @@ export async function applyChecklistTemplate(
         template_point_id: row.id,
         label: row.label,
         list_kind: listKind,
+        unit: String(row.unit ?? ""),
+        min_value: optionalNumber(row.min_value),
+        max_value: optionalNumber(row.max_value),
+        measured_value: "",
         result: "pendiente",
         sort_order: Number(row.sort_order ?? index),
       }))
@@ -1041,16 +1111,69 @@ export async function applyChecklistTemplate(
 export async function updateChecklistItem(
   itemId: string,
   result: ChecklistResult,
-  notes?: string
+  notes?: string,
+  extra?: { measuredValue?: string }
 ): Promise<void> {
+  const payload: Record<string, unknown> = { result };
+  if (notes != null) payload.notes = notes.trim();
+  if (extra?.measuredValue != null) payload.measured_value = extra.measuredValue.trim();
   const { error } = await db
     .from("service_order_checklist")
-    .update({
-      result,
-      notes: (notes ?? "").trim(),
-    })
+    .update(payload)
     .eq("id", itemId);
   if (error) throw new Error(error.message);
+}
+
+export async function updateFunctionTestMeasurement(
+  item: ServiceOrderChecklistItem,
+  measuredValue: string
+): Promise<void> {
+  const nextResult =
+    item.result === "no_aplica"
+      ? "no_aplica"
+      : evaluateFunctionTestResult(measuredValue, item.minValue, item.maxValue);
+  await updateChecklistItem(item.id, nextResult, item.notes, { measuredValue });
+}
+
+export async function addServiceOrderFunctionTest(input: {
+  orderId: string;
+  label: string;
+  unit?: string;
+  minValue?: number | null;
+  maxValue?: number | null;
+  createdBy?: string;
+}): Promise<void> {
+  const label = input.label.trim();
+  if (!label) throw new Error("El punto a revisar no puede estar vacío.");
+  const interval = intervalPayload(input);
+
+  const { data: existing, error: countError } = await db
+    .from("service_order_checklist")
+    .select("sort_order")
+    .eq("service_order_id", input.orderId)
+    .eq("list_kind", "funcionamiento")
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  if (countError) throw new Error(countError.message);
+  const nextOrder = Number(existing?.[0]?.sort_order ?? 0) + 1;
+
+  const { error } = await db.from("service_order_checklist").insert({
+    service_order_id: input.orderId,
+    label,
+    list_kind: "funcionamiento",
+    measured_value: "",
+    result: "pendiente",
+    sort_order: nextOrder,
+    ...interval,
+  });
+  if (error) throw new Error(error.message);
+
+  await addEvent(
+    input.orderId,
+    `Punto de prueba agregado: ${label}`,
+    input.createdBy ?? "",
+    "checklist"
+  );
 }
 
 export async function addServiceOrderNote(

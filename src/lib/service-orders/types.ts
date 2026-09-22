@@ -186,6 +186,9 @@ export type ChecklistTemplatePoint = {
   id: string;
   templateId: string;
   label: string;
+  unit: string;
+  minValue: number | null;
+  maxValue: number | null;
   sortOrder: number;
 };
 
@@ -211,6 +214,10 @@ export type ServiceOrderChecklistItem = {
   templatePointId: string | null;
   label: string;
   listKind: ListKind;
+  unit: string;
+  minValue: number | null;
+  maxValue: number | null;
+  measuredValue: string;
   result: ChecklistResult;
   notes: string;
   sortOrder: number;
@@ -443,6 +450,47 @@ export function inferEquipmentKind(
   if (/ecg|electrocard/.test(t)) return "ecg";
   if (/rayos|ultrason|imagen|rx\b/.test(t)) return "imagen";
   return "general";
+}
+
+export function parseOptionalNumber(value: string): number | null {
+  const raw = value.trim().replace(",", ".");
+  if (!raw) return null;
+  const num = Number(raw.replace(/[^\d.-]/g, ""));
+  return Number.isFinite(num) ? num : null;
+}
+
+export function formatValidInterval(
+  minValue: number | null | undefined,
+  maxValue: number | null | undefined,
+  unit = ""
+) {
+  const u = unit.trim() ? ` ${unit.trim()}` : "";
+  if (minValue == null && maxValue == null) return "";
+  if (minValue != null && maxValue != null) return `${minValue} – ${maxValue}${u}`;
+  if (minValue != null) return `≥ ${minValue}${u}`;
+  return `≤ ${maxValue}${u}`;
+}
+
+export function hasValidInterval(
+  minValue: number | null | undefined,
+  maxValue: number | null | undefined
+) {
+  return minValue != null || maxValue != null;
+}
+
+export function evaluateFunctionTestResult(
+  measuredValue: string,
+  minValue: number | null,
+  maxValue: number | null
+): ChecklistResult {
+  const raw = measuredValue.trim().replace(",", ".");
+  if (!raw) return "pendiente";
+  if (minValue == null && maxValue == null) return "pendiente";
+  const num = Number(raw.replace(/[^\d.-]/g, ""));
+  if (!Number.isFinite(num)) return "pendiente";
+  if (minValue != null && num < minValue) return "no_pasa";
+  if (maxValue != null && num > maxValue) return "no_pasa";
+  return "pasa";
 }
 
 export function evaluateCalibrationResult(
