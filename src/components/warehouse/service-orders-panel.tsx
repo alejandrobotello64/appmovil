@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   Lock,
   LockOpen,
+  Stamp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -82,6 +83,8 @@ import {
   computeServiceTotals,
   formatValidInterval,
   hasValidInterval,
+  isHospitalSignedDocument,
+  isImageDocumentFile,
   lineAmount,
   parseOptionalNumber,
   serviceLineKindLabel,
@@ -802,6 +805,31 @@ export function ServiceOrdersPanel({
         err instanceof Error
           ? err.message
           : "No se pudo subir el PDF de seguridad eléctrica."
+      );
+    }
+  }
+
+  async function onUploadSignedOrder(files: FileList | File[]) {
+    if (!selected || !canEdit) return;
+    const list = Array.from(files);
+    if (!list.length) return;
+    try {
+      setError("");
+      for (const file of list) {
+        await uploadServiceOrderDocument({
+          orderId: selected.id,
+          file,
+          docType: "orden_firmada",
+          title: "Orden firmada y sellada (hospital)",
+          uploadedBy: actor,
+        });
+      }
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo subir la documentación firmada."
       );
     }
   }
@@ -2318,8 +2346,8 @@ export function ServiceOrdersPanel({
                   <h3 className="font-medium">Verificación de entrega</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Revisa el checklist de verificación, las pruebas de
-                    funcionamiento, la evidencia fotográfica y genera el acta para
-                    el cliente y calidad.
+                    funcionamiento, la evidencia fotográfica y adjunta la orden
+                    firmada con sellos del hospital.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-sm">
                     <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200">
@@ -2348,7 +2376,108 @@ export function ServiceOrdersPanel({
                         ).length
                       }
                     </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                      <Stamp className="size-3.5" />
+                      Firmada/sellada:{" "}
+                      {
+                        selected.documents.filter((d) =>
+                          isHospitalSignedDocument(d)
+                        ).length
+                      }
+                    </span>
                   </div>
+                </div>
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900 dark:bg-amber-950/20">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 className="font-medium">
+                        Orden firmada y sellada del hospital
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Sube el escaneo o las fotos de la orden ya firmada, con
+                        sello y acuse del personal del hospital. Acepta PDF o
+                        imágenes.
+                      </p>
+                    </div>
+                    {canEdit ? (
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-muted">
+                        <Stamp className="size-4" />
+                        Subir escaneo
+                        <input
+                          type="file"
+                          multiple
+                          accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = e.target.files;
+                            if (files?.length) void onUploadSignedOrder(files);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    ) : null}
+                  </div>
+                  {selected.documents.filter((d) => isHospitalSignedDocument(d))
+                    .length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Aún no hay documentación firmada ni sellos del hospital.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {selected.documents
+                        .filter((d) => isHospitalSignedDocument(d))
+                        .map((doc) => (
+                          <li
+                            key={doc.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              {isImageDocumentFile(doc.fileName) ? (
+                                <a
+                                  href={doc.fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="shrink-0"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={doc.fileUrl}
+                                    alt=""
+                                    className="h-14 w-14 rounded-md border border-border object-cover"
+                                  />
+                                </a>
+                              ) : (
+                                <FileDown className="size-4 shrink-0 text-[#3B46A5]" />
+                              )}
+                              <div className="min-w-0">
+                                <a
+                                  href={doc.fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium text-[#3B46A5] hover:underline"
+                                >
+                                  {doc.title || doc.fileName}
+                                </a>
+                                <p className="text-xs text-muted-foreground">
+                                  {doc.fileName} ·{" "}
+                                  {new Date(doc.createdAt).toLocaleString("es-MX")}
+                                </p>
+                              </div>
+                            </div>
+                            {canEdit ? (
+                              <button
+                                type="button"
+                                className="text-xs text-destructive hover:underline"
+                                onClick={() => void onDeleteDocument(doc.id)}
+                              >
+                                Eliminar
+                              </button>
+                            ) : null}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
                 </div>
 
                 <div className="rounded-xl border border-border p-4">

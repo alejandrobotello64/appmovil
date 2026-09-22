@@ -87,6 +87,7 @@ export type ImageStage = (typeof IMAGE_STAGES)[number]["id"];
 
 export const SERVICE_DOCUMENT_TYPES = [
   { id: "seguridad_electrica", label: "Examen de seguridad eléctrica" },
+  { id: "orden_firmada", label: "Orden firmada y sellada" },
   { id: "otro", label: "Otro documento" },
 ] as const;
 
@@ -429,6 +430,21 @@ export function serviceLineKindLabel(kind: string) {
 
 export function listKindLabel(kind: string) {
   return LIST_KINDS.find((s) => s.id === kind)?.label ?? kind;
+}
+
+export function serviceDocumentTypeLabel(type: string) {
+  return SERVICE_DOCUMENT_TYPES.find((s) => s.id === type)?.label ?? type;
+}
+
+export function isHospitalSignedDocument(doc: Pick<ServiceOrderDocument, "docType" | "title">) {
+  return (
+    doc.docType === "orden_firmada" ||
+    /firmada|sellad/i.test(doc.title)
+  );
+}
+
+export function isImageDocumentFile(fileName: string) {
+  return /\.(jpe?g|png|webp|heic|heif|gif)$/i.test(fileName);
 }
 
 export function checklistResultLabel(result: string) {

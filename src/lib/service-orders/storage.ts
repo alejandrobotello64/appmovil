@@ -1510,6 +1510,24 @@ export async function deleteServiceOrderImage(
   if (error) throw new Error(error.message);
 }
 
+function isPdfFile(file: File) {
+  return (
+    file.type === "application/pdf" ||
+    file.name.toLowerCase().endsWith(".pdf")
+  );
+}
+
+function isImageFile(file: File) {
+  if (file.type.startsWith("image/")) return true;
+  return /\.(jpe?g|png|webp|heic|heif|gif)$/i.test(file.name);
+}
+
+function defaultDocumentTitle(docType: string, fileName: string) {
+  if (docType === "seguridad_electrica") return "Examen de seguridad eléctrica";
+  if (docType === "orden_firmada") return "Orden firmada y sellada (hospital)";
+  return fileName;
+}
+
 export async function uploadServiceOrderDocument(input: {
   orderId: string;
   file: File;
@@ -1518,18 +1536,28 @@ export async function uploadServiceOrderDocument(input: {
   uploadedBy?: string;
 }): Promise<ServiceOrderDocument> {
   await ensureOrderUnlocked(input.orderId);
-  if (input.file.type !== "application/pdf" && !input.file.name.toLowerCase().endsWith(".pdf")) {
+  const docType = input.docType ?? "seguridad_electrica";
+  if (docType === "seguridad_electrica" && !isPdfFile(input.file)) {
     throw new Error("Solo se permiten archivos PDF.");
   }
+  if (
+    docType === "orden_firmada" &&
+    !isPdfFile(input.file) &&
+    !isImageFile(input.file)
+  ) {
+    throw new Error("Sube un PDF o una imagen del documento escaneado.");
+  }
   const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
-  const docType = input.docType ?? "seguridad_electrica";
   const path = `${input.orderId}/docs/${docType}/${Date.now()}-${safeName}`;
+  const contentType =
+    input.file.type ||
+    (isPdfFile(input.file) ? "application/pdf" : "application/octet-stream");
 
   const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
     .upload(path, input.file, {
       upsert: false,
-      contentType: "application/pdf",
+      contentType,
     });
   if (uploadError) throw new Error(uploadError.message);
 
@@ -1537,28 +1565,43 @@ export async function uploadServiceOrderDocument(input: {
     .from(MEDIA_BUCKET)
     .getPublicUrl(path);
 
-  const { data, error } = await db
+  const title =
+    (input.title ?? "").trim() || defaultDocumentTitle(docType, input.file.name);
+  const row = {
+    service_order_id: input.orderId,
+    doc_type: docType,
+    title,
+    file_path: path,
+    file_url: publicData.publicUrl,
+    file_name: input.file.name,
+    uploaded_by: (input.uploadedBy ?? "").trim(),
+  };
+
+  let { data, error } = await db
     .from("service_order_documents")
-    .insert({
-      service_order_id: input.orderId,
-      doc_type: docType,
-      title:
-        (input.title ?? "").trim() ||
-        (docType === "seguridad_electrica"
-          ? "Examen de seguridad eléctrica"
-          : input.file.name),
-      file_path: path,
-      file_url: publicData.publicUrl,
-      file_name: input.file.name,
-      uploaded_by: (input.uploadedBy ?? "").trim(),
-    })
+    .insert(row)
     .select("*")
     .single();
+  if (
+    error &&
+    docType === "orden_firmada" &&
+    /doc_type|check constraint|23514/i.test(`${error.message} ${error.code ?? ""}`)
+  ) {
+    const retry = await db
+      .from("service_order_documents")
+      .insert({ ...row, doc_type: "otro" })
+      .select("*")
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
   if (error) throw new Error(error.message);
 
   await addEvent(
     input.orderId,
-    `PDF subido (${docType}): ${input.file.name}`,
+    docType === "orden_firmada"
+      ? `Orden firmada/sellada subida: ${input.file.name}`
+      : `PDF subido (${docType}): ${input.file.name}`,
     input.uploadedBy ?? "",
     "documento"
   );
