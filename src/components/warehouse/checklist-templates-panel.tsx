@@ -395,7 +395,7 @@ export function ChecklistTemplatesPanel() {
       {selected?.locked ? (
         <ReadOnlyBanner
           visible
-          message={`Esta plantilla está candada por ${
+          message={`Esta plantilla está cerrado por ${
             selected.lockedBy || "el asesor de servicios"
           }. Ya no se puede modificar.`}
         />
@@ -456,7 +456,7 @@ export function ChecklistTemplatesPanel() {
                       </span>
                       {tpl.locked ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
-                          <Lock className="size-2.5" /> Candada
+                          <Lock className="size-2.5" /> Cerrado
                         </span>
                       ) : null}
                     </div>
@@ -485,13 +485,11 @@ export function ChecklistTemplatesPanel() {
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-amber-950 dark:text-amber-100">
-                            {tpl.locked
-                              ? "Plantilla candada"
-                              : "Candado del asesor"}
+                            {tpl.locked ? "Cerrado" : "Candado del asesor"}
                           </p>
                           <p className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-200/80">
                             {tpl.locked
-                              ? `Candada por ${tpl.lockedBy || "asesor"}${
+                              ? `Cerrado por ${tpl.lockedBy || "asesor"}${
                                   tpl.lockedAt ? ` · ${tpl.lockedAt}` : ""
                                 }. Nadie más puede editarla.`
                               : isAdvisor

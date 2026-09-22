@@ -39,9 +39,9 @@ const db = supabase as any;
 const MEDIA_BUCKET = "service-order-media";
 
 const ORDER_LOCKED_MESSAGE =
-  "Esta orden está candada y ya no se puede modificar.";
+  "Esta orden está cerrado y ya no se puede modificar.";
 const TEMPLATE_LOCKED_MESSAGE =
-  "Esta plantilla está candada y ya no se puede modificar.";
+  "Esta plantilla está cerrado y ya no se puede modificar.";
 
 async function requireServiceAdvisor(actor: string, message?: string) {
   const staff = await listStaffMembers();
@@ -1107,7 +1107,7 @@ export async function setServiceOrderLock(
   await addEvent(
     orderId,
     locked
-      ? `Orden candada por el asesor ${me.fullName}`
+      ? `Orden cerrado por el asesor ${me.fullName}`
       : `Candado retirado por el asesor ${me.fullName}`,
     actor,
     "candado"

@@ -1148,7 +1148,7 @@ export function ServiceOrdersPanel() {
             visible
             message={
               selected.locked
-                ? "Esta orden está candada por el asesor de servicios. Ya no se puede modificar."
+                ? "Esta orden está cerrado por el asesor de servicios. Ya no se puede modificar."
                 : undefined
             }
           />
@@ -2492,11 +2492,11 @@ export function ServiceOrdersPanel() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-amber-950 dark:text-amber-100">
-                    {selected.locked ? "Orden candada" : "Candado del asesor"}
+                    {selected.locked ? "Cerrado" : "Candado del asesor"}
                   </p>
                   <p className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-200/80">
                     {selected.locked
-                      ? `Candada por ${selected.lockedBy || "asesor"}${
+                      ? `Cerrado por ${selected.lockedBy || "asesor"}${
                           selected.lockedAt
                             ? ` · ${selected.lockedAt}`
                             : ""
@@ -2712,7 +2712,7 @@ export function ServiceOrdersPanel() {
                     ) : null}
                     {order.locked ? (
                       <span className="mt-1 ml-1 inline-flex items-center gap-0.5 rounded bg-amber-700 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                        <Lock className="size-2.5" /> Candada
+                        <Lock className="size-2.5" /> Cerrado
                       </span>
                     ) : null}
                   </td>
