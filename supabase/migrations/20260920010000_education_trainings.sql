@@ -40,12 +40,21 @@ create trigger education_trainings_set_updated_at
 before update on public.education_trainings
 for each row execute function public.set_updated_at();
 
-insert into storage.buckets (id, name, public)
-values ('education-media', 'education-media', true)
-on conflict (id) do nothing;
+do $$
+begin
+  if to_regclass('storage.buckets') is null then
+    return;
+  end if;
+  insert into storage.buckets (id, name, public)
+  values ('education-media', 'education-media', true)
+  on conflict (id) do nothing;
+end $$;
 
 do $$
 begin
+  if to_regclass('storage.objects') is null then
+    return;
+  end if;
   if not exists (
     select 1 from pg_policies
     where schemaname = 'storage' and tablename = 'objects' and policyname = 'education_media_select'

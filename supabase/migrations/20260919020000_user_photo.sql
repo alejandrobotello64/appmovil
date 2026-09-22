@@ -3,12 +3,21 @@
 alter table public.app_users
   add column if not exists photo_url text not null default '';
 
-insert into storage.buckets (id, name, public)
-values ('user-photos', 'user-photos', true)
-on conflict (id) do nothing;
+do $$
+begin
+  if to_regclass('storage.buckets') is null then
+    return;
+  end if;
+  insert into storage.buckets (id, name, public)
+  values ('user-photos', 'user-photos', true)
+  on conflict (id) do nothing;
+end $$;
 
 do $$
 begin
+  if to_regclass('storage.objects') is null then
+    return;
+  end if;
   if not exists (
     select 1 from pg_policies
     where schemaname = 'storage' and tablename = 'objects' and policyname = 'user_photos_select'
