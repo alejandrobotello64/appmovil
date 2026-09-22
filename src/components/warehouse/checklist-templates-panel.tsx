@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Activity, ChevronDown, ClipboardCheck, Plus, Trash2 } from "lucide-react";
+import {
+  Activity,
+  ChevronDown,
+  ClipboardCheck,
+  Lock,
+  LockOpen,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
+import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   addChecklistTemplatePoint,
   createChecklistTemplate,
   deleteChecklistTemplatePoint,
   getChecklistTemplates,
+  setChecklistTemplateLock,
   updateChecklistTemplateMeta,
   updateChecklistTemplatePoint,
 } from "@/lib/service-orders/storage";
@@ -23,6 +33,11 @@ import {
   type EquipmentKind,
   type ListKind,
 } from "@/lib/service-orders/types";
+import {
+  isActorServiceAdvisor,
+  listStaffMembers,
+  type StaffMember,
+} from "@/lib/users/staff";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
@@ -30,7 +45,10 @@ const fieldClass =
 
 export function ChecklistTemplatesPanel() {
   const { canWrite } = usePermissions("ordenes_servicio");
+  const session = getSession();
+  const actor = session?.username ?? "usuario";
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -45,13 +63,18 @@ export function ChecklistTemplatesPanel() {
   const [createListKind, setCreateListKind] = useState<ListKind>("verificacion");
   const [createDescription, setCreateDescription] = useState("");
   const [kindFilter, setKindFilter] = useState<ListKind | "todas">("todas");
+  const isAdvisor = isActorServiceAdvisor(staff, session);
 
   async function reload() {
     setLoading(true);
     setError("");
     try {
-      const list = await getChecklistTemplates({ includeInactive: true });
+      const [list, staffList] = await Promise.all([
+        getChecklistTemplates({ includeInactive: true }),
+        listStaffMembers().catch(() => [] as StaffMember[]),
+      ]);
       setTemplates(list);
+      setStaff(staffList);
       if (openId && !list.some((t) => t.id === openId)) {
         setOpenId(list[0]?.id ?? null);
       } else if (!openId && list[0]) {
@@ -79,6 +102,7 @@ export function ChecklistTemplatesPanel() {
   );
 
   const selected = templates.find((t) => t.id === openId) ?? null;
+  const canEditSelected = canWrite && !selected?.locked;
   const verificationCount = templates.filter(
     (tpl) => tpl.listKind === "verificacion"
   ).length;
@@ -91,7 +115,7 @@ export function ChecklistTemplatesPanel() {
     description?: string;
     isActive?: boolean;
   }) {
-    if (!selected || !canWrite) return;
+    if (!selected || !canEditSelected) return;
     try {
       setSaving(true);
       setError("");
@@ -105,7 +129,7 @@ export function ChecklistTemplatesPanel() {
   }
 
   async function addPoint() {
-    if (!selected || !canWrite || !newPoint.trim()) return;
+    if (!selected || !canEditSelected || !newPoint.trim()) return;
     try {
       setSaving(true);
       setError("");
@@ -141,7 +165,7 @@ export function ChecklistTemplatesPanel() {
     maxRaw: string,
     unit: string
   ) {
-    if (!canWrite) return;
+    if (!canEditSelected) return;
     const minValue = parseOptionalNumber(minRaw);
     const maxValue = parseOptionalNumber(maxRaw);
     if (minRaw.trim() && minValue == null) {
@@ -165,7 +189,7 @@ export function ChecklistTemplatesPanel() {
   }
 
   async function removePoint(pointId: string) {
-    if (!canWrite) return;
+    if (!canEditSelected) return;
     if (!window.confirm("¿Eliminar este punto de la plantilla?")) return;
     try {
       setSaving(true);
@@ -201,6 +225,31 @@ export function ChecklistTemplatesPanel() {
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo crear la plantilla."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function toggleLock(tpl: ChecklistTemplate) {
+    if (!isAdvisor) return;
+    const next = !tpl.locked;
+    if (
+      next &&
+      !window.confirm(
+        "Al candar la plantilla ya no se podrá modificar. ¿Continuar?"
+      )
+    ) {
+      return;
+    }
+    try {
+      setSaving(true);
+      setError("");
+      await setChecklistTemplateLock(tpl.id, next, actor);
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo actualizar el candado."
       );
     } finally {
       setSaving(false);
@@ -343,6 +392,15 @@ export function ChecklistTemplatesPanel() {
         </p>
       ) : null}
 
+      {selected?.locked ? (
+        <ReadOnlyBanner
+          visible
+          message={`Esta plantilla está candada por ${
+            selected.lockedBy || "el asesor de servicios"
+          }. Ya no se puede modificar.`}
+        />
+      ) : null}
+
       {loading ? (
         <p className="text-sm text-muted-foreground">Cargando plantillas…</p>
       ) : visible.length === 0 ? (
@@ -361,6 +419,7 @@ export function ChecklistTemplatesPanel() {
             const isOpen = openId === tpl.id;
             const isFunction = tpl.listKind === "funcionamiento";
             const Icon = isFunction ? Activity : ClipboardCheck;
+            const canEditTpl = canWrite && !tpl.locked;
             return (
               <div
                 key={tpl.id}
@@ -395,6 +454,11 @@ export function ChecklistTemplatesPanel() {
                       >
                         {listKindLabel(tpl.listKind)}
                       </span>
+                      {tpl.locked ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
+                          <Lock className="size-2.5" /> Candada
+                        </span>
+                      ) : null}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {equipmentKindLabel(tpl.equipmentKind)} · {tpl.code} ·{" "}
@@ -412,6 +476,57 @@ export function ChecklistTemplatesPanel() {
 
                 {isOpen ? (
                   <div className="space-y-3 border-t border-border px-4 py-4">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-900 dark:bg-amber-950/20">
+                      <div className="flex items-start gap-2">
+                        {tpl.locked ? (
+                          <Lock className="mt-0.5 size-4 shrink-0 text-amber-800 dark:text-amber-200" />
+                        ) : (
+                          <LockOpen className="mt-0.5 size-4 shrink-0 text-amber-800 dark:text-amber-200" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-amber-950 dark:text-amber-100">
+                            {tpl.locked
+                              ? "Plantilla candada"
+                              : "Candado del asesor"}
+                          </p>
+                          <p className="mt-0.5 text-xs text-amber-900/80 dark:text-amber-200/80">
+                            {tpl.locked
+                              ? `Candada por ${tpl.lockedBy || "asesor"}${
+                                  tpl.lockedAt ? ` · ${tpl.lockedAt}` : ""
+                                }. Nadie más puede editarla.`
+                              : isAdvisor
+                                ? "Al colocar el candado, la plantilla queda solo de consulta."
+                                : "Solo el asesor de servicios puede candar esta plantilla."}
+                          </p>
+                          {isAdvisor ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={tpl.locked ? "outline" : "default"}
+                              className="mt-2"
+                              disabled={saving}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void toggleLock(tpl);
+                              }}
+                            >
+                              {tpl.locked ? (
+                                <>
+                                  <LockOpen className="size-3.5" /> Quitar
+                                  candado
+                                </>
+                              ) : (
+                                <>
+                                  <Lock className="size-3.5" /> Candar
+                                  plantilla
+                                </>
+                              )}
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+
                     {tpl.description ? (
                       <p className="text-sm text-muted-foreground">
                         {tpl.description}
@@ -427,7 +542,7 @@ export function ChecklistTemplatesPanel() {
                           <input
                             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
                             defaultValue={tpl.name}
-                            disabled={saving}
+                            disabled={saving || !canEditTpl}
                             onBlur={(e) => {
                               const value = e.target.value.trim();
                               if (value && value !== tpl.name) {
@@ -440,7 +555,7 @@ export function ChecklistTemplatesPanel() {
                           <input
                             type="checkbox"
                             checked={tpl.isActive}
-                            disabled={saving}
+                            disabled={saving || !canEditTpl}
                             onChange={(e) =>
                               void saveMeta({ isActive: e.target.checked })
                             }
@@ -454,7 +569,7 @@ export function ChecklistTemplatesPanel() {
                           <textarea
                             className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                             defaultValue={tpl.description}
-                            disabled={saving}
+                            disabled={saving || !canEditTpl}
                             onBlur={(e) => {
                               const value = e.target.value.trim();
                               if (value !== tpl.description) {
@@ -487,7 +602,7 @@ export function ChecklistTemplatesPanel() {
                                   <input
                                     className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
                                     defaultValue={point.minValue ?? ""}
-                                    disabled={saving || !canWrite}
+                                    disabled={saving || !canEditTpl}
                                     onBlur={(e) => {
                                       const next = e.target.value;
                                       if (String(point.minValue ?? "") === next.trim()) return;
@@ -505,7 +620,7 @@ export function ChecklistTemplatesPanel() {
                                   <input
                                     className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
                                     defaultValue={point.maxValue ?? ""}
-                                    disabled={saving || !canWrite}
+                                    disabled={saving || !canEditTpl}
                                     onBlur={(e) => {
                                       const next = e.target.value;
                                       if (String(point.maxValue ?? "") === next.trim()) return;
@@ -523,7 +638,7 @@ export function ChecklistTemplatesPanel() {
                                   <input
                                     className="mt-0.5 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
                                     defaultValue={point.unit}
-                                    disabled={saving || !canWrite}
+                                    disabled={saving || !canEditTpl}
                                     onBlur={(e) => {
                                       const next = e.target.value;
                                       if (point.unit === next.trim()) return;
@@ -539,7 +654,7 @@ export function ChecklistTemplatesPanel() {
                               </div>
                             ) : null}
                           </div>
-                          {canWrite ? (
+                          {canEditTpl ? (
                             <button
                               type="button"
                               className="text-destructive hover:underline"
@@ -554,7 +669,7 @@ export function ChecklistTemplatesPanel() {
                       })}
                     </ol>
 
-                    {canWrite ? (
+                    {canEditTpl ? (
                       <div className="space-y-2">
                         <div className="flex flex-wrap gap-2">
                           <input

@@ -39,7 +39,35 @@ const db = supabase as any;
 const MEDIA_BUCKET = "service-order-media";
 
 const ORDER_LOCKED_MESSAGE =
-  "La orden está candada por el asesor de servicios y ya no se puede modificar.";
+  "Esta orden está candada y ya no se puede modificar.";
+const TEMPLATE_LOCKED_MESSAGE =
+  "Esta plantilla está candada y ya no se puede modificar.";
+
+async function requireServiceAdvisor(actor: string, message?: string) {
+  const staff = await listStaffMembers();
+  const me = staff.find(
+    (member) =>
+      member.isServiceAdvisor &&
+      (member.username === actor || member.fullName === actor)
+  );
+  if (!me) {
+    throw new Error(
+      message ??
+        "Solo el asesor de servicios puede candar o quitar el candado."
+    );
+  }
+  return me;
+}
+
+async function ensureTemplateUnlocked(templateId: string) {
+  const { data, error } = await db
+    .from("service_checklist_templates")
+    .select("locked")
+    .eq("id", templateId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (data?.locked) throw new Error(TEMPLATE_LOCKED_MESSAGE);
+}
 
 async function ensureOrderUnlocked(orderId: string) {
   const { data, error } = await db
@@ -538,6 +566,9 @@ export async function getChecklistTemplates(options?: {
     listKind: parseListKind(row.list_kind),
     description: String(row.description ?? ""),
     isActive: Boolean(row.is_active),
+    locked: Boolean(row.locked),
+    lockedAt: dateOrEmpty(row.locked_at),
+    lockedBy: String(row.locked_by ?? ""),
     points: byTpl.get(String(row.id)) ?? [],
   }));
 }
@@ -620,6 +651,7 @@ export async function updateChecklistTemplateMeta(
   templateId: string,
   patch: { name?: string; description?: string; isActive?: boolean }
 ): Promise<void> {
+  await ensureTemplateUnlocked(templateId);
   const payload: Record<string, unknown> = {};
   if (patch.name != null) payload.name = patch.name.trim();
   if (patch.description != null) payload.description = patch.description.trim();
@@ -660,6 +692,7 @@ export async function addChecklistTemplatePoint(
         maxValue?: number | null;
       }
 ): Promise<void> {
+  await ensureTemplateUnlocked(templateId);
   const payload = typeof input === "string" ? { label: input } : input;
   const trimmed = payload.label.trim();
   if (!trimmed) throw new Error("El punto no puede estar vacío.");
@@ -699,6 +732,14 @@ export async function updateChecklistTemplatePoint(
     Object.assign(payload, intervalPayload(patch));
   }
   if (!Object.keys(payload).length) return;
+  const { data: point, error: fetchError } = await db
+    .from("service_checklist_template_points")
+    .select("template_id")
+    .eq("id", pointId)
+    .maybeSingle();
+  if (fetchError) throw new Error(fetchError.message);
+  if (!point) throw new Error("Punto no encontrado.");
+  await ensureTemplateUnlocked(String(point.template_id));
   const { error } = await db
     .from("service_checklist_template_points")
     .update(payload)
@@ -709,10 +750,38 @@ export async function updateChecklistTemplatePoint(
 export async function deleteChecklistTemplatePoint(
   pointId: string
 ): Promise<void> {
+  const { data: point, error: fetchError } = await db
+    .from("service_checklist_template_points")
+    .select("template_id")
+    .eq("id", pointId)
+    .maybeSingle();
+  if (fetchError) throw new Error(fetchError.message);
+  if (!point) throw new Error("Punto no encontrado.");
+  await ensureTemplateUnlocked(String(point.template_id));
   const { error } = await db
     .from("service_checklist_template_points")
     .delete()
     .eq("id", pointId);
+  if (error) throw new Error(error.message);
+}
+
+export async function setChecklistTemplateLock(
+  templateId: string,
+  locked: boolean,
+  actor: string
+): Promise<void> {
+  const me = await requireServiceAdvisor(
+    actor,
+    "Solo el asesor de servicios puede candar o quitar el candado de la plantilla."
+  );
+  const { error } = await db
+    .from("service_checklist_templates")
+    .update({
+      locked,
+      locked_at: locked ? new Date().toISOString() : null,
+      locked_by: locked ? me.fullName : "",
+    })
+    .eq("id", templateId);
   if (error) throw new Error(error.message);
 }
 
@@ -1019,17 +1088,10 @@ export async function setServiceOrderLock(
   locked: boolean,
   actor: string
 ): Promise<void> {
-  const staff = await listStaffMembers();
-  const me = staff.find(
-    (member) =>
-      member.isServiceAdvisor &&
-      (member.username === actor || member.fullName === actor)
+  const me = await requireServiceAdvisor(
+    actor,
+    "Solo el asesor de servicios puede candar o quitar el candado de la orden."
   );
-  if (!me) {
-    throw new Error(
-      "Solo el asesor de servicios puede candar o quitar el candado de la orden."
-    );
-  }
 
   const { error } = await db
     .from("service_orders")

@@ -179,6 +179,9 @@ export type ChecklistTemplate = {
   listKind: ListKind;
   description: string;
   isActive: boolean;
+  locked: boolean;
+  lockedAt: string;
+  lockedBy: string;
   points: ChecklistTemplatePoint[];
 };
 
