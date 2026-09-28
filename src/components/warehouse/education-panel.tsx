@@ -230,7 +230,7 @@ function SignaturePad({
 }
 
 export function EducationPanel() {
-  const { canWrite } = usePermissions("educacion");
+  const { canWrite, canDelete, canExport } = usePermissions("educacion");
   const [items, setItems] = useState<EducationTraining[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -367,7 +367,7 @@ export function EducationPanel() {
   }
 
   async function handleDelete(item: EducationTraining) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(
       `¿Eliminar la capacitación "${item.name}" y todos sus asistentes?`
     );
@@ -392,7 +392,7 @@ export function EducationPanel() {
   }
 
   async function handleDeleteAttendee(attendee: EducationAttendee) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(`¿Quitar a "${attendee.fullName}" de la lista?`);
     if (!ok) return;
     setSubmitting(true);
@@ -435,7 +435,7 @@ export function EducationPanel() {
   }
 
   async function handleDeletePhoto(photo: EducationTrainingPhoto) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     setPhotoUploading(true);
     try {
       await deleteTrainingPhoto(photo);
@@ -451,6 +451,7 @@ export function EducationPanel() {
   }
 
   async function handlePrint(item: EducationTraining) {
+    if (!canExport) return;
     setPrinting(true);
     setError("");
     try {
@@ -537,23 +538,27 @@ export function EducationPanel() {
                         <Pencil className="size-3.5" />
                         Abrir
                       </button>
-                      <button
-                        type="button"
-                        disabled={printing}
-                        onClick={() => void handlePrint(item)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
-                      >
-                        <Printer className="size-3.5" />
-                        Imprimir
-                      </button>
-                      {canWrite ? (
+                      {canExport ? (
                         <button
                           type="button"
-                          onClick={() => void handleDelete(item)}
-                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                          disabled={printing}
+                          onClick={() => void handlePrint(item)}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
                         >
-                          <Trash2 className="size-3.5" />
+                          <Printer className="size-3.5" />
+                          Imprimir
                         </button>
+                      ) : null}
+                      {canWrite ? (
+                        canDelete ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleDelete(item)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        ) : null
                       ) : null}
                     </div>
                   ),
@@ -603,23 +608,27 @@ export function EducationPanel() {
                                 <Pencil className="size-3.5" />
                                 Abrir
                               </button>
-                              <button
-                                type="button"
-                                disabled={printing}
-                                onClick={() => void handlePrint(item)}
-                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
-                              >
-                                <Printer className="size-3.5" />
-                                PDF
-                              </button>
-                              {canWrite ? (
+                              {canExport ? (
                                 <button
                                   type="button"
-                                  onClick={() => void handleDelete(item)}
-                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive"
+                                  disabled={printing}
+                                  onClick={() => void handlePrint(item)}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-muted"
                                 >
-                                  <Trash2 className="size-3.5" />
+                                  <Printer className="size-3.5" />
+                                  PDF
                                 </button>
+                              ) : null}
+                              {canWrite ? (
+                                canDelete ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleDelete(item)}
+                                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive"
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                ) : null
                               ) : null}
                             </div>
                           </td>
@@ -650,16 +659,18 @@ export function EducationPanel() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {selected ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={printing}
-                      onClick={() => void handlePrint(selected)}
-                    >
-                      <Printer className="size-4" />
-                      Imprimir hoja
-                    </Button>
+                    canExport ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={printing}
+                        onClick={() => void handlePrint(selected)}
+                      >
+                        <Printer className="size-4" />
+                        Imprimir hoja
+                      </Button>
+                    ) : null
                   ) : null}
                   <Button
                     type="button"
@@ -1002,16 +1013,18 @@ export function EducationPanel() {
                                       >
                                         Firma
                                       </Button>
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          void handleDeleteAttendee(attendee)
-                                        }
-                                      >
-                                        <Trash2 className="size-3.5" />
-                                      </Button>
+                                      {canDelete ? (
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            void handleDeleteAttendee(attendee)
+                                          }
+                                        >
+                                          <Trash2 className="size-3.5" />
+                                        </Button>
+                                      ) : null}
                                     </>
                                   ) : null}
                                 </div>
@@ -1093,13 +1106,15 @@ export function EducationPanel() {
                               />
                               {canWrite ? (
                                 <div className="flex justify-end p-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleDeletePhoto(photo)}
-                                    className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-destructive"
-                                  >
-                                    <Trash2 className="size-3.5" />
-                                  </button>
+                                  {canDelete ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleDeletePhoto(photo)}
+                                      className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-destructive"
+                                    >
+                                      <Trash2 className="size-3.5" />
+                                    </button>
+                                  ) : null}
                                 </div>
                               ) : null}
                             </div>

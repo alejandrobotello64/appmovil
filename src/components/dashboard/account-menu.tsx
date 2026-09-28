@@ -249,6 +249,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
           fullName: nextSession.fullName,
           role: nextSession.role,
           photoUrl: nextSession.photoUrl,
+          permissionOverrides: session.permissionOverrides,
         });
         onSessionUpdated?.(nextSession);
       }

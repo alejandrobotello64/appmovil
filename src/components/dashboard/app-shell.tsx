@@ -8,7 +8,12 @@ import { AccountMenu } from "@/components/dashboard/account-menu";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { clearSession, getSession, type SessionData } from "@/lib/auth";
+import {
+  clearSession,
+  getSession,
+  refreshSessionAccess,
+  type SessionData,
+} from "@/lib/auth";
 import { GlobalSearch } from "@/components/dashboard/global-search";
 
 type AppShellProps = {
@@ -29,6 +34,20 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
       return;
     }
     setSession(current);
+
+    let cancelled = false;
+    void refreshSessionAccess().then((stillValid) => {
+      if (cancelled) return;
+      if (!stillValid) {
+        clearSession();
+        router.replace("/");
+        return;
+      }
+      setSession(getSession());
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   useEffect(() => {

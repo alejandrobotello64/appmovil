@@ -1,5 +1,9 @@
 import { jsPDF } from "jspdf";
-import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import {
+  drawBrandedFooter,
+  drawBrandedHeader,
+  drawCompanySealBlock,
+} from "@/lib/brand/pdf";
 import {
   trainingShiftLabel,
   type EducationTraining,
@@ -193,6 +197,8 @@ export async function downloadTrainingPdf(training: EducationTraining) {
   doc.text("Firma instructor", margin, y + 17);
   doc.text("_______________________________", pageW / 2 + 10, y + 12);
   doc.text("Vo.Bo. cliente / responsable", pageW / 2 + 10, y + 17);
+
+  await drawCompanySealBlock(doc, y + 24);
 
   drawBrandedFooter(doc);
   doc.save(`${training.folio || "capacitacion"}-asistencia.pdf`);

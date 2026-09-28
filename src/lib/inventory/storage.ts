@@ -3,6 +3,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import type {
   AssetStatus,
   InventoryCategoryId,
+  InventoryGalleryImage,
   InventoryItem,
   InventoryItemInput,
   InventoryUnit,
@@ -29,6 +30,20 @@ export function getStockStatus(
   if (quantity <= 0) return "agotado";
   if (quantity <= minStock) return "bajo_stock";
   return "disponible";
+}
+
+function parseGallery(value: unknown): InventoryGalleryImage[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((entry) => {
+      const raw = (entry ?? {}) as Record<string, unknown>;
+      return {
+        path: String(raw.path ?? ""),
+        url: String(raw.url ?? ""),
+        uploadedAt: String(raw.uploadedAt ?? ""),
+      };
+    })
+    .filter((image) => image.path && image.url);
 }
 
 function mapRowToItem(row: InventoryRow): InventoryItem {
@@ -69,6 +84,7 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     subcategory: row.subcategory ?? "",
     imagePath: row.image_path ?? "",
     imageUrl: row.image_url ?? "",
+    galleryImages: parseGallery(row.gallery_images),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -288,6 +304,8 @@ export async function updateInventoryItem(
 ): Promise<InventoryItem> {
   const payload = mapInputToRow(input);
   delete payload.quantity;
+  if (input.imagePath === undefined) delete payload.image_path;
+  if (input.imageUrl === undefined) delete payload.image_url;
 
   const { data, error } = await supabase
     .from("inventory_items")
@@ -481,20 +499,33 @@ export async function uploadInventoryItemImage(
 export async function clearInventoryItemImage(
   itemId: string
 ): Promise<InventoryItem> {
-  const current = (await getInventoryItems({ includeInactive: true })).find(
-    (item) => item.id === itemId
-  );
-  if (!current) throw new Error("Producto no encontrado.");
-  if (current.imagePath) {
-    await supabase.storage
-      .from(INVENTORY_MEDIA_BUCKET)
-      .remove([current.imagePath]);
-  }
+  const current = await fetchInventoryItem(itemId);
+  if (!current.imagePath) return current;
+  return removeInventoryItemImage(itemId, current.imagePath);
+}
+
+async function fetchInventoryItem(itemId: string): Promise<InventoryItem> {
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .select("*")
+    .eq("id", itemId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Producto no encontrado.");
+  return mapRowToItem(data);
+}
+
+async function saveItemImages(
+  itemId: string,
+  primary: { path: string; url: string },
+  gallery: InventoryGalleryImage[]
+): Promise<InventoryItem> {
   const { data, error } = await supabase
     .from("inventory_items")
     .update({
-      image_path: "",
-      image_url: "",
+      image_path: primary.path,
+      image_url: primary.url,
+      gallery_images: gallery,
       updated_at: new Date().toISOString(),
     })
     .eq("id", itemId)
@@ -502,4 +533,91 @@ export async function clearInventoryItemImage(
     .single();
   if (error) throw new Error(error.message);
   return mapRowToItem(data);
+}
+
+/** Sube varias imágenes: si no hay principal, la primera ocupa ese lugar. */
+export async function addInventoryItemImages(
+  itemId: string,
+  files: File[]
+): Promise<InventoryItem> {
+  const images = files.filter((file) => file.type.startsWith("image/"));
+  if (images.length === 0) {
+    throw new Error("Solo se permiten archivos de imagen.");
+  }
+  const current = await fetchInventoryItem(itemId);
+
+  const uploaded: InventoryGalleryImage[] = [];
+  for (const [index, file] of images.entries()) {
+    const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+    const path = `${itemId}/${Date.now()}-${index}-${safeName}`;
+    const { error: uploadError } = await supabase.storage
+      .from(INVENTORY_MEDIA_BUCKET)
+      .upload(path, file, { upsert: false });
+    if (uploadError) {
+      if (uploaded.length) {
+        await supabase.storage
+          .from(INVENTORY_MEDIA_BUCKET)
+          .remove(uploaded.map((image) => image.path));
+      }
+      throw new Error(uploadError.message);
+    }
+    const { data: publicData } = supabase.storage
+      .from(INVENTORY_MEDIA_BUCKET)
+      .getPublicUrl(path);
+    uploaded.push({
+      path,
+      url: publicData.publicUrl,
+      uploadedAt: new Date().toISOString(),
+    });
+  }
+
+  let primary = { path: current.imagePath, url: current.imageUrl };
+  let extra = uploaded;
+  if (!primary.path || !primary.url) {
+    const [first, ...rest] = uploaded;
+    primary = { path: first.path, url: first.url };
+    extra = rest;
+  }
+  return saveItemImages(itemId, primary, [...current.galleryImages, ...extra]);
+}
+
+/** Quita una imagen; si era la principal, la siguiente de la galería toma su lugar. */
+export async function removeInventoryItemImage(
+  itemId: string,
+  path: string
+): Promise<InventoryItem> {
+  const current = await fetchInventoryItem(itemId);
+  await supabase.storage.from(INVENTORY_MEDIA_BUCKET).remove([path]);
+
+  if (path === current.imagePath) {
+    const [next, ...rest] = current.galleryImages;
+    return saveItemImages(
+      itemId,
+      next ? { path: next.path, url: next.url } : { path: "", url: "" },
+      rest
+    );
+  }
+  return saveItemImages(
+    itemId,
+    { path: current.imagePath, url: current.imageUrl },
+    current.galleryImages.filter((image) => image.path !== path)
+  );
+}
+
+export async function setInventoryItemPrimaryImage(
+  itemId: string,
+  path: string
+): Promise<InventoryItem> {
+  const current = await fetchInventoryItem(itemId);
+  const target = current.galleryImages.find((image) => image.path === path);
+  if (!target) return current;
+  const rest = current.galleryImages.filter((image) => image.path !== path);
+  const previous: InventoryGalleryImage[] =
+    current.imagePath && current.imageUrl
+      ? [{ path: current.imagePath, url: current.imageUrl, uploadedAt: current.updatedAt }]
+      : [];
+  return saveItemImages(itemId, { path: target.path, url: target.url }, [
+    ...previous,
+    ...rest,
+  ]);
 }

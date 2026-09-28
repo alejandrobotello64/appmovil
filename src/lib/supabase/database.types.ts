@@ -130,6 +130,7 @@ export type Database = {
           subcategory: string;
           image_path: string;
           image_url: string;
+          gallery_images: Json;
           created_at: string;
           updated_at: string;
         };
@@ -166,6 +167,7 @@ export type Database = {
           subcategory?: string;
           image_path?: string;
           image_url?: string;
+          gallery_images?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -202,6 +204,7 @@ export type Database = {
           subcategory?: string;
           image_path?: string;
           image_url?: string;
+          gallery_images?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -530,6 +533,93 @@ export type Database = {
           full_name: string | null;
           role: string;
           photo_url: string;
+          permission_overrides: Json;
+        }[];
+      };
+      service_vault_list: {
+        Args: {
+          p_username: string;
+          p_password: string;
+        };
+        Returns: {
+          id: string;
+          password_type: string;
+          title: string;
+          equipment_type: string;
+          brand: string;
+          model: string;
+          software_version: string;
+          client_name: string;
+          access_user: string;
+          notes: string;
+          created_by_name: string;
+          updated_by_name: string;
+          created_at: string;
+          updated_at: string;
+          reveal_count: number;
+          last_revealed_at: string | null;
+        }[];
+      };
+      service_vault_reveal: {
+        Args: {
+          p_username: string;
+          p_password: string;
+          p_id: string;
+        };
+        Returns: string;
+      };
+      service_vault_save: {
+        Args: {
+          p_username: string;
+          p_password: string;
+          p_id: string | null;
+          p_data: Json;
+        };
+        Returns: string;
+      };
+      service_vault_delete: {
+        Args: {
+          p_username: string;
+          p_password: string;
+          p_id: string;
+        };
+        Returns: undefined;
+      };
+      service_vault_log: {
+        Args: {
+          p_username: string;
+          p_password: string;
+          p_id?: string | null;
+        };
+        Returns: {
+          id: number;
+          password_id: string | null;
+          password_title: string;
+          action: string;
+          user_name: string;
+          created_at: string;
+        }[];
+      };
+      get_app_user_access: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: {
+          id: string;
+          role: string;
+          is_active: boolean;
+          permission_overrides: Json;
+        }[];
+      };
+      set_app_user_permissions: {
+        Args: {
+          p_user_id: string;
+          p_permission_overrides: Json;
+        };
+        Returns: {
+          id: string;
+          role: string;
+          permission_overrides: Json;
         }[];
       };
       list_app_users: {
@@ -559,6 +649,7 @@ export type Database = {
           photo_url: string;
           is_technician: boolean;
           is_service_advisor: boolean;
+          permission_overrides: Json;
         }[];
       };
       create_app_user: {

@@ -1,5 +1,9 @@
 ﻿import { jsPDF } from "jspdf";
-import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import {
+  drawBrandedFooter,
+  drawBrandedHeader,
+  drawCompanySealBlock,
+} from "@/lib/brand/pdf";
 import {
   vehicleServiceStatusLabel,
   vehicleServiceTypeLabel,
@@ -138,7 +142,10 @@ export async function downloadVehicleServicePdf(service: VehicleService) {
     doc.setFont("helvetica", "normal");
     const notes = doc.splitTextToSize(service.notes, 180);
     doc.text(notes, margin, y);
+    y += notes.length * 4;
   }
+
+  await drawCompanySealBlock(doc, y + 10);
 
   drawBrandedFooter(doc);
   doc.save(`${service.folio}-servicio-flotilla.pdf`);

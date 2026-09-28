@@ -70,7 +70,7 @@ function formatWhen(value: string) {
 }
 
 export function QualityPanel() {
-  const { canWrite } = usePermissions("calidad");
+  const { canWrite, canDelete } = usePermissions("calidad");
   const [items, setItems] = useState<QualitySurvey[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [orders, setOrders] = useState<ServiceOrderSummary[]>([]);
@@ -307,7 +307,7 @@ export function QualityPanel() {
   }
 
   async function handleDelete(survey: QualitySurvey) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     if (
       !window.confirm(
         `¿Eliminar ${survey.folio}? Esta acción no se puede deshacer.`
@@ -466,6 +466,7 @@ export function QualityPanel() {
                     <SurveyActions
                       item={item}
                       canWrite={canWrite}
+                      canDelete={canDelete}
                       onOpen={() => setDetail(item)}
                       onWhatsApp={() => void handleSendWhatsApp(item)}
                       onCopy={() => void handleCopyLink(item)}
@@ -538,6 +539,7 @@ export function QualityPanel() {
                             <SurveyActions
                               item={item}
                               canWrite={canWrite}
+                              canDelete={canDelete}
                               onOpen={() => setDetail(item)}
                               onWhatsApp={() => void handleSendWhatsApp(item)}
                               onCopy={() => void handleCopyLink(item)}
@@ -858,6 +860,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 function SurveyActions({
   item,
   canWrite,
+  canDelete,
   onOpen,
   onWhatsApp,
   onCopy,
@@ -866,6 +869,7 @@ function SurveyActions({
 }: {
   item: QualitySurvey;
   canWrite: boolean;
+  canDelete: boolean;
   onOpen: () => void;
   onWhatsApp: () => void;
   onCopy: () => void;
@@ -910,7 +914,7 @@ function SurveyActions({
           Cancelar
         </button>
       ) : null}
-      {canWrite ? (
+      {canDelete ? (
         <button
           type="button"
           onClick={onDelete}

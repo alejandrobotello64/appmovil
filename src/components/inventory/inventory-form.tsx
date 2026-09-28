@@ -95,6 +95,7 @@ export function InventoryForm({
       updatedAt: _updatedAt,
       imagePath: _imagePath,
       imageUrl: _imageUrl,
+      galleryImages: _galleryImages,
       ...rest
     } = item;
     const category =

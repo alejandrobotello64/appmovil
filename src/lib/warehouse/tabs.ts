@@ -96,6 +96,12 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=mantenimientos",
   },
   {
+    id: "registros_sanitarios",
+    label: "Registros sanitarios",
+    description: "Registros sanitarios, prórrogas y certificados con su vigencia",
+    href: "/dashboard/almacen?tab=registros_sanitarios",
+  },
+  {
     id: "reporte",
     label: "Reporte",
     description: "Reportes operativos del almacén",
@@ -107,6 +113,7 @@ export type WarehouseTabId = (typeof WAREHOUSE_TABS)[number]["id"];
 
 const LEGACY_TAB_ALIASES: Record<string, WarehouseTabId> = {
   productos: "insumos",
+  registros: "registros_sanitarios",
 };
 
 export function normalizeWarehouseTab(

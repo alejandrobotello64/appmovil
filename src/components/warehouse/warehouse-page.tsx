@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { InventoryPanel } from "@/components/inventory/inventory-panel";
@@ -14,8 +14,9 @@ import { OrdersPanel } from "@/components/warehouse/orders-panel";
 import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
 import { KardexPanel } from "@/components/warehouse/kardex-panel";
-import { getSession } from "@/lib/auth";
-import { canViewModule, type WarehouseModule } from "@/lib/auth/permissions";
+import { SanitaryRegistrationsPanel } from "@/components/documents/document-library-panel";
+import type { WarehouseModule } from "@/lib/auth/permissions";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 import {
   WAREHOUSE_TABS,
   normalizeWarehouseTab,
@@ -36,11 +37,7 @@ export function WarehousePage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const activeTab: WarehouseTabId = normalizeWarehouseTab(tabParam) ?? "dashboard";
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    setRole(getSession()?.role ?? "direccion");
-  }, []);
+  const access = useSessionAccess();
 
   useEffect(() => {
     if (tabParam === "usuarios") {
@@ -56,7 +53,7 @@ export function WarehousePage() {
 
   const activeTabMeta = WAREHOUSE_TABS.find((tab) => tab.id === activeTab);
   const allowed =
-    role === null || canViewModule(role, activeTab as WarehouseModule);
+    !access.ready || access.canView(activeTab as WarehouseModule);
   const supplyTab = SUPPLY_TABS.includes(activeTab as SupplyCategoryId)
     ? (activeTab as SupplyCategoryId)
     : null;
@@ -106,6 +103,10 @@ export function WarehousePage() {
             ) : null}
 
             {activeTab === "mantenimientos" ? <MaintenancesPanel /> : null}
+
+            {activeTab === "registros_sanitarios" ? (
+              <SanitaryRegistrationsPanel />
+            ) : null}
 
             {activeTab === "reporte" ? <ReportPanel /> : null}
           </>

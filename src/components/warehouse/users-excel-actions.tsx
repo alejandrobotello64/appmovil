@@ -16,6 +16,7 @@ import { bulkImportUsers } from "@/lib/users/bulk-import";
 type UsersExcelActionsProps = {
   users: ListedUserExcelSource[];
   canWrite: boolean;
+  canExport?: boolean;
   onImported: () => Promise<void>;
   onError: (message: string) => void;
   onMessage?: (message: string) => void;
@@ -24,6 +25,7 @@ type UsersExcelActionsProps = {
 export function UsersExcelActions({
   users,
   canWrite,
+  canExport = true,
   onImported,
   onError,
   onMessage,
@@ -156,10 +158,12 @@ export function UsersExcelActions({
         </Button>
       ) : null}
 
-      <Button type="button" variant="outline" className="h-10" onClick={handleExport}>
-        <Download className="size-4" />
-        Descargar Excel
-      </Button>
+      {canExport ? (
+        <Button type="button" variant="outline" className="h-10" onClick={handleExport}>
+          <Download className="size-4" />
+          Descargar Excel
+        </Button>
+      ) : null}
 
       {canWrite ? (
         <Button

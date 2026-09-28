@@ -52,7 +52,8 @@ function emptyForm(): BiomedicalInstrumentInput {
 }
 
 export function BiomedicalInstrumentsPanel() {
-  const { canWrite } = usePermissions("ordenes_servicio");
+  const { canWrite, canCreate, canEdit, canDelete } =
+    usePermissions("instrumentos");
   const [items, setItems] = useState<BiomedicalInstrument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -149,7 +150,7 @@ export function BiomedicalInstrumentsPanel() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!canWrite) return;
+    if (editing ? !canEdit : !canCreate) return;
     try {
       setError("");
       let saved: BiomedicalInstrument;
@@ -179,7 +180,7 @@ export function BiomedicalInstrumentsPanel() {
   }
 
   async function onDelete(item: BiomedicalInstrument) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     if (!confirm(`¿Eliminar «${item.name}»?`)) return;
     try {
       await deleteBiomedicalInstrument(item.id);
@@ -190,7 +191,7 @@ export function BiomedicalInstrumentsPanel() {
   }
 
   async function onUploadImage(item: BiomedicalInstrument, file: File) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     try {
       await uploadBiomedicalInstrumentImage(item.id, file);
       await reload();
@@ -200,7 +201,7 @@ export function BiomedicalInstrumentsPanel() {
   }
 
   async function onUploadPdf(item: BiomedicalInstrument, file: File) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     try {
       await uploadBiomedicalInstrumentCertificate(item.id, file);
       await reload();
@@ -471,7 +472,7 @@ export function BiomedicalInstrumentsPanel() {
             Captura nombre, serie, foto y PDF de certificación.
           </p>
         </div>
-        {canWrite ? (
+        {canCreate ? (
           <Button
             type="button"
             onClick={openCreate}
@@ -574,8 +575,10 @@ export function BiomedicalInstrumentsPanel() {
                     Sin PDF de certificación
                   </p>
                 )}
-                {canWrite ? (
+                {canEdit || canDelete ? (
                   <div className="flex flex-wrap gap-2 pt-1">
+                    {canEdit ? (
+                    <>
                     <Button
                       type="button"
                       size="sm"
@@ -636,13 +639,17 @@ export function BiomedicalInstrumentsPanel() {
                         Quitar PDF
                       </button>
                     ) : null}
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 text-xs text-destructive hover:underline"
-                      onClick={() => void onDelete(item)}
-                    >
-                      <Trash2 className="size-3.5" /> Eliminar
-                    </button>
+                    </>
+                    ) : null}
+                    {canDelete ? (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 text-xs text-destructive hover:underline"
+                        onClick={() => void onDelete(item)}
+                      >
+                        <Trash2 className="size-3.5" /> Eliminar
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
               </div>

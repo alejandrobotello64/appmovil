@@ -17,6 +17,7 @@ import type { InventoryItem, ItemKind } from "@/lib/inventory/types";
 type InventoryExcelActionsProps = {
   items: InventoryItem[];
   canWrite: boolean;
+  canExport?: boolean;
   defaultKind: ItemKind;
   onImported: () => Promise<void>;
   onError: (message: string) => void;
@@ -25,6 +26,7 @@ type InventoryExcelActionsProps = {
 export function InventoryExcelActions({
   items,
   canWrite,
+  canExport = true,
   defaultKind,
   onImported,
   onError,
@@ -136,10 +138,12 @@ export function InventoryExcelActions({
         }}
       />
 
-      <Button type="button" variant="outline" className="h-10" onClick={handleExport}>
-        <Download className="size-4" />
-        Exportar Excel
-      </Button>
+      {canExport ? (
+        <Button type="button" variant="outline" className="h-10" onClick={handleExport}>
+          <Download className="size-4" />
+          Exportar Excel
+        </Button>
+      ) : null}
 
       {canWrite ? (
         <Button

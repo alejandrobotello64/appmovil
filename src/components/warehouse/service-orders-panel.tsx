@@ -18,6 +18,8 @@ import {
   Stamp,
   BadgeCheck,
   MessageCircle,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -44,6 +46,7 @@ import {
   deleteServiceOrderDocument,
   deleteServiceOrderImage,
   getChecklistTemplates,
+  getServiceOrder,
   getServiceOrders,
   removeLinkedEquipment,
   removeServiceOrderInstrument,
@@ -215,7 +218,13 @@ export function ServiceOrdersPanel({
 }: {
   initialOrderId?: string | null;
 }) {
-  const { canWrite } = usePermissions("ordenes_servicio");
+  const {
+    canWrite,
+    canCreate,
+    canDelete,
+    canExport,
+    canApprove,
+  } = usePermissions("ordenes_servicio");
   const { canWrite: canWriteQuality } = usePermissions("calidad");
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
@@ -233,6 +242,7 @@ export function ServiceOrdersPanel({
     "todas"
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [statusSavingId, setStatusSavingId] = useState<string | null>(null);
   const [showReception, setShowReception] = useState(false);
   const [form, setForm] = useState<ServiceOrderInput>(emptyForm);
   const [detailTab, setDetailTab] = useState<DetailTab>("recepcion");
@@ -274,7 +284,7 @@ export function ServiceOrdersPanel({
     () => staff.filter((member) => member.isServiceAdvisor),
     [staff]
   );
-  const isAdvisor = isActorServiceAdvisor(staff, session);
+  const isAdvisor = isActorServiceAdvisor(staff, session) || canApprove;
   const canEdit = canWrite && !selected?.locked;
 
   async function reload() {
@@ -404,7 +414,7 @@ export function ServiceOrdersPanel({
 
   async function onCreate(e: FormEvent) {
     e.preventDefault();
-    if (!canEdit) return;
+    if (!canCreate) return;
     if (!form.clientName?.trim() && !form.clientId) {
       setError("Selecciona o escribe un cliente.");
       return;
@@ -524,6 +534,41 @@ export function ServiceOrdersPanel({
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo cambiar estatus.");
+    }
+  }
+
+  async function changeStatusFromTable(order: ServiceOrder, status: ServiceOrderStatus) {
+    if (!canWrite || order.locked || status === order.status) return;
+    if (
+      status === "cancelado" &&
+      !window.confirm(`¿Marcar la orden ${order.folio} como cancelada?`)
+    ) {
+      return;
+    }
+    setError("");
+    setStatusSavingId(order.id);
+    setOrders((rows) =>
+      rows.map((row) =>
+        row.id === order.id
+          ? { ...row, status, updatedAt: new Date().toISOString() }
+          : row
+      )
+    );
+    try {
+      await setServiceOrderStatus(order.id, status, actor);
+      const fresh = await getServiceOrder(order.id);
+      if (fresh) {
+        setOrders((rows) => rows.map((row) => (row.id === fresh.id ? fresh : row)));
+      }
+    } catch (err) {
+      setOrders((rows) => rows.map((row) => (row.id === order.id ? order : row)));
+      setError(
+        err instanceof Error
+          ? err.message
+          : `No se pudo cambiar el estatus de ${order.folio}.`
+      );
+    } finally {
+      setStatusSavingId(null);
     }
   }
 
@@ -911,7 +956,7 @@ export function ServiceOrdersPanel({
   }
 
   async function removeOrder(id: string) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const order = orders.find((item) => item.id === id);
     if (order?.locked) {
       setError("Esta orden está cerrado y ya no se puede modificar.");
@@ -969,7 +1014,7 @@ export function ServiceOrdersPanel({
   if (showReception) {
     return (
       <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
-        {!canWrite ? <ReadOnlyBanner visible /> : null}
+        {!canCreate ? <ReadOnlyBanner visible /> : null}
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[#3B46A5]">
@@ -1204,7 +1249,7 @@ export function ServiceOrdersPanel({
             </Button>
             <Button
               type="submit"
-              disabled={!canEdit}
+              disabled={!canCreate}
               className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
             >
               Guardar
@@ -1302,11 +1347,11 @@ export function ServiceOrdersPanel({
             ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
+            <div className={cn("relative", !canExport && "hidden")}>
               <Button type="button" variant="outline" onClick={() => setDocsOpen((v) => !v)}>
                 <FileDown className="size-4" /> Opciones PDF
               </Button>
-              {docsOpen ? (
+              {docsOpen && canExport ? (
                 <div className="absolute right-0 z-20 mt-1 w-72 rounded-xl border border-border bg-card p-2 shadow-lg">
                   <button
                     type="button"
@@ -2631,20 +2676,24 @@ export function ServiceOrdersPanel({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => downloadServiceDeliveryPdf(selected)}
-                  >
-                    <FileDown className="size-4" /> Imprimir entrega
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => downloadServiceWorkOrderPdf(selected)}
-                  >
-                    PDF calidad
-                  </Button>
+                  {canExport ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => downloadServiceDeliveryPdf(selected)}
+                      >
+                        <FileDown className="size-4" /> Imprimir entrega
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => downloadServiceWorkOrderPdf(selected)}
+                      >
+                        PDF calidad
+                      </Button>
+                    </>
+                  ) : null}
                   {canEdit && selected.status !== "entregado" ? (
                     <Button
                       type="button"
@@ -2866,7 +2915,7 @@ export function ServiceOrdersPanel({
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            disabled={!canEdit}
+            disabled={!canCreate}
             className="bg-emerald-600 text-white hover:bg-emerald-700"
             onClick={() => openReception(false)}
           >
@@ -2874,7 +2923,7 @@ export function ServiceOrdersPanel({
           </Button>
           <Button
             type="button"
-            disabled={!canEdit}
+            disabled={!canCreate}
             className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
             onClick={() => openReception(true)}
           >
@@ -2979,14 +3028,46 @@ export function ServiceOrdersPanel({
                     {order.lines.length > 3 ? "…" : ""}
                   </td>
                   <td className="px-3 py-3">
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                        statusTone(order.status)
-                      )}
-                    >
-                      {serviceOrderStatusLabel(order.status)}
-                    </span>
+                    {canWrite && !order.locked ? (
+                      <div className="relative inline-flex items-center">
+                        <select
+                          value={order.status}
+                          disabled={statusSavingId === order.id}
+                          onChange={(e) =>
+                            void changeStatusFromTable(
+                              order,
+                              e.target.value as ServiceOrderStatus
+                            )
+                          }
+                          aria-label={`Estatus de ${order.folio}`}
+                          title="Cambiar estatus"
+                          className={cn(
+                            "cursor-pointer appearance-none rounded-full border border-transparent py-0.5 pr-6 pl-2 text-xs font-medium outline-none hover:border-current/30 focus:ring-2 focus:ring-[#00BFFF]/40 disabled:cursor-wait disabled:opacity-70",
+                            statusTone(order.status)
+                          )}
+                        >
+                          {SERVICE_ORDER_STATUSES.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </select>
+                        {statusSavingId === order.id ? (
+                          <Loader2 className="pointer-events-none absolute right-1.5 size-3 animate-spin" />
+                        ) : (
+                          <ChevronDown className="pointer-events-none absolute right-1.5 size-3 opacity-70" />
+                        )}
+                      </div>
+                    ) : (
+                      <span
+                        className={cn(
+                          "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                          statusTone(order.status)
+                        )}
+                      >
+                        {serviceOrderStatusLabel(order.status)}
+                      </span>
+                    )}
                     <p className="mt-1 text-xs text-muted-foreground">
                       {timeInStatus(order.updatedAt)}
                     </p>
@@ -3029,7 +3110,7 @@ export function ServiceOrdersPanel({
                       >
                         Detalles
                       </button>
-                      {canWrite && !order.locked ? (
+                      {canDelete && !order.locked ? (
                         <button
                           type="button"
                           className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:underline"

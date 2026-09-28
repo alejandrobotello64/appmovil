@@ -12,6 +12,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   FileBarChart2,
+  KeyRound,
   LayoutDashboard,
   Package,
   Pill,
@@ -34,17 +35,24 @@ import {
   FileText,
   GraduationCap,
   BadgeCheck,
+  BadgeDollarSign,
+  Library,
   Shield,
+  ShieldCheck,
+  BookText,
   X,
 } from "lucide-react";
 import { WAREHOUSE_TABS, normalizeWarehouseTab } from "@/lib/warehouse/tabs";
+import { SALES_TABS, SALES_TAB_MODULES, normalizeSalesTab } from "@/lib/sales/tabs";
 import { USERS_TABS, normalizeUsersTab } from "@/lib/users/tabs";
 import {
+  BIOMEDICA_MODULES,
+  SERVICE_ORDER_TAB_MODULE,
   SERVICE_ORDER_TABS,
   normalizeServiceOrderTab,
 } from "@/lib/service-orders/tabs";
-import { canViewModule, type WarehouseModule } from "@/lib/auth/permissions";
-import { getSession } from "@/lib/auth";
+import type { WarehouseModule } from "@/lib/auth/permissions";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { cn } from "@/lib/utils";
 import { AnesthesiaMachineIcon } from "@/components/icons/anesthesia-machine-icon";
 
@@ -65,6 +73,7 @@ const TAB_ICONS = {
   proveedores: Truck,
   equipo: Wrench,
   mantenimientos: ClipboardList,
+  registros_sanitarios: ShieldCheck,
   reporte: FileBarChart2,
 } as const;
 
@@ -75,12 +84,20 @@ const USER_TAB_ICONS = {
   permisos: Shield,
 } as const;
 
+const SALES_TAB_ICONS = {
+  dashboard: LayoutDashboard,
+  cotizaciones: FileText,
+  catalogo: Library,
+} as const;
+
 const SERVICE_ORDER_TAB_ICONS = {
   dashboard: LayoutDashboard,
   ordenes: Wrench,
   instrumentos: Activity,
   solicitudes: Package,
   plantillas: ClipboardList,
+  documentos: BookText,
+  contrasenas: KeyRound,
 } as const;
 
 type SidebarProps = {
@@ -100,7 +117,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const inCalendar = pathname.startsWith("/dashboard/calendario");
   const inClients = pathname.startsWith("/dashboard/clientes");
   const inTenders = pathname.startsWith("/dashboard/licitaciones");
-  const inQuotes = pathname.startsWith("/dashboard/cotizaciones");
+  const inSales =
+    pathname.startsWith("/dashboard/ventas") ||
+    pathname.startsWith("/dashboard/cotizaciones");
+  const activeSalesTab = normalizeSalesTab(searchParams.get("tab"));
   const inServiceOrders = pathname.startsWith("/dashboard/ordenes-servicio");
   const inFleet = pathname.startsWith("/dashboard/flotilla");
   const inEducation = pathname.startsWith("/dashboard/educacion");
@@ -110,11 +130,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const [biomedicaOpen, setBiomedicaOpen] = useState(
     inServiceOrders || inEducation
   );
-  const [role, setRole] = useState("administrador");
-
-  useEffect(() => {
-    setRole(getSession()?.role ?? "administrador");
-  }, []);
+  const [salesOpen, setSalesOpen] = useState(inSales);
+  const [wasInSales, setWasInSales] = useState(inSales);
+  if (inSales !== wasInSales) {
+    setWasInSales(inSales);
+    if (inSales) setSalesOpen(true);
+  }
+  const { canView } = useSessionAccess();
 
   useEffect(() => {
     if (inWarehouse) setWarehouseOpen(true);
@@ -148,17 +170,31 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     const nextOpen = !biomedicaOpen;
     setBiomedicaOpen(nextOpen);
     if (nextOpen) {
-      if (canViewModule(role, "ordenes_servicio")) {
-        router.push("/dashboard/ordenes-servicio?tab=dashboard");
-      } else if (canViewModule(role, "educacion")) {
+      const firstTab = visibleServiceOrderTabs[0];
+      if (firstTab) {
+        router.push(firstTab.href);
+      } else if (canView("educacion")) {
         router.push("/dashboard/educacion");
       }
     }
   }
 
-  const showBiomedica =
-    canViewModule(role, "ordenes_servicio") ||
-    canViewModule(role, "educacion");
+  function handleSalesClick() {
+    const nextOpen = !salesOpen;
+    setSalesOpen(nextOpen);
+    if (nextOpen && visibleSalesTabs[0]) {
+      router.push(visibleSalesTabs[0].href);
+    }
+  }
+
+  const visibleSalesTabs = SALES_TABS.filter((tab) =>
+    SALES_TAB_MODULES[tab.id].some((module) => canView(module))
+  );
+
+  const visibleServiceOrderTabs = SERVICE_ORDER_TABS.filter((tab) =>
+    canView(SERVICE_ORDER_TAB_MODULE[tab.id])
+  );
+  const showBiomedica = BIOMEDICA_MODULES.some((module) => canView(module));
   const biomedicaActive = inServiceOrders || inEducation;
 
   return (
@@ -243,7 +279,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             {warehouseOpen ? (
               <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
                 {WAREHOUSE_TABS.filter((tab) =>
-                  canViewModule(role, tab.id as WarehouseModule)
+                  canView(tab.id as WarehouseModule)
                 ).map((tab) => {
                   const Icon = TAB_ICONS[tab.id];
                   const isActive =
@@ -272,7 +308,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             ) : null}
           </div>
 
-          {canViewModule(role, "calendario") ? (
+          {canView("calendario") ? (
             <Link
               href="/dashboard/calendario"
               onClick={onClose}
@@ -288,7 +324,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
-          {canViewModule(role, "clientes") ? (
+          {canView("clientes") ? (
             <Link
               href="/dashboard/clientes"
               onClick={onClose}
@@ -304,7 +340,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
-          {canViewModule(role, "calidad") ? (
+          {canView("calidad") ? (
             <Link
               href="/dashboard/calidad"
               onClick={onClose}
@@ -320,7 +356,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
-          {canViewModule(role, "licitaciones") ? (
+          {canView("licitaciones") ? (
             <Link
               href="/dashboard/licitaciones"
               onClick={onClose}
@@ -336,20 +372,55 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
-          {canViewModule(role, "cotizaciones") ? (
-            <Link
-              href="/dashboard/cotizaciones"
-              onClick={onClose}
-              className={cn(
-                "mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                inQuotes
-                  ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <FileText className="size-4 shrink-0" />
-              Cotizaciones
-            </Link>
+          {visibleSalesTabs.length ? (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={handleSalesClick}
+                aria-expanded={salesOpen}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                  inSales
+                    ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <BadgeDollarSign className="size-4 shrink-0" />
+                <span className="flex-1">Ventas</span>
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform",
+                    salesOpen ? "rotate-180" : "rotate-0"
+                  )}
+                />
+              </button>
+
+              {salesOpen ? (
+                <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
+                  {visibleSalesTabs.map((tab) => {
+                    const Icon = SALES_TAB_ICONS[tab.id];
+                    const isActive = inSales && activeSalesTab === tab.id;
+
+                    return (
+                      <Link
+                        key={tab.id}
+                        href={tab.href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                          isActive
+                            ? "bg-muted font-medium text-foreground"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="size-3.5 shrink-0" />
+                        {tab.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
           ) : null}
 
           {showBiomedica ? (
@@ -377,32 +448,30 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
               {biomedicaOpen ? (
                 <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
-                  {canViewModule(role, "ordenes_servicio")
-                    ? SERVICE_ORDER_TABS.map((tab) => {
-                        const Icon = SERVICE_ORDER_TAB_ICONS[tab.id];
-                        const isActive =
-                          inServiceOrders && activeServiceOrderTab === tab.id;
+                  {visibleServiceOrderTabs.map((tab) => {
+                    const Icon = SERVICE_ORDER_TAB_ICONS[tab.id];
+                    const isActive =
+                      inServiceOrders && activeServiceOrderTab === tab.id;
 
-                        return (
-                          <Link
-                            key={tab.id}
-                            href={tab.href}
-                            onClick={onClose}
-                            className={cn(
-                              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                              isActive
-                                ? "bg-muted font-medium text-foreground"
-                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                            )}
-                          >
-                            <Icon className="size-3.5 shrink-0" />
-                            {tab.label}
-                          </Link>
-                        );
-                      })
-                    : null}
+                    return (
+                      <Link
+                        key={tab.id}
+                        href={tab.href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                          isActive
+                            ? "bg-muted font-medium text-foreground"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="size-3.5 shrink-0" />
+                        {tab.label}
+                      </Link>
+                    );
+                  })}
 
-                  {canViewModule(role, "educacion") ? (
+                  {canView("educacion") ? (
                     <Link
                       href="/dashboard/educacion"
                       onClick={onClose}
@@ -422,7 +491,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </div>
           ) : null}
 
-          {canViewModule(role, "flotilla") ? (
+          {canView("flotilla") ? (
             <Link
               href="/dashboard/flotilla"
               onClick={onClose}
@@ -438,7 +507,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
           ) : null}
 
-          {canViewModule(role, "usuarios") ? (
+          {canView("usuarios") ? (
             <div className="mt-2">
               <button
                 type="button"
@@ -492,7 +561,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
-            Panel principal, almacén, biomédica, clientes, calidad, cotizaciones y usuarios
+            Panel principal, almacén, ventas, biomédica, clientes, calidad y usuarios
           </p>
         </div>
       </aside>

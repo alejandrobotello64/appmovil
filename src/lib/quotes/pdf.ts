@@ -1,5 +1,9 @@
 ﻿import { jsPDF } from "jspdf";
-import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import {
+  drawBrandedFooter,
+  drawBrandedHeader,
+  drawCompanySealBlock,
+} from "@/lib/brand/pdf";
 import { lineAmount, type Quote } from "./types";
 
 function money(value: number) {
@@ -153,7 +157,7 @@ export async function downloadQuotePdf(quote: Quote) {
     y += noteLines.length * 4 + 4;
   }
 
-  y = Math.max(y + 10, 270);
+  await drawCompanySealBlock(doc, y + 10);
   drawBrandedFooter(
     doc,
     "Documento generado desde MAS · Cotización sujeta a disponibilidad y confirmación."

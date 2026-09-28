@@ -123,7 +123,7 @@ const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
 
 export function ClientsPanel() {
-  const { canWrite } = usePermissions("clientes");
+  const { canWrite, canDelete } = usePermissions("clientes");
   const router = useRouter();
   const [view, setView] = useState<ViewId>("clientes");
   const [clients, setClients] = useState<Client[]>([]);
@@ -417,7 +417,7 @@ export function ClientsPanel() {
   }
 
   async function handleDeleteClient(client: Client) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(
       `¿Eliminar al cliente "${client.name}"? También se borrarán sus equipos y servicios.`
     );
@@ -432,7 +432,7 @@ export function ClientsPanel() {
   }
 
   async function handleDeleteEquipment(item: ClientEquipment) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(`¿Eliminar el equipo "${item.name}"?`);
     if (!ok) return;
     try {
@@ -445,7 +445,7 @@ export function ClientsPanel() {
   }
 
   async function handleDeleteService(item: ClientService) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(`¿Eliminar el servicio "${item.title}"?`);
     if (!ok) return;
     try {
@@ -643,7 +643,7 @@ export function ClientsPanel() {
   }
 
   async function handleDeleteContact(contact: ClientContact) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(`¿Eliminar a "${contact.name}" del directorio?`);
     if (!ok) return;
     try {
@@ -1493,13 +1493,15 @@ export function ClientsPanel() {
                         >
                           <Pencil className="size-3.5" /> Editar
                         </button>
-                        <button
-                          type="button"
-                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-destructive/30 px-2 text-xs text-destructive"
-                          onClick={() => void handleDeleteContact(contact)}
-                        >
-                          <Trash2 className="size-3.5" /> Eliminar
-                        </button>
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-destructive/30 px-2 text-xs text-destructive"
+                            onClick={() => void handleDeleteContact(contact)}
+                          >
+                            <Trash2 className="size-3.5" /> Eliminar
+                          </button>
+                        ) : null}
                       </div>
                     ) : null}
                   </article>
@@ -1623,14 +1625,16 @@ export function ClientsPanel() {
                           <Pencil className="size-3.5" />
                           Editar
                         </button>
-                        <button
-                          type="button"
-                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
-                          onClick={() => void handleDeleteClient(client)}
-                        >
-                          <Trash2 className="size-3.5" />
-                          Eliminar
-                        </button>
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
+                            onClick={() => void handleDeleteClient(client)}
+                          >
+                            <Trash2 className="size-3.5" />
+                            Eliminar
+                          </button>
+                        ) : null}
                       </>
                     ) : null}
                   </div>
@@ -1698,14 +1702,16 @@ export function ClientsPanel() {
                                 >
                                   Editar
                                 </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="h-8 text-destructive"
-                                  onClick={() => void handleDeleteClient(client)}
-                                >
-                                  Eliminar
-                                </Button>
+                                {canDelete ? (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="h-8 text-destructive"
+                                    onClick={() => void handleDeleteClient(client)}
+                                  >
+                                    Eliminar
+                                  </Button>
+                                ) : null}
                               </>
                             ) : null}
                           </div>
@@ -1765,14 +1771,16 @@ export function ClientsPanel() {
                           <Pencil className="size-3.5" />
                           Editar
                         </button>
-                        <button
-                          type="button"
-                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
-                          onClick={() => void handleDeleteEquipment(item)}
-                        >
-                          <Trash2 className="size-3.5" />
-                          Eliminar
-                        </button>
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
+                            onClick={() => void handleDeleteEquipment(item)}
+                          >
+                            <Trash2 className="size-3.5" />
+                            Eliminar
+                          </button>
+                        ) : null}
                       </>
                     ) : null}
                   </div>
@@ -1847,14 +1855,16 @@ export function ClientsPanel() {
                                 >
                                   Editar
                                 </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="h-8 text-destructive"
-                                  onClick={() => void handleDeleteEquipment(item)}
-                                >
-                                  Eliminar
-                                </Button>
+                                {canDelete ? (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="h-8 text-destructive"
+                                    onClick={() => void handleDeleteEquipment(item)}
+                                  >
+                                    Eliminar
+                                  </Button>
+                                ) : null}
                               </>
                             ) : null}
                           </div>
@@ -1951,14 +1961,16 @@ export function ClientsPanel() {
                       Ver orden
                     </button>
                   ) : canWrite && item.service ? (
-                    <button
-                      type="button"
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
-                      onClick={() => void handleDeleteService(item.service!)}
-                    >
-                      <Trash2 className="size-3.5" />
-                      Eliminar
-                    </button>
+                    canDelete ? (
+                      <button
+                        type="button"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
+                        onClick={() => void handleDeleteService(item.service!)}
+                      >
+                        <Trash2 className="size-3.5" />
+                        Eliminar
+                      </button>
+                    ) : null
                   ) : undefined,
               }))}
             />
@@ -2040,16 +2052,18 @@ export function ClientsPanel() {
                               Ver orden
                             </Button>
                           ) : canWrite && item.service ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="h-8 text-destructive"
-                              onClick={() =>
-                                void handleDeleteService(item.service!)
-                              }
-                            >
-                              Eliminar
-                            </Button>
+                            canDelete ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="h-8 text-destructive"
+                                onClick={() =>
+                                  void handleDeleteService(item.service!)
+                                }
+                              >
+                                Eliminar
+                              </Button>
+                            ) : null
                           ) : (
                             "—"
                           )}

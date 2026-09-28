@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { QualityPanel } from "@/components/warehouse/quality-panel";
-import { getSession } from "@/lib/auth";
-import { canViewModule } from "@/lib/auth/permissions";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 
 export function QualityPage() {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const role = getSession()?.role ?? "direccion";
-    setAllowed(canViewModule(role, "calidad"));
-  }, []);
+  const access = useSessionAccess();
+  const allowed = access.ready ? access.canView("calidad") : null;
 
   return (
     <AppShell

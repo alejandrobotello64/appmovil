@@ -1,3 +1,5 @@
+import { findOrgArea } from "@/lib/users/org-catalog";
+
 export const COMPANY_AREAS = [
   { id: "almacen", label: "Almacén" },
   { id: "compras", label: "Compras" },
@@ -25,6 +27,8 @@ const AREA_ALIASES: Record<string, CompanyAreaId> = {
 export function normalizeArea(value: string | null | undefined): string {
   const raw = (value ?? "").trim().toLowerCase();
   if (!raw) return "";
+  const orgArea = findOrgArea(raw);
+  if (orgArea) return orgArea.calendarArea;
   const folded = raw.normalize("NFD").replace(/\p{Diacritic}/gu, "");
   return AREA_ALIASES[folded] ?? AREA_ALIASES[raw] ?? folded.replace(/\s+/g, "-");
 }

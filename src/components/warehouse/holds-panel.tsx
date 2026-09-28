@@ -54,7 +54,8 @@ function locationLabel(city: string, state: string) {
 }
 
 export function HoldsPanel() {
-  const { canWrite } = usePermissions("apartados");
+  const { canWrite, canCreate, canEdit, canDelete } =
+    usePermissions("apartados");
   const [holds, setHolds] = useState<InventoryHold[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -217,7 +218,7 @@ export function HoldsPanel() {
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
-    if (!canWrite) return;
+    if (!canCreate) return;
     setSubmitting(true);
     setError("");
     setMessage("");
@@ -256,7 +257,7 @@ export function HoldsPanel() {
   }
 
   async function handleRelease(hold: InventoryHold) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     const ok = window.confirm(
       `¿Liberar el apartado ${hold.folio}? El stock vuelve a estar disponible.`
     );
@@ -271,7 +272,7 @@ export function HoldsPanel() {
   }
 
   async function handleCancel(hold: InventoryHold) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(`¿Cancelar el apartado ${hold.folio}?`);
     if (!ok) return;
     try {
@@ -284,7 +285,7 @@ export function HoldsPanel() {
   }
 
   async function handleFulfill(hold: InventoryHold) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     const ok = window.confirm(
       `¿Entregar el apartado ${hold.folio}?\nSe registrará una salida real por cada artículo.`
     );
@@ -316,7 +317,7 @@ export function HoldsPanel() {
               entregarlo.
             </p>
           </div>
-          {canWrite ? (
+          {canCreate ? (
             <Button
               type="button"
               onClick={() => {
@@ -752,30 +753,36 @@ export function HoldsPanel() {
                 actions:
                   canWrite && hold.status === "activo" ? (
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
-                        onClick={() => void handleFulfill(hold)}
-                      >
-                        <CheckCircle2 className="size-3.5" />
-                        Entregar
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
-                        onClick={() => void handleRelease(hold)}
-                      >
-                        <Unlock className="size-3.5" />
-                        Liberar
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
-                        onClick={() => void handleCancel(hold)}
-                      >
-                        <XCircle className="size-3.5" />
-                        Cancelar
-                      </button>
+                      {canEdit ? (
+                        <button
+                          type="button"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
+                          onClick={() => void handleFulfill(hold)}
+                        >
+                          <CheckCircle2 className="size-3.5" />
+                          Entregar
+                        </button>
+                      ) : null}
+                      {canEdit ? (
+                        <button
+                          type="button"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
+                          onClick={() => void handleRelease(hold)}
+                        >
+                          <Unlock className="size-3.5" />
+                          Liberar
+                        </button>
+                      ) : null}
+                      {canDelete ? (
+                        <button
+                          type="button"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
+                          onClick={() => void handleCancel(hold)}
+                        >
+                          <XCircle className="size-3.5" />
+                          Cancelar
+                        </button>
+                      ) : null}
                     </div>
                   ) : undefined,
               }))}
@@ -843,30 +850,36 @@ export function HoldsPanel() {
                         <td className="px-3 py-2">
                           {canWrite && hold.status === "activo" ? (
                             <div className="flex flex-col gap-1">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="h-8 justify-start"
-                                onClick={() => void handleFulfill(hold)}
-                              >
-                                Entregar
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="h-8 justify-start"
-                                onClick={() => void handleRelease(hold)}
-                              >
-                                Liberar
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="h-8 justify-start text-destructive"
-                                onClick={() => void handleCancel(hold)}
-                              >
-                                Cancelar
-                              </Button>
+                              {canEdit ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="h-8 justify-start"
+                                  onClick={() => void handleFulfill(hold)}
+                                >
+                                  Entregar
+                                </Button>
+                              ) : null}
+                              {canEdit ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="h-8 justify-start"
+                                  onClick={() => void handleRelease(hold)}
+                                >
+                                  Liberar
+                                </Button>
+                              ) : null}
+                              {canDelete ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="h-8 justify-start text-destructive"
+                                  onClick={() => void handleCancel(hold)}
+                                >
+                                  Cancelar
+                                </Button>
+                              ) : null}
                             </div>
                           ) : (
                             "—"

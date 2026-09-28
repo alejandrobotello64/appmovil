@@ -131,7 +131,7 @@ function statusTone(status: VehicleServiceStatus) {
 }
 
 export function FleetPanel() {
-  const { canWrite } = usePermissions("flotilla");
+  const { canWrite, canExport, canDelete } = usePermissions("flotilla");
   const [tab, setTab] = useState<MainTab>("monitoreo");
   const [vehicles, setVehicles] = useState<CompanyVehicle[]>([]);
   const [services, setServices] = useState<VehicleService[]>([]);
@@ -290,7 +290,7 @@ export function FleetPanel() {
   }
 
   async function removeVehicle(id: string) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     if (!confirm("¿Eliminar este vehículo y su historial de servicios?")) return;
     try {
       await deleteCompanyVehicle(id);
@@ -1257,13 +1257,15 @@ export function FleetPanel() {
                           </button>
                         ) : null}
                         {canWrite ? (
-                          <button
-                            type="button"
-                            className="text-destructive hover:underline"
-                            onClick={() => void removeVehicle(v.id)}
-                          >
-                            Eliminar
-                          </button>
+                          canDelete ? (
+                            <button
+                              type="button"
+                              className="text-destructive hover:underline"
+                              onClick={() => void removeVehicle(v.id)}
+                            >
+                              Eliminar
+                            </button>
+                          ) : null
                         ) : null}
                       </div>
                     </td>
@@ -1445,14 +1447,16 @@ export function FleetPanel() {
                     </label>
                   ) : null}
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => void downloadVehicleServicePdf(selectedService)}
-                    >
-                      <FileDown className="size-4" /> PDF
-                    </Button>
+                    {canExport ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void downloadVehicleServicePdf(selectedService)}
+                      >
+                        <FileDown className="size-4" /> PDF
+                      </Button>
+                    ) : null}
                     {canWrite ? (
                       <Button
                         type="button"
@@ -1463,7 +1467,7 @@ export function FleetPanel() {
                         Editar
                       </Button>
                     ) : null}
-                    {canWrite ? (
+                    {canDelete ? (
                       <Button
                         type="button"
                         size="sm"

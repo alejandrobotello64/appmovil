@@ -31,7 +31,7 @@ const EMPTY_FORM: SupplierInput = {
 };
 
 export function SuppliersPanel() {
-  const { canWrite } = usePermissions("proveedores");
+  const { canWrite, canDelete } = usePermissions("proveedores");
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
@@ -127,6 +127,7 @@ export function SuppliersPanel() {
   }
 
   async function handleDelete(supplier: Supplier) {
+    if (!canDelete) return;
     const confirmed = window.confirm(
       `¿Eliminar al proveedor "${supplier.name}"?`
     );
@@ -230,14 +231,16 @@ export function SuppliersPanel() {
                     <Pencil className="size-3.5" />
                     Editar
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(supplier)}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
-                  >
-                    <Trash2 className="size-3.5" />
-                    Eliminar
-                  </button>
+                  {canDelete ? (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(supplier)}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                    >
+                      <Trash2 className="size-3.5" />
+                      Eliminar
+                    </button>
+                  ) : null}
                 </>
               ) : undefined,
             }))}
@@ -311,14 +314,16 @@ export function SuppliersPanel() {
                           >
                             <Pencil className="size-4" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(supplier)}
-                            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            aria-label={`Eliminar ${supplier.name}`}
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
+                          {canDelete ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(supplier)}
+                              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              aria-label={`Eliminar ${supplier.name}`}
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          ) : null}
                         </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">Consulta</span>

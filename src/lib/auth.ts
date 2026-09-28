@@ -1,7 +1,12 @@
 import { supabase } from "@/lib/supabase/client";
+import {
+  parsePermissionOverrides,
+  type PermissionOverrides,
+} from "@/lib/auth/permissions";
 
 const SESSION_KEY = "mas-session";
 const REMEMBER_KEY = "mas-remember";
+export const SESSION_CHANGE_EVENT = "mas-session-change";
 
 export type AppUser = {
   id: string;
@@ -9,6 +14,7 @@ export type AppUser = {
   fullName: string | null;
   role: string;
   photoUrl?: string;
+  permissionOverrides?: PermissionOverrides;
 };
 
 export type RememberedCredentials = {
@@ -22,6 +28,7 @@ export type SessionData = {
   fullName: string | null;
   role: string;
   photoUrl?: string;
+  permissionOverrides?: PermissionOverrides;
   loggedInAt: number;
 };
 
@@ -72,36 +79,75 @@ export async function loginWithCredentials(
     fullName: user.full_name,
     role: user.role,
     photoUrl: user.photo_url ?? "",
+    permissionOverrides: parsePermissionOverrides(user.permission_overrides),
   };
+}
+
+function writeSession(session: SessionData) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
 }
 
 export function createSession(user: AppUser) {
   if (typeof window === "undefined") return;
-  const session: SessionData = {
+  writeSession({
     id: user.id,
     username: user.username,
     fullName: user.fullName,
     role: user.role,
     photoUrl: user.photoUrl ?? "",
+    permissionOverrides: user.permissionOverrides ?? {},
     loggedInAt: Date.now(),
-  };
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  });
 }
 
 export function clearSession() {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(SESSION_KEY);
+  window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
 }
 
-export function getSession(): SessionData | null {
+/**
+ * Relee rol y permisos desde la base para que los cambios hechos por un
+ * administrador apliquen sin volver a iniciar sesión.
+ * Devuelve `false` si el usuario ya no existe o fue deshabilitado.
+ */
+export async function refreshSessionAccess(): Promise<boolean> {
+  const current = getSession();
+  if (!current) return false;
+  const { data, error } = await supabase.rpc("get_app_user_access", {
+    p_user_id: current.id,
+  });
+  if (error) return true;
+  const row = data?.[0];
+  if (!row || !row.is_active) return false;
+
+  const overrides = parsePermissionOverrides(row.permission_overrides);
+  const changed =
+    row.role !== current.role ||
+    JSON.stringify(overrides) !== JSON.stringify(current.permissionOverrides ?? {});
+  if (changed) {
+    writeSession({ ...current, role: row.role, permissionOverrides: overrides });
+  }
+  return true;
+}
+
+export function getRawSession(): string | null {
   if (typeof window === "undefined") return null;
-  const raw = sessionStorage.getItem(SESSION_KEY);
+  return sessionStorage.getItem(SESSION_KEY);
+}
+
+export function parseSession(raw: string | null): SessionData | null {
   if (!raw) return null;
   try {
     return JSON.parse(raw) as SessionData;
   } catch {
     return null;
   }
+}
+
+export function getSession(): SessionData | null {
+  return parseSession(getRawSession());
 }
 
 export function saveRememberedCredentials(credentials: RememberedCredentials) {

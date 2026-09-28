@@ -107,7 +107,7 @@ function dueTone(date: string) {
 }
 
 export function TendersPanel() {
-  const { canWrite } = usePermissions("licitaciones");
+  const { canWrite, canDelete } = usePermissions("licitaciones");
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -354,7 +354,7 @@ export function TendersPanel() {
   }
 
   async function handleDelete(tender: Tender) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const ok = window.confirm(`¿Eliminar la licitación ${tender.folioInterno}?`);
     if (!ok) return;
     try {
@@ -1181,15 +1181,17 @@ export function TendersPanel() {
                       Crear apartado
                     </Button>
                   ) : null}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9 text-destructive"
-                    onClick={() => void handleDelete(selected)}
-                  >
-                    <Trash2 className="size-3.5" />
-                    Eliminar
-                  </Button>
+                  {canDelete ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 text-destructive"
+                      onClick={() => void handleDelete(selected)}
+                    >
+                      <Trash2 className="size-3.5" />
+                      Eliminar
+                    </Button>
+                  ) : null}
                 </>
               ) : null}
             </div>

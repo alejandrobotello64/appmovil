@@ -50,7 +50,9 @@ const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
 
 export function ChecklistTemplatesPanel() {
-  const { canWrite } = usePermissions("ordenes_servicio");
+  const { canWrite, canCreate, canDelete, canApprove } = usePermissions(
+    "plantillas_checklist"
+  );
   const session = getSession();
   const actor = session?.username ?? "usuario";
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
@@ -74,7 +76,7 @@ export function ChecklistTemplatesPanel() {
   const [editMin, setEditMin] = useState("");
   const [editMax, setEditMax] = useState("");
   const [editUnit, setEditUnit] = useState("");
-  const isAdvisor = isActorServiceAdvisor(staff, session);
+  const isAdvisor = isActorServiceAdvisor(staff, session) || canApprove;
 
   async function reload(quiet = false) {
     if (!quiet) setLoading(true);
@@ -234,7 +236,7 @@ export function ChecklistTemplatesPanel() {
   }
 
   async function removePoint(pointId: string) {
-    if (!canEditSelected) return;
+    if (!canEditSelected || !canDelete) return;
     if (!window.confirm("¿Eliminar este punto de la plantilla?")) return;
     try {
       setSaving(true);
@@ -249,7 +251,7 @@ export function ChecklistTemplatesPanel() {
   }
 
   async function createTemplate() {
-    if (!canWrite || !createName.trim()) return;
+    if (!canCreate || !createName.trim()) return;
     try {
       setSaving(true);
       setError("");
@@ -339,7 +341,7 @@ export function ChecklistTemplatesPanel() {
             aplica por separado en la orden de servicio.
           </p>
         </div>
-        {canWrite ? (
+        {canCreate ? (
           <Button
             type="button"
             onClick={() => setShowCreate((v) => !v)}
@@ -376,7 +378,7 @@ export function ChecklistTemplatesPanel() {
         ))}
       </div>
 
-      {showCreate && canWrite ? (
+      {showCreate && canCreate ? (
         <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1 block text-muted-foreground">Tipo de lista</span>
@@ -789,14 +791,16 @@ export function ChecklistTemplatesPanel() {
                               >
                                 <Pencil className="size-3.5" />
                               </button>
-                            <button
-                              type="button"
-                              className="rounded-md p-1 text-destructive hover:bg-destructive/10"
-                              onClick={() => void removePoint(point.id)}
-                              aria-label={`Eliminar ${point.label}`}
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
+                            {canDelete ? (
+                              <button
+                                type="button"
+                                className="rounded-md p-1 text-destructive hover:bg-destructive/10"
+                                onClick={() => void removePoint(point.id)}
+                                aria-label={`Eliminar ${point.label}`}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            ) : null}
                             </div>
                           ) : null}
                             </>

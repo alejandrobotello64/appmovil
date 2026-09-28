@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { TendersPanel } from "@/components/warehouse/tenders-panel";
-import { getSession } from "@/lib/auth";
-import { canViewModule } from "@/lib/auth/permissions";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 
 export function TendersPage() {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const role = getSession()?.role ?? "direccion";
-    setAllowed(canViewModule(role, "licitaciones"));
-  }, []);
+  const access = useSessionAccess();
+  const allowed = access.ready ? access.canView("licitaciones") : null;
 
   return (
     <AppShell title="Licitaciones" subtitle="MAS · CompraMX">

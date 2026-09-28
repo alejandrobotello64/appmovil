@@ -178,13 +178,21 @@ export type InventoryItem = {
   subcategory: string;
   imagePath: string;
   imageUrl: string;
+  /** Imágenes adicionales; la principal sigue en imagePath/imageUrl. */
+  galleryImages: InventoryGalleryImage[];
   createdAt: string;
   updatedAt: string;
 };
 
+export type InventoryGalleryImage = {
+  path: string;
+  url: string;
+  uploadedAt: string;
+};
+
 export type InventoryItemInput = Omit<
   InventoryItem,
-  "id" | "createdAt" | "updatedAt" | "imagePath" | "imageUrl"
+  "id" | "createdAt" | "updatedAt" | "imagePath" | "imageUrl" | "galleryImages"
 > & {
   imagePath?: string;
   imageUrl?: string;

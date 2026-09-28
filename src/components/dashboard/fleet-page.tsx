@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { FleetPanel } from "@/components/warehouse/fleet-panel";
-import { getSession } from "@/lib/auth";
-import { canViewModule } from "@/lib/auth/permissions";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 
 export function FleetPage() {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const role = getSession()?.role ?? "direccion";
-    setAllowed(canViewModule(role, "flotilla"));
-  }, []);
+  const access = useSessionAccess();
+  const allowed = access.ready ? access.canView("flotilla") : null;
 
   return (
     <AppShell title="Flotilla" subtitle="MAS · Vehículos de la empresa">

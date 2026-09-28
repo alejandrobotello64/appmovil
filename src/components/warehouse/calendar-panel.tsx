@@ -192,7 +192,7 @@ function reminderMessage(event: CalendarEvent) {
 }
 
 export function CalendarPanel() {
-  const { canWrite, role } = usePermissions("calendario");
+  const { canWrite, role, canDelete } = usePermissions("calendario");
   const userArea = roleToArea(role);
   const isAdmin = role === "administrador";
   const [cursor, setCursor] = useState(() => {
@@ -497,6 +497,7 @@ export function CalendarPanel() {
   }
 
   async function handleDelete(id: string) {
+    if (!canDelete) return;
     setError("");
     try {
       await deleteCalendarEvent(id);
@@ -758,14 +759,16 @@ export function CalendarPanel() {
                           <Mail className="size-4" />
                         </Button>
                         {canWrite ? (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => void handleDelete(item.sourceId!)}
-                            aria-label="Eliminar evento"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          canDelete ? (
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => void handleDelete(item.sourceId!)}
+                              aria-label="Eliminar evento"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          ) : null
                         ) : null}
                       </div>
                     ) : null}

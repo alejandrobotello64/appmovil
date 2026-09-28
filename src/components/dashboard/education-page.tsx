@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { EducationPanel } from "@/components/warehouse/education-panel";
-import { getSession } from "@/lib/auth";
-import { canViewModule } from "@/lib/auth/permissions";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 
 export function EducationPage() {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const role = getSession()?.role ?? "direccion";
-    setAllowed(canViewModule(role, "educacion"));
-  }, []);
+  const access = useSessionAccess();
+  const allowed = access.ready ? access.canView("educacion") : null;
 
   return (
     <AppShell title="Educación" subtitle="MAS · Capacitaciones de especialistas">

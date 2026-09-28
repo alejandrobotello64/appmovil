@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil, Trash2, Eye } from "lucide-react";
+import {
+  Eye,
+  ImagePlus,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+  Star,
+  Trash2,
+  ZoomIn,
+} from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
 import { InventoryStats } from "@/components/inventory/inventory-stats";
 import { Button } from "@/components/ui/button";
@@ -10,15 +20,19 @@ import {
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
 import {
+  addInventoryItemImages,
   clearInventoryItemImage,
   createInventoryItem,
   deleteInventoryItem,
   getEquipmentItems,
   getStockStatus,
   getSupplyItemsByCategory,
+  removeInventoryItemImage,
+  setInventoryItemPrimaryImage,
   updateInventoryItem,
   uploadInventoryItemImage,
 } from "@/lib/inventory/storage";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 import {
   ASSET_STATUS_OPTIONS,
   categoryRequiresExpiry,
@@ -51,6 +65,19 @@ const STATUS_STYLES: Record<StockStatus, string> = {
   agotado: "bg-destructive/10 text-destructive",
 };
 
+type ItemImage = { path: string; url: string; primary: boolean };
+
+function itemImages(item: InventoryItem): ItemImage[] {
+  const images: ItemImage[] = [];
+  if (item.imageUrl) {
+    images.push({ path: item.imagePath, url: item.imageUrl, primary: true });
+  }
+  for (const image of item.galleryImages) {
+    images.push({ path: image.path, url: image.url, primary: false });
+  }
+  return images;
+}
+
 function getCategoryLabel(category: InventoryCategoryId) {
   return (
     INVENTORY_CATEGORIES.find((item) => item.id === category)?.label ?? category
@@ -77,7 +104,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const permissionModule: WarehouseModule = isEquipment
     ? "equipo"
     : (supplyCategory as WarehouseModule);
-  const { canWrite } = usePermissions(permissionModule);
+  const { canWrite, canCreate, canDelete, canImport, canExport } =
+    usePermissions(permissionModule);
   const supplyMeta = supplyCategory
     ? getSupplyCategoryMeta(supplyCategory)
     : null;
@@ -98,6 +126,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [viewingItem, setViewingItem] = useState<InventoryItem | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -204,6 +234,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   }, [panelMode, isEquipment, supplyCategory]);
 
   function handleView(item: InventoryItem) {
+    setLightboxIndex(null);
     setViewingItem(item);
   }
 
@@ -213,35 +244,60 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
     setFormOpen(true);
   }
 
-  async function handleImageUpload(file: File | null) {
-    if (!viewingItem || !file || !canWrite) return;
+  async function runImageAction(
+    action: () => Promise<InventoryItem>,
+    fallbackMessage: string
+  ) {
     try {
       setError("");
-      const updated = await uploadInventoryItemImage(viewingItem.id, file);
+      setImageBusy(true);
+      const updated = await action();
       setViewingItem(updated);
       await refreshItems();
+      return updated;
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo subir la imagen."
-      );
+      setError(err instanceof Error ? err.message : fallbackMessage);
+      return null;
+    } finally {
+      setImageBusy(false);
     }
   }
 
-  async function handleClearImage() {
-    if (!viewingItem || !canWrite) return;
-    try {
-      setError("");
-      const updated = await clearInventoryItemImage(viewingItem.id);
-      setViewingItem(updated);
-      await refreshItems();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo quitar la imagen."
-      );
-    }
+  async function handleAddImages(files: File[]) {
+    if (!viewingItem || files.length === 0 || !canWrite) return;
+    await runImageAction(
+      () => addInventoryItemImages(viewingItem.id, files),
+      "No se pudieron subir las imágenes."
+    );
   }
+
+  async function handleRemoveImage(path: string) {
+    if (!viewingItem || !canWrite) return;
+    if (!window.confirm("¿Quitar esta imagen del equipo?")) return;
+    const updated = await runImageAction(
+      () => removeInventoryItemImage(viewingItem.id, path),
+      "No se pudo quitar la imagen."
+    );
+    if (!updated) return;
+    const remaining = itemImages(updated).length;
+    setLightboxIndex((current) =>
+      current == null || remaining === 0 ? null : Math.min(current, remaining - 1)
+    );
+  }
+
+  async function handleMakePrimary(path: string) {
+    if (!viewingItem || !canWrite) return;
+    const updated = await runImageAction(
+      () => setInventoryItemPrimaryImage(viewingItem.id, path),
+      "No se pudo cambiar la imagen principal."
+    );
+    if (updated) setLightboxIndex((current) => (current == null ? null : 0));
+  }
+
+  const viewingImages = viewingItem ? itemImages(viewingItem) : [];
 
   async function handleDelete(item: InventoryItem) {
+    if (!canDelete) return;
     const confirmed = window.confirm(
       `¿Desactivar "${item.name}"? El historial de movimientos se conserva.`
     );
@@ -300,37 +356,30 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                       : `${supplyMeta?.description ?? ""}. Tabla propia sin caducidad obligatoria.`}
               </p>
             </div>
-            {canWrite ? (
             <div className="flex flex-wrap items-center gap-2">
               <InventoryExcelActions
                 items={items}
-                canWrite={canWrite}
+                canWrite={canImport}
+                canExport={canExport}
                 defaultKind={isEquipment ? "equipo" : "producto"}
                 onImported={refreshItems}
                 onError={setError}
               />
-              <Button
-                onClick={() => {
-                  setEditingItem(null);
-                  setFormOpen(true);
-                }}
-                className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
-              >
-                <Plus className="size-4" />
-                {isEquipment
-                  ? "Nuevo equipo"
-                  : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
-              </Button>
+              {canCreate ? (
+                <Button
+                  onClick={() => {
+                    setEditingItem(null);
+                    setFormOpen(true);
+                  }}
+                  className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+                >
+                  <Plus className="size-4" />
+                  {isEquipment
+                    ? "Nuevo equipo"
+                    : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
+                </Button>
+              ) : null}
             </div>
-            ) : (
-              <InventoryExcelActions
-                items={items}
-                canWrite={false}
-                defaultKind={isEquipment ? "equipo" : "producto"}
-                onImported={refreshItems}
-                onError={setError}
-              />
-            )}
           </div>
 
           <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[1fr_auto]">
@@ -442,14 +491,16 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                           <Pencil className="size-3.5" />
                           Editar
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item)}
-                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
-                        >
-                          <Trash2 className="size-3.5" />
-                          Desactivar
-                        </button>
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(item)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                          >
+                            <Trash2 className="size-3.5" />
+                            Desactivar
+                          </button>
+                        ) : null}
                       </>
                     ) : null}
                   </>
@@ -600,14 +651,16 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                                 >
                                   <Pencil className="size-4" />
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDelete(item)}
-                                  className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                  aria-label={`Eliminar ${item.name}`}
-                                >
-                                  <Trash2 className="size-4" />
-                                </button>
+                                {canDelete ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDelete(item)}
+                                    className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                    aria-label={`Eliminar ${item.name}`}
+                                  >
+                                    <Trash2 className="size-4" />
+                                  </button>
+                                ) : null}
                               </>
                             ) : null}
                           </div>
@@ -697,56 +750,99 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setViewingItem(null)}
+                  onClick={() => {
+                    setLightboxIndex(null);
+                    setViewingItem(null);
+                  }}
                 >
                   Cerrar
                 </Button>
               </div>
             </div>
 
-            <div className="mb-4 grid gap-4 sm:grid-cols-[160px_1fr]">
+            <div className="mb-4 grid gap-4 sm:grid-cols-[200px_1fr]">
               <div className="space-y-2">
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/30">
-                  {viewingItem.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                {viewingImages[0] ? (
+                  <button
+                    type="button"
+                    className="group relative block aspect-square w-full overflow-hidden rounded-xl border border-border bg-muted/30"
+                    onClick={() => setLightboxIndex(0)}
+                    aria-label="Ampliar imagen principal"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={viewingItem.imageUrl}
+                      src={viewingImages[0].url}
                       alt={viewingItem.name}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition group-hover:scale-105"
                     />
-                  ) : (
-                    <span className="px-3 text-center text-xs text-muted-foreground">
-                      Sin imagen
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+                      <ZoomIn className="size-7" />
                     </span>
-                  )}
-                </div>
-                {canWrite ? (
-                  <div className="space-y-1">
-                    <label className="block">
-                      <span className="mb-1 block text-xs text-muted-foreground">
-                        Anexar / cambiar imagen
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="block w-full text-xs"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] ?? null;
-                          void handleImageUpload(file);
-                          e.target.value = "";
-                        }}
-                      />
-                    </label>
-                    {viewingItem.imageUrl ? (
-                      <button
-                        type="button"
-                        className="text-xs text-destructive hover:underline"
-                        onClick={() => void handleClearImage()}
-                      >
-                        Quitar imagen
-                      </button>
-                    ) : null}
+                    <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white">
+                      Principal
+                    </span>
+                  </button>
+                ) : (
+                  <div className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-border bg-muted/30">
+                    <span className="px-3 text-center text-xs text-muted-foreground">
+                      Sin imágenes
+                    </span>
                   </div>
+                )}
+
+                {viewingImages.length > 1 ? (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {viewingImages.slice(1).map((image, i) => (
+                      <button
+                        key={image.path}
+                        type="button"
+                        className="aspect-square overflow-hidden rounded-lg border border-border hover:opacity-85"
+                        onClick={() => setLightboxIndex(i + 1)}
+                        aria-label={`Ampliar imagen ${i + 2}`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={image.url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                <p className="text-xs text-muted-foreground">
+                  {viewingImages.length === 0
+                    ? "Aún no hay fotos del equipo."
+                    : `${viewingImages.length} ${viewingImages.length === 1 ? "imagen" : "imágenes"} · clic para ampliar`}
+                </p>
+
+                {canWrite ? (
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted",
+                      imageBusy && "pointer-events-none opacity-60"
+                    )}
+                  >
+                    {imageBusy ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <ImagePlus className="size-4" />
+                    )}
+                    {imageBusy ? "Guardando…" : "Agregar imágenes"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="sr-only"
+                      disabled={imageBusy}
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        e.target.value = "";
+                        void handleAddImages(files);
+                      }}
+                    />
+                  </label>
                 ) : null}
               </div>
 
@@ -801,6 +897,49 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
             </p>
           </div>
         </div>
+      ) : null}
+
+      {viewingItem && lightboxIndex != null && viewingImages[lightboxIndex] ? (
+        <ImageLightbox
+          images={viewingImages.map((image, i) => ({
+            src: image.url,
+            alt: viewingItem.name,
+            caption: `${viewingItem.name}${image.primary ? " · Principal" : ` · Imagen ${i + 1}`}`,
+          }))}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
+          renderActions={
+            canWrite
+              ? (index) => {
+                  const image = viewingImages[index];
+                  if (!image) return null;
+                  return (
+                    <>
+                      {!image.primary ? (
+                        <button
+                          type="button"
+                          disabled={imageBusy}
+                          onClick={() => void handleMakePrimary(image.path)}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 disabled:opacity-50"
+                        >
+                          <Star className="size-3.5" /> Hacer principal
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={imageBusy}
+                        onClick={() => void handleRemoveImage(image.path)}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-red-500/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                      >
+                        <Trash2 className="size-3.5" /> Quitar imagen
+                      </button>
+                    </>
+                  );
+                }
+              : undefined
+          }
+        />
       ) : null}
     </>
   );

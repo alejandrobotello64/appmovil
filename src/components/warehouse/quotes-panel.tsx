@@ -90,7 +90,7 @@ const EMPTY: QuoteInput = {
 };
 
 export function QuotesPanel() {
-  const { canWrite } = usePermissions("cotizaciones");
+  const { canWrite, canDelete, canExport } = usePermissions("cotizaciones");
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -346,7 +346,7 @@ export function QuotesPanel() {
   }
 
   async function handleDelete(quote: Quote) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     if (!window.confirm(`¿Eliminar ${quote.folio}?`)) return;
     try {
       await deleteQuote(quote.id);
@@ -359,6 +359,7 @@ export function QuotesPanel() {
   }
 
   function handlePdf(quote: Quote) {
+    if (!canExport) return;
     void downloadQuotePdf(quote)
       .then(() => setMessage(`PDF ${quote.folio} descargado.`))
       .catch((err) =>
@@ -937,14 +938,16 @@ export function QuotesPanel() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-                    onClick={() => handlePdf(selected)}
-                  >
-                    <FileDown className="size-4" />
-                    Descargar PDF
-                  </Button>
+                  {canExport ? (
+                    <Button
+                      type="button"
+                      className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                      onClick={() => handlePdf(selected)}
+                    >
+                      <FileDown className="size-4" />
+                      Descargar PDF
+                    </Button>
+                  ) : null}
                   {canWrite ? (
                     <>
                       <Button
@@ -954,14 +957,16 @@ export function QuotesPanel() {
                       >
                         Editar
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="text-destructive"
-                        onClick={() => void handleDelete(selected)}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
+                      {canDelete ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="text-destructive"
+                          onClick={() => void handleDelete(selected)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      ) : null}
                     </>
                   ) : null}
                 </div>

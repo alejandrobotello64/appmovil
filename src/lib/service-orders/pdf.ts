@@ -1,6 +1,13 @@
 import { jsPDF } from "jspdf";
-import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import {
+  drawBrandedFooter,
+  drawBrandedHeader,
+  drawCompanySealBlock,
+  drawSealImage,
+  loadCompanySealDataUrl,
+} from "@/lib/brand/pdf";
 import { biomedicalInstrumentTypeLabel } from "@/lib/biomedical-instruments/types";
+import { findStaffProfile, type StaffProfile } from "@/lib/users/staff";
 import {
   checklistItemsByKind,
   checklistResultLabel,
@@ -485,46 +492,202 @@ function drawBlankField(doc: jsPDF, label: string, x: number, y: number, width: 
   doc.line(x + 22, y + 0.8, x + width, y + 0.8);
 }
 
-function drawHospitalSignatures(doc: jsPDF, y: number) {
+type SignatureBox =
+  | { kind: "blank"; title: string; fields?: string[] }
+  | { kind: "technician"; name: string; profile: StaffProfile | null };
+
+const SIGNATURE_BOX_H = 50;
+const SIGNATURE_BLOCK_H = SIGNATURE_BOX_H + 19;
+
+async function technicianBox(order: ServiceOrder): Promise<SignatureBox> {
+  const name = order.technician.trim();
+  const profile = name ? await findStaffProfile(name) : null;
+  return { kind: "technician", name, profile };
+}
+
+function fitText(doc: jsPDF, text: string, width: number) {
+  const [first] = doc.splitTextToSize(text, width) as string[];
+  return first ?? "";
+}
+
+function drawTechnicianBox(
+  doc: jsPDF,
+  box: Extract<SignatureBox, { kind: "technician" }>,
+  x: number,
+  y: number,
+  w: number
+) {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(59, 70, 165);
+  doc.text("Por Medical Advanced Supplies", x + 4, y + 6);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(110, 110, 110);
+  doc.text("Técnico que realiza el servicio", x + 4, y + 10);
+
+  const profile = box.profile;
+  const puesto = [profile?.jobTitle, profile?.department].filter(Boolean).join(" · ");
+  const rows: [string, string][] = [
+    ["Nombre", profile?.fullName || box.name || ""],
+    ["Puesto", puesto],
+    ["No. empleado", profile?.employeeNumber ?? ""],
+    ["Teléfono", profile?.phone ?? ""],
+    ["Correo", profile?.email ?? ""],
+  ];
+
+  const labelW = 19;
+  let rowY = y + 15.5;
+  for (const [label, value] of rows) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(110, 110, 110);
+    doc.text(label, x + 4, rowY);
+    if (value) {
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(35, 35, 35);
+      doc.text(fitText(doc, value, w - labelW - 8), x + 4 + labelW, rowY);
+    } else {
+      doc.setDrawColor(200, 200, 208);
+      doc.line(x + 4 + labelW, rowY + 0.8, x + w - 4, rowY + 0.8);
+    }
+    rowY += 4.4;
+  }
+
+  doc.setDrawColor(150, 150, 160);
+  doc.line(x + 4, y + SIGNATURE_BOX_H - 6, x + w - 4, y + SIGNATURE_BOX_H - 6);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(110, 110, 110);
+  doc.text("Firma del técnico", x + w / 2, y + SIGNATURE_BOX_H - 2.5, { align: "center" });
+}
+
+function drawSignatureBoxes(
+  doc: jsPDF,
+  y: number,
+  heading: string,
+  note: string,
+  boxes: SignatureBox[]
+) {
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
-  const gap = 6;
-  const boxW = (pageW - margin * 2 - gap) / 2;
-  const boxH = 46;
+  const gap = 5;
+  const weight = (box: SignatureBox) =>
+    box.kind === "technician" && boxes.length > 2 ? 1.35 : 1;
+  const unit =
+    (pageW - margin * 2 - gap * (boxes.length - 1)) /
+    boxes.reduce((sum, box) => sum + weight(box), 0);
 
-  y = ensureSpace(doc, y, boxH + 16);
+  y = ensureSpace(doc, y, SIGNATURE_BLOCK_H);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(30, 30, 30);
-  doc.text("Firmas del personal del hospital", margin, y);
+  doc.text(heading, margin, y);
   y += 5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(90, 90, 90);
-  doc.text(
-    "Espacios en blanco para llenado manuscrito. No se imprimen nombres, cargos ni fechas.",
-    margin,
-    y
-  );
-  y += 6;
+  doc.text(note, margin, y);
+  y += 5;
 
-  const titles = ["Recibido / autorizado", "Vo.Bo. biomédica / mantenimiento"];
-  titles.forEach((title, index) => {
+  let x = margin;
+  boxes.forEach((box) => {
+    const boxW = unit * weight(box);
+    const boxX = x;
+    x += boxW + gap;
+    drawSignatureBox(doc, box, boxX, y, boxW);
+  });
+
+  return y + SIGNATURE_BOX_H + 8;
+}
+
+function drawSignatureBox(doc: jsPDF, box: SignatureBox, x: number, y: number, boxW: number) {
+  doc.setDrawColor(210, 214, 222);
+  if (box.kind === "technician") doc.setFillColor(246, 248, 253);
+  else doc.setFillColor(252, 252, 254);
+  doc.roundedRect(x, y, boxW, SIGNATURE_BOX_H, 1.5, 1.5, "FD");
+  if (box.kind === "technician") {
+    drawTechnicianBox(doc, box, x, y, boxW);
+    return;
+  }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(50, 50, 50);
+  doc.text(box.title, x + 4, y + 6);
+  const fields = box.fields ?? ["Nombre", "Cargo", "Firma", "Fecha"];
+  fields.forEach((field, i) => {
+    drawBlankField(doc, field, x + 4, y + 16 + i * 9, boxW - 8);
+  });
+}
+
+const STAMP_BOX_H = 44;
+const STAMPS_BLOCK_H = STAMP_BOX_H + 14;
+
+async function drawStampsSection(doc: jsPDF, y: number, clientTitle: string) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 14;
+  const gap = 6;
+  const seal = await loadCompanySealDataUrl();
+  const boxes = [
+    { title: clientTitle, seal: null },
+    { title: "Sello de Medical Advanced Supplies", seal },
+  ];
+  const boxW = (pageW - margin * 2 - gap * (boxes.length - 1)) / boxes.length;
+
+  y = ensureSpace(doc, y, STAMPS_BLOCK_H);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Sellos", margin, y);
+  y += 4;
+
+  boxes.forEach((box, index) => {
     const x = margin + index * (boxW + gap);
     doc.setDrawColor(210, 214, 222);
     doc.setFillColor(252, 252, 254);
-    doc.roundedRect(x, y, boxW, boxH, 1.5, 1.5, "FD");
+    doc.roundedRect(x, y, boxW, STAMP_BOX_H, 1.5, 1.5, "FD");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(50, 50, 50);
-    doc.text(title, x + 4, y + 6);
-    drawBlankField(doc, "Nombre", x + 4, y + 14, boxW - 8);
-    drawBlankField(doc, "Cargo", x + 4, y + 22, boxW - 8);
-    drawBlankField(doc, "Firma", x + 4, y + 30, boxW - 8);
-    drawBlankField(doc, "Fecha", x + 4, y + 38, boxW - 8);
+    doc.text(box.title, x + 4, y + 6);
+
+    const areaX = x + 4;
+    const areaY = y + 9;
+    const areaW = boxW - 8;
+    const areaH = STAMP_BOX_H - 13;
+    if (box.seal && drawSealImage(doc, box.seal, areaX + 2, areaY + 1, areaW - 4, areaH - 2)) {
+      return;
+    }
+
+    doc.setDrawColor(190, 196, 210);
+    doc.setLineDashPattern([1.5, 1.2], 0);
+    doc.roundedRect(areaX, areaY, areaW, areaH, 1.2, 1.2, "S");
+    doc.setLineDashPattern([], 0);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(170, 170, 170);
+    doc.text("Espacio para sello", x + boxW / 2, areaY + areaH / 2 + 1, {
+      align: "center",
+    });
   });
 
-  return y + boxH + 8;
+  doc.setDrawColor(220, 220, 220);
+  return y + STAMP_BOX_H + 8;
+}
+
+function drawHospitalSignatures(doc: jsPDF, y: number, technician: SignatureBox) {
+  return drawSignatureBoxes(
+    doc,
+    y,
+    "Firmas",
+    "Espacios del hospital en blanco para llenado manuscrito.",
+    [
+      { kind: "blank", title: "Recibido / autorizado" },
+      { kind: "blank", title: "Vo.Bo. biomédica / mantenimiento" },
+      technician,
+    ]
+  );
 }
 
 /** Cotización / propuesta económica para el cliente. */
@@ -581,7 +744,10 @@ export async function downloadServiceQuotePdf(order: ServiceOrder) {
     doc.setFont("helvetica", "normal");
     const notes = doc.splitTextToSize(order.serviceNotes, 180);
     doc.text(notes, margin, y);
+    y += notes.length * 4;
   }
+
+  await drawCompanySealBlock(doc, y + 8);
 
   drawBrandedFooter(doc);
   doc.save(`${order.folio}-cotizacion.pdf`);
@@ -662,13 +828,11 @@ export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
     showStage: true,
   });
 
-  y = ensureSpace(doc, y, 30);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("_______________________________", margin, y + 12);
-  doc.text("Firma técnico", margin, y + 17);
-  doc.text("_______________________________", 120, y + 12);
-  doc.text("Vo.Bo. calidad", 120, y + 17);
+  y = drawSignatureBoxes(doc, y, "Firmas", "Validación interna del servicio.", [
+    await technicianBox(order),
+    { kind: "blank", title: "Vo.Bo. calidad" },
+  ]);
+  await drawCompanySealBlock(doc, y);
 
   drawBrandedFooter(doc);
   doc.save(`${order.folio}-orden-trabajo.pdf`);
@@ -756,13 +920,17 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
     });
   }
 
-  y = ensureSpace(doc, y, 40);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("_______________________________", margin, y + 16);
-  doc.text("Firma del cliente", margin, y + 21);
-  doc.text("_______________________________", 120, y + 16);
-  doc.text("Firma del técnico", 120, y + 21);
+  const technician = await technicianBox(order);
+  y = ensureSpace(doc, y, SIGNATURE_BLOCK_H + STAMPS_BLOCK_H);
+  y = drawSignatureBoxes(
+    doc,
+    y,
+    "Firmas de conformidad",
+    "Espacio del cliente en blanco para llenado manuscrito.",
+    [{ kind: "blank", title: "Recibe por el cliente" }, technician]
+  );
+
+  await drawStampsSection(doc, y, "Sello del cliente / institución");
 
   drawBrandedFooter(doc);
   doc.save(`${order.folio}-entrega.pdf`);
@@ -843,7 +1011,10 @@ export async function downloadServiceHospitalPdf(order: ServiceOrder) {
     showStage: true,
   });
 
-  y = drawHospitalSignatures(doc, y);
+  const technician = await technicianBox(order);
+  y = ensureSpace(doc, y, SIGNATURE_BLOCK_H + STAMPS_BLOCK_H);
+  y = drawHospitalSignatures(doc, y, technician);
+  await drawStampsSection(doc, y, "Sello del hospital / institución");
 
   drawBrandedFooter(doc);
   doc.save(`${order.folio}-orden.pdf`);

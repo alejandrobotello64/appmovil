@@ -19,7 +19,7 @@ import {
   DesktopTable,
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
-import { getSession } from "@/lib/auth";
+import { getSession, refreshSessionAccess } from "@/lib/auth";
 import { supabase } from "@/lib/supabase/client";
 import {
   removeUserPhoto,
@@ -30,19 +30,26 @@ import { ModulePlaceholder } from "@/components/warehouse/module-placeholder";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import {
   APP_ROLES,
-  canWriteModule,
-  modulesForRole,
+  cleanOverrides,
+  hasPermission,
   normalizeRole,
+  parsePermissionOverrides,
   roleLabel,
   type AppRole,
-  type WarehouseModule,
+  type PermissionOverrides,
 } from "@/lib/auth/permissions";
 import { usePermissions } from "@/lib/auth/use-permissions";
-import { WAREHOUSE_TABS } from "@/lib/warehouse/tabs";
 import { USERS_TABS, type UsersTabId } from "@/lib/users/tabs";
 import { cn } from "@/lib/utils";
 import { UsersExcelActions } from "@/components/warehouse/users-excel-actions";
+import { PermissionMatrix } from "@/components/warehouse/permission-matrix";
 import { FlagCheckbox } from "@/components/ui/flag-checkbox";
+import {
+  AreaSelect,
+  PositionSelect,
+  RoleSuggestion,
+} from "@/components/warehouse/org-fields";
+import { findOrgArea, suggestedRoleFor } from "@/lib/users/org-catalog";
 
 type ListedUser = {
   id: string;
@@ -69,6 +76,7 @@ type ListedUser = {
   photo_url: string;
   is_technician: boolean;
   is_service_advisor: boolean;
+  permission_overrides: PermissionOverrides;
 };
 
 type AltaFormState = {
@@ -120,32 +128,6 @@ const EMPTY_ALTA: AltaFormState = {
   isTechnician: false,
   isServiceAdvisor: false,
 };
-
-const MODULE_LABELS: Record<WarehouseModule, string> = {
-  ...Object.fromEntries(WAREHOUSE_TABS.map((tab) => [tab.id, tab.label])),
-  calendario: "Calendario",
-  clientes: "Clientes",
-  licitaciones: "Licitaciones",
-  cotizaciones: "Cotizaciones",
-  ordenes_servicio: "Órdenes de servicio",
-  flotilla: "Flotilla",
-  educacion: "Educación",
-  calidad: "Calidad",
-  usuarios: "Usuarios",
-} as Record<WarehouseModule, string>;
-
-const PERMISSION_MODULES: WarehouseModule[] = [
-  ...(WAREHOUSE_TABS.map((tab) => tab.id) as WarehouseModule[]),
-  "calendario",
-  "clientes",
-  "licitaciones",
-  "cotizaciones",
-  "ordenes_servicio",
-  "flotilla",
-  "educacion",
-  "calidad",
-  "usuarios",
-];
 
 const inputClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm";
@@ -235,7 +217,15 @@ type UsersPanelProps = {
 
 export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
   const router = useRouter();
-  const { canWrite } = usePermissions("usuarios");
+  const {
+    canWrite,
+    canCreate,
+    canEdit,
+    canDelete,
+    canImport,
+    canExport,
+    canApprove: canAssignPermissions,
+  } = usePermissions("usuarios");
   const [users, setUsers] = useState<ListedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -252,6 +242,8 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
 
   const [selectedUserId, setSelectedUserId] = useState("");
   const [permissionRole, setPermissionRole] = useState<AppRole>("almacen");
+  const [permissionOverrides, setPermissionOverrides] =
+    useState<PermissionOverrides>({});
   const [permissionName, setPermissionName] = useState("");
   const [permissionEmail, setPermissionEmail] = useState("");
   const [permissionPhone, setPermissionPhone] = useState("");
@@ -267,6 +259,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
       ...user,
       is_technician: Boolean(user.is_technician),
       is_service_advisor: Boolean(user.is_service_advisor),
+      permission_overrides: parsePermissionOverrides(user.permission_overrides),
     }));
     setUsers(list);
     return list;
@@ -351,14 +344,10 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
     [users, selectedUserId]
   );
 
-  const previewModules = useMemo(
-    () => modulesForRole(permissionRole),
-    [permissionRole]
-  );
-
   useEffect(() => {
     if (!selectedUser) return;
     setPermissionRole(normalizeRole(selectedUser.role));
+    setPermissionOverrides(selectedUser.permission_overrides ?? {});
     setPermissionName(selectedUser.full_name ?? "");
     setPermissionEmail(selectedUser.email ?? "");
     setPermissionPhone(selectedUser.phone ?? "");
@@ -464,7 +453,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
 
   async function handleSaveFicha(event: FormEvent) {
     event.preventDefault();
-    if (!canWrite) return;
+    if (editingId ? !canEdit : !canCreate) return;
     setSubmitting(true);
     setError("");
     setMessage("");
@@ -517,7 +506,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
   }
 
   async function handleSetActive(user: ListedUser, isActive: boolean) {
-    if (!canWrite) return;
+    if (!canEdit) return;
     const session = getSession();
     if (!isActive && session?.id === user.id) {
       setError("No puedes deshabilitar tu propio acceso.");
@@ -562,7 +551,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
   }
 
   async function handleDeleteUser(user: ListedUser) {
-    if (!canWrite) return;
+    if (!canDelete) return;
     const session = getSession();
     if (session?.id === user.id) {
       setError("No puedes eliminar tu propio usuario.");
@@ -601,14 +590,33 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
 
   async function handleSavePermissions(event: FormEvent) {
     event.preventDefault();
-    if (!canWrite || !selectedUser || !selectedUser.is_active) return;
+    if (!canEdit || !selectedUser || !selectedUser.is_active) return;
+
+    const nextRole = canAssignPermissions
+      ? permissionRole
+      : normalizeRole(selectedUser.role);
+    const nextOverrides = cleanOverrides(nextRole, permissionOverrides);
+    const isSelf = getSession()?.id === selectedUser.id;
+    if (canAssignPermissions && isSelf) {
+      const subject = { role: nextRole, permissionOverrides: nextOverrides };
+      if (
+        !hasPermission(subject, "usuarios.view") ||
+        !hasPermission(subject, "usuarios.approve")
+      ) {
+        setError(
+          "No puedes quitarte a ti mismo el acceso a Usuarios ni el permiso de asignar permisos."
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
     setError("");
     setMessage("");
     try {
       const { error: rpcError } = await supabase.rpc("update_app_user_access", {
         p_user_id: selectedUser.id,
-        p_role: permissionRole,
+        p_role: nextRole,
         p_full_name: permissionName.trim() || null,
         p_email: permissionEmail.trim(),
         p_phone: permissionPhone.trim(),
@@ -616,9 +624,23 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
         p_department: permissionDepartment.trim(),
       });
       if (rpcError) throw new Error(rpcError.message);
+      if (canAssignPermissions) {
+        const { error: permError } = await supabase.rpc(
+          "set_app_user_permissions",
+          {
+            p_user_id: selectedUser.id,
+            p_permission_overrides: nextOverrides,
+          }
+        );
+        if (permError) throw new Error(permError.message);
+      }
       await loadUsers();
+      if (isSelf) await refreshSessionAccess();
+      const adjustments = Object.keys(nextOverrides).length;
       setMessage(
-        `Datos y permisos actualizados para ${selectedUser.username} (${roleLabel(permissionRole)}).`
+        `Datos y permisos actualizados para ${selectedUser.username} (${roleLabel(nextRole)}${
+          adjustments ? ` + ${adjustments} ajuste${adjustments === 1 ? "" : "s"}` : ""
+        }).`
       );
     } catch (err) {
       setError(
@@ -709,7 +731,8 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
             <div className="flex flex-wrap gap-2">
               <UsersExcelActions
                 users={users}
-                canWrite={canWrite}
+                canWrite={canImport}
+                canExport={canExport}
                 onImported={async () => {
                   await loadUsers();
                 }}
@@ -1254,24 +1277,34 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               <h3 className="text-base font-semibold text-foreground sm:col-span-2">
                 Datos laborales
               </h3>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Puesto</span>
-                <input
-                  disabled={!canWrite}
-                  value={alta.jobTitle}
-                  onChange={(e) => updateAlta("jobTitle", e.target.value)}
-                  className={inputClass}
-                />
-              </label>
-              <label className="space-y-1.5">
+              <div className="space-y-1.5">
                 <span className="text-sm font-medium">Área / departamento</span>
-                <input
+                <AreaSelect
+                  key={`alta-area-${editingId || "new"}`}
                   disabled={!canWrite}
                   value={alta.department}
-                  onChange={(e) => updateAlta("department", e.target.value)}
-                  className={inputClass}
+                  onChange={(value) => updateAlta("department", value)}
                 />
-              </label>
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-sm font-medium">Puesto</span>
+                <PositionSelect
+                  key={`alta-position-${editingId || "new"}`}
+                  disabled={!canWrite}
+                  value={alta.jobTitle}
+                  area={alta.department}
+                  onChange={(value, match) => {
+                    setAlta((prev) => {
+                      const next = { ...prev, jobTitle: value };
+                      if (match && findOrgArea(prev.department)?.id !== match.area.id) {
+                        next.department = match.area.label;
+                      }
+                      if (match && !editingId) next.role = match.position.role;
+                      return next;
+                    });
+                  }}
+                />
+              </div>
               <label className="space-y-1.5">
                 <span className="text-sm font-medium">Fecha de ingreso</span>
                 <input
@@ -1299,6 +1332,13 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   ))}
                 </select>
               </label>
+              <RoleSuggestion
+                className="sm:col-span-2"
+                suggested={suggestedRoleFor(alta.jobTitle, alta.department)}
+                current={alta.role}
+                disabled={!canWrite}
+                onApply={(role) => updateAlta("role", role)}
+              />
               <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
                 <FlagCheckbox
                   checked={alta.isTechnician}
@@ -1440,15 +1480,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         disabled={submitting}
                         onToggle={() => void handleSetActive(user, false)}
                       />
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
-                        onClick={() => void handleDeleteUser(user)}
-                      >
-                        <Trash2 className="size-3.5" />
-                        Eliminar
-                      </button>
+                      {canDelete ? (
+                        <button
+                          type="button"
+                          disabled={submitting}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                          onClick={() => void handleDeleteUser(user)}
+                        >
+                          <Trash2 className="size-3.5" />
+                          Eliminar
+                        </button>
+                      ) : null}
                     </div>
                   ) : undefined,
                 }))}
@@ -1520,15 +1562,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                                   <Pencil className="size-3.5" />
                                   Editar
                                 </Link>
-                                <button
-                                  type="button"
-                                  disabled={submitting}
-                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
-                                  onClick={() => void handleDeleteUser(user)}
-                                >
-                                  <Trash2 className="size-3.5" />
-                                  Eliminar
-                                </button>
+                                {canDelete ? (
+                                  <button
+                                    type="button"
+                                    disabled={submitting}
+                                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
+                                    onClick={() => void handleDeleteUser(user)}
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                    Eliminar
+                                  </button>
+                                ) : null}
                               </div>
                             ) : (
                               "—"
@@ -1584,15 +1628,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         disabled={submitting}
                         onToggle={() => void handleSetActive(user, true)}
                       />
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
-                        onClick={() => void handleDeleteUser(user)}
-                      >
-                        <Trash2 className="size-3.5" />
-                        Eliminar
-                      </button>
+                      {canDelete ? (
+                        <button
+                          type="button"
+                          disabled={submitting}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                          onClick={() => void handleDeleteUser(user)}
+                        >
+                          <Trash2 className="size-3.5" />
+                          Eliminar
+                        </button>
+                      ) : null}
                     </div>
                   ) : undefined,
                 }))}
@@ -1664,15 +1710,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                                   <Pencil className="size-3.5" />
                                   Editar
                                 </Link>
-                                <button
-                                  type="button"
-                                  disabled={submitting}
-                                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
-                                  onClick={() => void handleDeleteUser(user)}
-                                >
-                                  <Trash2 className="size-3.5" />
-                                  Eliminar
-                                </button>
+                                {canDelete ? (
+                                  <button
+                                    type="button"
+                                    disabled={submitting}
+                                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
+                                    onClick={() => void handleDeleteUser(user)}
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                    Eliminar
+                                  </button>
+                                ) : null}
                               </div>
                             ) : (
                               "—"
@@ -1689,7 +1737,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
         ) : null}
 
         {!loading && activeTab === "permisos" ? (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
             <section className="space-y-3">
               <h3 className="text-base font-semibold text-foreground">
                 Selecciona colaborador
@@ -1723,6 +1771,9 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       <span className="text-xs text-muted-foreground">
                         @{user.username} · {roleLabel(user.role)} ·{" "}
                         {user.is_active ? "Activo" : "Deshabilitado"}
+                        {Object.keys(user.permission_overrides ?? {}).length
+                          ? ` · ${Object.keys(user.permission_overrides).length} ajustes`
+                          : ""}
                       </span>
                     </button>
                   ))
@@ -1781,7 +1832,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium">Nombre completo</span>
                     <input
-                      disabled={!canWrite || !selectedUser.is_active}
+                      disabled={!canEdit || !selectedUser.is_active}
                       value={permissionName}
                       onChange={(e) => setPermissionName(e.target.value)}
                       className={inputClass}
@@ -1793,7 +1844,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       <span className="text-sm font-medium">Correo</span>
                       <input
                         type="email"
-                        disabled={!canWrite || !selectedUser.is_active}
+                        disabled={!canEdit || !selectedUser.is_active}
                         value={permissionEmail}
                         onChange={(e) => setPermissionEmail(e.target.value)}
                         className={inputClass}
@@ -1803,33 +1854,50 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       <span className="text-sm font-medium">Teléfono</span>
                       <input
                         type="tel"
-                        disabled={!canWrite || !selectedUser.is_active}
+                        disabled={!canEdit || !selectedUser.is_active}
                         value={permissionPhone}
                         onChange={(e) => setPermissionPhone(e.target.value)}
                         className={inputClass}
                       />
                     </label>
-                    <label className="space-y-1.5">
-                      <span className="text-sm font-medium">Puesto</span>
-                      <input
-                        disabled={!canWrite || !selectedUser.is_active}
-                        value={permissionJobTitle}
-                        onChange={(e) => setPermissionJobTitle(e.target.value)}
-                        className={inputClass}
-                      />
-                    </label>
-                    <label className="space-y-1.5">
+                    <div className="space-y-1.5">
                       <span className="text-sm font-medium">Área</span>
-                      <input
-                        disabled={!canWrite || !selectedUser.is_active}
+                      <AreaSelect
+                        key={`perm-area-${selectedUser.id}`}
+                        disabled={!canEdit || !selectedUser.is_active}
                         value={permissionDepartment}
-                        onChange={(e) =>
-                          setPermissionDepartment(e.target.value)
-                        }
-                        className={inputClass}
+                        onChange={setPermissionDepartment}
                       />
-                    </label>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm font-medium">Puesto</span>
+                      <PositionSelect
+                        key={`perm-position-${selectedUser.id}`}
+                        disabled={!canEdit || !selectedUser.is_active}
+                        value={permissionJobTitle}
+                        area={permissionDepartment}
+                        onChange={(value, match) => {
+                          setPermissionJobTitle(value);
+                          if (
+                            match &&
+                            findOrgArea(permissionDepartment)?.id !== match.area.id
+                          ) {
+                            setPermissionDepartment(match.area.label);
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
+
+                  <RoleSuggestion
+                    suggested={suggestedRoleFor(
+                      permissionJobTitle,
+                      permissionDepartment
+                    )}
+                    current={permissionRole}
+                    disabled={!canAssignPermissions || !selectedUser.is_active}
+                    onApply={setPermissionRole}
+                  />
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <FlagCheckbox
@@ -1860,65 +1928,39 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     />
                   </div>
 
-                  <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Rol / permisos</span>
-                    <select
-                      disabled={!canWrite || !selectedUser.is_active}
-                      value={permissionRole}
-                      onChange={(e) =>
-                        setPermissionRole(e.target.value as AppRole)
-                      }
-                      className={inputClass}
-                    >
-                      {APP_ROLES.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Módulos que tendrá con este rol
-                    </p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {PERMISSION_MODULES.map((moduleId) => {
-                        const canView = previewModules.includes(moduleId);
-                        const canWriteRole = canWriteModule(
-                          permissionRole,
-                          moduleId
-                        );
-                        return (
-                          <div
-                            key={moduleId}
-                            className={cn(
-                              "rounded-lg border px-3 py-2 text-xs",
-                              canView
-                                ? "border-border bg-background"
-                                : "border-transparent bg-muted/40 text-muted-foreground"
-                            )}
-                          >
-                            <p className="font-medium">
-                              {MODULE_LABELS[moduleId] ?? moduleId}
-                            </p>
-                            <p>
-                              {canView
-                                ? canWriteRole
-                                  ? "Ver y editar"
-                                  : "Solo lectura"
-                                : "Sin acceso"}
-                            </p>
-                          </div>
-                        );
-                      })}
+                    <div>
+                      <p className="text-base font-semibold text-foreground">
+                        Permisos
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Elige un rol como plantilla y ajusta acciones concretas
+                        para este colaborador. Los ajustes se conservan aunque
+                        cambies de rol, salvo los que ya coincidan con él.
+                      </p>
                     </div>
+                    {!canAssignPermissions ? (
+                      <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+                        Solo consulta: necesitas el permiso «Asignar roles y
+                        permisos» de Usuarios para modificar el rol o los
+                        ajustes.
+                      </p>
+                    ) : null}
+                    <PermissionMatrix
+                      role={permissionRole}
+                      overrides={permissionOverrides}
+                      onRoleChange={setPermissionRole}
+                      onOverridesChange={setPermissionOverrides}
+                      disabled={
+                        !canAssignPermissions || !selectedUser.is_active
+                      }
+                    />
                   </div>
 
                   <Button
                     type="submit"
                     disabled={
-                      !canWrite || submitting || !selectedUser.is_active
+                      !canEdit || submitting || !selectedUser.is_active
                     }
                     className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
                   >

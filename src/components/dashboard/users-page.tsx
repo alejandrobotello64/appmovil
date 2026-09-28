@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { UsersPanel } from "@/components/warehouse/users-panel";
-import { getSession } from "@/lib/auth";
-import { canViewModule } from "@/lib/auth/permissions";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { normalizeUsersTab, USERS_TABS } from "@/lib/users/tabs";
 
 export function UsersPage() {
@@ -13,12 +11,8 @@ export function UsersPage() {
   const activeTab = normalizeUsersTab(searchParams.get("tab"));
   const editUserId = searchParams.get("id");
   const activeTabMeta = USERS_TABS.find((tab) => tab.id === activeTab);
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const role = getSession()?.role ?? "direccion";
-    setAllowed(canViewModule(role, "usuarios"));
-  }, []);
+  const access = useSessionAccess();
+  const allowed = access.ready ? access.canView("usuarios") : null;
 
   return (
     <AppShell
