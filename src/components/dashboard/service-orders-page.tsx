@@ -9,6 +9,7 @@ import { ServiceOrdersPanel } from "@/components/warehouse/service-orders-panel"
 import { ServicePasswordsPanel } from "@/components/warehouse/service-passwords-panel";
 import { TechnicalDocumentsPanel } from "@/components/documents/document-library-panel";
 import { ServiceRequisitionsPanel } from "@/components/warehouse/service-requisitions-panel";
+import { BiomedicalToolRequestsPanel } from "@/components/tools/tools-module";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import {
   normalizeServiceOrderTab,
@@ -59,6 +60,7 @@ export function ServiceOrdersPage() {
                 subtitle="Insumos y refacciones solicitados desde las órdenes de servicio. El surtido lo confirma almacén."
               />
             ) : null}
+            {activeTab === "herramientas" ? <BiomedicalToolRequestsPanel /> : null}
             {activeTab === "plantillas" ? <ChecklistTemplatesPanel /> : null}
             {activeTab === "documentos" ? <TechnicalDocumentsPanel /> : null}
             {activeTab === "contrasenas" ? <ServicePasswordsPanel /> : null}

@@ -55,7 +55,9 @@ export type WarehouseModule =
   | "cotizaciones"
   | "catalogo_ventas"
   | "registros_sanitarios"
+  | "herramientas"
   | "ordenes_servicio"
+  | "solicitud_herramientas"
   | "plantillas_checklist"
   | "instrumentos"
   | "contrasenas_servicio"
@@ -271,6 +273,18 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
         description: "Registros sanitarios, prórrogas y certificados con su vigencia.",
         actions: DOCUMENT_LIBRARY_ACTIONS,
       },
+      {
+        id: "herramientas",
+        label: "Herramientas",
+        description: "Catálogo de herramientas, entregas a biomédica y devoluciones.",
+        actions: [
+          { action: "view" },
+          { action: "create", label: "Dar de alta herramientas" },
+          { action: "edit", label: "Editar, entregar y recibir devoluciones" },
+          { action: "delete" },
+          { action: "export", label: "Descargar PDF" },
+        ],
+      },
     ],
   },
   {
@@ -337,6 +351,17 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
         label: "Simuladores y analizadores",
         description: "Instrumentos de medición y sus certificados.",
         actions: CRUD,
+      },
+      {
+        id: "solicitud_herramientas",
+        label: "Solicitud de herramientas",
+        description: "Pedir herramientas a almacén, consultar el catálogo y el historial de vales.",
+        actions: [
+          { action: "view" },
+          { action: "create", label: "Solicitar herramientas" },
+          { action: "delete", label: "Cancelar solicitudes" },
+          { action: "export", label: "Descargar PDF" },
+        ],
       },
       {
         id: "contrasenas_servicio",
@@ -466,6 +491,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "calendario",
     "reporte",
     "registros_sanitarios",
+    "herramientas",
     "flotilla",
     "educacion",
   ],
@@ -479,6 +505,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "calendario",
     "reporte",
     "registros_sanitarios",
+    "herramientas",
     "licitaciones",
   ],
   ventas: [
@@ -506,8 +533,10 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "calendario",
     "catalogo_ventas",
     "registros_sanitarios",
+    "herramientas",
     "kardex",
     "ordenes_servicio",
+    "solicitud_herramientas",
     "plantillas_checklist",
     "instrumentos",
     "contrasenas_servicio",
@@ -528,7 +557,9 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "cotizaciones",
     "catalogo_ventas",
     "registros_sanitarios",
+    "herramientas",
     "ordenes_servicio",
+    "solicitud_herramientas",
     "plantillas_checklist",
     "instrumentos",
     "documentos_tecnicos",
@@ -556,6 +587,7 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "equipo",
     "calendario",
     "registros_sanitarios",
+    "herramientas",
     "flotilla",
     "educacion",
   ],
@@ -577,6 +609,7 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "calendario",
     "clientes",
     "ordenes_servicio",
+    "solicitud_herramientas",
     "plantillas_checklist",
     "instrumentos",
     "contrasenas_servicio",

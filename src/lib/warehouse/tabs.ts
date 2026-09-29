@@ -102,6 +102,12 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=registros_sanitarios",
   },
   {
+    id: "herramientas",
+    label: "Herramientas",
+    description: "Catálogo de herramientas, entregas a biomédica y devoluciones",
+    href: "/dashboard/almacen?tab=herramientas",
+  },
+  {
     id: "reporte",
     label: "Reporte",
     description: "Reportes operativos del almacén",

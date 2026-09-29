@@ -26,6 +26,12 @@ export const SERVICE_ORDER_TABS = [
     href: "/dashboard/ordenes-servicio?tab=solicitudes",
   },
   {
+    id: "herramientas",
+    label: "Solicitud de herramientas",
+    description: "Pide herramientas a almacén con vale foliado, devolución e historial",
+    href: "/dashboard/ordenes-servicio?tab=herramientas",
+  },
+  {
     id: "plantillas",
     label: "Checklist",
     description:
@@ -54,6 +60,7 @@ export const SERVICE_ORDER_TAB_MODULE: Record<ServiceOrderTabId, WarehouseModule
   ordenes: "ordenes_servicio",
   instrumentos: "instrumentos",
   solicitudes: "ordenes_servicio",
+  herramientas: "solicitud_herramientas",
   plantillas: "plantillas_checklist",
   documentos: "documentos_tecnicos",
   contrasenas: "contrasenas_servicio",
@@ -62,6 +69,7 @@ export const SERVICE_ORDER_TAB_MODULE: Record<ServiceOrderTabId, WarehouseModule
 export const BIOMEDICA_MODULES: WarehouseModule[] = [
   "ordenes_servicio",
   "instrumentos",
+  "solicitud_herramientas",
   "plantillas_checklist",
   "documentos_tecnicos",
   "contrasenas_servicio",

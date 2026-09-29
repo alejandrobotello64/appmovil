@@ -40,6 +40,8 @@ import {
   Shield,
   ShieldCheck,
   BookText,
+  Hammer,
+  HandHelping,
   X,
 } from "lucide-react";
 import { WAREHOUSE_TABS, normalizeWarehouseTab } from "@/lib/warehouse/tabs";
@@ -74,6 +76,7 @@ const TAB_ICONS = {
   equipo: Wrench,
   mantenimientos: ClipboardList,
   registros_sanitarios: ShieldCheck,
+  herramientas: Hammer,
   reporte: FileBarChart2,
 } as const;
 
@@ -95,6 +98,7 @@ const SERVICE_ORDER_TAB_ICONS = {
   ordenes: Wrench,
   instrumentos: Activity,
   solicitudes: Package,
+  herramientas: HandHelping,
   plantillas: ClipboardList,
   documentos: BookText,
   contrasenas: KeyRound,

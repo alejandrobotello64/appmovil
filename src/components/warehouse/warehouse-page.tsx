@@ -15,6 +15,7 @@ import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
 import { KardexPanel } from "@/components/warehouse/kardex-panel";
 import { SanitaryRegistrationsPanel } from "@/components/documents/document-library-panel";
+import { WarehouseToolsPanel } from "@/components/tools/tools-module";
 import type { WarehouseModule } from "@/lib/auth/permissions";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import {
@@ -107,6 +108,8 @@ export function WarehousePage() {
             {activeTab === "registros_sanitarios" ? (
               <SanitaryRegistrationsPanel />
             ) : null}
+
+            {activeTab === "herramientas" ? <WarehouseToolsPanel /> : null}
 
             {activeTab === "reporte" ? <ReportPanel /> : null}
           </>
