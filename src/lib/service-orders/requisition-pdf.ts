@@ -137,8 +137,7 @@ function signatureCard(
   ];
   let rowY = y + 18.8;
   for (const [label, value] of rows) {
-    kv(doc, label, value || "—", x + 3.5, rowY, w - 7);
-    rowY += 3.6;
+    rowY += kv(doc, label, value || "—", x + 3.5, rowY, w - 7);
   }
 
   doc.setDrawColor(150, 150, 160);
@@ -283,7 +282,7 @@ function drawSignatures(
   technicianName: string,
   technicianProfile: StaffProfile | null
 ) {
-  const h = 46;
+  const h = 50;
   cursor.ensure(h + 4);
   const { doc } = cursor;
   const gap = 3;
