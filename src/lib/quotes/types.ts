@@ -64,6 +64,8 @@ export type Quote = {
   taxAmount: number;
   total: number;
   discount: number;
+  /** 0 = descuento en pesos; >0 aplica ese % sobre el importe de partidas. */
+  discountPercent: number;
   salesperson: string;
   probability: number;
   notes: string;
@@ -100,6 +102,7 @@ export type QuoteInput = {
   lastContactAt?: string;
   taxRate?: number;
   discount?: number;
+  discountPercent?: number;
   salesperson?: string;
   probability?: number;
   notes?: string;
@@ -116,20 +119,28 @@ export function lineAmount(line: Pick<QuoteLine, "quantity" | "unitPrice">) {
   return Number(line.quantity) * Number(line.unitPrice);
 }
 
+export const DEFAULT_TAX_RATE = 16;
+
 export function computeQuoteTotals(
   lines: QuoteLineInput[],
   discount = 0,
-  taxRate = 16
+  taxRate = DEFAULT_TAX_RATE,
+  discountPercent = 0
 ) {
-  const subtotal = Math.max(
-    0,
-    lines.reduce(
-      (sum, line) => sum + Number(line.quantity) * Number(line.unitPrice),
-      0
-    ) - Number(discount || 0)
+  const gross = lines.reduce(
+    (sum, line) => sum + Number(line.quantity) * Number(line.unitPrice),
+    0
   );
+  const percent = Math.min(100, Math.max(0, Number(discountPercent || 0)));
+  const discountAmount =
+    percent > 0
+      ? gross * (percent / 100)
+      : Math.min(Math.max(0, Number(discount || 0)), gross);
+  const subtotal = Math.max(0, gross - discountAmount);
   const taxAmount = subtotal * (Number(taxRate) / 100);
   return {
+    gross: Number(gross.toFixed(2)),
+    discountAmount: Number(discountAmount.toFixed(2)),
     subtotal: Number(subtotal.toFixed(2)),
     taxAmount: Number(taxAmount.toFixed(2)),
     total: Number((subtotal + taxAmount).toFixed(2)),

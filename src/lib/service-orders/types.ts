@@ -568,10 +568,12 @@ export function lineAmount(line: Pick<ServiceOrderLine, "quantity" | "unitPrice"
   return Number(line.quantity) * Number(line.unitPrice);
 }
 
+export const DEFAULT_TAX_RATE = 16;
+
 export function computeServiceTotals(
   lines: ServiceOrderLineInput[],
   discount = 0,
-  taxRate = 16
+  taxRate = DEFAULT_TAX_RATE
 ) {
   const subtotal = Math.max(
     0,

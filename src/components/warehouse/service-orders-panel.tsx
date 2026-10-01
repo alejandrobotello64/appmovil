@@ -97,6 +97,7 @@ import {
   SERVICE_TYPES,
   checklistItemsByKind,
   computeServiceTotals,
+  DEFAULT_TAX_RATE,
   formatValidInterval,
   hasValidInterval,
   isHospitalSignedDocument,
@@ -194,7 +195,7 @@ function emptyForm(): ServiceOrderInput {
     serviceNotes: "",
     underWarranty: false,
     authorized: false,
-    taxRate: 16,
+    taxRate: DEFAULT_TAX_RATE,
     discount: 0,
   };
 }
@@ -386,7 +387,7 @@ export function ServiceOrdersPanel({
   }, [orders, query, statusFilter]);
 
   const lineTotals = useMemo(
-    () => computeServiceTotals(draftLines, form.discount ?? 0, form.taxRate ?? 16),
+    () => computeServiceTotals(draftLines, form.discount ?? 0, form.taxRate ?? DEFAULT_TAX_RATE),
     [draftLines, form.discount, form.taxRate]
   );
 
@@ -447,6 +448,25 @@ export function ServiceOrdersPanel({
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar.");
+    }
+  }
+
+  async function saveTaxIncluded(include: boolean) {
+    if (!selected || !canEdit) return;
+    const taxRate = include ? DEFAULT_TAX_RATE : 0;
+    setForm((f) => ({ ...f, taxRate }));
+    try {
+      setError("");
+      await updateServiceOrder(selected.id, {
+        ...formFromOrder(selected),
+        ...form,
+        taxRate,
+        createdBy: actor,
+        lines: undefined,
+      });
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo actualizar el IVA.");
     }
   }
 
@@ -1233,6 +1253,19 @@ export function ServiceOrdersPanel({
             />
             Cubierta por garantía
           </label>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={(form.taxRate ?? DEFAULT_TAX_RATE) > 0}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  taxRate: e.target.checked ? DEFAULT_TAX_RATE : 0,
+                }))
+              }
+            />
+            Aplicar IVA ({DEFAULT_TAX_RATE}%)
+          </label>
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1 block text-muted-foreground">
               Falla reportada por el cliente
@@ -1537,6 +1570,17 @@ export function ServiceOrdersPanel({
                     }
                   />
                   Cubierta por garantía
+                </label>
+                <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={(form.taxRate ?? DEFAULT_TAX_RATE) > 0}
+                    disabled={!canEdit}
+                    onChange={(e) => {
+                      void saveTaxIncluded(e.target.checked);
+                    }}
+                  />
+                  Aplicar IVA ({DEFAULT_TAX_RATE}%)
                 </label>
 
                 <div className="sm:col-span-2 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
@@ -2408,9 +2452,26 @@ export function ServiceOrdersPanel({
                     </a>
                   </div>
                 ) : null}
-                <p className="text-right text-sm font-medium">
-                  Total: {money(lineTotals.total)}
-                </p>
+                <div className="space-y-1 text-right text-sm">
+                  <label className="flex items-center justify-end gap-2 text-sm font-normal">
+                    <input
+                      type="checkbox"
+                      checked={(form.taxRate ?? DEFAULT_TAX_RATE) > 0}
+                      disabled={!canEdit}
+                      onChange={(e) => {
+                        void saveTaxIncluded(e.target.checked);
+                      }}
+                    />
+                    Aplicar IVA ({DEFAULT_TAX_RATE}%)
+                  </label>
+                  <p>Subtotal: {money(lineTotals.subtotal)}</p>
+                  <p>
+                    {(form.taxRate ?? 0) > 0
+                      ? `IVA (${form.taxRate}%): ${money(lineTotals.taxAmount)}`
+                      : "IVA: no aplica"}
+                  </p>
+                  <p className="font-medium">Total: {money(lineTotals.total)}</p>
+                </div>
                 <label className="block text-sm">
                   <span className="mb-1 block text-muted-foreground">
                     Notas del servicio (salen en PDF)
@@ -2880,7 +2941,12 @@ export function ServiceOrdersPanel({
               <p>Promesa: {selected.promisedAt || "—"}</p>
               <p>Próximo servicio: {selected.nextServiceAt || "—"}</p>
               <p>Creada: {new Date(selected.createdAt).toLocaleString("es-MX")}</p>
-              <p>Total: {money(selected.total)}</p>
+              <p>
+                Total: {money(selected.total)}
+                {(selected.taxRate ?? 0) > 0
+                  ? ` · IVA ${selected.taxRate}%`
+                  : " · sin IVA"}
+              </p>
             </div>
           </aside>
         </div>

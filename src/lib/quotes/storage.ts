@@ -74,6 +74,7 @@ function mapQuote(
     taxAmount: Number(row.tax_amount ?? 0),
     total: Number(row.total ?? 0),
     discount: Number(row.discount ?? 0),
+    discountPercent: Number(row.discount_percent ?? 0),
     salesperson: String(row.salesperson ?? ""),
     probability: Number(row.probability ?? 0),
     notes: String(row.notes ?? ""),
@@ -129,11 +130,36 @@ function linePayload(quoteId: string, line: QuoteLineInput, index: number) {
   };
 }
 
+function isMissingColumnError(error: {
+  message?: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+} | null) {
+  if (!error) return false;
+  const code = String(error.code ?? "");
+  const text = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    text.includes("does not exist") ||
+    text.includes("schema cache") ||
+    text.includes("could not find the")
+  );
+}
+
+function withoutDiscountPercent<T extends Record<string, unknown>>(payload: T) {
+  const next = { ...payload };
+  delete next.discount_percent;
+  return next;
+}
+
 function payloadFromInput(input: QuoteInput, lines: QuoteLineInput[]) {
   const totals = computeQuoteTotals(
     lines,
     input.discount ?? 0,
-    input.taxRate ?? 16
+    input.taxRate ?? 16,
+    input.discountPercent ?? 0
   );
   return {
     title: (input.title ?? "").trim(),
@@ -150,7 +176,8 @@ function payloadFromInput(input: QuoteInput, lines: QuoteLineInput[]) {
     next_follow_up: input.nextFollowUp || null,
     last_contact_at: input.lastContactAt || null,
     tax_rate: Number(input.taxRate ?? 16),
-    discount: Number(input.discount ?? 0),
+    discount: totals.discountAmount,
+    discount_percent: Number(input.discountPercent ?? 0),
     subtotal: totals.subtotal,
     tax_amount: totals.taxAmount,
     total: totals.total,
@@ -232,16 +259,27 @@ export async function createQuote(input: QuoteInput): Promise<Quote> {
 
   const folio = await nextFolio();
   const createdBy = (input.createdBy ?? "").trim();
-  const { data, error } = await db
+  const insertPayload = {
+    folio,
+    ...payloadFromInput(input, lines),
+    created_by: createdBy,
+  };
+  let { data, error } = await db
     .from("quotes")
-    .insert({
-      folio,
-      ...payloadFromInput(input, lines),
-      created_by: createdBy,
-    })
+    .insert(insertPayload)
     .select("*")
     .single();
+  if (error && isMissingColumnError(error)) {
+    const retry = await db
+      .from("quotes")
+      .insert(withoutDiscountPercent(insertPayload))
+      .select("*")
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
   if (error) throw new Error(error.message);
+  if (!data) throw new Error("No se pudo crear la cotización.");
 
   const { error: linesError } = await db
     .from("quote_lines")
@@ -269,13 +307,18 @@ export async function updateQuote(
   );
   if (!lines.length) throw new Error("Agrega al menos una partida.");
 
-  const { error } = await db
-    .from("quotes")
-    .update({
-      ...payloadFromInput(input, lines),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+  const updatePayload = {
+    ...payloadFromInput(input, lines),
+    updated_at: new Date().toISOString(),
+  };
+  let { error } = await db.from("quotes").update(updatePayload).eq("id", id);
+  if (error && isMissingColumnError(error)) {
+    const retry = await db
+      .from("quotes")
+      .update(withoutDiscountPercent(updatePayload))
+      .eq("id", id);
+    error = retry.error;
+  }
   if (error) throw new Error(error.message);
 
   const { error: delError } = await db

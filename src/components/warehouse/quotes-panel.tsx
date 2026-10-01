@@ -32,10 +32,10 @@ import {
   updateQuote,
 } from "@/lib/quotes/storage";
 import {
-  QUOTE_PIPELINE_STATUSES,
-  QUOTE_STATUSES,
   computeQuoteTotals,
   lineAmount,
+  QUOTE_PIPELINE_STATUSES,
+  QUOTE_STATUSES,
   quoteStatusLabel,
   type Quote,
   type QuoteInput,
@@ -84,6 +84,7 @@ const EMPTY: QuoteInput = {
   nextFollowUp: "",
   taxRate: 16,
   discount: 0,
+  discountPercent: 0,
   salesperson: "",
   probability: 50,
   notes: "",
@@ -107,6 +108,9 @@ export function QuotesPanel() {
   const [submitting, setSubmitting] = useState(false);
   const [followUpText, setFollowUpText] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
+  const [discountKind, setDiscountKind] = useState<"amount" | "percent">(
+    "amount"
+  );
 
   async function refresh() {
     setLoading(true);
@@ -188,9 +192,10 @@ export function QuotesPanel() {
       computeQuoteTotals(
         lines.filter((line) => line.description.trim()),
         form.discount ?? 0,
-        form.taxRate ?? 16
+        form.taxRate ?? 16,
+        discountKind === "percent" ? form.discountPercent ?? 0 : 0
       ),
-    [lines, form.discount, form.taxRate]
+    [lines, form.discount, form.taxRate, form.discountPercent, discountKind]
   );
 
   function itemsForLine(line: DraftLine) {
@@ -201,6 +206,7 @@ export function QuotesPanel() {
   function openCreate() {
     const session = getSession();
     setEditing(null);
+    setDiscountKind("amount");
     setForm({
       ...EMPTY,
       salesperson: session?.fullName || session?.username || "",
@@ -222,6 +228,7 @@ export function QuotesPanel() {
 
   function openEdit(quote: Quote) {
     setEditing(quote);
+    setDiscountKind(quote.discountPercent > 0 ? "percent" : "amount");
     setForm({
       title: quote.title,
       clientId: quote.clientId,
@@ -237,6 +244,7 @@ export function QuotesPanel() {
       nextFollowUp: quote.nextFollowUp,
       taxRate: quote.taxRate,
       discount: quote.discount,
+      discountPercent: quote.discountPercent,
       salesperson: quote.salesperson,
       probability: quote.probability,
       notes: quote.notes,
@@ -296,6 +304,9 @@ export function QuotesPanel() {
       );
       const payload: QuoteInput = {
         ...form,
+        discount:
+          discountKind === "percent" ? draftTotals.discountAmount : form.discount ?? 0,
+        discountPercent: discountKind === "percent" ? form.discountPercent ?? 0 : 0,
         createdBy: session?.username ?? "",
         lines: validLines,
       };
@@ -616,22 +627,97 @@ export function QuotesPanel() {
                 className={fieldClass}
               />
             </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Descuento ($)</span>
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={form.discount}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    discount: Number(e.target.value),
-                  }))
-                }
-                className={fieldClass}
-              />
-            </label>
+            <div className="space-y-1.5">
+              <span className="text-sm font-medium">Descuento</span>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  className={cn(
+                    "h-10 flex-1 rounded-lg border text-sm",
+                    discountKind === "amount"
+                      ? "border-[#3B46A5] bg-muted/40 font-medium"
+                      : "border-input bg-background"
+                  )}
+                  onClick={() => {
+                    setDiscountKind("amount");
+                    setForm((prev) => ({
+                      ...prev,
+                      discount: draftTotals.discountAmount,
+                      discountPercent: 0,
+                    }));
+                  }}
+                >
+                  Monto ($)
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "h-10 flex-1 rounded-lg border text-sm",
+                    discountKind === "percent"
+                      ? "border-[#3B46A5] bg-muted/40 font-medium"
+                      : "border-input bg-background"
+                  )}
+                  onClick={() => {
+                    const percent =
+                      draftTotals.gross > 0
+                        ? Number(
+                            (
+                              (draftTotals.discountAmount / draftTotals.gross) *
+                              100
+                            ).toFixed(2)
+                          )
+                        : Number(form.discountPercent ?? 0);
+                    setDiscountKind("percent");
+                    setForm((prev) => ({
+                      ...prev,
+                      discountPercent: percent,
+                    }));
+                  }}
+                >
+                  Porcentaje (%)
+                </button>
+              </div>
+              {discountKind === "percent" ? (
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.01"
+                  value={form.discountPercent}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      discountPercent: Number(e.target.value),
+                    }))
+                  }
+                  className={fieldClass}
+                  aria-label="Descuento en porcentaje"
+                />
+              ) : (
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={form.discount}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      discount: Number(e.target.value),
+                      discountPercent: 0,
+                    }))
+                  }
+                  className={fieldClass}
+                  aria-label="Descuento en pesos"
+                />
+              )}
+              {draftTotals.discountAmount > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {discountKind === "percent"
+                    ? `Equivale a ${money(draftTotals.discountAmount)} sobre ${money(draftTotals.gross)}.`
+                    : `Se resta ${money(draftTotals.discountAmount)} del importe.`}
+                </p>
+              ) : null}
+            </div>
             <label className="space-y-1.5 sm:col-span-2">
               <span className="text-sm font-medium">Notas / condiciones</span>
               <textarea
@@ -822,8 +908,22 @@ export function QuotesPanel() {
               </div>
             ))}
             <div className="rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm">
+              <p>Importe: {money(draftTotals.gross)}</p>
+              {draftTotals.discountAmount > 0 ? (
+                <p>
+                  Descuento
+                  {discountKind === "percent" && (form.discountPercent ?? 0) > 0
+                    ? ` (${form.discountPercent}%)`
+                    : ""}
+                  : -{money(draftTotals.discountAmount)}
+                </p>
+              ) : null}
               <p>Subtotal: {money(draftTotals.subtotal)}</p>
-              <p>IVA: {money(draftTotals.taxAmount)}</p>
+              <p>
+                {(form.taxRate ?? 0) > 0
+                  ? `IVA (${form.taxRate}%): ${money(draftTotals.taxAmount)}`
+                  : "IVA: no aplica"}
+              </p>
               <p className="font-semibold">Total: {money(draftTotals.total)}</p>
             </div>
           </div>
@@ -1030,6 +1130,28 @@ export function QuotesPanel() {
                   </li>
                 ))}
               </ul>
+
+              <div className="rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm">
+                <p>
+                  Importe: {money(selected.subtotal + selected.discount)}
+                </p>
+                {selected.discount > 0 ? (
+                  <p>
+                    Descuento
+                    {selected.discountPercent > 0
+                      ? ` (${selected.discountPercent}%)`
+                      : ""}
+                    : -{money(selected.discount)}
+                  </p>
+                ) : null}
+                <p>Subtotal: {money(selected.subtotal)}</p>
+                <p>
+                  {selected.taxRate > 0
+                    ? `IVA (${selected.taxRate}%): ${money(selected.taxAmount)}`
+                    : "IVA: no aplica"}
+                </p>
+                <p className="font-semibold">Total: {money(selected.total)}</p>
+              </div>
 
               {canWrite ? (
                 <div className="space-y-2 rounded-xl border border-dashed border-border p-3">

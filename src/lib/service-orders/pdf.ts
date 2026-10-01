@@ -474,9 +474,13 @@ function drawLinesTable(
     align: "right",
   });
   y += 5;
-  doc.text(`IVA (${order.taxRate}%): ${money(order.taxAmount)}`, pageW - margin, y, {
-    align: "right",
-  });
+  if (order.taxRate > 0) {
+    doc.text(`IVA (${order.taxRate}%): ${money(order.taxAmount)}`, pageW - margin, y, {
+      align: "right",
+    });
+  } else {
+    doc.text("IVA: no aplica", pageW - margin, y, { align: "right" });
+  }
   y += 5;
   doc.setFontSize(11);
   doc.text(`Total: ${money(order.total)}`, pageW - margin, y, { align: "right" });

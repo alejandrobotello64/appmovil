@@ -1355,7 +1355,18 @@ export async function replaceServiceOrderLines(
     if (error) throw new Error(error.message);
   }
 
-  const totals = computeServiceTotals(lines);
+  const { data: header, error: headerError } = await db
+    .from("service_orders")
+    .select("discount, tax_rate")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (headerError) throw new Error(headerError.message);
+
+  const totals = computeServiceTotals(
+    lines,
+    Number(header?.discount ?? 0),
+    Number(header?.tax_rate ?? 16)
+  );
   await db
     .from("service_orders")
     .update({

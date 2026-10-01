@@ -123,18 +123,31 @@ export async function downloadQuotePdf(quote: Quote) {
   const labelX = pageW - margin - 50;
   doc.setFontSize(9);
   doc.setTextColor(60, 60, 60);
-  doc.text("Subtotal", labelX, y, { align: "right" });
-  doc.text(money(quote.subtotal + quote.discount), totalsX, y, {
+  const gross = quote.subtotal + quote.discount;
+  doc.text("Importe", labelX, y, { align: "right" });
+  doc.text(money(gross), totalsX, y, {
     align: "right",
   });
   y += 5;
   if (quote.discount > 0) {
-    doc.text("Descuento", labelX, y, { align: "right" });
+    const discountLabel =
+      quote.discountPercent > 0
+        ? `Descuento (${quote.discountPercent}%)`
+        : "Descuento";
+    doc.text(discountLabel, labelX, y, { align: "right" });
     doc.text(`- ${money(quote.discount)}`, totalsX, y, { align: "right" });
     y += 5;
+    doc.text("Subtotal", labelX, y, { align: "right" });
+    doc.text(money(quote.subtotal), totalsX, y, { align: "right" });
+    y += 5;
   }
-  doc.text(`IVA (${quote.taxRate}%)`, labelX, y, { align: "right" });
-  doc.text(money(quote.taxAmount), totalsX, y, { align: "right" });
+  if (quote.taxRate > 0) {
+    doc.text(`IVA (${quote.taxRate}%)`, labelX, y, { align: "right" });
+    doc.text(money(quote.taxAmount), totalsX, y, { align: "right" });
+  } else {
+    doc.text("IVA", labelX, y, { align: "right" });
+    doc.text("No aplica", totalsX, y, { align: "right" });
+  }
   y += 6;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
