@@ -35,6 +35,7 @@ import {
   downloadServiceQuotePdf,
   downloadServiceWorkOrderPdf,
 } from "@/lib/service-orders/pdf";
+import { downloadServiceRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   addLinkedEquipment,
   addServiceOrderFunctionTest,
@@ -2432,7 +2433,10 @@ export function ServiceOrdersPanel({
                     </p>
                     <ul className="space-y-1 text-xs text-muted-foreground">
                       {orderRequisitions.map((req) => (
-                        <li key={req.id} className="flex flex-wrap gap-2">
+                        <li
+                          key={req.id}
+                          className="flex flex-wrap items-center gap-2"
+                        >
                           <span className="font-medium text-foreground">
                             {req.folio}
                           </span>
@@ -2441,6 +2445,25 @@ export function ServiceOrdersPanel({
                             {req.lines.length} línea(s) ·{" "}
                             {new Date(req.requestedAt).toLocaleString("es-MX")}
                           </span>
+                          {canExport ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 font-medium text-[#3B46A5] hover:underline"
+                              onClick={() => {
+                                void downloadServiceRequisitionPdf(req).catch(
+                                  (err) =>
+                                    setError(
+                                      err instanceof Error
+                                        ? err.message
+                                        : "No se pudo generar el PDF de surtimiento."
+                                    )
+                                );
+                              }}
+                            >
+                              <FileDown className="size-3.5" />
+                              PDF
+                            </button>
+                          ) : null}
                         </li>
                       ))}
                     </ul>

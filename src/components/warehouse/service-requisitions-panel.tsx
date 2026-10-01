@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, PackageCheck, RefreshCw, XCircle } from "lucide-react";
+import { CheckCircle2, FileDown, PackageCheck, RefreshCw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
@@ -19,6 +19,7 @@ import {
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
 import { cn } from "@/lib/utils";
+import { downloadServiceRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 
 function statusTone(status: RequisitionStatus) {
   switch (status) {
@@ -46,7 +47,7 @@ export function ServiceRequisitionsPanel({
   title?: string;
   subtitle?: string;
 } = {}) {
-  const { canWrite } = usePermissions(permissionModule);
+  const { canWrite, canExport } = usePermissions(permissionModule);
   const canFulfill =
     allowFulfill ?? permissionModule === "solicitudes" ? canWrite : false;
   const [items, setItems] = useState<ServiceOrderRequisition[]>([]);
@@ -59,6 +60,7 @@ export function ServiceRequisitionsPanel({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [qtyDraft, setQtyDraft] = useState<Record<string, string>>({});
   const [warehouseNotes, setWarehouseNotes] = useState("");
+  const [pdfBusy, setPdfBusy] = useState(false);
   const actor = getSession()?.username ?? "usuario";
 
   const selected = useMemo(
@@ -137,6 +139,23 @@ export function ServiceRequisitionsPanel({
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo surtir.");
+    }
+  }
+
+  async function onPdf() {
+    if (!selected) return;
+    try {
+      setError("");
+      setPdfBusy(true);
+      await downloadServiceRequisitionPdf(selected);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo generar el PDF de surtimiento."
+      );
+    } finally {
+      setPdfBusy(false);
     }
   }
 
@@ -348,6 +367,17 @@ export function ServiceRequisitionsPanel({
               </label>
 
               <div className="flex flex-wrap gap-2">
+                {canExport ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={pdfBusy}
+                    onClick={() => void onPdf()}
+                  >
+                    <FileDown className="size-4" />
+                    {pdfBusy ? "Generando PDF…" : "PDF de surtimiento"}
+                  </Button>
+                ) : null}
                 {(selected.status === "solicitada" ||
                   selected.status === "parcial") &&
                 canWrite ? (

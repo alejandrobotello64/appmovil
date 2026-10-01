@@ -235,6 +235,7 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
         actions: [
           { action: "view" },
           { action: "edit", label: "Surtir / cancelar" },
+          { action: "export", label: "Descargar PDF de surtimiento" },
         ],
       },
       {
