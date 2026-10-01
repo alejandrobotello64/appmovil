@@ -114,19 +114,20 @@ function signatureCard(
   doc.rect(x, y + 1.1, 1.1, h - 2.2, "F");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
+  doc.setFontSize(6.8);
   doc.setTextColor(...BLUE);
-  doc.text(title.toUpperCase(), x + 4, y + 5);
+  doc.text(title.toUpperCase(), x + 3.5, y + 5);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(6);
+  doc.setFontSize(5.8);
   doc.setTextColor(...MUTED);
-  doc.text(subtitle, x + 4, y + 8.6, { maxWidth: w - 8 });
+  doc.text(subtitle, x + 3.5, y + 8.5, { maxWidth: w - 7 });
 
   const displayName = profile?.fullName || name || "Nombre y firma";
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(...INK);
-  doc.text(displayName, x + 4, y + 14, { maxWidth: w - 8 });
+  const nameLines = doc.splitTextToSize(displayName, w - 7) as string[];
+  doc.text(nameLines.slice(0, 2), x + 3.5, y + 13.4);
 
   const rows: [string, string][] = [
     ["Puesto", [profile?.jobTitle, profile?.department].filter(Boolean).join(" · ")],
@@ -134,10 +135,10 @@ function signatureCard(
     ["Teléfono", profile?.phone ?? ""],
     ["Correo", profile?.email ?? ""],
   ];
-  let rowY = y + 18.4;
+  let rowY = y + 18.8;
   for (const [label, value] of rows) {
-    kv(doc, label, value || "—", x + 4, rowY, w - 8);
-    rowY += 3.7;
+    kv(doc, label, value || "—", x + 3.5, rowY, w - 7);
+    rowY += 3.6;
   }
 
   doc.setDrawColor(150, 150, 160);
@@ -277,36 +278,49 @@ function drawSignatures(
   cursor: Cursor,
   advisorName: string,
   advisorProfile: StaffProfile | null,
+  warehouseName: string,
+  warehouseProfile: StaffProfile | null,
   technicianName: string,
   technicianProfile: StaffProfile | null
 ) {
   const h = 46;
   cursor.ensure(h + 4);
   const { doc } = cursor;
-  const gap = 4;
-  const w = (cursor.contentW - gap) / 2;
-  signatureCard(
-    doc,
-    "Asesor de servicio",
-    "Autoriza el surtimiento",
-    advisorName,
-    advisorProfile,
-    MARGIN,
-    cursor.y,
-    w,
-    h
-  );
-  signatureCard(
-    doc,
-    "Técnico que recibe",
-    "Recibe el material de almacén",
-    technicianName,
-    technicianProfile,
-    MARGIN + w + gap,
-    cursor.y,
-    w,
-    h
-  );
+  const gap = 3;
+  const w = (cursor.contentW - gap * 2) / 3;
+  const cards = [
+    {
+      title: "Asesor de servicio",
+      subtitle: "Autoriza el surtimiento",
+      name: advisorName,
+      profile: advisorProfile,
+    },
+    {
+      title: "Almacén",
+      subtitle: "Entrega el material",
+      name: warehouseName,
+      profile: warehouseProfile,
+    },
+    {
+      title: "Técnico que recibe",
+      subtitle: "Recibe el surtimiento",
+      name: technicianName,
+      profile: technicianProfile,
+    },
+  ];
+  cards.forEach((card, index) => {
+    signatureCard(
+      doc,
+      card.title,
+      card.subtitle,
+      card.name,
+      card.profile,
+      MARGIN + index * (w + gap),
+      cursor.y,
+      w,
+      h
+    );
+  });
   cursor.y += h + 4;
 }
 
@@ -321,9 +335,12 @@ export async function downloadServiceRequisitionPdf(
     order = null;
   }
 
-  const [advisorProfile, technicianProfile] = await Promise.all([
+  const [advisorProfile, technicianProfile, warehouseProfile] = await Promise.all([
     order?.advisor ? findStaffProfile(order.advisor) : Promise.resolve(null),
     order?.technician ? findStaffProfile(order.technician) : Promise.resolve(null),
+    requisition.fulfilledBy
+      ? findStaffProfile(requisition.fulfilledBy)
+      : Promise.resolve(null),
   ]);
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -452,6 +469,8 @@ export async function downloadServiceRequisitionPdf(
     cursor,
     order?.advisor || "",
     advisorProfile,
+    requisition.fulfilledBy || "",
+    warehouseProfile,
     order?.technician || "",
     technicianProfile
   );
