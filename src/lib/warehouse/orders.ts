@@ -245,6 +245,14 @@ export async function receivePurchaseOrderLines(
     .single();
 
   if (updateError) throw new Error(updateError.message);
+
+  try {
+    const { syncPurchaseRequestForOrder } = await import("@/lib/compras/storage");
+    await syncPurchaseRequestForOrder(orderId, nextStatus, mapped);
+  } catch {
+    // La solicitud de compra es informativa; no bloquea la recepción.
+  }
+
   return mapOrder(updated, mapped);
 }
 
@@ -276,4 +284,11 @@ export async function cancelPurchaseOrder(orderId: string): Promise<void> {
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
+
+  try {
+    const { syncPurchaseRequestForOrder } = await import("@/lib/compras/storage");
+    await syncPurchaseRequestForOrder(orderId, "cancelado");
+  } catch {
+    // Sin solicitud vinculada no hay nada que actualizar.
+  }
 }

@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { WAREHOUSE_TABS, normalizeWarehouseTab } from "@/lib/warehouse/tabs";
 import { SALES_TABS, SALES_TAB_MODULES, normalizeSalesTab } from "@/lib/sales/tabs";
+import { COMPRAS_TABS, COMPRAS_TAB_MODULES, normalizeComprasTab } from "@/lib/compras/tabs";
 import { USERS_TABS, normalizeUsersTab } from "@/lib/users/tabs";
 import {
   BIOMEDICA_MODULES,
@@ -71,8 +72,7 @@ const TAB_ICONS = {
   solicitudes: ClipboardCheck,
   movimientos: History,
   kardex: BookOpen,
-  pedidos: ShoppingCart,
-  proveedores: Truck,
+  solicitudes_compra: ShoppingCart,
   equipo: Wrench,
   mantenimientos: ClipboardList,
   registros_sanitarios: ShieldCheck,
@@ -91,6 +91,13 @@ const SALES_TAB_ICONS = {
   dashboard: LayoutDashboard,
   cotizaciones: FileText,
   catalogo: Library,
+} as const;
+
+const COMPRAS_TAB_ICONS = {
+  dashboard: LayoutDashboard,
+  solicitudes: ClipboardList,
+  pedidos: ShoppingCart,
+  proveedores: Truck,
 } as const;
 
 const SERVICE_ORDER_TAB_ICONS = {
@@ -125,6 +132,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     pathname.startsWith("/dashboard/ventas") ||
     pathname.startsWith("/dashboard/cotizaciones");
   const activeSalesTab = normalizeSalesTab(searchParams.get("tab"));
+  const inCompras = pathname.startsWith("/dashboard/compras");
+  const activeComprasTab = normalizeComprasTab(searchParams.get("tab"));
   const inServiceOrders = pathname.startsWith("/dashboard/ordenes-servicio");
   const inFleet = pathname.startsWith("/dashboard/flotilla");
   const inEducation = pathname.startsWith("/dashboard/educacion");
@@ -135,10 +144,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     inServiceOrders || inEducation
   );
   const [salesOpen, setSalesOpen] = useState(inSales);
+  const [comprasOpen, setComprasOpen] = useState(inCompras);
   const [wasInSales, setWasInSales] = useState(inSales);
   if (inSales !== wasInSales) {
     setWasInSales(inSales);
     if (inSales) setSalesOpen(true);
+  }
+  const [wasInCompras, setWasInCompras] = useState(inCompras);
+  if (inCompras !== wasInCompras) {
+    setWasInCompras(inCompras);
+    if (inCompras) setComprasOpen(true);
   }
   const { canView } = useSessionAccess();
 
@@ -191,8 +206,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     }
   }
 
+  function handleComprasClick() {
+    const nextOpen = !comprasOpen;
+    setComprasOpen(nextOpen);
+    if (nextOpen && visibleComprasTabs[0]) {
+      router.push(visibleComprasTabs[0].href);
+    }
+  }
+
   const visibleSalesTabs = SALES_TABS.filter((tab) =>
     SALES_TAB_MODULES[tab.id].some((module) => canView(module))
+  );
+
+  const visibleComprasTabs = COMPRAS_TABS.filter((tab) =>
+    COMPRAS_TAB_MODULES[tab.id].some((module) => canView(module))
   );
 
   const visibleServiceOrderTabs = SERVICE_ORDER_TABS.filter((tab) =>
@@ -311,6 +338,57 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               </div>
             ) : null}
           </div>
+
+          {visibleComprasTabs.length ? (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={handleComprasClick}
+                aria-expanded={comprasOpen}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                  inCompras
+                    ? "bg-[linear-gradient(135deg,rgba(0,191,255,0.18),rgba(59,70,165,0.22))] text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <ShoppingCart className="size-4 shrink-0" />
+                <span className="flex-1">Compras</span>
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform",
+                    comprasOpen ? "rotate-180" : "rotate-0"
+                  )}
+                />
+              </button>
+
+              {comprasOpen ? (
+                <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
+                  {visibleComprasTabs.map((tab) => {
+                    const Icon = COMPRAS_TAB_ICONS[tab.id];
+                    const isActive = inCompras && activeComprasTab === tab.id;
+
+                    return (
+                      <Link
+                        key={tab.id}
+                        href={tab.href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                          isActive
+                            ? "bg-muted font-medium text-foreground"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="size-3.5 shrink-0" />
+                        {tab.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           {canView("calendario") ? (
             <Link
@@ -565,7 +643,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
           <p className="text-xs text-muted-foreground">
-            Panel principal, almacén, ventas, biomédica, clientes, calidad y usuarios
+            Panel principal, almacén, compras, ventas, biomédica, clientes, calidad y usuarios
           </p>
         </div>
       </aside>

@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, FileDown, PackageCheck, RefreshCw, XCircle } from "lucide-react";
+import { CheckCircle2, FileDown, PackageCheck, RefreshCw, ShoppingCart, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import {
+  createPurchaseRequest,
+  getOpenPurchaseRequestsForSource,
+} from "@/lib/compras/storage";
+import {
+  purchaseRequestStatusLabel,
+  type PurchaseRequest,
+} from "@/lib/compras/types";
+import { getInventoryItems } from "@/lib/inventory/storage";
+import type { InventoryItem } from "@/lib/inventory/types";
 import {
   cancelServiceOrderRequisition,
   fulfillServiceOrderRequisition,
@@ -48,9 +58,12 @@ export function ServiceRequisitionsPanel({
   subtitle?: string;
 } = {}) {
   const { canWrite, canExport } = usePermissions(permissionModule);
+  const purchaseAccess = usePermissions("solicitudes_compra");
   const canFulfill =
-    allowFulfill ?? permissionModule === "solicitudes" ? canWrite : false;
+    allowFulfill ?? (permissionModule === "solicitudes" ? canWrite : false);
   const [items, setItems] = useState<ServiceOrderRequisition[]>([]);
+  const [products, setProducts] = useState<InventoryItem[]>([]);
+  const [linkedRequests, setLinkedRequests] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -61,6 +74,7 @@ export function ServiceRequisitionsPanel({
   const [qtyDraft, setQtyDraft] = useState<Record<string, string>>({});
   const [warehouseNotes, setWarehouseNotes] = useState("");
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [lineChecked, setLineChecked] = useState<Record<string, boolean>>({});
   const actor = getSession()?.username ?? "usuario";
 
   const selected = useMemo(
@@ -72,8 +86,12 @@ export function ServiceRequisitionsPanel({
     setLoading(true);
     setError("");
     try {
-      const list = await getServiceOrderRequisitions();
+      const [list, productList] = await Promise.all([
+        getServiceOrderRequisitions(),
+        getInventoryItems({ kind: "producto" }),
+      ]);
       setItems(list);
+      setProducts(productList);
       if (selectedId && !list.some((item) => item.id === selectedId)) {
         setSelectedId(null);
       }
@@ -94,6 +112,8 @@ export function ServiceRequisitionsPanel({
     if (!selected) {
       setQtyDraft({});
       setWarehouseNotes("");
+      setLinkedRequests([]);
+      setLineChecked({});
       return;
     }
     const next: Record<string, string> = {};
@@ -106,7 +126,18 @@ export function ServiceRequisitionsPanel({
     }
     setQtyDraft(next);
     setWarehouseNotes(selected.warehouseNotes);
-  }, [selected?.id, selected?.updatedAt]);
+    const checked: Record<string, boolean> = {};
+    for (const line of selected.lines) {
+      const pending = Math.max(0, line.quantityRequested - line.quantityFulfilled);
+      const stock =
+        products.find((item) => item.id === line.productId)?.quantity ?? 0;
+      checked[line.id] = pending > 0 && stock < pending;
+    }
+    setLineChecked(checked);
+    void getOpenPurchaseRequestsForSource("requisicion_os", selected.id)
+      .then(setLinkedRequests)
+      .catch(() => setLinkedRequests([]));
+  }, [selected?.id, selected?.updatedAt, products]);
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -170,6 +201,62 @@ export function ServiceRequisitionsPanel({
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo cancelar.");
+    }
+  }
+
+  async function onRequestPurchase() {
+    if (!selected || !purchaseAccess.canCreate) return;
+    const lines = selected.lines.filter((line) => {
+      const pending = Math.max(
+        0,
+        line.quantityRequested - line.quantityFulfilled
+      );
+      return pending > 0 && lineChecked[line.id];
+    });
+    if (lines.length === 0) {
+      setError("Marca al menos una línea que no se pueda surtir.");
+      return;
+    }
+    try {
+      setError("");
+      setMessage("");
+      const created = await createPurchaseRequest({
+        requestedBy: actor,
+        sourceType: "requisicion_os",
+        sourceId: selected.id,
+        sourceFolio: selected.folio,
+        reason: "no_surtible",
+        warehouseNotes:
+          warehouseNotes ||
+          `No se pudo surtir ${selected.folio} (${selected.clientName || "OS"}).`,
+        lines: lines.map((line) => ({
+          sourceLineId: line.id,
+          productId: line.productId,
+          productSku: line.productSku,
+          productName: line.productName || line.description,
+          quantity: Math.max(
+            0,
+            line.quantityRequested - line.quantityFulfilled
+          ),
+          unit: line.unit,
+        })),
+      });
+      setMessage(
+        `Se envió a Compras la orden ${created.folio} por ${lines.length} producto${
+          lines.length === 1 ? "" : "s"
+        } que no se pudieron surtir.`
+      );
+      const linked = await getOpenPurchaseRequestsForSource(
+        "requisicion_os",
+        selected.id
+      );
+      setLinkedRequests(linked);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo generar la orden de compra."
+      );
     }
   }
 
@@ -311,6 +398,10 @@ export function ServiceRequisitionsPanel({
                     0,
                     line.quantityRequested - line.quantityFulfilled
                   );
+                  const stock =
+                    products.find((item) => item.id === line.productId)
+                      ?.quantity ?? 0;
+                  const cannotFulfill = pending > 0 && stock < pending;
                   return (
                     <div
                       key={line.id}
@@ -322,37 +413,68 @@ export function ServiceRequisitionsPanel({
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Pedido: {line.quantityRequested} {line.unit} · Surtido:{" "}
-                        {line.quantityFulfilled} · Pendiente: {pending}
+                        {line.quantityFulfilled} · Pendiente: {pending} · Existencia:{" "}
+                        {stock}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {requisitionLineStatusLabel(line.lineStatus)}
+                        {cannotFulfill ? " · No se puede surtir completo" : ""}
                       </p>
                       {pending > 0 &&
                       (selected.status === "solicitada" ||
                         selected.status === "parcial") ? (
-                        <label className="mt-2 block text-xs">
-                          Surtiendo ahora
-                          <input
-                            type="number"
-                            min={0}
-                            max={pending}
-                            step="0.01"
-                            className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-                            value={qtyDraft[line.id] ?? "0"}
-                            disabled={!canWrite}
-                            onChange={(e) =>
-                              setQtyDraft((current) => ({
-                                ...current,
-                                [line.id]: e.target.value,
-                              }))
-                            }
-                          />
-                        </label>
+                        <>
+                          <label className="mt-2 block text-xs">
+                            Surtiendo ahora
+                            <input
+                              type="number"
+                              min={0}
+                              max={pending}
+                              step="0.01"
+                              className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                              value={qtyDraft[line.id] ?? "0"}
+                              disabled={!canWrite}
+                              onChange={(e) =>
+                                setQtyDraft((current) => ({
+                                  ...current,
+                                  [line.id]: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          {purchaseAccess.canCreate ? (
+                            <label className="mt-2 flex items-center gap-2 text-xs">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(lineChecked[line.id])}
+                                onChange={(event) =>
+                                  setLineChecked((current) => ({
+                                    ...current,
+                                    [line.id]: event.target.checked,
+                                  }))
+                                }
+                              />
+                              Incluir en orden a Compras
+                            </label>
+                          ) : null}
+                        </>
                       ) : null}
                     </div>
                   );
                 })}
               </div>
+
+              {linkedRequests.length ? (
+                <p className="rounded-lg bg-sky-500/10 px-3 py-2 text-xs text-sky-800 dark:text-sky-200">
+                  En compras:{" "}
+                  {linkedRequests
+                    .map(
+                      (item) =>
+                        `${item.folio} (${purchaseRequestStatusLabel(item.status)})`
+                    )
+                    .join(" · ")}
+                </p>
+              ) : null}
 
               <label className="block text-sm">
                 <span className="mb-1 block text-muted-foreground">
@@ -380,13 +502,24 @@ export function ServiceRequisitionsPanel({
                 ) : null}
                 {(selected.status === "solicitada" ||
                   selected.status === "parcial") &&
-                canWrite ? (
+                canFulfill ? (
                       <Button
                     type="button"
                     onClick={() => void onFulfill()}
                     className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
                   >
                     <PackageCheck className="size-4" /> Surtir y descontar
+                  </Button>
+                ) : null}
+                {(selected.status === "solicitada" ||
+                  selected.status === "parcial") &&
+                purchaseAccess.canCreate ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void onRequestPurchase()}
+                  >
+                    <ShoppingCart className="size-4" /> Solicitar a compras
                   </Button>
                 ) : null}
                 {selected.status === "solicitada" && canWrite ? (

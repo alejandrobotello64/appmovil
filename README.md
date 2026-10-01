@@ -1,6 +1,6 @@
 # Medical Advanced Supplies (MAS)
 
-App de almacén e inventario: login, inventario, proveedores, órdenes, movimientos, mantenimientos, calendario operativo y **calidad** (encuestas de satisfacción enviables por WhatsApp al cliente, con enlace público `/encuesta/{token}`). El código vive en GitHub (`alejandrobotello64/appmovil`) y los datos en Postgres con la API de Supabase.
+App de almacén, **compras** e inventario: login, inventario, solicitudes de compra de almacén a compras, pedidos, proveedores, órdenes, movimientos, mantenimientos, calendario operativo y **calidad** (encuestas de satisfacción enviables por WhatsApp al cliente, con enlace público `/encuesta/{token}`). El código vive en GitHub (`alejandrobotello64/appmovil`) y los datos en Postgres con la API de Supabase.
 
 ## Arranque local
 
@@ -42,6 +42,14 @@ El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nu
 La recepción de pedidos puede ser **parcial**. Entradas y salidas piden almacén, ubicación, lote/caducidad/serie cuando el producto lo exige. Los roles (`administrador`, `almacén`, `compras`, `ventas`, `servicio`, `dirección`) filtran el menú y bloquean escritura.
 
 Migración: `supabase/migrations/20260916000000_inventory_core_structure.sql` (aditiva; no borra `inventory_items` ni datos).
+
+## Compras
+
+El módulo **Compras** vive aparte de Almacén (`/dashboard/compras`): dashboard, solicitudes de almacén, pedidos y proveedores.
+
+Cuando almacén no puede surtir un producto (solicitud de OS o reabasto), genera una orden `SC-YYYY-####` hacia Compras. Compras toma la solicitud, arma el pedido y el estatus recorre *solicitada → en compra → pedida → recepción parcial → recibida*. La recepción del pedido actualiza el surtimiento.
+
+Si las tablas `purchase_requests` aún no están en la nube, la app guarda las solicitudes en el navegador hasta aplicar `supabase/migrations/20261001220000_purchase_requests.sql`.
 
 
 | Script | Qué hace |

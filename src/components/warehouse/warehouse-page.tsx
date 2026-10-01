@@ -8,9 +8,8 @@ import { WarehouseDashboard } from "@/components/warehouse/warehouse-dashboard";
 import { StockMovementPanel } from "@/components/warehouse/stock-movement-panel";
 import { HoldsPanel } from "@/components/warehouse/holds-panel";
 import { ServiceRequisitionsPanel } from "@/components/warehouse/service-requisitions-panel";
-import { SuppliersPanel } from "@/components/warehouse/suppliers-panel";
 import { MovementsPanel } from "@/components/warehouse/movements-panel";
-import { OrdersPanel } from "@/components/warehouse/orders-panel";
+import { PurchaseRequestsPanel } from "@/components/compras/purchase-requests-panel";
 import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
 import { KardexPanel } from "@/components/warehouse/kardex-panel";
@@ -49,6 +48,12 @@ export function WarehousePage() {
     }
     if (tabParam === "clientes") {
       router.replace("/dashboard/clientes");
+    }
+    if (tabParam === "pedidos") {
+      router.replace("/dashboard/compras?tab=pedidos");
+    }
+    if (tabParam === "proveedores") {
+      router.replace("/dashboard/compras?tab=proveedores");
     }
   }, [tabParam, router]);
 
@@ -91,13 +96,13 @@ export function WarehousePage() {
 
             {activeTab === "solicitudes" ? <ServiceRequisitionsPanel /> : null}
 
+            {activeTab === "solicitudes_compra" ? (
+              <PurchaseRequestsPanel mode="warehouse" />
+            ) : null}
+
             {activeTab === "movimientos" ? <MovementsPanel /> : null}
 
             {activeTab === "kardex" ? <KardexPanel /> : null}
-
-            {activeTab === "pedidos" ? <OrdersPanel /> : null}
-
-            {activeTab === "proveedores" ? <SuppliersPanel /> : null}
 
             {activeTab === "equipo" ? (
               <InventoryPanel panelMode="equipment" />

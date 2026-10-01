@@ -9,12 +9,12 @@ export const APP_ROLES = [
   {
     id: "almacen",
     label: "Almacén",
-    description: "Inventario, entradas, salidas, apartados, pedidos y proveedores.",
+    description: "Inventario, entradas, salidas, apartados y solicitudes de compra.",
   },
   {
     id: "compras",
     label: "Compras",
-    description: "Pedidos, proveedores, entradas y licitaciones.",
+    description: "Solicitudes de almacén, pedidos, surtimiento y proveedores.",
   },
   {
     id: "ventas",
@@ -48,6 +48,7 @@ export type WarehouseModule =
   | "solicitudes"
   | "movimientos"
   | "kardex"
+  | "solicitudes_compra"
   | "pedidos"
   | "proveedores"
   | "clientes"
@@ -251,18 +252,6 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
         actions: [{ action: "view" }],
       },
       {
-        id: "pedidos",
-        label: "Pedidos",
-        description: "Órdenes de compra y surtido.",
-        actions: CRUD,
-      },
-      {
-        id: "proveedores",
-        label: "Proveedores",
-        description: "Alta y administración de proveedores.",
-        actions: CRUD,
-      },
-      {
         id: "mantenimientos",
         label: "Mantenimientos",
         description: "Servicios programados de equipos del almacén.",
@@ -285,6 +274,36 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
           { action: "delete" },
           { action: "export", label: "Descargar PDF" },
         ],
+      },
+    ],
+  },
+  {
+    id: "compras",
+    label: "Compras",
+    modules: [
+      {
+        id: "solicitudes_compra",
+        label: "Solicitudes de compra",
+        description:
+          "Almacén pide a compras cuando un producto no se puede surtir.",
+        actions: [
+          { action: "view" },
+          { action: "create", label: "Solicitar a compras" },
+          { action: "edit", label: "Avanzar compra y vincular pedido" },
+          { action: "delete", label: "Cancelar solicitud" },
+        ],
+      },
+      {
+        id: "pedidos",
+        label: "Pedidos",
+        description: "Órdenes de compra y recepción de surtimiento.",
+        actions: CRUD,
+      },
+      {
+        id: "proveedores",
+        label: "Proveedores",
+        description: "Alta y administración de proveedores.",
+        actions: CRUD,
       },
     ],
   },
@@ -485,6 +504,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "solicitudes",
     "movimientos",
     "kardex",
+    "solicitudes_compra",
     "pedidos",
     "proveedores",
     "clientes",
@@ -500,6 +520,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "dashboard",
     ...CATALOG_MODULES,
     "entradas",
+    "solicitudes_compra",
     "pedidos",
     "proveedores",
     "kardex",
@@ -554,6 +575,9 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "equipo",
     "clientes",
     "calendario",
+    "solicitudes_compra",
+    "pedidos",
+    "proveedores",
     "licitaciones",
     "cotizaciones",
     "catalogo_ventas",
@@ -582,6 +606,7 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "apartados",
     "solicitudes",
     "movimientos",
+    "solicitudes_compra",
     "pedidos",
     "proveedores",
     "clientes",
@@ -593,6 +618,7 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "educacion",
   ],
   compras: [
+    "solicitudes_compra",
     "pedidos",
     "proveedores",
     "entradas",

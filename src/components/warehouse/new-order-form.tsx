@@ -12,7 +12,8 @@ import {
   type SupplyCategoryId,
 } from "@/lib/inventory/types";
 import type { Supplier } from "@/lib/suppliers/types";
-import { createPurchaseOrder } from "@/lib/warehouse/orders";
+import { createPurchaseOrder, type PurchaseOrder } from "@/lib/warehouse/orders";
+import { createPurchaseOrderFromRequest } from "@/lib/compras/storage";
 import { cn } from "@/lib/utils";
 
 type DraftLine = {
@@ -30,7 +31,11 @@ type NewOrderFormProps = {
   products: InventoryItem[];
   suppliers: Supplier[];
   onCancel: () => void;
-  onCreated: () => Promise<void> | void;
+  onCreated: (order?: PurchaseOrder) => Promise<void> | void;
+  initialLines?: DraftLine[];
+  initialNotes?: string;
+  fromRequestId?: string;
+  heading?: string;
 };
 
 function formatCurrency(value: number) {
@@ -75,14 +80,18 @@ export function NewOrderForm({
   suppliers,
   onCancel,
   onCreated,
+  initialLines = [],
+  initialNotes = "",
+  fromRequestId,
+  heading,
 }: NewOrderFormProps) {
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id ?? "");
   const [expectedDate, setExpectedDate] = useState("");
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(initialNotes);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [quantity, setQuantity] = useState(1);
-  const [lines, setLines] = useState<DraftLine[]>([]);
+  const [lines, setLines] = useState<DraftLine[]>(initialLines);
   const [error, setError] = useState("");
   const [hint, setHint] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -155,15 +164,38 @@ export function NewOrderForm({
     try {
       const supplier = suppliers.find((item) => item.id === supplierId);
       const session = getSession();
-      await createPurchaseOrder({
+      const payload = {
         supplierId: supplier?.id ?? null,
         supplierName: supplier?.name ?? "Sin proveedor",
         expectedDate,
         notes,
         createdBy: session?.username ?? "",
-        items: lines,
-      });
-      await onCreated();
+        items: lines.map((line) => ({
+          itemId: products.some((item) => item.id === line.itemId)
+            ? line.itemId
+            : null,
+          itemSku: line.itemSku,
+          itemName: line.itemName,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+        })),
+      };
+      const order = fromRequestId
+        ? (
+            await createPurchaseOrderFromRequest(
+              fromRequestId,
+              session?.username ?? "",
+              {
+                supplierId: payload.supplierId,
+                supplierName: payload.supplierName,
+                expectedDate: payload.expectedDate,
+                notes: payload.notes,
+                items: payload.items,
+              }
+            )
+          ).order
+        : await createPurchaseOrder(payload);
+      await onCreated(order);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear el pedido");
     } finally {
@@ -180,7 +212,9 @@ export function NewOrderForm({
     >
       <div className="flex shrink-0 flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold">Nuevo pedido</h2>
+          <h2 className="text-lg font-semibold">
+            {heading ?? (fromRequestId ? "Pedido desde solicitud" : "Nuevo pedido")}
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Busca por código MAS o nombre, arma las líneas y confirma la orden.
           </p>
@@ -215,7 +249,7 @@ export function NewOrderForm({
                   No hay proveedores activos. Puedes crear el pedido sin
                   proveedor o{" "}
                   <Link
-                    href="/dashboard/almacen?tab=proveedores"
+                    href="/dashboard/compras?tab=proveedores"
                     className="font-medium underline underline-offset-2"
                   >
                     dar de alta uno

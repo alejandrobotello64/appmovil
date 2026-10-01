@@ -207,7 +207,7 @@ export function WarehouseDashboard() {
       label: "Pedidos abiertos",
       value: stats.openOrders,
       icon: ClipboardList,
-      href: "/dashboard/almacen?tab=pedidos",
+      href: "/dashboard/compras?tab=pedidos",
       tone: "text-[#00BFFF]",
     },
     {
@@ -242,7 +242,7 @@ export function WarehouseDashboard() {
       label: "Proveedores activos",
       value: stats.activeSuppliers,
       icon: Truck,
-      href: "/dashboard/almacen?tab=proveedores",
+      href: "/dashboard/compras?tab=proveedores",
       tone: "text-[#00BFFF]",
     },
   ];

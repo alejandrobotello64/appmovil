@@ -219,7 +219,7 @@ export function OrdersPanel() {
           <div>
             <h2 className="text-lg font-semibold">Pedidos de compra</h2>
             <p className="text-sm text-muted-foreground">
-              Solicita productos consumibles y recibe parcial o total contra la OC.
+              Órdenes de Compras. Recibe parcial o total contra la OC y actualiza el surtimiento.
             </p>
           </div>
           {canWrite ? (

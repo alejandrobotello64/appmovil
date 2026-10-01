@@ -60,6 +60,12 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=solicitudes",
   },
   {
+    id: "solicitudes_compra",
+    label: "Solicitar compra",
+    description: "Cuando no se puede surtir, envía la orden a Compras",
+    href: "/dashboard/almacen?tab=solicitudes_compra",
+  },
+  {
     id: "movimientos",
     label: "Movimientos",
     description: "Cambios de ubicación y canjes de materiales caducados",
@@ -70,18 +76,6 @@ export const WAREHOUSE_TABS = [
     label: "Kardex",
     description: "Historial inalterable de existencias",
     href: "/dashboard/almacen?tab=kardex",
-  },
-  {
-    id: "pedidos",
-    label: "Pedidos",
-    description: "Órdenes de compra y surtido",
-    href: "/dashboard/almacen?tab=pedidos",
-  },
-  {
-    id: "proveedores",
-    label: "Proveedores",
-    description: "Alta y administración de proveedores",
-    href: "/dashboard/almacen?tab=proveedores",
   },
   {
     id: "equipo",
