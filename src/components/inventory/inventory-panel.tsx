@@ -52,6 +52,11 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import { InventoryExcelActions } from "@/components/inventory/inventory-excel-actions";
 import type { WarehouseModule } from "@/lib/auth/permissions";
 import { getReservedQuantities } from "@/lib/holds/storage";
+import { daysUntilExpiry, formatIsoDateEs } from "@/lib/inventory/expiry";
+import {
+  getLotsByProductIds,
+  type ProductLot,
+} from "@/lib/warehouse/stock";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -91,6 +96,86 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+const LOT_PREVIEW_LIMIT = 3;
+
+function expiryTextClass(iso: string) {
+  const days = daysUntilExpiry(iso);
+  if (days == null) return "text-muted-foreground";
+  if (days < 0) return "text-destructive font-medium";
+  if (days <= 30) return "text-amber-700 dark:text-amber-300 font-medium";
+  return "text-foreground";
+}
+
+function resolveItemLots(
+  item: InventoryItem,
+  lotsByProduct: Map<string, ProductLot[]>
+): ProductLot[] {
+  const rows = lotsByProduct.get(item.id);
+  if (rows && rows.length > 0) return rows;
+  const lotNumber = item.itemKind === "equipo" ? "" : item.serialNumber.trim();
+  const expiryDate = item.expiryDate.trim();
+  if (!lotNumber && !expiryDate) return [];
+  return [
+    {
+      id: `fallback-${item.id}`,
+      lotNumber,
+      expiryDate,
+      manufacturedAt: item.manufacturedAt,
+    },
+  ];
+}
+
+function lotFieldValue(lots: ProductLot[]) {
+  if (lots.length === 0) return "—";
+  return lots
+    .map((lot) => lot.lotNumber.trim() || "Sin lote")
+    .join(" · ");
+}
+
+function expiryFieldValue(lots: ProductLot[]) {
+  if (lots.length === 0) return "—";
+  return lots
+    .map((lot) =>
+      lot.expiryDate ? formatIsoDateEs(lot.expiryDate) : "Sin caducidad"
+    )
+    .join(" · ");
+}
+
+function LotListCell({
+  lots,
+  field,
+}: {
+  lots: ProductLot[];
+  field: "lot" | "expiry";
+}) {
+  if (lots.length === 0) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  const visible = lots.slice(0, LOT_PREVIEW_LIMIT);
+  const extra = lots.length - visible.length;
+  return (
+    <div className="space-y-0.5">
+      {visible.map((lot) =>
+        field === "lot" ? (
+          <p key={lot.id} className="font-mono text-xs text-foreground">
+            {lot.lotNumber.trim() || "—"}
+          </p>
+        ) : (
+          <p
+            key={lot.id}
+            className={cn("text-xs tabular-nums", expiryTextClass(lot.expiryDate))}
+          >
+            {lot.expiryDate ? formatIsoDateEs(lot.expiryDate) : "—"}
+          </p>
+        )
+      )}
+      {extra > 0 ? (
+        <p className="text-[11px] text-muted-foreground">+{extra} más</p>
+      ) : null}
+    </div>
+  );
+}
+
 type InventoryPanelProps = {
   /** Tabla propia por categoría, o equipos */
   panelMode?: SupplyCategoryId | "equipment";
@@ -121,6 +206,10 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const [reservedByProduct, setReservedByProduct] = useState<Map<string, number>>(
     new Map()
   );
+  const [lotsByProduct, setLotsByProduct] = useState<Map<string, ProductLot[]>>(
+    new Map()
+  );
+  const showLotExpiry = !isEquipment;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -189,14 +278,27 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   }
 
   const filteredItems = useMemo(() => {
+    const query = search.toLowerCase().trim();
     return items.filter((item) => {
       const status = getStockStatus(item.quantity, item.minStock);
+      const lotHaystack = (lotsByProduct.get(item.id) ?? [])
+        .map((lot) => `${lot.lotNumber} ${lot.expiryDate}`)
+        .join(" ");
       const matchesSearch =
-        search.trim().length === 0 ||
-        [item.sku, item.name, item.brand, item.model, item.supplier, item.serialNumber]
+        query.length === 0 ||
+        [
+          item.sku,
+          item.name,
+          item.brand,
+          item.model,
+          item.supplier,
+          item.serialNumber,
+          item.expiryDate,
+          lotHaystack,
+        ]
           .join(" ")
           .toLowerCase()
-          .includes(search.toLowerCase());
+          .includes(query);
       const matchesStatus =
         isEquipment ||
         item.itemKind === "equipo" ||
@@ -204,7 +306,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
         status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [items, search, statusFilter, isEquipment]);
+  }, [items, search, statusFilter, isEquipment, lotsByProduct]);
 
   async function refreshItems() {
     try {
@@ -216,8 +318,13 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           : getSupplyItemsByCategory(supplyCategory ?? "insumos"),
         isEquipment ? Promise.resolve(new Map<string, number>()) : getReservedQuantities(),
       ]);
+      const lotsMap =
+        isEquipment || data.length === 0
+          ? new Map<string, ProductLot[]>()
+          : await getLotsByProductIds(data.map((item) => item.id));
       setItems(data);
       setReservedByProduct(reservedMap);
+      setLotsByProduct(lotsMap);
     } catch (err) {
       setError(
         err instanceof Error
@@ -388,7 +495,11 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por SKU, nombre, marca o proveedor..."
+                placeholder={
+                  isEquipment
+                    ? "Buscar por SKU, nombre, marca o proveedor..."
+                    : "Buscar por SKU, nombre, marca, lote o proveedor..."
+                }
                 className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-10 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20"
               />
             </label>
@@ -418,6 +529,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
             }
             items={filteredItems.map((item) => {
               const status = getStockStatus(item.quantity, item.minStock);
+              const itemLots = resolveItemLots(item, lotsByProduct);
               return {
                 key: item.id,
                 title: item.name,
@@ -459,6 +571,12 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                           })(),
                   },
                   { label: "Ubicación", value: item.location || "—" },
+                  ...(showLotExpiry
+                    ? [
+                        { label: "Lote", value: lotFieldValue(itemLots) },
+                        { label: "Caducidad", value: expiryFieldValue(itemLots) },
+                      ]
+                    : []),
                   {
                     label: requiresManufactureDate
                       ? "Fabricación"
@@ -529,6 +647,12 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     <th className="px-4 py-3 font-medium">Próx. mant.</th>
                   )}
                   <th className="px-4 py-3 font-medium">Ubicación</th>
+                  {showLotExpiry ? (
+                    <>
+                      <th className="px-4 py-3 font-medium">Lote</th>
+                      <th className="px-4 py-3 font-medium">Caducidad</th>
+                    </>
+                  ) : null}
                   {requiresManufactureDate ? (
                     <th className="px-4 py-3 font-medium">Fabricación</th>
                   ) : null}
@@ -540,7 +664,10 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={requiresManufactureDate ? 9 : 8}
+                      colSpan={
+                        (requiresManufactureDate ? 9 : 8) +
+                        (showLotExpiry ? 2 : 0)
+                      }
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isEquipment
@@ -551,6 +678,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 ) : (
                   filteredItems.map((item) => {
                     const status = getStockStatus(item.quantity, item.minStock);
+                    const itemLots = resolveItemLots(item, lotsByProduct);
                     return (
                       <tr
                         key={item.id}
@@ -623,6 +751,16 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                         <td className="px-4 py-3 text-muted-foreground">
                           {item.location || "—"}
                         </td>
+                        {showLotExpiry ? (
+                          <>
+                            <td className="px-4 py-3">
+                              <LotListCell lots={itemLots} field="lot" />
+                            </td>
+                            <td className="px-4 py-3">
+                              <LotListCell lots={itemLots} field="expiry" />
+                            </td>
+                          </>
+                        ) : null}
                         {requiresManufactureDate ? (
                           <td className="px-4 py-3 text-muted-foreground">
                             {item.manufacturedAt || "—"}
@@ -866,7 +1004,22 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     )?.label ?? viewingItem.assetStatus,
                   ],
                   ["Fabricación", viewingItem.manufacturedAt || "—"],
-                  ["Caducidad", viewingItem.expiryDate || "—"],
+                  [
+                    "Lote",
+                    showLotExpiry
+                      ? lotFieldValue(
+                          resolveItemLots(viewingItem, lotsByProduct)
+                        )
+                      : viewingItem.serialNumber || "—",
+                  ],
+                  [
+                    "Caducidad",
+                    showLotExpiry
+                      ? expiryFieldValue(
+                          resolveItemLots(viewingItem, lotsByProduct)
+                        )
+                      : viewingItem.expiryDate || "—",
+                  ],
                   ["Próx. mant.", viewingItem.nextMaintenanceDate || "—"],
                 ].map(([label, value]) => (
                   <div key={label}>
@@ -876,6 +1029,37 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 ))}
               </div>
             </div>
+
+            {showLotExpiry ? (
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground">Lotes y caducidad</p>
+                {resolveItemLots(viewingItem, lotsByProduct).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Sin lote ni caducidad registrados.
+                  </p>
+                ) : (
+                  <ul className="mt-1 space-y-1">
+                    {resolveItemLots(viewingItem, lotsByProduct).map((lot) => (
+                      <li key={lot.id} className="text-sm">
+                        <span className="font-mono font-medium">
+                          {lot.lotNumber.trim() || "Sin lote"}
+                        </span>
+                        <span
+                          className={cn(
+                            "ml-2 text-xs tabular-nums",
+                            expiryTextClass(lot.expiryDate)
+                          )}
+                        >
+                          {lot.expiryDate
+                            ? `cad. ${formatIsoDateEs(lot.expiryDate)}`
+                            : "sin caducidad"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : null}
 
             {viewingItem.description ? (
               <div className="mb-3">

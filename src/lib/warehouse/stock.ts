@@ -169,6 +169,15 @@ export type ProductLot = {
   manufacturedAt: string;
 };
 
+function mapLotRow(row: Record<string, unknown>): ProductLot {
+  return {
+    id: String(row.id),
+    lotNumber: String(row.lot_number ?? ""),
+    expiryDate: String(row.expiry_date ?? ""),
+    manufacturedAt: String(row.manufactured_at ?? ""),
+  };
+}
+
 export async function getProductLots(productId: string): Promise<ProductLot[]> {
   const { data, error } = await db
     .from("lots")
@@ -176,12 +185,34 @@ export async function getProductLots(productId: string): Promise<ProductLot[]> {
     .eq("product_id", productId)
     .order("expiry_date", { ascending: true, nullsFirst: false });
   if (error) throw new Error(error.message);
-  return (data ?? []).map((row: Record<string, unknown>) => ({
-    id: String(row.id),
-    lotNumber: String(row.lot_number ?? ""),
-    expiryDate: String(row.expiry_date ?? ""),
-    manufacturedAt: String(row.manufactured_at ?? ""),
-  }));
+  return (data ?? []).map((row: Record<string, unknown>) => mapLotRow(row));
+}
+
+/** Carga lotes de varios productos en una sola consulta (listas de inventario). */
+export async function getLotsByProductIds(
+  productIds: string[]
+): Promise<Map<string, ProductLot[]>> {
+  const result = new Map<string, ProductLot[]>();
+  const uniqueIds = [...new Set(productIds.filter(Boolean))];
+  const chunkSize = 150;
+  for (let index = 0; index < uniqueIds.length; index += chunkSize) {
+    const chunk = uniqueIds.slice(index, index + chunkSize);
+    const { data, error } = await db
+      .from("lots")
+      .select("id, product_id, lot_number, expiry_date, manufactured_at")
+      .in("product_id", chunk)
+      .order("expiry_date", { ascending: true, nullsFirst: false });
+    if (error) throw new Error(error.message);
+    for (const row of (data ?? []) as Record<string, unknown>[]) {
+      const productId = String(row.product_id ?? "");
+      if (!productId) continue;
+      const list = result.get(productId);
+      const lot = mapLotRow(row);
+      if (list) list.push(lot);
+      else result.set(productId, [lot]);
+    }
+  }
+  return result;
 }
 
 export async function getOpenTransferCount(): Promise<number> {
