@@ -96,7 +96,7 @@ function kv(
   return Math.max(3.6, Math.min(lines.length, 2) * 3.2);
 }
 
-function personCard(
+function signatureCard(
   doc: jsPDF,
   title: string,
   subtitle: string,
@@ -107,26 +107,26 @@ function personCard(
   w: number,
   h: number
 ) {
-  doc.setFillColor(246, 248, 253);
-  doc.setDrawColor(210, 216, 236);
+  doc.setFillColor(252, 252, 254);
+  doc.setDrawColor(190, 190, 198);
   doc.roundedRect(x, y, w, h, 1.2, 1.2, "FD");
   doc.setFillColor(...BLUE);
   doc.rect(x, y + 1.1, 1.1, h - 2.2, "F");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
   doc.setTextColor(...BLUE);
-  doc.text(title.toUpperCase(), x + 4, y + 4.6);
+  doc.text(title.toUpperCase(), x + 4, y + 5);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(6);
   doc.setTextColor(...MUTED);
-  doc.text(subtitle, x + 4, y + 8.2, { maxWidth: w - 8 });
+  doc.text(subtitle, x + 4, y + 8.6, { maxWidth: w - 8 });
 
-  const displayName = profile?.fullName || name || "—";
+  const displayName = profile?.fullName || name || "Nombre y firma";
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(8.5);
   doc.setTextColor(...INK);
-  doc.text(displayName, x + 4, y + 13, { maxWidth: w - 8 });
+  doc.text(displayName, x + 4, y + 14, { maxWidth: w - 8 });
 
   const rows: [string, string][] = [
     ["Puesto", [profile?.jobTitle, profile?.department].filter(Boolean).join(" · ")],
@@ -134,11 +134,18 @@ function personCard(
     ["Teléfono", profile?.phone ?? ""],
     ["Correo", profile?.email ?? ""],
   ];
-  let rowY = y + 17.2;
+  let rowY = y + 18.4;
   for (const [label, value] of rows) {
     kv(doc, label, value || "—", x + 4, rowY, w - 8);
-    rowY += 3.6;
+    rowY += 3.7;
   }
+
+  doc.setDrawColor(150, 150, 160);
+  doc.line(x + 10, y + h - 8, x + w - 10, y + h - 8);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...MUTED);
+  doc.text("Firma", x + w / 2, y + h - 4.5, { align: "center" });
 }
 
 function noteBlock(cursor: Cursor, title: string, text: string) {
@@ -266,44 +273,40 @@ function drawLines(cursor: Cursor, req: ServiceOrderRequisition) {
   cursor.y += 12;
 }
 
-function drawSignatures(cursor: Cursor, req: ServiceOrderRequisition) {
-  cursor.ensure(32);
+function drawSignatures(
+  cursor: Cursor,
+  advisorName: string,
+  advisorProfile: StaffProfile | null,
+  technicianName: string,
+  technicianProfile: StaffProfile | null
+) {
+  const h = 46;
+  cursor.ensure(h + 4);
   const { doc } = cursor;
   const gap = 4;
-  const w = (cursor.contentW - gap * 2) / 3;
-  const h = 26;
-  const boxes = [
-    { title: "Solicitó (servicio)", name: req.requestedBy, date: req.requestedAt },
-    { title: "Surtido (almacén)", name: req.fulfilledBy, date: req.fulfilledAt },
-    { title: "Recibido en servicio", name: "", date: "" },
-  ];
-  boxes.forEach((box, index) => {
-    const x = MARGIN + index * (w + gap);
-    doc.setDrawColor(190, 190, 198);
-    doc.setFillColor(252, 252, 254);
-    doc.roundedRect(x, cursor.y, w, h, 1.2, 1.2, "FD");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.5);
-    doc.setTextColor(...BLUE);
-    doc.text(box.title, x + 3, cursor.y + 4);
-    doc.setDrawColor(160, 160, 170);
-    doc.line(x + 8, cursor.y + 14, x + w - 8, cursor.y + 14);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.5);
-    doc.setTextColor(...INK);
-    doc.text(box.name || "Nombre y firma", x + w / 2, cursor.y + 17.5, {
-      align: "center",
-      maxWidth: w - 8,
-    });
-    doc.setTextColor(...MUTED);
-    doc.setFontSize(6);
-    doc.text(
-      box.date ? formatDateTime(box.date) : "Fecha",
-      x + w / 2,
-      cursor.y + 21.5,
-      { align: "center" }
-    );
-  });
+  const w = (cursor.contentW - gap) / 2;
+  signatureCard(
+    doc,
+    "Asesor de servicio",
+    "Autoriza el surtimiento",
+    advisorName,
+    advisorProfile,
+    MARGIN,
+    cursor.y,
+    w,
+    h
+  );
+  signatureCard(
+    doc,
+    "Técnico que recibe",
+    "Recibe el material de almacén",
+    technicianName,
+    technicianProfile,
+    MARGIN + w + gap,
+    cursor.y,
+    w,
+    h
+  );
   cursor.y += h + 4;
 }
 
@@ -334,10 +337,8 @@ export async function downloadServiceRequisitionPdf(
   const cursor = new Cursor(doc, y);
 
   const pad = 3;
-  const gap = 3;
-  const cardW = (cursor.contentW - gap) / 2;
-  const cardH = 33.5;
-  const orderH = 16.5;
+  const orderH = 20;
+  const col = (cursor.contentW - pad * 2 - 4) / 3;
 
   doc.setFillColor(246, 248, 253);
   doc.setDrawColor(210, 216, 236);
@@ -347,23 +348,13 @@ export async function downloadServiceRequisitionPdf(
 
   let rowY = cursor.y + 4.2;
   const left = MARGIN + pad;
-  const mid = MARGIN + cursor.contentW / 3;
-  const right = MARGIN + (cursor.contentW / 3) * 2;
-  const colW = cursor.contentW / 3 - pad;
+  const mid = left + col + 2;
+  const right = mid + col + 2;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...BLUE);
   doc.text("ORDEN DE SERVICIO", left, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.5);
-  doc.setTextColor(...MUTED);
-  doc.text(
-    requisition.folio,
-    MARGIN + cursor.contentW - pad,
-    rowY,
-    { align: "right" }
-  );
   rowY += 4.2;
   kv(
     doc,
@@ -371,7 +362,7 @@ export async function downloadServiceRequisitionPdf(
     order?.folio || requisition.serviceOrderFolio || "—",
     left,
     rowY,
-    colW
+    col
   );
   kv(
     doc,
@@ -381,7 +372,7 @@ export async function downloadServiceRequisitionPdf(
       : "—",
     mid,
     rowY,
-    colW
+    col
   );
   kv(
     doc,
@@ -389,7 +380,7 @@ export async function downloadServiceRequisitionPdf(
     order?.clientName || requisition.clientName || "—",
     right,
     rowY,
-    colW
+    col
   );
   rowY += 3.6;
   const equipmentLine = [
@@ -401,35 +392,9 @@ export async function downloadServiceRequisitionPdf(
     .filter(Boolean)
     .join(" · ");
   kv(doc, "Equipo", equipmentLine || "—", left, rowY, cursor.contentW - pad * 2);
-  cursor.y += orderH + 2.8;
-
-  cursor.ensure(cardH + 4);
-  personCard(
-    doc,
-    "Asesor de servicio",
-    "Responsable comercial / autorización",
-    order?.advisor || "",
-    advisorProfile,
-    MARGIN,
-    cursor.y,
-    cardW,
-    cardH
-  );
-  personCard(
-    doc,
-    "Técnico que recibe",
-    "Recibe el surtimiento en servicio",
-    order?.technician || "",
-    technicianProfile,
-    MARGIN + cardW + gap,
-    cursor.y,
-    cardW,
-    cardH
-  );
-  cursor.y += cardH + 3.5;
+  cursor.y += orderH + 3;
 
   cursor.section("Solicitud a almacén");
-  const col = (cursor.contentW - 6) / 3;
   let h5 = kv(doc, "Solicitó", requisition.requestedBy || "—", MARGIN, cursor.y, col);
   h5 = Math.max(
     h5,
@@ -483,7 +448,13 @@ export async function downloadServiceRequisitionPdf(
   noteBlock(cursor, "Notas de almacén", requisition.warehouseNotes);
 
   cursor.section("Firmas");
-  drawSignatures(cursor, requisition);
+  drawSignatures(
+    cursor,
+    order?.advisor || "",
+    advisorProfile,
+    order?.technician || "",
+    technicianProfile
+  );
 
   await drawCompanySealBlock(doc, cursor.y);
   drawBrandedFooter(
