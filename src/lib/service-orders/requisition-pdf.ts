@@ -124,8 +124,8 @@ type Column = {
 
 const COLUMNS: Column[] = [
   { key: "n", label: "#", width: 8, align: "center" },
-  { key: "sku", label: "SKU", width: 28 },
-  { key: "desc", label: "Descripción", width: 68 },
+  { key: "sku", label: "SKU", width: 34 },
+  { key: "desc", label: "Descripción", width: 62 },
   { key: "unit", label: "Unid.", width: 14, align: "center" },
   { key: "req", label: "Pedido", width: 16, align: "center" },
   { key: "ok", label: "Surtido", width: 16, align: "center" },
