@@ -62,19 +62,19 @@ class Cursor {
     }
   }
   section(title: string) {
-    this.ensure(12);
+    this.ensure(8);
     const { doc } = this;
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
+    doc.setFontSize(8);
     doc.setTextColor(...BLUE);
     doc.text(title.toUpperCase(), MARGIN, this.y);
     doc.setDrawColor(210, 216, 236);
-    doc.line(MARGIN, this.y + 1.6, this.pageW - MARGIN, this.y + 1.6);
-    this.y += 7;
+    doc.line(MARGIN, this.y + 1.2, this.pageW - MARGIN, this.y + 1.2);
+    this.y += 5;
   }
 }
 
-function field(
+function kv(
   doc: jsPDF,
   label: string,
   value: string,
@@ -83,36 +83,37 @@ function field(
   width: number
 ) {
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
+  doc.setFontSize(6);
   doc.setTextColor(...MUTED);
   doc.text(label, x, y);
+  const labelW = Math.min(doc.getTextWidth(`${label}  `), width * 0.42);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
+  doc.setFontSize(7);
   doc.setTextColor(...INK);
-  const lines = doc.splitTextToSize(value || "—", width) as string[];
-  doc.text(lines, x, y + 4);
-  return 4 + lines.length * 4;
+  const lines = doc.splitTextToSize(value || "—", width - labelW) as string[];
+  doc.text(lines.slice(0, 2), x + labelW, y);
+  return Math.max(3.6, Math.min(lines.length, 2) * 3.2);
 }
 
 function noteBlock(cursor: Cursor, title: string, text: string) {
   if (!text.trim()) return;
-  cursor.ensure(16);
+  cursor.ensure(10);
   const { doc } = cursor;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(...BLUE);
   doc.text(title, MARGIN, cursor.y);
-  cursor.y += 4;
+  cursor.y += 3.2;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(...INK);
   const lines = doc.splitTextToSize(text.trim(), cursor.contentW) as string[];
-  for (const line of lines) {
-    cursor.ensure(5);
+  for (const line of lines.slice(0, 4)) {
+    cursor.ensure(4);
     doc.text(line, MARGIN, cursor.y);
-    cursor.y += 4;
+    cursor.y += 3.4;
   }
-  cursor.y += 3;
+  cursor.y += 2;
 }
 
 type Column = {
@@ -220,11 +221,11 @@ function drawLines(cursor: Cursor, req: ServiceOrderRequisition) {
 }
 
 function drawSignatures(cursor: Cursor, req: ServiceOrderRequisition) {
-  cursor.ensure(42);
+  cursor.ensure(32);
   const { doc } = cursor;
   const gap = 4;
   const w = (cursor.contentW - gap * 2) / 3;
-  const h = 34;
+  const h = 26;
   const boxes = [
     { title: "Solicitó (servicio)", name: req.requestedBy, date: req.requestedAt },
     { title: "Surtido (almacén)", name: req.fulfilledBy, date: req.fulfilledAt },
@@ -234,30 +235,30 @@ function drawSignatures(cursor: Cursor, req: ServiceOrderRequisition) {
     const x = MARGIN + index * (w + gap);
     doc.setDrawColor(190, 190, 198);
     doc.setFillColor(252, 252, 254);
-    doc.roundedRect(x, cursor.y, w, h, 1.4, 1.4, "FD");
+    doc.roundedRect(x, cursor.y, w, h, 1.2, 1.2, "FD");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.5);
     doc.setTextColor(...BLUE);
-    doc.text(box.title, x + 3, cursor.y + 5);
+    doc.text(box.title, x + 3, cursor.y + 4);
     doc.setDrawColor(160, 160, 170);
-    doc.line(x + 8, cursor.y + 20, x + w - 8, cursor.y + 20);
+    doc.line(x + 8, cursor.y + 14, x + w - 8, cursor.y + 14);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.5);
     doc.setTextColor(...INK);
-    doc.text(box.name || "Nombre y firma", x + w / 2, cursor.y + 24, {
+    doc.text(box.name || "Nombre y firma", x + w / 2, cursor.y + 17.5, {
       align: "center",
       maxWidth: w - 8,
     });
     doc.setTextColor(...MUTED);
-    doc.setFontSize(7);
+    doc.setFontSize(6);
     doc.text(
       box.date ? formatDateTime(box.date) : "Fecha",
       x + w / 2,
-      cursor.y + 29,
+      cursor.y + 21.5,
       { align: "center" }
     );
   });
-  cursor.y += h + 6;
+  cursor.y += h + 4;
 }
 
 /** PDF de la orden de surtimiento (solicitud de material de una OS). */
@@ -280,131 +281,113 @@ export async function downloadServiceRequisitionPdf(
   });
 
   const cursor = new Cursor(doc, y);
+
+  const pad = 3;
+  const col = (cursor.contentW - pad * 2 - 4) / 3;
+  const boxTop = cursor.y;
+  const estimateH = order?.linkedEquipment?.length ? 30 : 25.5;
+  let rowY = boxTop + 4.4;
+  const left = MARGIN + pad;
+  const mid = left + col + 2;
+  const right = mid + col + 2;
+
+  doc.setFillColor(246, 248, 253);
+  doc.setDrawColor(210, 216, 236);
+  doc.roundedRect(MARGIN, boxTop, cursor.contentW, estimateH, 1.2, 1.2, "FD");
+  doc.setFillColor(...BLUE);
+  doc.rect(MARGIN, boxTop + 1.1, 1.1, estimateH - 2.2, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...BLUE);
+  doc.text("ORDEN DE SERVICIO", left, rowY);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(6.5);
   doc.setTextColor(...MUTED);
   doc.text(
-    `Material pedido desde ${requisition.serviceOrderFolio || order?.folio || "orden de servicio"} para trabajo en campo.`,
-    MARGIN,
-    cursor.y
+    `Material pedido desde ${requisition.serviceOrderFolio || order?.folio || "OS"}`,
+    MARGIN + cursor.contentW - pad,
+    rowY,
+    { align: "right" }
   );
-  cursor.y += 8;
+  rowY += 4.4;
 
-  cursor.section("Orden de servicio");
-  const col = cursor.contentW / 3 - 2;
-  let h1 = field(
+  let h1 = kv(
     doc,
-    "Folio OS",
+    "Folio",
     order?.folio || requisition.serviceOrderFolio || "—",
-    MARGIN,
-    cursor.y,
+    left,
+    rowY,
     col
   );
   h1 = Math.max(
     h1,
-    field(
+    kv(
       doc,
-      "Tipo / estatus",
+      "Tipo",
       order
         ? `${serviceTypeLabel(order.serviceType)} · ${serviceOrderStatusLabel(order.status)}`
         : "—",
-      MARGIN + col + 3,
-      cursor.y,
+      mid,
+      rowY,
       col
     )
   );
   h1 = Math.max(
     h1,
-    field(
+    kv(
       doc,
-      "Prioridad / garantía",
+      "Prioridad",
       order
         ? `${order.priority === "urgente" ? "Urgente" : "Normal"}${order.underWarranty ? " · Garantía" : ""}`
         : "—",
-      MARGIN + (col + 3) * 2,
-      cursor.y,
+      right,
+      rowY,
       col
     )
   );
-  cursor.y += h1 + 2;
-  let h2 = field(doc, "Técnico", order?.technician || "—", MARGIN, cursor.y, col);
+  rowY += h1 + 0.6;
+  let h2 = kv(doc, "Técnico", order?.technician || "—", left, rowY, col);
+  h2 = Math.max(h2, kv(doc, "Asesor", order?.advisor || "—", mid, rowY, col));
   h2 = Math.max(
     h2,
-    field(doc, "Asesor", order?.advisor || "—", MARGIN + col + 3, cursor.y, col)
+    kv(doc, "Recepción", formatDateTime(order?.receptionAt || ""), right, rowY, col)
   );
-  h2 = Math.max(
-    h2,
-    field(
-      doc,
-      "Recepción",
-      formatDateTime(order?.receptionAt || ""),
-      MARGIN + (col + 3) * 2,
-      cursor.y,
-      col
-    )
-  );
-  cursor.y += h2 + 4;
-
-  cursor.section("Cliente");
-  let h3 = field(
+  rowY += h2 + 0.6;
+  let h3 = kv(
     doc,
     "Cliente",
     order?.clientName || requisition.clientName || "—",
-    MARGIN,
-    cursor.y,
+    left,
+    rowY,
     col
   );
+  h3 = Math.max(h3, kv(doc, "Contacto", order?.contactName || "—", mid, rowY, col));
   h3 = Math.max(
     h3,
-    field(doc, "Contacto", order?.contactName || "—", MARGIN + col + 3, cursor.y, col)
-  );
-  h3 = Math.max(
-    h3,
-    field(
+    kv(
       doc,
-      "Teléfono / correo",
+      "Tel. / correo",
       [order?.contactPhone, order?.contactEmail].filter(Boolean).join(" · ") || "—",
-      MARGIN + (col + 3) * 2,
-      cursor.y,
+      right,
+      rowY,
       col
     )
   );
-  cursor.y += h3 + 4;
-
-  cursor.section("Equipo");
-  let h4 = field(
-    doc,
-    "Equipo",
-    order?.equipmentName || requisition.equipmentName || "—",
-    MARGIN,
-    cursor.y,
-    col
-  );
-  h4 = Math.max(
-    h4,
-    field(
-      doc,
-      "Marca / modelo",
-      [order?.equipmentBrand, order?.equipmentModel].filter(Boolean).join(" · ") ||
-        "—",
-      MARGIN + col + 3,
-      cursor.y,
-      col
-    )
-  );
-  h4 = Math.max(
-    h4,
-    field(
-      doc,
-      "Serie / ubicación",
-      [order?.equipmentSerial, order?.equipmentLocation].filter(Boolean).join(" · ") ||
-        "—",
-      MARGIN + (col + 3) * 2,
-      cursor.y,
-      col
-    )
-  );
-  cursor.y += h4 + 2;
+  rowY += h3 + 0.6;
+  const equipmentLine = [
+    order?.equipmentName || requisition.equipmentName,
+    order?.equipmentBrand,
+    order?.equipmentModel,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const serialLine = [order?.equipmentSerial, order?.equipmentLocation]
+    .filter(Boolean)
+    .join(" · ");
+  let h4 = kv(doc, "Equipo", equipmentLine || "—", left, rowY, col * 2);
+  h4 = Math.max(h4, kv(doc, "Serie / ubic.", serialLine || "—", right, rowY, col));
+  rowY += h4;
   if (order?.linkedEquipment?.length) {
     const linked = order.linkedEquipment
       .map(
@@ -414,36 +397,35 @@ export async function downloadServiceRequisitionPdf(
           }`
       )
       .join(" · ");
-    cursor.y += field(doc, "Equipos ligados", linked, MARGIN, cursor.y, cursor.contentW) + 2;
+    rowY += 0.4 + kv(doc, "Ligados", linked, left, rowY, cursor.contentW - pad * 2);
   }
-  cursor.y += 2;
+
+  const boxH = Math.max(estimateH, rowY - boxTop + 2);
+  if (boxH > estimateH) {
+    doc.setDrawColor(210, 216, 236);
+    doc.roundedRect(MARGIN, boxTop, cursor.contentW, boxH, 1.2, 1.2, "S");
+  }
+  cursor.y = boxTop + boxH + 3;
 
   cursor.section("Solicitud a almacén");
-  let h5 = field(doc, "Solicitó", requisition.requestedBy || "—", MARGIN, cursor.y, col);
+  let h5 = kv(doc, "Solicitó", requisition.requestedBy || "—", MARGIN, cursor.y, col);
   h5 = Math.max(
     h5,
-    field(
-      doc,
-      "Fecha de solicitud",
-      formatDateTime(requisition.requestedAt),
-      MARGIN + col + 3,
-      cursor.y,
-      col
-    )
+    kv(doc, "Fecha", formatDateTime(requisition.requestedAt), MARGIN + col + 3, cursor.y, col)
   );
   h5 = Math.max(
     h5,
-    field(
+    kv(
       doc,
-      "Estatus de surtido",
+      "Estatus",
       requisitionStatusLabel(requisition.status),
       MARGIN + (col + 3) * 2,
       cursor.y,
       col
     )
   );
-  cursor.y += h5 + 2;
-  let h6 = field(
+  cursor.y += h5 + 0.4;
+  let h6 = kv(
     doc,
     "Surtido por",
     requisition.fulfilledBy || "Pendiente",
@@ -453,9 +435,9 @@ export async function downloadServiceRequisitionPdf(
   );
   h6 = Math.max(
     h6,
-    field(
+    kv(
       doc,
-      "Fecha de surtido",
+      "Fecha surtido",
       formatDateTime(requisition.fulfilledAt),
       MARGIN + col + 3,
       cursor.y,
@@ -464,16 +446,9 @@ export async function downloadServiceRequisitionPdf(
   );
   h6 = Math.max(
     h6,
-    field(
-      doc,
-      "Partidas",
-      String(requisition.lines.length),
-      MARGIN + (col + 3) * 2,
-      cursor.y,
-      col
-    )
+    kv(doc, "Partidas", String(requisition.lines.length), MARGIN + (col + 3) * 2, cursor.y, col)
   );
-  cursor.y += h6 + 4;
+  cursor.y += h6 + 3;
 
   if (order?.faultReported) {
     noteBlock(cursor, "Falla / trabajo reportado", order.faultReported);
