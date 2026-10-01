@@ -5,6 +5,7 @@ import {
   drawCompanySealBlock,
 } from "@/lib/brand/pdf";
 import { getServiceOrder } from "@/lib/service-orders/storage";
+import { findStaffProfile, type StaffProfile } from "@/lib/users/staff";
 import {
   serviceOrderStatusLabel,
   serviceTypeLabel,
@@ -93,6 +94,51 @@ function kv(
   const lines = doc.splitTextToSize(value || "—", width - labelW) as string[];
   doc.text(lines.slice(0, 2), x + labelW, y);
   return Math.max(3.6, Math.min(lines.length, 2) * 3.2);
+}
+
+function personCard(
+  doc: jsPDF,
+  title: string,
+  subtitle: string,
+  name: string,
+  profile: StaffProfile | null,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  doc.setFillColor(246, 248, 253);
+  doc.setDrawColor(210, 216, 236);
+  doc.roundedRect(x, y, w, h, 1.2, 1.2, "FD");
+  doc.setFillColor(...BLUE);
+  doc.rect(x, y + 1.1, 1.1, h - 2.2, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...BLUE);
+  doc.text(title.toUpperCase(), x + 4, y + 4.6);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+  doc.setTextColor(...MUTED);
+  doc.text(subtitle, x + 4, y + 8.2, { maxWidth: w - 8 });
+
+  const displayName = profile?.fullName || name || "—";
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...INK);
+  doc.text(displayName, x + 4, y + 13, { maxWidth: w - 8 });
+
+  const rows: [string, string][] = [
+    ["Puesto", [profile?.jobTitle, profile?.department].filter(Boolean).join(" · ")],
+    ["No. emp.", profile?.employeeNumber ?? ""],
+    ["Teléfono", profile?.phone ?? ""],
+    ["Correo", profile?.email ?? ""],
+  ];
+  let rowY = y + 17.2;
+  for (const [label, value] of rows) {
+    kv(doc, label, value || "—", x + 4, rowY, w - 8);
+    rowY += 3.6;
+  }
 }
 
 function noteBlock(cursor: Cursor, title: string, text: string) {
@@ -272,6 +318,11 @@ export async function downloadServiceRequisitionPdf(
     order = null;
   }
 
+  const [advisorProfile, technicianProfile] = await Promise.all([
+    order?.advisor ? findStaffProfile(order.advisor) : Promise.resolve(null),
+    order?.technician ? findStaffProfile(order.technician) : Promise.resolve(null),
+  ]);
+
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const generated = new Date().toLocaleString("es-MX");
   let y = await drawBrandedHeader(doc, {
@@ -283,19 +334,22 @@ export async function downloadServiceRequisitionPdf(
   const cursor = new Cursor(doc, y);
 
   const pad = 3;
-  const col = (cursor.contentW - pad * 2 - 4) / 3;
-  const boxTop = cursor.y;
-  const estimateH = order?.linkedEquipment?.length ? 30 : 25.5;
-  let rowY = boxTop + 4.4;
-  const left = MARGIN + pad;
-  const mid = left + col + 2;
-  const right = mid + col + 2;
+  const gap = 3;
+  const cardW = (cursor.contentW - gap) / 2;
+  const cardH = 33.5;
+  const orderH = 16.5;
 
   doc.setFillColor(246, 248, 253);
   doc.setDrawColor(210, 216, 236);
-  doc.roundedRect(MARGIN, boxTop, cursor.contentW, estimateH, 1.2, 1.2, "FD");
+  doc.roundedRect(MARGIN, cursor.y, cursor.contentW, orderH, 1.2, 1.2, "FD");
   doc.setFillColor(...BLUE);
-  doc.rect(MARGIN, boxTop + 1.1, 1.1, estimateH - 2.2, "F");
+  doc.rect(MARGIN, cursor.y + 1, 1.1, orderH - 2, "F");
+
+  let rowY = cursor.y + 4.2;
+  const left = MARGIN + pad;
+  const mid = MARGIN + cursor.contentW / 3;
+  const right = MARGIN + (cursor.contentW / 3) * 2;
+  const colW = cursor.contentW / 3 - pad;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -305,109 +359,77 @@ export async function downloadServiceRequisitionPdf(
   doc.setFontSize(6.5);
   doc.setTextColor(...MUTED);
   doc.text(
-    `Material pedido desde ${requisition.serviceOrderFolio || order?.folio || "OS"}`,
+    requisition.folio,
     MARGIN + cursor.contentW - pad,
     rowY,
     { align: "right" }
   );
-  rowY += 4.4;
-
-  let h1 = kv(
+  rowY += 4.2;
+  kv(
     doc,
-    "Folio",
+    "Folio OS",
     order?.folio || requisition.serviceOrderFolio || "—",
     left,
     rowY,
-    col
+    colW
   );
-  h1 = Math.max(
-    h1,
-    kv(
-      doc,
-      "Tipo",
-      order
-        ? `${serviceTypeLabel(order.serviceType)} · ${serviceOrderStatusLabel(order.status)}`
-        : "—",
-      mid,
-      rowY,
-      col
-    )
+  kv(
+    doc,
+    "Tipo",
+    order
+      ? `${serviceTypeLabel(order.serviceType)} · ${serviceOrderStatusLabel(order.status)}`
+      : "—",
+    mid,
+    rowY,
+    colW
   );
-  h1 = Math.max(
-    h1,
-    kv(
-      doc,
-      "Prioridad",
-      order
-        ? `${order.priority === "urgente" ? "Urgente" : "Normal"}${order.underWarranty ? " · Garantía" : ""}`
-        : "—",
-      right,
-      rowY,
-      col
-    )
-  );
-  rowY += h1 + 0.6;
-  let h2 = kv(doc, "Técnico", order?.technician || "—", left, rowY, col);
-  h2 = Math.max(h2, kv(doc, "Asesor", order?.advisor || "—", mid, rowY, col));
-  h2 = Math.max(
-    h2,
-    kv(doc, "Recepción", formatDateTime(order?.receptionAt || ""), right, rowY, col)
-  );
-  rowY += h2 + 0.6;
-  let h3 = kv(
+  kv(
     doc,
     "Cliente",
     order?.clientName || requisition.clientName || "—",
-    left,
+    right,
     rowY,
-    col
+    colW
   );
-  h3 = Math.max(h3, kv(doc, "Contacto", order?.contactName || "—", mid, rowY, col));
-  h3 = Math.max(
-    h3,
-    kv(
-      doc,
-      "Tel. / correo",
-      [order?.contactPhone, order?.contactEmail].filter(Boolean).join(" · ") || "—",
-      right,
-      rowY,
-      col
-    )
-  );
-  rowY += h3 + 0.6;
+  rowY += 3.6;
   const equipmentLine = [
     order?.equipmentName || requisition.equipmentName,
     order?.equipmentBrand,
     order?.equipmentModel,
+    order?.equipmentSerial,
   ]
     .filter(Boolean)
     .join(" · ");
-  const serialLine = [order?.equipmentSerial, order?.equipmentLocation]
-    .filter(Boolean)
-    .join(" · ");
-  let h4 = kv(doc, "Equipo", equipmentLine || "—", left, rowY, col * 2);
-  h4 = Math.max(h4, kv(doc, "Serie / ubic.", serialLine || "—", right, rowY, col));
-  rowY += h4;
-  if (order?.linkedEquipment?.length) {
-    const linked = order.linkedEquipment
-      .map(
-        (item) =>
-          `${item.relationLabel}${item.equipmentName ? `: ${item.equipmentName}` : ""}${
-            item.equipmentSerial ? ` (${item.equipmentSerial})` : ""
-          }`
-      )
-      .join(" · ");
-    rowY += 0.4 + kv(doc, "Ligados", linked, left, rowY, cursor.contentW - pad * 2);
-  }
+  kv(doc, "Equipo", equipmentLine || "—", left, rowY, cursor.contentW - pad * 2);
+  cursor.y += orderH + 2.8;
 
-  const boxH = Math.max(estimateH, rowY - boxTop + 2);
-  if (boxH > estimateH) {
-    doc.setDrawColor(210, 216, 236);
-    doc.roundedRect(MARGIN, boxTop, cursor.contentW, boxH, 1.2, 1.2, "S");
-  }
-  cursor.y = boxTop + boxH + 3;
+  cursor.ensure(cardH + 4);
+  personCard(
+    doc,
+    "Asesor de servicio",
+    "Responsable comercial / autorización",
+    order?.advisor || "",
+    advisorProfile,
+    MARGIN,
+    cursor.y,
+    cardW,
+    cardH
+  );
+  personCard(
+    doc,
+    "Técnico que recibe",
+    "Recibe el surtimiento en servicio",
+    order?.technician || "",
+    technicianProfile,
+    MARGIN + cardW + gap,
+    cursor.y,
+    cardW,
+    cardH
+  );
+  cursor.y += cardH + 3.5;
 
   cursor.section("Solicitud a almacén");
+  const col = (cursor.contentW - 6) / 3;
   let h5 = kv(doc, "Solicitó", requisition.requestedBy || "—", MARGIN, cursor.y, col);
   h5 = Math.max(
     h5,
