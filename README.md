@@ -49,7 +49,22 @@ El módulo **Compras** vive aparte de Almacén (`/dashboard/compras`): dashboard
 
 Cuando almacén no puede surtir un producto (solicitud de OS o reabasto), genera una orden `SC-YYYY-####` hacia Compras. Compras toma la solicitud, arma el pedido y el estatus recorre *solicitada → en compra → pedida → recepción parcial → recibida*. La recepción del pedido actualiza el surtimiento.
 
-Si las tablas `purchase_requests` aún no están en la nube, la app guarda las solicitudes en el navegador hasta aplicar `supabase/migrations/20261001220000_purchase_requests.sql`.
+Si las tablas `purchase_requests` aún no están en la nube, o si existen pero les faltan columnas (`source_type`, `quantity_requested`, etc.), aplica en el [SQL Editor](https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new):
+
+1. `supabase/migrations/20261001220000_purchase_requests.sql`
+2. `supabase/migrations/20261001204500_lock_own_technician_advisor.sql`
+3. `supabase/migrations/20261002090000_purchase_requests_cloud_columns.sql`
+
+Hasta que el esquema esté completo, Compras sigue funcionando (localStorage o el esquema stub de la nube).
+
+## Vercel
+
+El proyecto de producción es `medicaladvancedsupplies`. Variables ya configuradas:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Para publicar el código actual: `git push origin main` en GitHub (`alejandrobotello64/appmovil`) — Vercel despliega `main` automáticamente. Framework: Next.js, Node 24.x.
 
 
 | Script | Qué hace |

@@ -31,6 +31,17 @@ function isMissingRelation(error: { code?: string; message?: string } | null) {
   );
 }
 
+function isMissingColumn(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  const text = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    (text.includes("column") && text.includes("does not exist")) ||
+    (text.includes("could not find the") && text.includes("column"))
+  );
+}
+
 function readLocal(): PurchaseRequest[] {
   if (typeof window === "undefined") return [];
   try {
@@ -64,7 +75,7 @@ function mapLine(row: Record<string, unknown>): PurchaseRequestLine {
     productId: row.product_id ? String(row.product_id) : null,
     productSku: String(row.product_sku ?? ""),
     productName: String(row.product_name ?? ""),
-    quantityRequested: Number(row.quantity_requested ?? 0),
+    quantityRequested: Number(row.quantity_requested ?? row.quantity ?? 0),
     quantityOrdered: Number(row.quantity_ordered ?? 0),
     quantityReceived: Number(row.quantity_received ?? 0),
     unit: String(row.unit ?? "pza"),
@@ -88,7 +99,7 @@ function mapRequest(
     requestedAt: String(row.requested_at ?? row.created_at ?? ""),
     takenBy: String(row.taken_by ?? ""),
     takenAt: row.taken_at ? String(row.taken_at) : "",
-    warehouseNotes: String(row.warehouse_notes ?? ""),
+    warehouseNotes: String(row.warehouse_notes ?? row.notes ?? ""),
     comprasNotes: String(row.compras_notes ?? ""),
     purchaseOrderId: row.purchase_order_id ? String(row.purchase_order_id) : null,
     purchaseOrderNumber: String(row.purchase_order_number ?? ""),
@@ -261,47 +272,83 @@ export async function createPurchaseRequest(
   }
 
   const folio = await nextRemoteFolio();
-  const { data: header, error } = await db
+  const fullHeader = {
+    folio,
+    status: "solicitada",
+    source_type: input.sourceType ?? "manual",
+    source_id: input.sourceId ?? null,
+    source_folio: input.sourceFolio ?? "",
+    reason: input.reason ?? "no_surtible",
+    requested_by: input.requestedBy,
+    warehouse_notes: input.warehouseNotes ?? "",
+  };
+  const stubHeader = {
+    folio,
+    status: "solicitada",
+    requested_by: input.requestedBy,
+    notes: input.warehouseNotes ?? "",
+  };
+
+  let headerInsert = await db
     .from("purchase_requests")
-    .insert({
-      folio,
-      status: "solicitada",
-      source_type: input.sourceType ?? "manual",
-      source_id: input.sourceId ?? null,
-      source_folio: input.sourceFolio ?? "",
-      reason: input.reason ?? "no_surtible",
-      requested_by: input.requestedBy,
-      warehouse_notes: input.warehouseNotes ?? "",
-    })
+    .insert(fullHeader)
     .select("*")
     .single();
 
-  if (error) {
-    if (isMissingRelation(error)) {
+  if (headerInsert.error && isMissingColumn(headerInsert.error)) {
+    headerInsert = await db
+      .from("purchase_requests")
+      .insert(stubHeader)
+      .select("*")
+      .single();
+  }
+
+  if (headerInsert.error) {
+    if (isMissingRelation(headerInsert.error)) {
       useLocal = true;
       return createPurchaseRequest(input);
     }
-    throw new Error(error.message);
+    throw new Error(headerInsert.error.message);
   }
 
-  const { data: insertedLines, error: linesError } = await db
+  const header = headerInsert.data;
+  const fullLines = lines.map((line) => ({
+    request_id: header.id,
+    source_line_id: line.sourceLineId ?? null,
+    product_id: line.productId,
+    product_sku: line.productSku,
+    product_name: line.productName,
+    quantity_requested: line.quantity,
+    unit: line.unit ?? "pza",
+    notes: line.notes ?? "",
+  }));
+  const stubLines = lines.map((line) => ({
+    request_id: header.id,
+    product_id: line.productId,
+    product_sku: line.productSku,
+    product_name: line.productName,
+    quantity: line.quantity,
+    unit: line.unit ?? "pza",
+    notes: line.notes ?? "",
+  }));
+
+  let linesInsert = await db
     .from("purchase_request_lines")
-    .insert(
-      lines.map((line) => ({
-        request_id: header.id,
-        source_line_id: line.sourceLineId ?? null,
-        product_id: line.productId,
-        product_sku: line.productSku,
-        product_name: line.productName,
-        quantity_requested: line.quantity,
-        unit: line.unit ?? "pza",
-        notes: line.notes ?? "",
-      }))
-    )
+    .insert(fullLines)
     .select("*");
 
-  if (linesError) throw new Error(linesError.message);
-  return mapRequest(header, ((insertedLines ?? []) as Record<string, unknown>[]).map(mapLine));
+  if (linesInsert.error && isMissingColumn(linesInsert.error)) {
+    linesInsert = await db
+      .from("purchase_request_lines")
+      .insert(stubLines)
+      .select("*");
+  }
+
+  if (linesInsert.error) throw new Error(linesInsert.error.message);
+  return mapRequest(
+    header,
+    ((linesInsert.data ?? []) as Record<string, unknown>[]).map(mapLine)
+  );
 }
 
 async function patchRequest(
@@ -326,25 +373,41 @@ async function patchRequest(
     return next;
   }
 
-  const { data, error } = await db
+  const fullPatch = {
+    status: next.status,
+    taken_by: next.takenBy,
+    taken_at: next.takenAt || null,
+    warehouse_notes: next.warehouseNotes,
+    compras_notes: next.comprasNotes,
+    purchase_order_id: next.purchaseOrderId,
+    purchase_order_number: next.purchaseOrderNumber,
+  };
+  const stubPatch = {
+    status: next.status,
+    notes: [next.warehouseNotes, next.comprasNotes].filter(Boolean).join("\n"),
+    purchase_order_id: next.purchaseOrderId,
+    purchase_order_number: next.purchaseOrderNumber,
+  };
+
+  let updated = await db
     .from("purchase_requests")
-    .update({
-      status: next.status,
-      taken_by: next.takenBy,
-      taken_at: next.takenAt || null,
-      warehouse_notes: next.warehouseNotes,
-      compras_notes: next.comprasNotes,
-      purchase_order_id: next.purchaseOrderId,
-      purchase_order_number: next.purchaseOrderNumber,
-    })
+    .update(fullPatch)
     .eq("id", id)
     .select("*")
     .single();
-  if (error) throw new Error(error.message);
+  if (updated.error && isMissingColumn(updated.error)) {
+    updated = await db
+      .from("purchase_requests")
+      .update(stubPatch)
+      .eq("id", id)
+      .select("*")
+      .single();
+  }
+  if (updated.error) throw new Error(updated.error.message);
 
   if (linePatch) {
     for (const line of next.lines) {
-      const { error: lineError } = await db
+      let lineUpdate = await db
         .from("purchase_request_lines")
         .update({
           quantity_ordered: line.quantityOrdered,
@@ -352,11 +415,20 @@ async function patchRequest(
           notes: line.notes,
         })
         .eq("id", line.id);
-      if (lineError) throw new Error(lineError.message);
+      if (lineUpdate.error && isMissingColumn(lineUpdate.error)) {
+        lineUpdate = await db
+          .from("purchase_request_lines")
+          .update({
+            quantity: line.quantityReceived || line.quantityRequested,
+            notes: line.notes,
+          })
+          .eq("id", line.id);
+      }
+      if (lineUpdate.error) throw new Error(lineUpdate.error.message);
     }
   }
 
-  return mapRequest(data, next.lines);
+  return mapRequest(updated.data, next.lines);
 }
 
 export async function takePurchaseRequest(
