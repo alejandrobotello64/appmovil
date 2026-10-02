@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -49,6 +50,9 @@ import {
   type EducationTrainingPhoto,
 } from "@/lib/education/types";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const inputClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20";
@@ -249,6 +253,31 @@ export function EducationPanel() {
     useState<EducationAttendee | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const visibleItems = useMemo(
+    () =>
+      items.filter((item) =>
+        matchesSearch(query, [
+          item.folio,
+          item.name,
+          item.trainingDate,
+          item.location,
+          item.instructor,
+          item.clientName,
+          item.notes,
+          ...item.attendees.flatMap((attendee) => [
+            attendee.fullName,
+            attendee.jobTitle,
+            attendee.employeeNumber,
+          ]),
+        ])
+      ),
+    [items, query]
+  );
+  const emptyMessage = query.trim()
+    ? "Ninguna capacitación coincide con la búsqueda."
+    : "No hay capacitaciones registradas.";
 
   async function refresh(keepId?: string | null) {
     const rows = await getEducationTrainings();
@@ -511,9 +540,15 @@ export function EducationPanel() {
             <p className="text-sm text-muted-foreground">Cargando capacitaciones…</p>
           ) : (
             <>
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                placeholder="Buscar folio, capacitación, lugar, instructor, cliente o asistente..."
+                className="mb-4"
+              />
               <ResponsiveDataList
-                emptyMessage="No hay capacitaciones registradas."
-                items={items.map((item) => ({
+                emptyMessage={emptyMessage}
+                items={visibleItems.map((item) => ({
                   key: item.id,
                   title: item.name,
                   subtitle: `${item.trainingDate || "Sin fecha"} · ${item.attendees.length} asistente${item.attendees.length === 1 ? "" : "s"}`,
@@ -565,7 +600,7 @@ export function EducationPanel() {
                 }))}
               />
               <DesktopTable>
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Folio</th>
@@ -578,17 +613,17 @@ export function EducationPanel() {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.length === 0 ? (
+                    {visibleItems.length === 0 ? (
                       <tr>
                         <td
                           colSpan={7}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
-                          No hay capacitaciones registradas.
+                          {emptyMessage}
                         </td>
                       </tr>
                     ) : (
-                      items.map((item) => (
+                      visibleItems.map((item) => (
                         <tr key={item.id} className="border-t border-border/70">
                           <td className="px-3 py-2 font-medium">{item.folio}</td>
                           <td className="px-3 py-2">{item.name}</td>
@@ -636,7 +671,7 @@ export function EducationPanel() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </SortableTable>
               </DesktopTable>
             </>
           )}

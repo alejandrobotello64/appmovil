@@ -39,6 +39,8 @@ import {
   type WarehouseLocation,
 } from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
 
 type StockMovementPanelProps = {
   mode: "entrada" | "salida";
@@ -144,6 +146,38 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const selected = useMemo(
     () => items.find((item) => item.id === itemId) ?? null,
     [items, itemId]
+  );
+
+  const [itemQuery, setItemQuery] = useState("");
+  const [historyQuery, setHistoryQuery] = useState("");
+  const itemOptions = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          item.id === itemId ||
+          matchesSearch(itemQuery, [
+            item.sku,
+            item.name,
+            item.brand,
+            item.model,
+            item.serialNumber,
+          ])
+      ),
+    [items, itemQuery, itemId]
+  );
+  const visibleHistory = useMemo(
+    () =>
+      history.filter((row) =>
+        matchesSearch(historyQuery, [
+          row.folio,
+          row.productSku,
+          row.productName,
+          row.reason,
+          row.note,
+          row.createdBy,
+        ])
+      ),
+    [history, historyQuery]
   );
 
   useEffect(() => {
@@ -371,6 +405,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   disabled={!canWrite}
                   onChange={(event) => {
                     setCatalogKind(event.target.value as CatalogKind);
+                    setItemQuery("");
                     setError("");
                     setMessage("");
                   }}
@@ -404,11 +439,35 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               </label>
             </div>
 
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">
+            <div className="space-y-1.5">
+              <label htmlFor="stock-movement-item" className="text-sm font-medium">
                 {isEquipmentCatalog ? "Equipo" : "Artículo"}
-              </span>
+              </label>
+              {items.length > 0 ? (
+                <SearchInput
+                  value={itemQuery}
+                  onChange={(value) => {
+                    setItemQuery(value);
+                    const first = items.find((item) =>
+                      matchesSearch(value, [
+                        item.sku,
+                        item.name,
+                        item.brand,
+                        item.model,
+                        item.serialNumber,
+                      ])
+                    );
+                    if (value.trim() && first) setItemId(first.id);
+                  }}
+                  placeholder={
+                    isEquipmentCatalog
+                      ? "Buscar equipo por código, nombre, marca o serie..."
+                      : "Buscar artículo por código o nombre..."
+                  }
+                />
+              ) : null}
               <select
+                id="stock-movement-item"
                 required
                 value={itemId}
                 onChange={(event) => setItemId(event.target.value)}
@@ -422,7 +481,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       : `No hay ${catalogKind} disponibles.`}
                   </option>
                 ) : (
-                  items.map((item) => (
+                  itemOptions.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.sku} — {item.name}
                       {isEquipmentCatalog && item.serialNumber
@@ -432,7 +491,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   ))
                 )}
               </select>
-            </label>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-1.5">
@@ -687,16 +746,24 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             </button>
           </div>
 
-          <div className="mt-4 max-h-[70vh] space-y-2 overflow-y-auto pr-1">
+          <SearchInput
+            value={historyQuery}
+            onChange={setHistoryQuery}
+            placeholder="Buscar folio, artículo, motivo..."
+            className="mt-3"
+          />
+
+          <div className="mt-3 max-h-[70vh] space-y-2 overflow-y-auto pr-1">
             {historyLoading ? (
               <p className="text-sm text-muted-foreground">Cargando historial...</p>
-            ) : history.length === 0 ? (
+            ) : visibleHistory.length === 0 ? (
               <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
-                Aún no hay {mode === "entrada" ? "entradas" : "salidas"}{" "}
-                registradas.
+                {historyQuery.trim()
+                  ? "Ningún movimiento coincide con la búsqueda."
+                  : `Aún no hay ${mode === "entrada" ? "entradas" : "salidas"} registradas.`}
               </p>
             ) : (
-              history.map((row) => {
+              visibleHistory.map((row) => {
                 const qty =
                   mode === "entrada"
                     ? row.qtyIn || row.resultingQty

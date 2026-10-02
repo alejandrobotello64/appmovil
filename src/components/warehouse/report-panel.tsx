@@ -11,6 +11,7 @@ import {
   DesktopTable,
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -108,7 +109,7 @@ export function ReportPanel() {
       />
 
       <DesktopTable className="mt-5">
-        <table className="min-w-full text-sm">
+        <SortableTable className="min-w-full text-sm">
           <thead className="bg-muted/50 text-left text-muted-foreground">
             <tr>
               <th className="px-3 py-2 font-medium">Categoría de producto</th>
@@ -127,7 +128,7 @@ export function ReportPanel() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </SortableTable>
       </DesktopTable>
     </ModulePlaceholder>
   );

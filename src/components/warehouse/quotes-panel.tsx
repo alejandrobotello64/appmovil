@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FileDown,
   Plus,
@@ -9,6 +10,7 @@ import {
   MessageSquarePlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QuoteFulfillmentSection } from "@/components/sales/quote-fulfillment";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -34,8 +36,14 @@ import {
 import {
   QUOTE_PIPELINE_STATUSES,
   QUOTE_STATUSES,
+  clampAmount,
+  clampPercent,
   computeQuoteTotals,
   lineAmount,
+  lineDiscountAmount,
+  lineDiscountLabel,
+  lineGrossAmount,
+  lineHasDiscount,
   quoteStatusLabel,
   type Quote,
   type QuoteInput,
@@ -50,6 +58,7 @@ const fieldClass =
 type DraftLine = QuoteLineInput & {
   key: string;
   categoryFilter: InventoryCategoryId | "all";
+  discountMode?: "amount" | "percent";
 };
 
 function money(value: number) {
@@ -84,6 +93,7 @@ const EMPTY: QuoteInput = {
   nextFollowUp: "",
   taxRate: 16,
   discount: 0,
+  discountPercent: 0,
   salesperson: "",
   probability: 50,
   notes: "",
@@ -97,13 +107,21 @@ export function QuotesPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const searchParams = useSearchParams();
+  const linkedQuoteId = searchParams.get("quote");
+  const scrolledToLinked = useRef(false);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("abiertas");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState(
+    linkedQuoteId ? "todos" : "abiertas"
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(linkedQuoteId);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Quote | null>(null);
   const [form, setForm] = useState<QuoteInput>(EMPTY);
   const [lines, setLines] = useState<DraftLine[]>([]);
+  const [discountMode, setDiscountMode] = useState<"amount" | "percent">(
+    "amount"
+  );
   const [submitting, setSubmitting] = useState(false);
   const [followUpText, setFollowUpText] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
@@ -128,6 +146,14 @@ export function QuotesPanel() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function reloadQuotesQuietly() {
+    try {
+      setQuotes(await getQuotes());
+    } catch {
+      // La bitácora se actualizará en la siguiente recarga completa.
     }
   }
 
@@ -188,10 +214,38 @@ export function QuotesPanel() {
       computeQuoteTotals(
         lines.filter((line) => line.description.trim()),
         form.discount ?? 0,
-        form.taxRate ?? 16
+        form.taxRate ?? 16,
+        form.discountPercent ?? 0
       ),
-    [lines, form.discount, form.taxRate]
+    [lines, form.discount, form.taxRate, form.discountPercent]
   );
+
+  function changeDiscountMode(mode: "amount" | "percent") {
+    if (mode === discountMode) return;
+    setDiscountMode(mode);
+    setForm((prev) => ({ ...prev, discount: 0, discountPercent: 0 }));
+  }
+
+  function changeLineDiscountMode(index: number, mode: "amount" | "percent") {
+    setLines((current) =>
+      current.map((row, i) =>
+        i === index && (row.discountMode ?? "percent") !== mode
+          ? { ...row, discountMode: mode, discountPercent: 0, discountAmount: 0 }
+          : row
+      )
+    );
+  }
+
+  function updateLineDiscount(index: number, value: string) {
+    setLines((current) =>
+      current.map((row, i) => {
+        if (i !== index) return row;
+        return row.discountMode === "amount"
+          ? { ...row, discountPercent: 0, discountAmount: clampAmount(value) }
+          : { ...row, discountPercent: clampPercent(value), discountAmount: 0 };
+      })
+    );
+  }
 
   function itemsForLine(line: DraftLine) {
     if (line.categoryFilter === "all") return items;
@@ -206,6 +260,7 @@ export function QuotesPanel() {
       salesperson: session?.fullName || session?.username || "",
       quoteDate: new Date().toISOString().slice(0, 10),
     });
+    setDiscountMode("amount");
     setLines([
       {
         key: crypto.randomUUID(),
@@ -237,10 +292,12 @@ export function QuotesPanel() {
       nextFollowUp: quote.nextFollowUp,
       taxRate: quote.taxRate,
       discount: quote.discount,
+      discountPercent: quote.discountPercent,
       salesperson: quote.salesperson,
       probability: quote.probability,
       notes: quote.notes,
     });
+    setDiscountMode(quote.discountPercent > 0 ? "percent" : "amount");
     setLines(
       quote.lines.length
         ? quote.lines.map((line) => ({
@@ -250,6 +307,12 @@ export function QuotesPanel() {
             quantity: line.quantity,
             unit: line.unit,
             unitPrice: line.unitPrice,
+            discountPercent: line.discountPercent,
+            discountAmount: line.discountAmount,
+            discountMode:
+              line.discountPercent <= 0 && line.discountAmount > 0
+                ? ("amount" as const)
+                : ("percent" as const),
             notes: line.notes,
             categoryFilter: "all" as const,
           }))
@@ -616,22 +679,66 @@ export function QuotesPanel() {
                 className={fieldClass}
               />
             </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">Descuento ($)</span>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="quote-discount" className="text-sm font-medium">
+                  Descuento general {discountMode === "percent" ? "(%)" : "($)"}
+                </label>
+                <div
+                  role="group"
+                  aria-label="Tipo de descuento"
+                  className="inline-flex rounded-md border border-input p-0.5 text-xs"
+                >
+                  {(
+                    [
+                      { id: "amount", label: "$" },
+                      { id: "percent", label: "%" },
+                    ] as const
+                  ).map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-pressed={discountMode === option.id}
+                      onClick={() => changeDiscountMode(option.id)}
+                      className={cn(
+                        "rounded px-2.5 py-0.5 font-semibold transition-colors",
+                        discountMode === option.id
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <input
+                id="quote-discount"
                 type="number"
                 min={0}
+                max={discountMode === "percent" ? 100 : undefined}
                 step="0.01"
-                value={form.discount}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    discount: Number(e.target.value),
-                  }))
+                value={
+                  discountMode === "percent"
+                    ? form.discountPercent
+                    : form.discount
                 }
+                onChange={(e) => {
+                  const value = Math.max(0, Number(e.target.value));
+                  setForm((prev) =>
+                    discountMode === "percent"
+                      ? { ...prev, discount: 0, discountPercent: Math.min(100, value) }
+                      : { ...prev, discount: value, discountPercent: 0 }
+                  );
+                }}
                 className={fieldClass}
               />
-            </label>
+              {discountMode === "percent" && draftTotals.discountAmount > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Equivale a {money(draftTotals.discountAmount)}
+                </p>
+              ) : null}
+            </div>
             <label className="space-y-1.5 sm:col-span-2">
               <span className="text-sm font-medium">Notas / condiciones</span>
               <textarea
@@ -801,9 +908,72 @@ export function QuotesPanel() {
                     className={fieldClass}
                   />
                 </label>
-                <div className="flex items-end justify-between gap-2 lg:col-span-4">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <label
+                      htmlFor={`line-discount-${line.key}`}
+                      className="text-xs text-muted-foreground"
+                    >
+                      Desc. {line.discountMode === "amount" ? "$" : "%"}
+                    </label>
+                    <div
+                      role="group"
+                      aria-label="Tipo de descuento de la partida"
+                      className="inline-flex rounded-md border border-input p-0.5 text-[10px]"
+                    >
+                      {(
+                        [
+                          { id: "amount", label: "$" },
+                          { id: "percent", label: "%" },
+                        ] as const
+                      ).map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          aria-pressed={(line.discountMode ?? "percent") === option.id}
+                          onClick={() => changeLineDiscountMode(index, option.id)}
+                          className={cn(
+                            "rounded px-1.5 font-semibold leading-4 transition-colors",
+                            (line.discountMode ?? "percent") === option.id
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <input
+                    id={`line-discount-${line.key}`}
+                    type="number"
+                    min={0}
+                    max={line.discountMode === "amount" ? lineGrossAmount(line) : 100}
+                    step="0.01"
+                    value={
+                      (line.discountMode === "amount"
+                        ? line.discountAmount
+                        : line.discountPercent) || ""
+                    }
+                    placeholder="0"
+                    onChange={(e) => updateLineDiscount(index, e.target.value)}
+                    className={fieldClass}
+                  />
+                </div>
+                <div className="flex items-end justify-between gap-2 lg:col-span-3">
                   <p className="text-sm text-muted-foreground">
-                    Importe: {money(lineAmount(line))}
+                    Importe:{" "}
+                    {lineHasDiscount(line) ? (
+                      <>
+                        <span className="line-through">{money(lineGrossAmount(line))}</span>{" "}
+                        <span className="font-medium text-foreground">{money(lineAmount(line))}</span>{" "}
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                          (−{money(lineDiscountAmount(line))})
+                        </span>
+                      </>
+                    ) : (
+                      money(lineAmount(line))
+                    )}
                   </p>
                   <Button
                     type="button"
@@ -822,6 +992,23 @@ export function QuotesPanel() {
               </div>
             ))}
             <div className="rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm">
+              {draftTotals.lineDiscounts > 0 ? (
+                <>
+                  <p>Precio de lista: {money(draftTotals.listAmount)}</p>
+                  <p>Descuentos por partida: - {money(draftTotals.lineDiscounts)}</p>
+                </>
+              ) : null}
+              {draftTotals.discountAmount > 0 ? (
+                <>
+                  <p>Suma de partidas: {money(draftTotals.gross)}</p>
+                  <p>
+                    {draftTotals.discountPercent > 0
+                      ? `Descuento general (${draftTotals.discountPercent}%)`
+                      : "Descuento general"}
+                    : - {money(draftTotals.discountAmount)}
+                  </p>
+                </>
+              ) : null}
               <p>Subtotal: {money(draftTotals.subtotal)}</p>
               <p>IVA: {money(draftTotals.taxAmount)}</p>
               <p className="font-semibold">Total: {money(draftTotals.total)}</p>
@@ -926,7 +1113,19 @@ export function QuotesPanel() {
           </div>
 
           {selected ? (
-            <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <section
+              ref={(node) => {
+                if (
+                  node &&
+                  selected.id === linkedQuoteId &&
+                  !scrolledToLinked.current
+                ) {
+                  scrolledToLinked.current = true;
+                  node.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+              className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+            >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">{selected.folio}</h3>
@@ -1022,6 +1221,9 @@ export function QuotesPanel() {
                         <p className="font-medium">{line.description}</p>
                         <p className="text-xs text-muted-foreground">
                           {line.quantity} {line.unit} × {money(line.unitPrice)}
+                          {lineHasDiscount(line)
+                            ? ` · desc. ${lineDiscountLabel(line, money)}`
+                            : ""}
                           {line.productSku ? ` · ${line.productSku}` : ""}
                         </p>
                       </div>
@@ -1030,6 +1232,12 @@ export function QuotesPanel() {
                   </li>
                 ))}
               </ul>
+
+              <QuoteFulfillmentSection
+                quote={selected}
+                canWrite={canWrite}
+                onChanged={() => void reloadQuotesQuietly()}
+              />
 
               {canWrite ? (
                 <div className="space-y-2 rounded-xl border border-dashed border-border p-3">

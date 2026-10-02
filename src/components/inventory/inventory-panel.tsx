@@ -5,11 +5,13 @@ import {
   Eye,
   ImagePlus,
   Loader2,
+  MapPin,
   Pencil,
   Plus,
   Search,
   Star,
   Trash2,
+  Warehouse as WarehouseIcon,
   ZoomIn,
 } from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
@@ -48,10 +50,31 @@ import {
 } from "@/lib/inventory/types";
 import { cn } from "@/lib/utils";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
 import { InventoryExcelActions } from "@/components/inventory/inventory-excel-actions";
 import type { WarehouseModule } from "@/lib/auth/permissions";
 import { getReservedQuantities } from "@/lib/holds/storage";
+import {
+  getInventoryStock,
+  hasStockIn,
+  placementsFor,
+  quantityIn,
+  trackingFor,
+  type InventoryStock,
+} from "@/lib/inventory/tracking";
+import { getWarehouses, type Warehouse } from "@/lib/warehouse/stock";
+import {
+  RelocateStockModal,
+  WarehouseManagerModal,
+} from "@/components/inventory/warehouse-location-dialogs";
+import {
+  TrackingDetail,
+  TrackingSummary,
+  trackingColumnLabel,
+  trackingSearchText,
+  type TrackingDateMode,
+} from "@/components/inventory/inventory-tracking";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -104,8 +127,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const permissionModule: WarehouseModule = isEquipment
     ? "equipo"
     : (supplyCategory as WarehouseModule);
-  const { canWrite, canCreate, canDelete, canImport, canExport } =
+  const { canWrite, canCreate, canEdit, canDelete, canImport, canExport, role } =
     usePermissions(permissionModule);
+  const { session } = useSessionAccess();
   const supplyMeta = supplyCategory
     ? getSupplyCategoryMeta(supplyCategory)
     : null;
@@ -121,6 +145,20 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const [reservedByProduct, setReservedByProduct] = useState<Map<string, number>>(
     new Map()
   );
+  const [stockByProduct, setStockByProduct] = useState<Map<string, InventoryStock>>(
+    new Map()
+  );
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [warehouseFilter, setWarehouseFilter] = useState("");
+  const [relocatingItem, setRelocatingItem] = useState<InventoryItem | null>(null);
+  const [managerOpen, setManagerOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const selectedWarehouse = warehouses.find((w) => w.id === warehouseFilter);
+  const trackingMode: TrackingDateMode = requiresExpiry
+    ? "expiry"
+    : requiresManufactureDate
+      ? "manufacture"
+      : "auto";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -193,7 +231,19 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
       const status = getStockStatus(item.quantity, item.minStock);
       const matchesSearch =
         search.trim().length === 0 ||
-        [item.sku, item.name, item.brand, item.model, item.supplier, item.serialNumber]
+        [
+          item.sku,
+          item.name,
+          item.brand,
+          item.model,
+          item.supplier,
+          item.serialNumber,
+          item.location,
+          trackingSearchText(trackingFor(stockByProduct.get(item.id))),
+          placementsFor(stockByProduct.get(item.id))
+            .map((placement) => placement.locationName)
+            .join(" "),
+        ]
           .join(" ")
           .toLowerCase()
           .includes(search.toLowerCase());
@@ -202,22 +252,93 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
         item.itemKind === "equipo" ||
         statusFilter === "all" ||
         status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesWarehouse =
+        !warehouseFilter || hasStockIn(stockByProduct.get(item.id), warehouseFilter);
+      return matchesSearch && matchesStatus && matchesWarehouse;
     });
-  }, [items, search, statusFilter, isEquipment]);
+  }, [items, search, statusFilter, isEquipment, stockByProduct, warehouseFilter]);
+
+  function itemTracking(item: InventoryItem) {
+    return trackingFor(stockByProduct.get(item.id), warehouseFilter || undefined);
+  }
+
+  function renderPlacements(item: InventoryItem, compact = true) {
+    const placements = placementsFor(
+      stockByProduct.get(item.id),
+      warehouseFilter || undefined
+    );
+    if (placements.length === 0) {
+      return (
+        <span className="text-muted-foreground">
+          {item.location || "—"}
+          {item.location ? (
+            <span className="block text-[11px]">Sin existencia registrada</span>
+          ) : null}
+        </span>
+      );
+    }
+    const shown = compact ? placements.slice(0, 2) : placements;
+    const hidden = placements.length - shown.length;
+    return (
+      <div className="space-y-1 text-xs">
+        {shown.map((placement) => (
+          <div key={`${placement.warehouseId}-${placement.locationName}`}>
+            <p className="text-foreground">
+              <span className="font-medium">{placement.warehouseCode}</span>
+              {" · "}
+              {placement.unplaced && item.location ? item.location : placement.locationName}
+              <span className="text-muted-foreground"> · {placement.quantity}</span>
+            </p>
+            {placement.unplaced ? (
+              <p className="text-amber-700 dark:text-amber-300">
+                Por ubicar (en {placement.locationName.toLowerCase()})
+              </p>
+            ) : null}
+          </div>
+        ))}
+        {hidden > 0 ? <p className="text-muted-foreground">+{hidden} más</p> : null}
+      </div>
+    );
+  }
+
+  function openRelocate(item: InventoryItem) {
+    setNotice("");
+    setRelocatingItem(item);
+  }
+
+  function defaultWarehouseFor(item: InventoryItem) {
+    if (warehouseFilter) return warehouseFilter;
+    const best = placementsFor(stockByProduct.get(item.id)).sort(
+      (a, b) => b.quantity - a.quantity
+    )[0];
+    return best?.warehouseId ?? warehouses.find((w) => w.isDefault)?.id ?? warehouses[0]?.id ?? "";
+  }
 
   async function refreshItems() {
     try {
       setLoading(true);
       setError("");
-      const [data, reservedMap] = await Promise.all([
+      let trackingError = "";
+      const [data, reservedMap, stockMap, warehouseRows] = await Promise.all([
         isEquipment
           ? getEquipmentItems()
           : getSupplyItemsByCategory(supplyCategory ?? "insumos"),
         isEquipment ? Promise.resolve(new Map<string, number>()) : getReservedQuantities(),
+        getInventoryStock(isEquipment ? "equipos" : (supplyCategory ?? "insumos")).catch(
+          (err: unknown) => {
+            trackingError = err instanceof Error ? err.message : String(err);
+            return new Map<string, InventoryStock>();
+          }
+        ),
+        getWarehouses().catch(() => [] as Warehouse[]),
       ]);
       setItems(data);
       setReservedByProduct(reservedMap);
+      setStockByProduct(stockMap);
+      setWarehouses(warehouseRows);
+      if (trackingError) {
+        setError(`No se pudieron cargar existencias por almacén, lotes y series: ${trackingError}`);
+      }
     } catch (err) {
       setError(
         err instanceof Error
@@ -332,6 +453,15 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
 
         <ReadOnlyBanner visible={!canWrite} />
 
+        {notice ? (
+          <p
+            role="status"
+            className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200"
+          >
+            {notice}
+          </p>
+        ) : null}
+
         {loading ? (
           <p className="text-sm text-muted-foreground">
             Cargando inventario desde Supabase...
@@ -357,6 +487,10 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" variant="outline" onClick={() => setManagerOpen(true)}>
+                <WarehouseIcon className="size-4" />
+                Almacenes y ubicaciones
+              </Button>
               <InventoryExcelActions
                 items={items}
                 canWrite={canImport}
@@ -382,16 +516,39 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
             </div>
           </div>
 
-          <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[1fr_auto]">
+          <div
+            className={cn(
+              "grid gap-3 border-b border-border p-4",
+              isEquipment ? "md:grid-cols-[1fr_auto]" : "md:grid-cols-[1fr_auto_auto]"
+            )}
+          >
             <label className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por SKU, nombre, marca o proveedor..."
+                placeholder={
+                  isEquipment
+                    ? "Buscar por SKU, nombre, marca, proveedor o serie..."
+                    : "Buscar por SKU, nombre, marca, proveedor, lote o serie..."
+                }
                 className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-10 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20"
               />
             </label>
+            <select
+              value={warehouseFilter}
+              onChange={(event) => setWarehouseFilter(event.target.value)}
+              aria-label="Almacén"
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            >
+              <option value="">Todos los almacenes</option>
+              {warehouses.map((warehouse) => (
+                <option key={warehouse.id} value={warehouse.id}>
+                  {warehouse.name}
+                  {warehouse.city ? ` · ${warehouse.city}` : ""}
+                </option>
+              ))}
+            </select>
             {!isEquipment ? (
               <select
                 value={statusFilter}
@@ -405,9 +562,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 <option value="bajo_stock">Bajo stock</option>
                 <option value="agotado">Agotado</option>
               </select>
-            ) : (
-              <div />
-            )}
+            ) : null}
           </div>
 
           <ResponsiveDataList
@@ -451,6 +606,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                       item.itemKind === "equipo"
                         ? item.nextMaintenanceDate || "—"
                         : (() => {
+                            if (selectedWarehouse) {
+                              return `${quantityIn(stockByProduct.get(item.id), selectedWarehouse.id)} ${item.unit} en ${selectedWarehouse.code} · total ${item.quantity}`;
+                            }
                             const reserved = reservedByProduct.get(item.id) ?? 0;
                             const available = Math.max(0, item.quantity - reserved);
                             return reserved > 0
@@ -458,7 +616,21 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                               : `${item.quantity} ${item.unit} (mín. ${item.minStock})`;
                           })(),
                   },
-                  { label: "Ubicación", value: item.location || "—" },
+                  ...(!isEquipment
+                    ? [
+                        {
+                          label: trackingColumnLabel(trackingMode),
+                          value: (
+                            <TrackingSummary
+                              item={item}
+                              tracking={itemTracking(item)}
+                              mode={trackingMode}
+                            />
+                          ),
+                        },
+                      ]
+                    : []),
+                  { label: "Almacén / ubicación", value: renderPlacements(item) },
                   {
                     label: requiresManufactureDate
                       ? "Fabricación"
@@ -481,6 +653,16 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                       <Eye className="size-3.5" />
                       Ficha
                     </button>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openRelocate(item)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                      >
+                        <MapPin className="size-3.5" />
+                        Ubicar
+                      </button>
+                    ) : null}
                     {canWrite ? (
                       <>
                         <button
@@ -510,7 +692,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           />
 
           <DesktopTable>
-            <table className="min-w-full text-sm">
+            <SortableTable className="min-w-full text-sm">
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">SKU</th>
@@ -524,11 +706,16 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     {isEquipment ? "Estado" : "Stock"}
                   </th>
                   {!isEquipment ? (
+                    <th className="px-4 py-3 font-medium">
+                      {trackingColumnLabel(trackingMode)}
+                    </th>
+                  ) : null}
+                  {!isEquipment ? (
                     <th className="px-4 py-3 font-medium">Alerta</th>
                   ) : (
                     <th className="px-4 py-3 font-medium">Próx. mant.</th>
                   )}
-                  <th className="px-4 py-3 font-medium">Ubicación</th>
+                  <th className="px-4 py-3 font-medium">Almacén / ubicación</th>
                   {requiresManufactureDate ? (
                     <th className="px-4 py-3 font-medium">Fabricación</th>
                   ) : null}
@@ -540,7 +727,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={requiresManufactureDate ? 9 : 8}
+                      colSpan={8 + (requiresManufactureDate ? 1 : 0) + (isEquipment ? 0 : 1)}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isEquipment
@@ -587,9 +774,15 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                             </span>
                           ) : (
                             <>
-                              {item.quantity} {item.unit}
+                              {selectedWarehouse
+                                ? quantityIn(stockByProduct.get(item.id), selectedWarehouse.id)
+                                : item.quantity}{" "}
+                              {item.unit}
                               <p className="text-xs text-muted-foreground">
                                 {(() => {
+                                  if (selectedWarehouse) {
+                                    return `en ${selectedWarehouse.code} · total ${item.quantity}`;
+                                  }
                                   const reserved =
                                     reservedByProduct.get(item.id) ?? 0;
                                   const available = Math.max(
@@ -604,6 +797,15 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                             </>
                           )}
                         </td>
+                        {!isEquipment ? (
+                          <td className="px-4 py-3 align-top">
+                            <TrackingSummary
+                              item={item}
+                              tracking={itemTracking(item)}
+                              mode={trackingMode}
+                            />
+                          </td>
+                        ) : null}
                         <td className="px-4 py-3">
                           {item.itemKind === "equipo" ? (
                             <span className="text-sm text-muted-foreground">
@@ -620,9 +822,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {item.location || "—"}
-                        </td>
+                        <td className="px-4 py-3 align-top">{renderPlacements(item)}</td>
                         {requiresManufactureDate ? (
                           <td className="px-4 py-3 text-muted-foreground">
                             {item.manufacturedAt || "—"}
@@ -641,6 +841,17 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                             >
                               <Eye className="size-4" />
                             </button>
+                            {canEdit ? (
+                              <button
+                                type="button"
+                                onClick={() => openRelocate(item)}
+                                className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                                aria-label={`Ubicar ${item.name}`}
+                                title="Ubicar en almacén"
+                              >
+                                <MapPin className="size-4" />
+                              </button>
+                            ) : null}
                             {canWrite ? (
                               <>
                                 <button
@@ -670,7 +881,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                   })
                 )}
               </tbody>
-            </table>
+            </SortableTable>
           </DesktopTable>
         </section>
       </div>
@@ -738,6 +949,19 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                {canEdit ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const item = viewingItem;
+                      setViewingItem(null);
+                      openRelocate(item);
+                    }}
+                  >
+                    <MapPin className="size-4" /> Ubicar
+                  </Button>
+                ) : null}
                 {canWrite ? (
                   <Button
                     type="button"
@@ -851,8 +1075,25 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                   ["Categoría", getCategoryLabel(viewingItem.category)],
                   ["Marca", viewingItem.brand || "—"],
                   ["Modelo", viewingItem.model || "—"],
-                  ["Serie", viewingItem.serialNumber || "—"],
-                  ["Ubicación", viewingItem.location || "—"],
+                  [
+                    isEquipment || viewingItem.tracksSerial ? "Serie" : "Serie / lote",
+                    viewingItem.serialNumber || "—",
+                  ],
+                  [
+                    "Almacén / ubicación",
+                    placementsFor(stockByProduct.get(viewingItem.id))
+                      .map(
+                        (placement) =>
+                          `${placement.warehouseCode} · ${
+                            placement.unplaced && viewingItem.location
+                              ? `${viewingItem.location} (por ubicar)`
+                              : placement.locationName
+                          } · ${placement.quantity}`
+                      )
+                      .join(" | ") ||
+                      viewingItem.location ||
+                      "—",
+                  ],
                   ["Proveedor", viewingItem.supplier || "—"],
                   ["Precio", formatCurrency(viewingItem.unitPrice)],
                   [
@@ -866,7 +1107,18 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     )?.label ?? viewingItem.assetStatus,
                   ],
                   ["Fabricación", viewingItem.manufacturedAt || "—"],
-                  ["Caducidad", viewingItem.expiryDate || "—"],
+                  ...(trackingMode === "manufacture"
+                    ? []
+                    : [
+                        [
+                          trackingMode === "expiry" ? "Próxima caducidad" : "Caducidad",
+                          viewingItem.expiryDate ||
+                            trackingFor(stockByProduct.get(viewingItem.id))?.lots.find(
+                              (lot) => lot.expiryDate
+                            )?.expiryDate ||
+                            "—",
+                        ],
+                      ]),
                   ["Próx. mant.", viewingItem.nextMaintenanceDate || "—"],
                 ].map(([label, value]) => (
                   <div key={label}>
@@ -875,6 +1127,17 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="mb-4 rounded-xl border border-border bg-muted/20 p-3">
+              <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+                {isEquipment ? "Números de serie" : "Lotes, series y caducidad"}
+              </p>
+              <TrackingDetail
+                item={viewingItem}
+                tracking={trackingFor(stockByProduct.get(viewingItem.id))}
+                mode={trackingMode}
+              />
             </div>
 
             {viewingItem.description ? (
@@ -939,6 +1202,36 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 }
               : undefined
           }
+        />
+      ) : null}
+
+      {relocatingItem && canEdit ? (
+        <RelocateStockModal
+          item={relocatingItem}
+          stock={stockByProduct.get(relocatingItem.id)}
+          warehouses={warehouses}
+          initialWarehouseId={defaultWarehouseFor(relocatingItem)}
+          actor={session?.username ?? "sistema"}
+          onClose={() => setRelocatingItem(null)}
+          onDone={(result, warehouse) => {
+            const name = relocatingItem.name;
+            setRelocatingItem(null);
+            setNotice(
+              result.movedQty > 0
+                ? `${name}: ${result.movedQty} ${relocatingItem.unit} ubicados en ${warehouse.code} · ${result.locationName} (folio ${result.folio}).`
+                : `${name}: ubicación asignada ${warehouse.code} · ${result.locationName}.`
+            );
+            void refreshItems();
+          }}
+        />
+      ) : null}
+
+      {managerOpen ? (
+        <WarehouseManagerModal
+          canEditLocations={canEdit}
+          canManageWarehouses={role === "administrador"}
+          onClose={() => setManagerOpen(false)}
+          onChanged={() => void refreshItems()}
         />
       ) : null}
     </>

@@ -52,6 +52,7 @@ import {
   type VehicleType,
 } from "@/lib/fleet/types";
 import { cn } from "@/lib/utils";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -1121,7 +1122,7 @@ export function FleetPanel() {
               <p className="text-sm text-muted-foreground">No hay servicios abiertos.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="text-left text-xs text-muted-foreground">
                     <tr>
                       <th className="px-2 py-2">Folio</th>
@@ -1171,7 +1172,7 @@ export function FleetPanel() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </SortableTable>
               </div>
             )}
           </div>
@@ -1180,7 +1181,7 @@ export function FleetPanel() {
 
       {tab === "vehiculos" && !showVehicleForm ? (
         <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
                 <th className="px-3 py-3">Código</th>
@@ -1273,7 +1274,7 @@ export function FleetPanel() {
                 ))
               )}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
       ) : null}
 
@@ -1311,7 +1312,7 @@ export function FleetPanel() {
 
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
             <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-              <table className="min-w-full text-sm">
+              <SortableTable className="min-w-full text-sm">
                 <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="px-3 py-3">Folio</th>
@@ -1385,7 +1386,7 @@ export function FleetPanel() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </SortableTable>
             </div>
 
             <aside className="rounded-2xl border border-border bg-card p-4 shadow-sm">

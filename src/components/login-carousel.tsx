@@ -40,7 +40,7 @@ export function LoginCarousel() {
   }, []);
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {LOGIN_SLIDES.map((slide, index) => {
         const isActive = index === active;
         return (
@@ -56,7 +56,7 @@ export function LoginCarousel() {
               alt={slide.alt}
               fill
               priority={index === 0}
-              sizes="(max-width: 420px) 100vw, 420px"
+              sizes="100vw"
               className={cn(
                 "object-cover transition-transform duration-[6500ms] ease-out",
                 isActive ? "scale-105" : "scale-100"
@@ -66,11 +66,10 @@ export function LoginCarousel() {
         );
       })}
 
-      {/* Oscurece la foto para priorizar logo y campos */}
-      <div className="absolute inset-0 bg-black/55" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,28,0.35)_0%,rgba(8,12,28,0.62)_45%,rgba(8,12,28,0.78)_100%)]" />
+      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,28,0.25)_0%,rgba(8,12,28,0.45)_55%,rgba(8,12,28,0.7)_100%)]" />
 
-      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+      <div className="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] left-1/2 flex -translate-x-1/2 gap-1.5">
         {LOGIN_SLIDES.map((slide, index) => (
           <span
             key={slide.src}

@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase/client";
 import {
+  clampPercent,
   computeQuoteTotals,
+  lineDiscountAmount,
   quoteStatusLabel,
   type Quote,
   type QuoteEvent,
@@ -31,6 +33,8 @@ function mapLine(
     quantity: Number(row.quantity ?? 0),
     unit: String(row.unit ?? "pza"),
     unitPrice: Number(row.unit_price ?? 0),
+    discountPercent: Number(row.discount_percent ?? 0),
+    discountAmount: Number(row.discount_amount ?? 0),
     sortOrder: Number(row.sort_order ?? 0),
     notes: String(row.notes ?? ""),
   };
@@ -74,6 +78,7 @@ function mapQuote(
     taxAmount: Number(row.tax_amount ?? 0),
     total: Number(row.total ?? 0),
     discount: Number(row.discount ?? 0),
+    discountPercent: Number(row.discount_percent ?? 0),
     salesperson: String(row.salesperson ?? ""),
     probability: Number(row.probability ?? 0),
     notes: String(row.notes ?? ""),
@@ -124,6 +129,9 @@ function linePayload(quoteId: string, line: QuoteLineInput, index: number) {
     quantity: Number(line.quantity),
     unit: (line.unit ?? "pza").trim() || "pza",
     unit_price: Number(line.unitPrice),
+    discount_percent: clampPercent(line.discountPercent),
+    discount_amount:
+      clampPercent(line.discountPercent) > 0 ? 0 : lineDiscountAmount(line),
     sort_order: index,
     notes: (line.notes ?? "").trim(),
   };
@@ -133,7 +141,8 @@ function payloadFromInput(input: QuoteInput, lines: QuoteLineInput[]) {
   const totals = computeQuoteTotals(
     lines,
     input.discount ?? 0,
-    input.taxRate ?? 16
+    input.taxRate ?? 16,
+    input.discountPercent ?? 0
   );
   return {
     title: (input.title ?? "").trim(),
@@ -150,7 +159,8 @@ function payloadFromInput(input: QuoteInput, lines: QuoteLineInput[]) {
     next_follow_up: input.nextFollowUp || null,
     last_contact_at: input.lastContactAt || null,
     tax_rate: Number(input.taxRate ?? 16),
-    discount: Number(input.discount ?? 0),
+    discount: totals.discountAmount,
+    discount_percent: totals.discountPercent,
     subtotal: totals.subtotal,
     tax_amount: totals.taxAmount,
     total: totals.total,
@@ -167,8 +177,43 @@ export async function getQuotes(): Promise<Quote[]> {
     .select("*")
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
+  return hydrateQuotes(rows ?? []);
+}
 
-  const quoteRows = rows ?? [];
+/**
+ * Quotes linked to the client by id, plus legacy quotes captured with the
+ * client's name but without `client_id`.
+ */
+export async function getClientQuotes(client: {
+  id: string;
+  name: string;
+}): Promise<Quote[]> {
+  const [byId, byName] = await Promise.all([
+    db.from("quotes").select("*").eq("client_id", client.id),
+    client.name.trim()
+      ? db
+          .from("quotes")
+          .select("*")
+          .is("client_id", null)
+          .ilike("client_name", client.name.trim().replace(/[%_]/g, "\\$&"))
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (byId.error) throw new Error(byId.error.message);
+  if (byName.error) throw new Error(byName.error.message);
+
+  const rows = [...(byId.data ?? []), ...(byName.data ?? [])] as Record<
+    string,
+    unknown
+  >[];
+  rows.sort((a, b) =>
+    String(b.quote_date || b.created_at).localeCompare(
+      String(a.quote_date || a.created_at)
+    )
+  );
+  return hydrateQuotes(rows);
+}
+
+async function hydrateQuotes(quoteRows: Record<string, unknown>[]): Promise<Quote[]> {
   if (!quoteRows.length) return [];
 
   const ids = quoteRows.map((row: Record<string, unknown>) => row.id);

@@ -55,6 +55,7 @@ import {
   type TenderStatus,
 } from "@/lib/tenders/types";
 import { cn } from "@/lib/utils";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -1074,7 +1075,7 @@ export function TendersPanel() {
 
       {!loading && view === "lista" ? (
         <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
             <thead className="bg-muted/50 text-left text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 font-medium">Folio</th>
@@ -1125,7 +1126,7 @@ export function TendersPanel() {
                 ))
               )}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
       ) : null}
 

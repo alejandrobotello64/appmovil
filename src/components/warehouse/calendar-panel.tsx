@@ -52,6 +52,8 @@ import { listServiceOrderCalendarItems } from "@/lib/service-orders/storage";
 import { buildTenderCalendarItems, getTenders } from "@/lib/tenders/storage";
 import { getMaintenances } from "@/lib/warehouse/maintenances";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MONTHS = [
@@ -220,6 +222,7 @@ export function CalendarPanel() {
   const [notifyWhatsapp, setNotifyWhatsapp] = useState(true);
   const [reminderDays, setReminderDays] = useState(1);
   const [composeEventId, setComposeEventId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   const cells = useMemo(
     () => monthGrid(cursor.year, cursor.month),
@@ -390,9 +393,22 @@ export function CalendarPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursor.year, role]);
 
-  const filtered = items.filter((item) =>
-    filter === "todos" ? true : item.kind === filter
+  const searching = query.trim().length > 0;
+  const filtered = items.filter(
+    (item) =>
+      (filter === "todos" || item.kind === filter) &&
+      matchesSearch(query, [
+        item.title,
+        item.subtitle,
+        item.time,
+        KIND_LABEL[item.kind],
+      ])
   );
+  const searchResults = searching
+    ? [...filtered]
+        .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title))
+        .slice(0, 40)
+    : [];
   const byDay = new Map<string, CalendarItem[]>();
   for (const item of filtered) {
     const list = byDay.get(item.date) ?? [];
@@ -597,6 +613,13 @@ export function CalendarPanel() {
             </button>
           ))}
         </div>
+
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder="Buscar evento, equipo, cliente, colaborador, licitación..."
+          className="mt-3"
+        />
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(18rem,1fr)]">
@@ -809,18 +832,30 @@ export function CalendarPanel() {
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <h3 className="font-semibold">Próximo en este mes</h3>
-            {upcoming.length === 0 ? (
+            <h3 className="font-semibold">
+              {searching
+                ? `Resultados de búsqueda (${filtered.length})`
+                : "Próximo en este mes"}
+            </h3>
+            {(searching ? searchResults : upcoming).length === 0 ? (
               <p className="mt-2 text-sm text-muted-foreground">
-                No hay actividades pendientes en {MONTHS[cursor.month]}.
+                {searching
+                  ? `Sin coincidencias en ${cursor.year}.`
+                  : `No hay actividades pendientes en ${MONTHS[cursor.month]}.`}
               </p>
             ) : (
               <ul className="mt-3 space-y-2">
-                {upcoming.map((item) => (
+                {(searching ? searchResults : upcoming).map((item) => (
                   <li key={item.id}>
                     <button
                       type="button"
-                      onClick={() => setSelectedDay(item.date)}
+                      onClick={() => {
+                        setSelectedDay(item.date);
+                        setCursor({
+                          year: Number(item.date.slice(0, 4)),
+                          month: Number(item.date.slice(5, 7)) - 1,
+                        });
+                      }}
                       className="flex w-full items-start gap-2 rounded-xl px-2 py-1.5 text-left hover:bg-muted"
                     >
                       {item.kind === "mantenimiento" ? (

@@ -40,6 +40,7 @@ import {
 import { daysUntilExpiry } from "@/lib/inventory/expiry";
 import { MEXICO_STATES } from "@/lib/location/mexico-states";
 import { cn } from "@/lib/utils";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -789,7 +790,7 @@ export function HoldsPanel() {
             />
 
             <DesktopTable>
-              <table className="min-w-full text-sm">
+              <SortableTable className="min-w-full text-sm">
                 <thead className="bg-muted/50 text-left text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 font-medium">Folio</th>
@@ -889,7 +890,7 @@ export function HoldsPanel() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </SortableTable>
             </DesktopTable>
           </>
         ) : null}

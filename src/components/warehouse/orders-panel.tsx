@@ -1,13 +1,21 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
 import {
   DesktopTable,
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
 import { NewOrderForm } from "@/components/warehouse/new-order-form";
+import {
+  PurchaseOrderInvoicesModal,
+  formatMoney,
+  invoiceSummary,
+} from "@/components/warehouse/purchase-order-invoices";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
+import { cn } from "@/lib/utils";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { getInventoryItems } from "@/lib/inventory/storage";
@@ -20,6 +28,7 @@ import type { Supplier } from "@/lib/suppliers/types";
 import {
   cancelPurchaseOrder,
   getPurchaseOrders,
+  purchaseOrderTotal,
   receivePurchaseOrderLines,
   type PurchaseOrder,
   type PurchaseOrderItem,
@@ -30,6 +39,7 @@ import {
   type Warehouse,
   type WarehouseLocation,
 } from "@/lib/warehouse/stock";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 type ReceiveDraft = {
   lineId: string;
@@ -44,8 +54,19 @@ function pendingQty(line: PurchaseOrderItem) {
   return Math.max(line.quantity - line.receivedQuantity, 0);
 }
 
+function supplierKey(order: PurchaseOrder) {
+  return order.supplierId ?? `name:${order.supplierName.trim().toLowerCase()}`;
+}
+
+function invoicedTotal(order: PurchaseOrder) {
+  return order.invoices.reduce((sum, invoice) => sum + invoice.total, 0);
+}
+
 export function OrdersPanel() {
-  const { canWrite } = usePermissions("pedidos");
+  const { canWrite, canDelete } = usePermissions("pedidos");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [groupBySupplier, setGroupBySupplier] = useState(false);
+  const [invoicesOrderId, setInvoicesOrderId] = useState<string | null>(null);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -56,6 +77,58 @@ export function OrdersPanel() {
   const [formOpen, setFormOpen] = useState(false);
   const [receiving, setReceiving] = useState<PurchaseOrder | null>(null);
   const [receiveDrafts, setReceiveDrafts] = useState<ReceiveDraft[]>([]);
+  const [query, setQuery] = useState("");
+  const supplierOptions = useMemo(() => {
+    const byKey = new Map<string, string>();
+    for (const order of orders) {
+      if (!byKey.has(supplierKey(order))) {
+        byKey.set(supplierKey(order), order.supplierName || "Sin proveedor");
+      }
+    }
+    return [...byKey.entries()]
+      .map(([key, name]) => ({ key, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "es"));
+  }, [orders]);
+  const visibleOrders = useMemo(
+    () =>
+      orders.filter(
+        (order) =>
+          (!supplierFilter || supplierKey(order) === supplierFilter) &&
+          matchesSearch(query, [
+            order.orderNumber,
+            order.supplierName,
+            order.status,
+            order.notes,
+            order.createdBy,
+            ...order.items.flatMap((line) => [line.itemSku, line.itemName]),
+            ...order.invoices.flatMap((invoice) => [
+              invoice.invoiceNumber,
+              invoice.cfdiUuid,
+              invoice.issuerRfc,
+            ]),
+          ])
+      ),
+    [orders, query, supplierFilter]
+  );
+  const supplierGroups = useMemo(() => {
+    const groups = new Map<string, { key: string; name: string; orders: PurchaseOrder[] }>();
+    for (const order of visibleOrders) {
+      const key = supplierKey(order);
+      const group = groups.get(key) ?? {
+        key,
+        name: order.supplierName || "Sin proveedor",
+        orders: [],
+      };
+      group.orders.push(order);
+      groups.set(key, group);
+    }
+    return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, "es"));
+  }, [visibleOrders]);
+  const emptyOrdersMessage =
+    query.trim() || supplierFilter
+      ? "Ningún pedido coincide con la búsqueda."
+      : "No hay pedidos. Crea el primero para reabastecer insumos o medicamentos.";
+  const invoicesOrder = orders.find((order) => order.id === invoicesOrderId) ?? null;
   const [authorizeOverReceipt, setAuthorizeOverReceipt] = useState(false);
   const [warehouseId, setWarehouseId] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -163,28 +236,127 @@ export function OrdersPanel() {
   }
 
   function orderActions(order: PurchaseOrder) {
-    if (!canWrite || order.status === "recibido" || order.status === "cancelado") {
-      return undefined;
-    }
+    const open = canWrite && order.status !== "recibido" && order.status !== "cancelado";
     return (
       <>
-        <Button size="sm" className="h-9" onClick={() => openReceive(order)}>
-          Recibir
-        </Button>
+        {open ? (
+          <Button size="sm" className="h-9" onClick={() => openReceive(order)}>
+            Recibir
+          </Button>
+        ) : null}
         <Button
           size="sm"
           variant="outline"
           className="h-9"
-          onClick={() =>
-            void cancelPurchaseOrder(order.id)
-              .then(refresh)
-              .catch((err) =>
-                setError(err instanceof Error ? err.message : "No se pudo cancelar")
-              )
-          }
+          onClick={() => setInvoicesOrderId(order.id)}
         >
-          Cancelar
+          Facturas{order.invoices.length ? ` (${order.invoices.length})` : ""}
         </Button>
+        {open ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9"
+            onClick={() =>
+              void cancelPurchaseOrder(order.id)
+                .then(refresh)
+                .catch((err) =>
+                  setError(err instanceof Error ? err.message : "No se pudo cancelar")
+                )
+            }
+          >
+            Cancelar
+          </Button>
+        ) : null}
+      </>
+    );
+  }
+
+  function invoiceCell(order: PurchaseOrder) {
+    if (!order.invoices.length) {
+      return <span className="text-muted-foreground">Sin factura</span>;
+    }
+    const pending = purchaseOrderTotal(order) - invoicedTotal(order);
+    return (
+      <span>
+        {invoiceSummary(order)}
+        {Math.abs(pending) >= 0.01 ? (
+          <span className="block text-xs text-amber-700 dark:text-amber-300">
+            Diferencia {formatMoney(pending)}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+
+  function renderOrders(list: PurchaseOrder[]) {
+    return (
+      <>
+        <ResponsiveDataList
+          emptyMessage={emptyOrdersMessage}
+          items={list.map((order) => ({
+            key: order.id,
+            title: order.orderNumber,
+            subtitle: order.supplierName,
+            badge: (
+              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs capitalize">
+                {order.status}
+              </span>
+            ),
+            fields: [
+              { label: "Total", value: formatMoney(purchaseOrderTotal(order)) },
+              {
+                label: "Pendiente",
+                value: order.items.reduce((sum, line) => sum + pendingQty(line), 0),
+              },
+              { label: "Factura", value: invoiceCell(order) },
+            ],
+            actions: orderActions(order),
+          }))}
+        />
+
+        <DesktopTable>
+          <SortableTable className="min-w-full text-sm">
+            <thead className="bg-muted/50 text-left text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-medium">Pedido</th>
+                <th className="px-4 py-3 font-medium">Proveedor</th>
+                <th className="px-4 py-3 font-medium">Estado</th>
+                <th className="px-4 py-3 font-medium">Total</th>
+                <th className="px-4 py-3 font-medium">Factura</th>
+                <th className="px-4 py-3 font-medium">Pendiente</th>
+                <th className="px-4 py-3 font-medium">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                    {emptyOrdersMessage}
+                  </td>
+                </tr>
+              ) : (
+                list.map((order) => (
+                  <tr key={order.id} className="border-t border-border/70">
+                    <td className="px-4 py-3 font-medium">{order.orderNumber}</td>
+                    <td className="px-4 py-3">{order.supplierName}</td>
+                    <td className="px-4 py-3 capitalize">{order.status}</td>
+                    <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                      {formatMoney(purchaseOrderTotal(order))}
+                    </td>
+                    <td className="px-4 py-3">{invoiceCell(order)}</td>
+                    <td className="px-4 py-3">
+                      {order.items.reduce((sum, line) => sum + pendingQty(line), 0)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">{orderActions(order)}</div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </SortableTable>
+        </DesktopTable>
       </>
     );
   }
@@ -237,64 +409,71 @@ export function OrdersPanel() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card shadow-sm">
-        <ResponsiveDataList
-          emptyMessage="No hay pedidos. Crea el primero para reabastecer insumos o medicamentos."
-          items={orders.map((order) => ({
-            key: order.id,
-            title: order.orderNumber,
-            subtitle: order.supplierName,
-            badge: (
-              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs capitalize">
-                {order.status}
-              </span>
-            ),
-            fields: [
-              { label: "Líneas", value: order.items.length },
-              {
-                label: "Pendiente",
-                value: order.items.reduce((sum, line) => sum + pendingQty(line), 0),
-              },
-            ],
-            actions: orderActions(order),
-          }))}
-        />
-
-        <DesktopTable>
-          <table className="min-w-full text-sm">
-          <thead className="bg-muted/50 text-left text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-medium">Pedido</th>
-              <th className="px-4 py-3 font-medium">Proveedor</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Pendiente</th>
-              <th className="px-4 py-3 font-medium">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
-                  No hay pedidos. Crea el primero para reabastecer insumos o medicamentos.
-                </td>
-              </tr>
-            ) : (
-              orders.map((order) => (
-                <tr key={order.id} className="border-t border-border/70">
-                  <td className="px-4 py-3 font-medium">{order.orderNumber}</td>
-                  <td className="px-4 py-3">{order.supplierName}</td>
-                  <td className="px-4 py-3 capitalize">{order.status}</td>
-                  <td className="px-4 py-3">
-                    {order.items.reduce((sum, line) => sum + pendingQty(line), 0)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">{orderActions(order)}</div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        </DesktopTable>
+        <div className="flex flex-col gap-2 border-b border-border p-4 lg:flex-row lg:items-center">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Buscar pedido, proveedor, producto, SKU o factura..."
+            className="lg:flex-1"
+          />
+          <select
+            value={supplierFilter}
+            onChange={(event) => setSupplierFilter(event.target.value)}
+            aria-label="Filtrar por proveedor"
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm lg:w-64"
+          >
+            <option value="">Todos los proveedores</option>
+            {supplierOptions.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+          <div className="inline-flex shrink-0 rounded-lg border border-input p-0.5 text-sm">
+            {(
+              [
+                [false, "Lista"],
+                [true, "Por proveedor"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setGroupBySupplier(value)}
+                className={cn(
+                  "h-9 flex-1 rounded-md px-3 font-medium",
+                  groupBySupplier === value
+                    ? "bg-[#3B46A5] text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {groupBySupplier && supplierGroups.length > 0 ? (
+          <div className="divide-y divide-border">
+            {supplierGroups.map((group) => {
+              const total = group.orders.reduce((sum, order) => sum + purchaseOrderTotal(order), 0);
+              const invoiced = group.orders.reduce((sum, order) => sum + invoicedTotal(order), 0);
+              return (
+                <div key={group.key}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 bg-muted/30 px-4 py-3">
+                    <h3 className="font-semibold">{group.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {group.orders.length} pedido{group.orders.length === 1 ? "" : "s"} · Total{" "}
+                      {formatMoney(total)} · Facturado {formatMoney(invoiced)}
+                    </p>
+                  </div>
+                  {renderOrders(group.orders)}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          renderOrders(visibleOrders)
+        )}
       </section>
         </>
       )}
@@ -344,7 +523,7 @@ export function OrdersPanel() {
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-border">
-                <table className="min-w-[720px] w-full text-sm">
+                <SortableTable className="min-w-[720px] w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Producto</th>
@@ -365,6 +544,11 @@ export function OrdersPanel() {
                           <td className="px-3 py-2">
                             <p className="font-medium">{line.itemName}</p>
                             <p className="font-mono text-xs text-muted-foreground">{line.itemSku}</p>
+                            {!line.itemId ? (
+                              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                Fuera de catálogo · se registra recibido sin entrar a inventario
+                              </p>
+                            ) : null}
                           </td>
                           <td className="px-3 py-2">{line.quantity}</td>
                           <td className="px-3 py-2">{line.receivedQuantity}</td>
@@ -438,7 +622,7 @@ export function OrdersPanel() {
                       );
                     })}
                   </tbody>
-                </table>
+                </SortableTable>
               </div>
 
               <label className="mt-4 flex items-start gap-2 text-sm">
@@ -472,6 +656,24 @@ export function OrdersPanel() {
             </div>
           </form>
         </div>
+      ) : null}
+
+      {invoicesOrder ? (
+        <PurchaseOrderInvoicesModal
+          order={invoicesOrder}
+          canAdd={canWrite}
+          canDelete={canDelete}
+          supplierRfc={suppliers.find((item) => item.id === invoicesOrder.supplierId)?.rfc}
+          actor={getSession()?.fullName || getSession()?.username || "usuario"}
+          onClose={() => setInvoicesOrderId(null)}
+          onChanged={(invoices) =>
+            setOrders((current) =>
+              current.map((order) =>
+                order.id === invoicesOrder.id ? { ...order, invoices } : order
+              )
+            )
+          }
+        />
       ) : null}
     </div>
   );

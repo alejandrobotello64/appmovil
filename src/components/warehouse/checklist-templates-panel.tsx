@@ -45,6 +45,8 @@ import {
   type StaffMember,
 } from "@/lib/users/staff";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -114,12 +116,22 @@ export function ChecklistTemplatesPanel() {
     setEditUnit("");
   }, [openId]);
 
+  const [query, setQuery] = useState("");
   const visible = useMemo(
     () =>
-      kindFilter === "todas"
-        ? templates
-        : templates.filter((tpl) => tpl.listKind === kindFilter),
-    [templates, kindFilter]
+      templates.filter(
+        (tpl) =>
+          (kindFilter === "todas" || tpl.listKind === kindFilter) &&
+          matchesSearch(query, [
+            tpl.code,
+            tpl.name,
+            tpl.description,
+            tpl.equipmentKind,
+            EQUIPMENT_KINDS.find((kind) => kind.id === tpl.equipmentKind)?.label,
+            ...tpl.points.map((point) => point.label),
+          ])
+      ),
+    [templates, kindFilter, query]
   );
 
   const selected = templates.find((t) => t.id === openId) ?? null;
@@ -378,6 +390,12 @@ export function ChecklistTemplatesPanel() {
         ))}
       </div>
 
+      <SearchInput
+        value={query}
+        onChange={setQuery}
+        placeholder="Buscar plantilla por nombre, código, tipo de equipo o punto..."
+      />
+
       {showCreate && canCreate ? (
         <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
@@ -474,6 +492,10 @@ export function ChecklistTemplatesPanel() {
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Cargando plantillas…</p>
+      ) : visible.length === 0 && query.trim() ? (
+        <p className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+          Ninguna plantilla coincide con la búsqueda.
+        </p>
       ) : visible.length === 0 ? (
         <p className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
           No hay plantillas

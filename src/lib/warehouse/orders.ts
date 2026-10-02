@@ -1,5 +1,9 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
+import {
+  getPurchaseOrderInvoices,
+  type PurchaseOrderInvoice,
+} from "@/lib/warehouse/order-invoices";
 
 type OrderRow = Database["public"]["Tables"]["purchase_orders"]["Row"];
 type OrderItemRow = Database["public"]["Tables"]["purchase_order_items"]["Row"];
@@ -34,6 +38,7 @@ export type PurchaseOrder = {
   createdAt: string;
   updatedAt: string;
   items: PurchaseOrderItem[];
+  invoices: PurchaseOrderInvoice[];
 };
 
 export type PurchaseOrderInput = {
@@ -64,7 +69,11 @@ function mapItem(row: OrderItemRow): PurchaseOrderItem {
   };
 }
 
-function mapOrder(row: OrderRow, items: PurchaseOrderItem[] = []): PurchaseOrder {
+function mapOrder(
+  row: OrderRow,
+  items: PurchaseOrderItem[] = [],
+  invoices: PurchaseOrderInvoice[] = []
+): PurchaseOrder {
   return {
     id: row.id,
     orderNumber: row.order_number,
@@ -77,7 +86,12 @@ function mapOrder(row: OrderRow, items: PurchaseOrderItem[] = []): PurchaseOrder
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     items,
+    invoices,
   };
+}
+
+export function purchaseOrderTotal(order: Pick<PurchaseOrder, "items">) {
+  return order.items.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
 }
 
 function nextOrderNumber() {
@@ -85,21 +99,28 @@ function nextOrderNumber() {
   const y = stamp.getFullYear();
   const m = String(stamp.getMonth() + 1).padStart(2, "0");
   const d = String(stamp.getDate()).padStart(2, "0");
-  const r = Math.floor(Math.random() * 900 + 100);
+  const r = Math.floor(Math.random() * 9000 + 1000);
   return `PED-${y}${m}${d}-${r}`;
 }
 
-export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
-  const { data: orders, error } = await supabase
+export async function getPurchaseOrders(ids?: string[]): Promise<PurchaseOrder[]> {
+  if (ids && ids.length === 0) return [];
+
+  let ordersQuery = supabase
     .from("purchase_orders")
     .select("*")
     .order("created_at", { ascending: false });
+  if (ids) ordersQuery = ordersQuery.in("id", ids);
+  const { data: orders, error } = await ordersQuery;
 
   if (error) throw new Error(error.message);
 
-  const { data: items, error: itemsError } = await supabase
-    .from("purchase_order_items")
-    .select("*");
+  let itemsQuery = supabase.from("purchase_order_items").select("*");
+  if (ids) itemsQuery = itemsQuery.in("order_id", ids);
+  const [{ data: items, error: itemsError }, invoices] = await Promise.all([
+    itemsQuery,
+    getPurchaseOrderInvoices(ids),
+  ]);
 
   if (itemsError) throw new Error(itemsError.message);
 
@@ -107,7 +128,8 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
   return (orders ?? []).map((order) =>
     mapOrder(
       order,
-      mappedItems.filter((item) => item.orderId === order.id)
+      mappedItems.filter((item) => item.orderId === order.id),
+      invoices.filter((invoice) => invoice.orderId === order.id)
     )
   );
 }
@@ -119,21 +141,25 @@ export async function createPurchaseOrder(
     throw new Error("Agrega al menos un producto al pedido.");
   }
 
-  const { data: order, error } = await supabase
-    .from("purchase_orders")
-    .insert({
-      order_number: nextOrderNumber(),
-      supplier_id: input.supplierId,
-      supplier_name: input.supplierName,
-      status: "enviado",
-      expected_date: input.expectedDate || null,
-      notes: input.notes,
-      created_by: input.createdBy ?? "",
-    })
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
+  let order: OrderRow | null = null;
+  for (let attempt = 0; attempt < 4 && !order; attempt++) {
+    const { data, error } = await supabase
+      .from("purchase_orders")
+      .insert({
+        order_number: nextOrderNumber(),
+        supplier_id: input.supplierId,
+        supplier_name: input.supplierName,
+        status: "enviado",
+        expected_date: input.expectedDate || null,
+        notes: input.notes,
+        created_by: input.createdBy ?? "",
+      })
+      .select("*")
+      .single();
+    if (!error) order = data;
+    else if (error.code !== "23505") throw new Error(error.message);
+  }
+  if (!order) throw new Error("No se pudo asignar un folio al pedido. Intenta de nuevo.");
 
   const { data: items, error: itemsError } = await supabase
     .from("purchase_order_items")
@@ -149,7 +175,10 @@ export async function createPurchaseOrder(
     )
     .select("*");
 
-  if (itemsError) throw new Error(itemsError.message);
+  if (itemsError) {
+    await supabase.from("purchase_orders").delete().eq("id", order.id);
+    throw new Error(itemsError.message);
+  }
 
   return mapOrder(order, (items ?? []).map(mapItem));
 }
@@ -169,8 +198,7 @@ export async function receivePurchaseOrderLines(
   createdBy: string,
   destination?: { warehouseId?: string | null; locationId?: string | null }
 ): Promise<PurchaseOrder> {
-  const orders = await getPurchaseOrders();
-  const order = orders.find((item) => item.id === orderId);
+  const [order] = await getPurchaseOrders([orderId]);
   if (!order) throw new Error("Pedido no encontrado.");
   if (order.status === "cancelado") {
     throw new Error("No se puede recibir un pedido cancelado.");
@@ -184,7 +212,7 @@ export async function receivePurchaseOrderLines(
   for (const input of lines) {
     if (input.receiveNow <= 0) continue;
     const line = order.items.find((item) => item.id === input.lineId);
-    if (!line || !input.itemId) continue;
+    if (!line) continue;
 
     const pending = line.quantity - line.receivedQuantity;
     if (input.receiveNow > pending && !input.authorizeOverReceipt) {
@@ -193,7 +221,8 @@ export async function receivePurchaseOrderLines(
       );
     }
 
-    await applyStockMovement({
+    // Fuera de catálogo: se registra lo recibido pero no entra a inventario; almacén lo entrega directo.
+    if (input.itemId) await applyStockMovement({
       productId: input.itemId,
       movementType: "entrada",
       quantity: input.receiveNow,
@@ -245,7 +274,7 @@ export async function receivePurchaseOrderLines(
     .single();
 
   if (updateError) throw new Error(updateError.message);
-  return mapOrder(updated, mapped);
+  return mapOrder(updated, mapped, order.invoices);
 }
 
 export async function receivePurchaseOrder(
@@ -253,8 +282,7 @@ export async function receivePurchaseOrder(
   createdBy = "sistema",
   destination?: { warehouseId?: string | null; locationId?: string | null }
 ): Promise<PurchaseOrder> {
-  const orders = await getPurchaseOrders();
-  const order = orders.find((item) => item.id === orderId);
+  const [order] = await getPurchaseOrders([orderId]);
   if (!order) throw new Error("Pedido no encontrado.");
 
   return receivePurchaseOrderLines(

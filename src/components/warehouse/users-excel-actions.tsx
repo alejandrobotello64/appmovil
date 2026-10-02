@@ -12,6 +12,7 @@ import {
   type UserExcelRow,
 } from "@/lib/users/excel";
 import { bulkImportUsers } from "@/lib/users/bulk-import";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 type UsersExcelActionsProps = {
   users: ListedUserExcelSource[];
@@ -203,7 +204,7 @@ export function UsersExcelActions({
 
             {preview.length > 0 ? (
               <div className="overflow-x-auto rounded-xl border border-border">
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Usuario</th>
@@ -229,7 +230,7 @@ export function UsersExcelActions({
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </SortableTable>
                 {preview.length > 8 ? (
                   <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
                     Y {preview.length - 8} más...

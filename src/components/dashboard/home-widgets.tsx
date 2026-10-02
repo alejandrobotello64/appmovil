@@ -19,6 +19,7 @@ import type {
   MonthPoint,
 } from "@/lib/analytics/home-metrics";
 import { cn } from "@/lib/utils";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 // ---------- Formato ----------
 
@@ -395,7 +396,7 @@ export function ClientActivityTable({
   return (
     <div>
       <div className="-mx-5 overflow-x-auto">
-        <table className="w-full min-w-[720px] text-sm">
+        <SortableTable className="w-full min-w-[720px] text-sm">
           <thead className="border-y border-border bg-muted/40">
             <tr>
               <th className={cn(th, "text-left")}>Cliente</th>
@@ -450,7 +451,7 @@ export function ClientActivityTable({
               </tr>
             ))}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
       {rows.length > 8 ? (
         <button

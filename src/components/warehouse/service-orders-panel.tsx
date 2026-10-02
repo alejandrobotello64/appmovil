@@ -22,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SortableTable } from "@/components/ui/sortable-table";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -86,6 +87,7 @@ import {
   requisitionStatusLabel,
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
+import { downloadRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   CHECKLIST_RESULTS,
   FUNCTION_TEST_RESULTS,
@@ -2388,7 +2390,7 @@ export function ServiceOrdersPanel({
                     </p>
                     <ul className="space-y-1 text-xs text-muted-foreground">
                       {orderRequisitions.map((req) => (
-                        <li key={req.id} className="flex flex-wrap gap-2">
+                        <li key={req.id} className="flex flex-wrap items-center gap-2">
                           <span className="font-medium text-foreground">
                             {req.folio}
                           </span>
@@ -2397,6 +2399,25 @@ export function ServiceOrdersPanel({
                             {req.lines.length} línea(s) ·{" "}
                             {new Date(req.requestedAt).toLocaleString("es-MX")}
                           </span>
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 font-medium text-[#3B46A5] hover:underline"
+                            onClick={() =>
+                              void downloadRequisitionPdf(req, {
+                                printedBy: session
+                                  ? { username: session.username, fullName: session.fullName }
+                                  : undefined,
+                              }).catch((err) =>
+                                setError(
+                                  err instanceof Error
+                                    ? err.message
+                                    : "No se pudo generar el PDF de surtimiento."
+                                )
+                              )
+                            }
+                          >
+                            <FileDown className="size-3.5" /> Imprimir
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -2975,7 +2996,7 @@ export function ServiceOrdersPanel({
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-        <table className="min-w-full text-sm">
+        <SortableTable className="min-w-full text-sm">
           <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
             <tr>
               <th className="px-3 py-3">Cliente</th>
@@ -3125,7 +3146,7 @@ export function ServiceOrdersPanel({
               ))
             )}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
     </section>
   );

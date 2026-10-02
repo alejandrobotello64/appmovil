@@ -22,6 +22,15 @@ type DraftLine = {
   unit: string;
   quantity: number;
   unitPrice: number;
+  /** Vacío = usa el proveedor general del pedido. */
+  supplierId: string;
+};
+
+type SupplierGroup = {
+  key: string;
+  supplier: Supplier | null;
+  lines: DraftLine[];
+  total: number;
 };
 
 type CategoryFilter = SupplyCategoryId | "all";
@@ -103,6 +112,30 @@ export function NewOrderForm({
     [lines]
   );
   const lineCount = lines.reduce((sum, line) => sum + line.quantity, 0);
+  const generalSupplier = suppliers.find((item) => item.id === supplierId) ?? null;
+
+  const supplierGroups = useMemo(() => {
+    const groups = new Map<string, SupplierGroup>();
+    for (const line of lines) {
+      const key = line.supplierId || supplierId;
+      const group = groups.get(key) ?? {
+        key,
+        supplier: suppliers.find((item) => item.id === key) ?? null,
+        lines: [],
+        total: 0,
+      };
+      group.lines.push(line);
+      group.total += line.quantity * line.unitPrice;
+      groups.set(key, group);
+    }
+    return [...groups.values()];
+  }, [lines, supplierId, suppliers]);
+
+  function catalogSupplierFor(product: InventoryItem) {
+    const name = product.supplier?.trim().toLowerCase();
+    if (!name) return "";
+    return suppliers.find((item) => item.name.trim().toLowerCase() === name)?.id ?? "";
+  }
 
   function addProduct(product: InventoryItem) {
     const qty = Number.isFinite(quantity) ? Math.max(1, Math.floor(quantity)) : 1;
@@ -124,6 +157,7 @@ export function NewOrderForm({
           unit: product.unit,
           quantity: qty,
           unitPrice: product.unitPrice,
+          supplierId: catalogSupplierFor(product),
         },
       ];
     });
@@ -152,26 +186,60 @@ export function NewOrderForm({
     }
     setSubmitting(true);
     setError("");
+    const created: string[] = [];
+    const remaining = [...supplierGroups];
     try {
-      const supplier = suppliers.find((item) => item.id === supplierId);
       const session = getSession();
-      await createPurchaseOrder({
-        supplierId: supplier?.id ?? null,
-        supplierName: supplier?.name ?? "Sin proveedor",
-        expectedDate,
-        notes,
-        createdBy: session?.username ?? "",
-        items: lines,
-      });
+      while (remaining.length) {
+        const group = remaining[0];
+        const order = await createPurchaseOrder({
+          supplierId: group.supplier?.id ?? null,
+          supplierName: group.supplier?.name ?? "Sin proveedor",
+          expectedDate,
+          notes,
+          createdBy: session?.username ?? "",
+          items: group.lines,
+        });
+        created.push(order.orderNumber);
+        remaining.shift();
+        setLines((current) =>
+          current.filter((line) => !group.lines.some((done) => done.itemId === line.itemId))
+        );
+      }
       await onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear el pedido");
+      const message = err instanceof Error ? err.message : "No se pudo crear el pedido";
+      setError(
+        created.length
+          ? `Se crearon ${created.join(", ")}, pero falló el resto: ${message}. Las líneas que faltan siguen en el formulario.`
+          : message
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   const canCreate = lines.length > 0 && !submitting;
+  const createLabel =
+    supplierGroups.length > 1 ? `Crear ${supplierGroups.length} pedidos` : "Crear pedido";
+
+  function lineSupplierSelect(line: DraftLine, className: string) {
+    return (
+      <select
+        value={line.supplierId}
+        onChange={(event) => updateLine(line.itemId, { supplierId: event.target.value })}
+        aria-label={`Proveedor de ${line.itemName}`}
+        className={className}
+      >
+        <option value="">General ({generalSupplier?.name ?? "Sin proveedor"})</option>
+        {suppliers.map((supplier) => (
+          <option key={supplier.id} value={supplier.id}>
+            {supplier.name}
+          </option>
+        ))}
+      </select>
+    );
+  }
 
   return (
     <form
@@ -194,7 +262,7 @@ export function NewOrderForm({
             disabled={!canCreate}
             className="h-9 border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90 disabled:opacity-40"
           >
-            {submitting ? "Creando..." : "Crear pedido"}
+            {submitting ? "Creando..." : createLabel}
           </Button>
         </div>
       </div>
@@ -209,7 +277,7 @@ export function NewOrderForm({
         <section className="min-h-0 space-y-4 overflow-y-auto border-b border-border p-4 sm:p-5 lg:border-r lg:border-b-0">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Proveedor</span>
+              <span className="text-sm font-medium">Proveedor general</span>
               {suppliers.length === 0 ? (
                 <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-200">
                   No hay proveedores activos. Puedes crear el pedido sin
@@ -236,6 +304,12 @@ export function NewOrderForm({
                   ))}
                 </select>
               )}
+              {suppliers.length > 0 ? (
+                <span className="block text-xs text-muted-foreground">
+                  Cada línea puede ir con otro proveedor; se genera una orden de
+                  compra por proveedor.
+                </span>
+              ) : null}
             </label>
             <label className="space-y-1.5">
               <span className="text-sm font-medium">Fecha esperada</span>
@@ -496,6 +570,15 @@ export function NewOrderForm({
                         className="h-8 w-28 rounded-lg border border-input bg-background px-2 text-right text-sm text-foreground outline-none"
                       />
                     </label>
+                    {suppliers.length > 0 ? (
+                      <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                        Proveedor
+                        {lineSupplierSelect(
+                          line,
+                          "h-8 min-w-0 flex-1 rounded-lg border border-input bg-background px-2 text-sm text-foreground outline-none"
+                        )}
+                      </div>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -505,6 +588,9 @@ export function NewOrderForm({
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Producto</th>
+                      {suppliers.length > 0 ? (
+                        <th className="px-3 py-2 font-medium">Proveedor</th>
+                      ) : null}
                       <th className="px-3 py-2 font-medium">Cant.</th>
                       <th className="px-3 py-2 font-medium">P. unit.</th>
                       <th className="px-3 py-2 font-medium">Importe</th>
@@ -522,6 +608,14 @@ export function NewOrderForm({
                             {line.itemSku}
                           </p>
                         </td>
+                        {suppliers.length > 0 ? (
+                          <td className="px-3 py-2">
+                            {lineSupplierSelect(
+                              line,
+                              "h-9 w-40 rounded-lg border border-input bg-background px-2 text-sm outline-none"
+                            )}
+                          </td>
+                        ) : null}
                         <td className="px-3 py-2">
                           <input
                             type="number"
@@ -576,6 +670,24 @@ export function NewOrderForm({
             </div>
           )}
 
+          {supplierGroups.length > 1 ? (
+            <div className="mt-3 shrink-0 rounded-xl border border-[#3B46A5]/30 bg-[#3B46A5]/5 px-3 py-2 text-sm">
+              <p className="font-medium">
+                Se generarán {supplierGroups.length} órdenes de compra, una por proveedor:
+              </p>
+              <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                {supplierGroups.map((group) => (
+                  <li key={group.key} className="flex justify-between gap-3">
+                    <span className="truncate">
+                      {group.supplier?.name ?? "Sin proveedor"} · {group.lines.length} SKU
+                    </span>
+                    <span className="tabular-nums">{formatCurrency(group.total)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           <div className="sticky bottom-0 mt-4 flex shrink-0 flex-col gap-3 border-t border-border bg-card pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs text-muted-foreground">Total estimado</p>
@@ -597,7 +709,7 @@ export function NewOrderForm({
                 disabled={!canCreate}
                 className="h-10 flex-1 border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90 disabled:opacity-40 sm:min-w-40 sm:flex-none"
               >
-                {submitting ? "Creando..." : "Crear pedido"}
+                {submitting ? "Creando..." : createLabel}
               </Button>
             </div>
           </div>
