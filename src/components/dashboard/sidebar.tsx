@@ -81,6 +81,7 @@ const TAB_ICONS = {
   salidas: ArrowUpFromLine,
   apartados: Bookmark,
   solicitudes: ClipboardCheck,
+  solicitudes_compra: ShoppingBag,
   movimientos: History,
   kardex: BookOpen,
   pedidos: ShoppingCart,
@@ -347,7 +348,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 {WAREHOUSE_TABS.filter((tab) =>
                   canView(tab.id as WarehouseModule)
                 ).map((tab) => {
-                  const Icon = TAB_ICONS[tab.id];
+                  const Icon = TAB_ICONS[tab.id] ?? LayoutDashboard;
                   const isActive =
                     inWarehouse &&
                     (activeWarehouseTab === tab.id ||
