@@ -15,7 +15,18 @@ npm run dev               # http://127.0.0.1:43145
 
 Usuarios iniciales (seed): `alexbazz64@gmail.com` / `admin123` y `masservice.lcs@gmail.com` / `mas101012`.
 
-El catálogo real (más de 1500 SKU) está en `supabase/seed_catalog.sql` y se carga con `npm run db:local`. Para volver a volcar la base local al repo: `npm run db:export-catalog`.
+El catálogo y el resto de datos de negocio viven en `supabase/seed_catalog.sql` y `supabase/seed_cloud_snapshot.sql`. `npm run db:local` los carga después de las migraciones.
+
+Para volver a copiar el proyecto de Supabase en la nube sobre Postgres local (conserva los logins de `app_users`):
+
+```bash
+# En .env.local:
+# CLOUD_SUPABASE_URL=https://iqfareiwiadqsauejaaf.supabase.co
+# CLOUD_SUPABASE_ANON_KEY=<anon public>
+npm run db:sync-cloud
+```
+
+Las imágenes siguen en Storage de la nube. Para congelar el catálogo en el repo después de sincronizar: `npm run db:export-catalog`.
 
 ## Conectar el proyecto de Supabase en la nube
 
@@ -70,7 +81,8 @@ Para publicar el código actual: `git push origin main` en GitHub (`alejandrobot
 | Script | Qué hace |
 | --- | --- |
 | `npm run dev` | Next.js en el puerto 43145 |
-| `npm run db:local` | Crea la base `mas`, aplica migraciones, usuarios y el catálogo |
+| `npm run db:local` | Crea la base `mas`, aplica migraciones, usuarios, catálogo y el snapshot de la nube |
+| `npm run db:sync-cloud` | Copia el snapshot vivo de Supabase (nube) sobre Postgres local |
 | `npm run db:export-catalog` | Vuelca `inventory_items` local a `supabase/seed_catalog.sql` |
 | `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
 | `npm run db:push` | Empuja migraciones al proyecto linkeado |
