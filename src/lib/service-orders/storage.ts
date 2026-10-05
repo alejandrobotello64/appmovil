@@ -151,7 +151,9 @@ async function resolveRelatedFields(input: ServiceOrderInput) {
   if (input.equipmentId) {
     const { data: equipment, error } = await db
       .from("client_equipment")
-      .select("id, client_id, name, brand, model, serial_number, location")
+      .select(
+        "id, client_id, name, brand, model, serial_number, location, contract_id"
+      )
       .eq("id", input.equipmentId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -165,6 +167,20 @@ async function resolveRelatedFields(input: ServiceOrderInput) {
       next.equipmentModel = String(equipment.model ?? "");
       next.equipmentSerial = String(equipment.serial_number ?? "");
       next.equipmentLocation = String(equipment.location ?? "");
+      const contractUnset =
+        input.contractId === undefined && input.contractNumber === undefined;
+      if (contractUnset && equipment.contract_id) {
+        const { data: contract, error: contractError } = await db
+          .from("service_contracts")
+          .select("id, contract_number")
+          .eq("id", equipment.contract_id)
+          .maybeSingle();
+        if (contractError) throw new Error(contractError.message);
+        if (contract) {
+          next.contractId = String(contract.id);
+          next.contractNumber = String(contract.contract_number ?? "");
+        }
+      }
     }
   }
 
@@ -402,6 +418,8 @@ function mapOrder(
     equipmentModel: String(row.equipment_model ?? ""),
     equipmentSerial: String(row.equipment_serial ?? ""),
     equipmentLocation: String(row.equipment_location ?? ""),
+    contractId: row.contract_id ? String(row.contract_id) : null,
+    contractNumber: String(row.contract_number ?? ""),
     deliveredBy: String(row.delivered_by ?? ""),
     technician: String(row.technician ?? ""),
     advisor: String(row.advisor ?? ""),
@@ -528,6 +546,8 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
     equipment_model: (input.equipmentModel ?? "").trim(),
     equipment_serial: (input.equipmentSerial ?? "").trim(),
     equipment_location: (input.equipmentLocation ?? "").trim(),
+    contract_id: input.contractId || null,
+    contract_number: (input.contractNumber ?? "").trim(),
     delivered_by: (input.deliveredBy ?? "").trim(),
     technician: (input.technician ?? "").trim(),
     advisor: (input.advisor ?? "").trim(),
@@ -552,9 +572,15 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
   };
 }
 
-function withoutNextServiceColumn<T extends Record<string, unknown>>(payload: T) {
+function withoutMissingColumns<T extends Record<string, unknown>>(
+  payload: T,
+  error: { message?: string; details?: string; hint?: string }
+) {
+  const text = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
   const next = { ...payload };
-  delete next.next_service_at;
+  if (text.includes("contract_id")) delete next.contract_id;
+  if (text.includes("contract_number")) delete next.contract_number;
+  if (text.includes("next_service")) delete next.next_service_at;
   return next;
 }
 
@@ -1115,17 +1141,15 @@ export async function createServiceOrder(
       (kind === "servicio" ? new Date().toISOString() : null),
   };
 
+  let insertRow: Record<string, unknown> = insertPayload;
   let { data, error } = await db
     .from("service_orders")
-    .insert(insertPayload)
+    .insert(insertRow)
     .select("*")
     .single();
-  if (error && isMissingColumnError(error)) {
-    const retry = await db
-      .from("service_orders")
-      .insert(withoutNextServiceColumn(insertPayload))
-      .select("*")
-      .single();
+  for (let attempt = 0; error && isMissingColumnError(error) && attempt < 3; attempt += 1) {
+    insertRow = withoutMissingColumns(insertRow, error);
+    const retry = await db.from("service_orders").insert(insertRow).select("*").single();
     data = retry.data;
     error = retry.error;
   }
@@ -1196,15 +1220,11 @@ export async function updateServiceOrder(
     ),
     updated_at: new Date().toISOString(),
   };
-  let { error } = await db
-    .from("service_orders")
-    .update(updatePayload)
-    .eq("id", id);
-  if (error && isMissingColumnError(error)) {
-    const retry = await db
-      .from("service_orders")
-      .update(withoutNextServiceColumn(updatePayload))
-      .eq("id", id);
+  let updateRow: Record<string, unknown> = updatePayload;
+  let { error } = await db.from("service_orders").update(updateRow).eq("id", id);
+  for (let attempt = 0; error && isMissingColumnError(error) && attempt < 3; attempt += 1) {
+    updateRow = withoutMissingColumns(updateRow, error);
+    const retry = await db.from("service_orders").update(updateRow).eq("id", id);
     error = retry.error;
   }
   if (error) throw new Error(error.message);

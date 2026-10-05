@@ -56,6 +56,7 @@ import {
 } from "@/lib/tenders/types";
 import { cn } from "@/lib/utils";
 import { SortableTable } from "@/components/ui/sortable-table";
+import { ContractsPanel } from "@/components/warehouse/contracts-panel";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -117,6 +118,7 @@ export function TendersPanel() {
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("abiertas");
+  const [section, setSection] = useState<"licitaciones" | "contratos">("licitaciones");
   const [view, setView] = useState<"tablero" | "lista">("tablero");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -425,6 +427,35 @@ export function TendersPanel() {
 
   return (
     <section className="space-y-4">
+      <div className="flex w-fit rounded-lg border border-border bg-card p-1">
+        <button
+          type="button"
+          onClick={() => setSection("licitaciones")}
+          className={cn(
+            "rounded-md px-3 py-1.5 text-sm font-medium",
+            section === "licitaciones"
+              ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+              : "text-muted-foreground"
+          )}
+        >
+          Licitaciones
+        </button>
+        <button
+          type="button"
+          onClick={() => setSection("contratos")}
+          className={cn(
+            "rounded-md px-3 py-1.5 text-sm font-medium",
+            section === "contratos"
+              ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+              : "text-muted-foreground"
+          )}
+        >
+          Contratos
+        </button>
+      </div>
+      {section === "contratos" ? <ContractsPanel /> : null}
+      {section === "licitaciones" ? (
+      <>
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -1418,6 +1449,8 @@ export function TendersPanel() {
             </div>
           </div>
         </section>
+      ) : null}
+      </>
       ) : null}
     </section>
   );

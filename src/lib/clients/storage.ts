@@ -33,6 +33,17 @@ function mapClient(row: Record<string, unknown>): Client {
   };
 }
 
+function withoutMissingContract<T extends Record<string, unknown>>(
+  payload: T,
+  error: { message?: string; details?: string; hint?: string }
+) {
+  const text = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+  if (!text.includes("contract_id")) return payload;
+  const next = { ...payload };
+  delete next.contract_id;
+  return next;
+}
+
 function mapEquipment(row: Record<string, unknown>): ClientEquipment {
   return {
     id: String(row.id),
@@ -46,6 +57,7 @@ function mapEquipment(row: Record<string, unknown>): ClientEquipment {
     equipmentKind: String(row.equipment_kind ?? "general"),
     installedAt: row.installed_at ? String(row.installed_at).slice(0, 10) : "",
     notes: String(row.notes ?? ""),
+    contractId: row.contract_id ? String(row.contract_id) : null,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -163,22 +175,31 @@ export async function getClientEquipment(
 export async function createClientEquipment(
   input: ClientEquipmentInput
 ): Promise<ClientEquipment> {
-  const { data, error } = await db
-    .from("client_equipment")
-    .insert({
-      client_id: input.clientId,
-      name: input.name.trim(),
-      brand: input.brand.trim(),
-      model: input.model.trim(),
-      serial_number: input.serialNumber.trim(),
-      location: input.location.trim(),
-      status: input.status,
-      equipment_kind: (input.equipmentKind ?? "general").trim() || "general",
-      installed_at: input.installedAt || null,
-      notes: input.notes.trim(),
-    })
-    .select("*")
-    .single();
+  const row = {
+    client_id: input.clientId,
+    name: input.name.trim(),
+    brand: input.brand.trim(),
+    model: input.model.trim(),
+    serial_number: input.serialNumber.trim(),
+    location: input.location.trim(),
+    status: input.status,
+    equipment_kind: (input.equipmentKind ?? "general").trim() || "general",
+    installed_at: input.installedAt || null,
+    notes: input.notes.trim(),
+    contract_id: input.contractId || null,
+  };
+  let { data, error } = await db.from("client_equipment").insert(row).select("*").single();
+  if (error && String(error.code ?? "") !== "23505") {
+    const retry = await db
+      .from("client_equipment")
+      .insert(withoutMissingContract(row, error))
+      .select("*")
+      .single();
+    if (!retry.error) {
+      data = retry.data;
+      error = null;
+    }
+  }
   if (error) throw new Error(error.message);
   return mapEquipment(data);
 }
@@ -187,24 +208,38 @@ export async function updateClientEquipment(
   id: string,
   input: ClientEquipmentInput
 ): Promise<ClientEquipment> {
-  const { data, error } = await db
+  const row = {
+    client_id: input.clientId,
+    name: input.name.trim(),
+    brand: input.brand.trim(),
+    model: input.model.trim(),
+    serial_number: input.serialNumber.trim(),
+    location: input.location.trim(),
+    status: input.status,
+    equipment_kind: (input.equipmentKind ?? "general").trim() || "general",
+    installed_at: input.installedAt || null,
+    notes: input.notes.trim(),
+    contract_id: input.contractId || null,
+    updated_at: new Date().toISOString(),
+  };
+  let { data, error } = await db
     .from("client_equipment")
-    .update({
-      client_id: input.clientId,
-      name: input.name.trim(),
-      brand: input.brand.trim(),
-      model: input.model.trim(),
-      serial_number: input.serialNumber.trim(),
-      location: input.location.trim(),
-      status: input.status,
-      equipment_kind: (input.equipmentKind ?? "general").trim() || "general",
-      installed_at: input.installedAt || null,
-      notes: input.notes.trim(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(row)
     .eq("id", id)
     .select("*")
     .single();
+  if (error) {
+    const retry = await db
+      .from("client_equipment")
+      .update(withoutMissingContract(row, error))
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (!retry.error) {
+      data = retry.data;
+      error = null;
+    }
+  }
   if (error) throw new Error(error.message);
   return mapEquipment(data);
 }

@@ -354,6 +354,7 @@ function drawClientEquipment(doc: jsPDF, order: ServiceOrder, y: number) {
       undefined,
     order.equipmentSerial ? `Serie: ${order.equipmentSerial}` : undefined,
     order.equipmentLocation ? `Ubicación: ${order.equipmentLocation}` : undefined,
+    order.contractNumber ? `Contrato: ${order.contractNumber}` : undefined,
   ].filter(Boolean) as string[];
 
   const n = Math.max(left.length, right.length, 1);

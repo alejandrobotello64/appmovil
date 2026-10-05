@@ -27,6 +27,8 @@ import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { getClientEquipment, getClients } from "@/lib/clients/storage";
+import { getServiceContracts } from "@/lib/contracts/storage";
+import { contractLabel, type ServiceContract } from "@/lib/contracts/types";
 import type { Client, ClientEquipment } from "@/lib/clients/types";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
@@ -182,6 +184,8 @@ function emptyForm(): ServiceOrderInput {
     equipmentModel: "",
     equipmentSerial: "",
     equipmentLocation: "",
+    contractId: null,
+    contractNumber: "",
     deliveredBy: "",
     technician: "",
     advisor: "",
@@ -232,6 +236,7 @@ export function ServiceOrdersPanel({
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [equipment, setEquipment] = useState<ClientEquipment[]>([]);
+  const [contracts, setContracts] = useState<ServiceContract[]>([]);
   const [instrumentsCatalog, setInstrumentsCatalog] = useState<
     BiomedicalInstrument[]
   >([]);
@@ -293,7 +298,7 @@ export function ServiceOrdersPanel({
     setLoading(true);
     setError("");
     try {
-      const [list, tpls, clientList, inventory, instruments, staffList] =
+      const [list, tpls, clientList, inventory, instruments, staffList, contractList] =
         await Promise.all([
           getServiceOrders(),
           getChecklistTemplates(),
@@ -301,10 +306,12 @@ export function ServiceOrdersPanel({
           getInventoryItems({ kind: "producto" }),
           getBiomedicalInstruments(),
           listStaffMembers().catch(() => [] as StaffMember[]),
+          getServiceContracts().catch(() => [] as ServiceContract[]),
         ]);
       setOrders(list);
       setTemplates(tpls);
       setClients(clientList.filter((c) => c.isActive));
+      setContracts(contractList);
       setProducts(inventory);
       setInstrumentsCatalog(instruments);
       setStaff(staffList);
@@ -378,6 +385,7 @@ export function ServiceOrdersPanel({
         order.clientName,
         order.equipmentName,
         order.equipmentSerial,
+        order.contractNumber,
         order.technician,
         order.contactPhone,
       ]
@@ -469,6 +477,8 @@ export function ServiceOrdersPanel({
       equipmentModel: order.equipmentModel,
       equipmentSerial: order.equipmentSerial,
       equipmentLocation: order.equipmentLocation,
+      contractId: order.contractId,
+      contractNumber: order.contractNumber,
       deliveredBy: order.deliveredBy,
       technician: order.technician,
       advisor: order.advisor,
@@ -992,11 +1002,25 @@ export function ServiceOrdersPanel({
       equipmentModel: "",
       equipmentSerial: "",
       equipmentLocation: "",
+      contractId: null,
+      contractNumber: "",
+    }));
+  }
+
+  function applyContract(contractId: string) {
+    const contract = contracts.find((item) => item.id === contractId);
+    setForm((current) => ({
+      ...current,
+      contractId: contract?.id ?? null,
+      contractNumber: contract?.contractNumber ?? "",
     }));
   }
 
   function pickEquipment(equipmentId: string) {
     const eq = equipment.find((e) => e.id === equipmentId);
+    const contract = eq?.contractId
+      ? contracts.find((item) => item.id === eq.contractId)
+      : null;
     setForm((f) => ({
       ...f,
       equipmentId: equipmentId || null,
@@ -1005,6 +1029,8 @@ export function ServiceOrdersPanel({
       equipmentModel: eq?.model ?? "",
       equipmentSerial: eq?.serialNumber ?? "",
       equipmentLocation: eq?.location ?? "",
+      contractId: contract?.id ?? null,
+      contractNumber: contract?.contractNumber ?? "",
     }));
   }
 
@@ -1075,6 +1101,21 @@ export function ServiceOrdersPanel({
               {equipment.map((eq) => (
                 <option key={eq.id} value={eq.id}>
                   {eq.name} · {eq.brand} {eq.model} · {eq.serialNumber}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block text-muted-foreground">Contrato (opcional)</span>
+            <select
+              className={fieldClass}
+              value={form.contractId ?? ""}
+              onChange={(e) => applyContract(e.target.value)}
+            >
+              <option value="">Sin contrato</option>
+              {contracts.map((contract) => (
+                <option key={contract.id} value={contract.id}>
+                  {contractLabel(contract)}
                 </option>
               ))}
             </select>
@@ -1335,6 +1376,7 @@ export function ServiceOrdersPanel({
                 .filter(Boolean)
                 .join(" · ")}
               {selected.equipmentSerial ? ` · Serie ${selected.equipmentSerial}` : ""}
+              {selected.contractNumber ? ` · Contrato ${selected.contractNumber}` : ""}
             </p>
             {selected.linkedEquipment.length > 0 ? (
               <p className="mt-1 text-xs text-muted-foreground">
@@ -1525,6 +1567,22 @@ export function ServiceOrdersPanel({
                     {SERVICE_TYPES.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm sm:col-span-2">
+                  <span className="mb-1 block text-muted-foreground">Contrato (opcional)</span>
+                  <select
+                    className={fieldClass}
+                    value={form.contractId ?? ""}
+                    disabled={!canEdit}
+                    onChange={(e) => applyContract(e.target.value)}
+                  >
+                    <option value="">Sin contrato</option>
+                    {contracts.map((contract) => (
+                      <option key={contract.id} value={contract.id}>
+                        {contractLabel(contract)}
                       </option>
                     ))}
                   </select>
@@ -3037,6 +3095,7 @@ export function ServiceOrdersPanel({
                       {[order.equipmentBrand, order.equipmentModel, order.equipmentSerial]
                         .filter(Boolean)
                         .join(" · ") || "Sin datos"}
+                      {order.contractNumber ? ` · Contrato ${order.contractNumber}` : ""}
                     </p>
                   </td>
                   <td className="px-3 py-3 text-xs">

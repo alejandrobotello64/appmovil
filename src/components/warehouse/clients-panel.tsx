@@ -58,6 +58,8 @@ import {
   type ClientServiceInput,
   type ClientServiceType,
 } from "@/lib/clients/types";
+import { getServiceContracts } from "@/lib/contracts/storage";
+import { contractLabel, type ServiceContract } from "@/lib/contracts/types";
 import { MEXICO_STATES } from "@/lib/location/mexico-states";
 import { listServiceOrderSummaries } from "@/lib/service-orders/storage";
 import {
@@ -107,6 +109,7 @@ const EMPTY_EQUIPMENT: ClientEquipmentInput = {
   equipmentKind: "general",
   installedAt: "",
   notes: "",
+  contractId: null,
 };
 
 const EMPTY_SERVICE: Omit<ClientServiceInput, "createdBy"> = {
@@ -131,6 +134,7 @@ export function ClientsPanel() {
   const [clients, setClients] = useState<Client[]>([]);
   const [contacts, setContacts] = useState<ClientContact[]>([]);
   const [equipment, setEquipment] = useState<ClientEquipment[]>([]);
+  const [contracts, setContracts] = useState<ServiceContract[]>([]);
   const [services, setServices] = useState<ClientService[]>([]);
   const [orderSummaries, setOrderSummaries] = useState<ServiceOrderSummary[]>(
     []
@@ -166,17 +170,19 @@ export function ClientsPanel() {
     setLoading(true);
     setError("");
     try {
-      const [clientRows, contactRows, equipmentRows, serviceRows, orderRows] =
+      const [clientRows, contactRows, equipmentRows, serviceRows, orderRows, contractRows] =
         await Promise.all([
           getClients(),
           getClientContacts(),
           getClientEquipment(),
           getClientServices(),
           listServiceOrderSummaries().catch(() => [] as ServiceOrderSummary[]),
+          getServiceContracts().catch(() => [] as ServiceContract[]),
         ]);
       setClients(clientRows);
       setContacts(contactRows);
       setEquipment(equipmentRows);
+      setContracts(contractRows);
       setServices(serviceRows);
       setOrderSummaries(orderRows);
       setFichaClient((current) =>
@@ -235,6 +241,7 @@ export function ClientsPanel() {
       equipmentKind: editingEquipment.equipmentKind || "general",
       installedAt: editingEquipment.installedAt,
       notes: editingEquipment.notes,
+      contractId: editingEquipment.contractId,
     });
   }, [editingEquipment, filterClientId, clients]);
 
@@ -243,6 +250,12 @@ export function ClientsPanel() {
     for (const client of clients) map.set(client.id, client.name);
     return map;
   }, [clients]);
+
+  const contractById = useMemo(() => {
+    const map = new Map<string, ServiceContract>();
+    for (const contract of contracts) map.set(contract.id, contract);
+    return map;
+  }, [contracts]);
 
   const equipmentByClient = useMemo(() => {
     if (!filterClientId) return equipment;
@@ -280,6 +293,9 @@ export function ClientsPanel() {
           item.serialNumber,
           item.location,
           clientNameById.get(item.clientId) ?? "",
+          item.contractId
+            ? contractById.get(item.contractId)?.contractNumber ?? ""
+            : "",
         ]
           .join(" ")
           .toLowerCase()
@@ -287,7 +303,7 @@ export function ClientsPanel() {
       );
     }
     return rows;
-  }, [equipmentByClient, search, clientNameById]);
+  }, [equipmentByClient, search, clientNameById, contractById]);
 
   const filteredServices = useMemo(() => {
     let rows = services;
@@ -1074,6 +1090,27 @@ export function ClientsPanel() {
               ))}
             </select>
           </label>
+          <label className="space-y-1.5 sm:col-span-2">
+            <span className="text-sm font-medium">Contrato vigente (opcional)</span>
+            <select
+              value={equipmentForm.contractId ?? ""}
+              onChange={(e) =>
+                setEquipmentForm((prev) => ({
+                  ...prev,
+                  contractId: e.target.value || null,
+                }))
+              }
+              className={fieldClass}
+            >
+              <option value="">Sin contrato</option>
+              {contracts.map((contract) => (
+                <option key={contract.id} value={contract.id}>
+                  {contractLabel(contract)}
+                  {contract.isActive ? "" : " · inactivo"}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Fecha de instalación</span>
             <input
@@ -1738,6 +1775,10 @@ export function ClientsPanel() {
                 title: item.name,
                 subtitle: `${clientNameById.get(item.clientId) ?? "Cliente"} · ${
                   item.serialNumber || "Sin serie"
+                }${
+                  item.contractId && contractById.get(item.contractId)
+                    ? ` · Contrato ${contractById.get(item.contractId)?.contractNumber}`
+                    : ""
                 }`,
                 badge: (
                   <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs text-sky-800 dark:text-sky-200">
@@ -1750,6 +1791,12 @@ export function ClientsPanel() {
                     value: [item.brand, item.model].filter(Boolean).join(" ") || "—",
                   },
                   { label: "Ubicación", value: item.location || "—" },
+                  {
+                    label: "Contrato",
+                    value: item.contractId
+                      ? contractById.get(item.contractId)?.contractNumber || "—"
+                      : "Sin contrato",
+                  },
                 ],
                 onSelect: () => openEquipmentHistory(item),
                 actions: (
@@ -1798,6 +1845,7 @@ export function ClientsPanel() {
                     <th className="px-3 py-2 font-medium">Equipo</th>
                     <th className="px-3 py-2 font-medium">Cliente</th>
                     <th className="px-3 py-2 font-medium">Serie</th>
+                    <th className="px-3 py-2 font-medium">Contrato</th>
                     <th className="px-3 py-2 font-medium">Estado</th>
                     <th className="px-3 py-2 font-medium">Ubicación</th>
                     <th className="px-3 py-2 font-medium">Acciones</th>
@@ -1807,7 +1855,7 @@ export function ClientsPanel() {
                   {filteredEquipment.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-3 py-8 text-center text-muted-foreground"
                       >
                         No hay equipos de levantamiento.
@@ -1828,6 +1876,11 @@ export function ClientsPanel() {
                         </td>
                         <td className="px-3 py-2">
                           {item.serialNumber || "—"}
+                        </td>
+                        <td className="px-3 py-2">
+                          {item.contractId
+                            ? contractById.get(item.contractId)?.contractNumber || "—"
+                            : "—"}
                         </td>
                         <td className="px-3 py-2">
                           {clientEquipmentStatusLabel(item.status)}

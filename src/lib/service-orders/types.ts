@@ -322,6 +322,8 @@ export type ServiceOrder = {
   equipmentModel: string;
   equipmentSerial: string;
   equipmentLocation: string;
+  contractId: string | null;
+  contractNumber: string;
   deliveredBy: string;
   technician: string;
   advisor: string;
@@ -393,6 +395,8 @@ export type ServiceOrderInput = {
   equipmentModel?: string;
   equipmentSerial?: string;
   equipmentLocation?: string;
+  contractId?: string | null;
+  contractNumber?: string;
   deliveredBy?: string;
   technician?: string;
   advisor?: string;

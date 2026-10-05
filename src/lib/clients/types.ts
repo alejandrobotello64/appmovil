@@ -49,6 +49,7 @@ export type ClientEquipment = {
   equipmentKind: string;
   installedAt: string;
   notes: string;
+  contractId: string | null;
   createdAt: string;
   updatedAt: string;
 };
