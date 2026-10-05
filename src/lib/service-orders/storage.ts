@@ -7,8 +7,13 @@ import {
 } from "@/lib/clients/storage";
 import type { ClientServiceType } from "@/lib/clients/types";
 import {
+  DEFAULT_SERVICE_PRICING,
+  clampPercent,
   computeServiceTotals,
+  normalizeExtraCharges,
+  pricingFromOrder,
   serviceOrderStatusLabel,
+  type ServicePricing,
   type ChecklistResult,
   type ChecklistTemplate,
   type ChecklistTemplatePoint,
@@ -271,6 +276,7 @@ function mapLine(
     quantity: Number(row.quantity ?? 0),
     unit: String(row.unit ?? "pza"),
     unitPrice: Number(row.unit_price ?? 0),
+    discountPercent: Number(row.discount_percent ?? 0),
     lineStatus: String(row.line_status ?? "pendiente") as ServiceLineStatus,
     sortOrder: Number(row.sort_order ?? 0),
     notes: String(row.notes ?? ""),
@@ -431,6 +437,13 @@ function mapOrder(
     taxAmount: Number(row.tax_amount ?? 0),
     discount: Number(row.discount ?? 0),
     total: Number(row.total ?? 0),
+    discountPercent: Number(row.discount_percent ?? 0),
+    taxExempt: Boolean(row.tax_exempt),
+    retentionIsrPercent: Number(row.retention_isr_percent ?? 0),
+    retentionIvaPercent: Number(row.retention_iva_percent ?? 0),
+    retentionAmount: Number(row.retention_amount ?? 0),
+    extraCharges: normalizeExtraCharges(row.extra_charges),
+    showPricesInPdf: row.show_prices_in_pdf !== false,
     calibrationTemplateId: row.calibration_template_id
       ? String(row.calibration_template_id)
       : null,
@@ -500,18 +513,52 @@ function linePayload(
     quantity: Number(line.quantity),
     unit: (line.unit ?? "pza").trim() || "pza",
     unit_price: Number(line.unitPrice),
+    discount_percent: clampPercent(line.discountPercent),
     line_status: line.lineStatus ?? "pendiente",
     sort_order: index,
     notes: (line.notes ?? "").trim(),
   };
 }
 
-function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput[]) {
-  const totals = computeServiceTotals(
-    lines,
-    input.discount ?? 0,
-    input.taxRate ?? 16
-  );
+/** Fields omitted from the input keep their value from `base`. */
+function resolvePricing(base: ServicePricing, input: ServiceOrderInput): ServicePricing {
+  return {
+    taxRate: input.taxRate ?? base.taxRate,
+    taxExempt: input.taxExempt ?? base.taxExempt,
+    discount: input.discount ?? base.discount,
+    discountPercent: input.discountPercent ?? base.discountPercent,
+    retentionIsrPercent: input.retentionIsrPercent ?? base.retentionIsrPercent,
+    retentionIvaPercent: input.retentionIvaPercent ?? base.retentionIvaPercent,
+    extraCharges: input.extraCharges ?? base.extraCharges,
+    showPricesInPdf: input.showPricesInPdf ?? base.showPricesInPdf,
+  };
+}
+
+function pricingPayload(lines: ServiceOrderLineInput[], pricing: ServicePricing) {
+  const totals = computeServiceTotals(lines, pricing);
+  return {
+    tax_rate: totals.taxRate,
+    tax_exempt: pricing.taxExempt,
+    discount_percent: totals.discountPercent,
+    discount: totals.discountPercent > 0 ? totals.discountAmount : Math.max(0, Number(pricing.discount) || 0),
+    retention_isr_percent: totals.retentionIsrPercent,
+    retention_iva_percent: totals.retentionIvaPercent,
+    retention_amount: totals.retentionAmount,
+    extra_charges: normalizeExtraCharges(pricing.extraCharges).filter(
+      (charge) => charge.label || charge.amount > 0
+    ),
+    show_prices_in_pdf: pricing.showPricesInPdf,
+    subtotal: totals.subtotal,
+    tax_amount: totals.taxAmount,
+    total: totals.total,
+  };
+}
+
+function payloadFromInput(
+  input: ServiceOrderInput,
+  lines: ServiceOrderLineInput[],
+  pricing: ServicePricing
+) {
   return {
     order_kind: input.orderKind ?? "servicio",
     status: input.status ?? "borrador",
@@ -544,11 +591,7 @@ function payloadFromInput(input: ServiceOrderInput, lines: ServiceOrderLineInput
     under_warranty: Boolean(input.underWarranty),
     authorized: Boolean(input.authorized),
     closed: Boolean(input.closed),
-    tax_rate: input.taxRate ?? 16,
-    discount: input.discount ?? 0,
-    subtotal: totals.subtotal,
-    tax_amount: totals.taxAmount,
-    total: totals.total,
+    ...pricingPayload(lines, pricing),
   };
 }
 
@@ -1108,7 +1151,7 @@ export async function createServiceOrder(
 
   const insertPayload = {
     folio,
-    ...payloadFromInput(input, lines),
+    ...payloadFromInput(input, lines, resolvePricing(DEFAULT_SERVICE_PRICING, input)),
     created_by: createdBy,
     reception_at:
       isoOrNull(input.receptionAt) ??
@@ -1185,14 +1228,17 @@ export async function updateServiceOrder(
     quantity: line.quantity,
     unit: line.unit,
     unitPrice: line.unitPrice,
+    discountPercent: line.discountPercent,
     lineStatus: line.lineStatus,
     notes: line.notes,
   }));
 
+  const pricing = resolvePricing(pricingFromOrder(current), input);
   const updatePayload = {
     ...payloadFromInput(
       { ...input, orderKind: input.orderKind ?? current.orderKind },
-      lines
+      lines,
+      pricing
     ),
     updated_at: new Date().toISOString(),
   };
@@ -1210,7 +1256,7 @@ export async function updateServiceOrder(
   if (error) throw new Error(error.message);
 
   if (input.lines) {
-    await replaceServiceOrderLines(id, input.lines);
+    await replaceServiceOrderLines(id, input.lines, pricing);
   }
 
   if (
@@ -1337,11 +1383,37 @@ export async function deleteServiceOrder(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Replaces the order lines and recalculates its totals. When `pricing` is
+ * omitted the order keeps its current IVA, discounts, retentions and charges.
+ */
 export async function replaceServiceOrderLines(
   orderId: string,
-  lines: ServiceOrderLineInput[]
+  lines: ServiceOrderLineInput[],
+  pricing?: ServicePricing
 ): Promise<void> {
   await ensureOrderUnlocked(orderId);
+  let resolvedPricing = pricing;
+  if (!resolvedPricing) {
+    const { data: row, error: rowError } = await db
+      .from("service_orders")
+      .select(
+        "tax_rate, tax_exempt, discount, discount_percent, retention_isr_percent, retention_iva_percent, extra_charges, show_prices_in_pdf"
+      )
+      .eq("id", orderId)
+      .maybeSingle();
+    if (rowError) throw new Error(rowError.message);
+    resolvedPricing = {
+      taxRate: Number(row?.tax_rate ?? DEFAULT_SERVICE_PRICING.taxRate),
+      taxExempt: Boolean(row?.tax_exempt),
+      discount: Number(row?.discount ?? 0),
+      discountPercent: Number(row?.discount_percent ?? 0),
+      retentionIsrPercent: Number(row?.retention_isr_percent ?? 0),
+      retentionIvaPercent: Number(row?.retention_iva_percent ?? 0),
+      extraCharges: normalizeExtraCharges(row?.extra_charges),
+      showPricesInPdf: row?.show_prices_in_pdf !== false,
+    };
+  }
   const { error: delError } = await db
     .from("service_order_lines")
     .delete()
@@ -1355,16 +1427,14 @@ export async function replaceServiceOrderLines(
     if (error) throw new Error(error.message);
   }
 
-  const totals = computeServiceTotals(lines);
-  await db
+  const { error: totalsError } = await db
     .from("service_orders")
     .update({
-      subtotal: totals.subtotal,
-      tax_amount: totals.taxAmount,
-      total: totals.total,
+      ...pricingPayload(lines, resolvedPricing),
       updated_at: new Date().toISOString(),
     })
     .eq("id", orderId);
+  if (totalsError) throw new Error(totalsError.message);
 }
 
 export async function applyChecklistTemplate(

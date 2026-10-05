@@ -207,10 +207,51 @@ export type ServiceOrderLine = {
   quantity: number;
   unit: string;
   unitPrice: number;
+  discountPercent: number;
   lineStatus: ServiceLineStatus;
   sortOrder: number;
   notes: string;
 };
+
+export type ServiceExtraCharge = {
+  id: string;
+  label: string;
+  amount: number;
+  /** When false the charge is added after IVA (e.g. reimbursed travel expenses). */
+  taxable: boolean;
+};
+
+export type ServicePricing = {
+  taxRate: number;
+  taxExempt: boolean;
+  discount: number;
+  discountPercent: number;
+  retentionIsrPercent: number;
+  retentionIvaPercent: number;
+  extraCharges: ServiceExtraCharge[];
+  showPricesInPdf: boolean;
+};
+
+export const DEFAULT_SERVICE_PRICING: ServicePricing = {
+  taxRate: 16,
+  taxExempt: false,
+  discount: 0,
+  discountPercent: 0,
+  retentionIsrPercent: 0,
+  retentionIvaPercent: 0,
+  extraCharges: [],
+  showPricesInPdf: true,
+};
+
+export const SERVICE_TAX_PRESETS = [
+  { id: "16", label: "IVA 16%", rate: 16, exempt: false },
+  { id: "8", label: "IVA 8% (zona fronteriza)", rate: 8, exempt: false },
+  { id: "0", label: "Tasa 0%", rate: 0, exempt: false },
+  { id: "exento", label: "Exento de IVA", rate: 0, exempt: true },
+] as const;
+
+/** Withheld IVA for services to companies is two thirds of the 16% rate. */
+export const IVA_RETENTION_TWO_THIRDS = 10.6667;
 
 export type ServiceOrderChecklistItem = {
   id: string;
@@ -347,6 +388,13 @@ export type ServiceOrder = {
   taxAmount: number;
   discount: number;
   total: number;
+  discountPercent: number;
+  taxExempt: boolean;
+  retentionIsrPercent: number;
+  retentionIvaPercent: number;
+  retentionAmount: number;
+  extraCharges: ServiceExtraCharge[];
+  showPricesInPdf: boolean;
   calibrationTemplateId: string | null;
   calibrationPerformedAt: string;
   calibrationInstrument: string;
@@ -373,6 +421,7 @@ export type ServiceOrderLineInput = {
   quantity: number;
   unit?: string;
   unitPrice: number;
+  discountPercent?: number;
   lineStatus?: ServiceLineStatus;
   notes?: string;
 };
@@ -411,6 +460,12 @@ export type ServiceOrderInput = {
   closed?: boolean;
   taxRate?: number;
   discount?: number;
+  discountPercent?: number;
+  taxExempt?: boolean;
+  retentionIsrPercent?: number;
+  retentionIvaPercent?: number;
+  extraCharges?: ServiceExtraCharge[];
+  showPricesInPdf?: boolean;
   calibrationTemplateId?: string | null;
   calibrationPerformedAt?: string;
   calibrationInstrument?: string;
@@ -564,27 +619,136 @@ export function computeCalibrationOverall(
   return "parcial";
 }
 
-export function lineAmount(line: Pick<ServiceOrderLine, "quantity" | "unitPrice">) {
+type LineMath = {
+  quantity: number;
+  unitPrice: number;
+  discountPercent?: number;
+  lineKind?: ServiceLineKind;
+};
+
+export function clampPercent(value: unknown) {
+  return Math.min(100, Math.max(0, Number(value) || 0));
+}
+
+function round2(value: number) {
+  return Number(value.toFixed(2));
+}
+
+export function lineGrossAmount(line: LineMath) {
   return Number(line.quantity) * Number(line.unitPrice);
 }
 
-export function computeServiceTotals(
-  lines: ServiceOrderLineInput[],
-  discount = 0,
-  taxRate = 16
-) {
-  const subtotal = Math.max(
-    0,
-    lines.reduce(
-      (sum, line) => sum + Number(line.quantity) * Number(line.unitPrice),
-      0
-    ) - Number(discount || 0)
-  );
-  const taxAmount = subtotal * (Number(taxRate) / 100);
+export function lineDiscountAmount(line: LineMath) {
+  return round2(lineGrossAmount(line) * (clampPercent(line.discountPercent) / 100));
+}
+
+/** Net line amount, after its own discount. */
+export function lineAmount(line: LineMath) {
+  return round2(lineGrossAmount(line) - lineDiscountAmount(line));
+}
+
+export function normalizeExtraCharges(value: unknown): ServiceExtraCharge[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .map((item, index) => ({
+      id: String(item.id ?? `cargo-${index}`),
+      label: String(item.label ?? "").trim(),
+      amount: Math.max(0, Number(item.amount) || 0),
+      taxable: item.taxable !== false,
+    }));
+}
+
+export function pricingFromOrder(
+  order: Pick<ServiceOrder, keyof ServicePricing>
+): ServicePricing {
   return {
-    subtotal: Number(subtotal.toFixed(2)),
-    taxAmount: Number(taxAmount.toFixed(2)),
-    total: Number((subtotal + taxAmount).toFixed(2)),
+    taxRate: order.taxRate,
+    taxExempt: order.taxExempt,
+    discount: order.discount,
+    discountPercent: order.discountPercent,
+    retentionIsrPercent: order.retentionIsrPercent,
+    retentionIvaPercent: order.retentionIvaPercent,
+    extraCharges: order.extraCharges,
+    showPricesInPdf: order.showPricesInPdf,
+  };
+}
+
+export function serviceTaxLabel(pricing: Pick<ServicePricing, "taxRate" | "taxExempt">) {
+  if (pricing.taxExempt) return "Exento de IVA";
+  return `IVA ${Number(pricing.taxRate)}%`;
+}
+
+export type ServiceTotals = ReturnType<typeof computeServiceTotals>;
+
+/**
+ * Line discounts apply first, then the general discount over the net lines.
+ * Taxable extra charges join the subtotal; non-taxable ones are added after
+ * IVA. Retentions are computed over the subtotal.
+ */
+export function computeServiceTotals(
+  lines: LineMath[],
+  pricing: Partial<ServicePricing> = {}
+) {
+  const config = { ...DEFAULT_SERVICE_PRICING, ...pricing };
+
+  const byKindMap = new Map<ServiceLineKind, number>();
+  let linesGross = 0;
+  let lineDiscounts = 0;
+  for (const line of lines) {
+    linesGross += lineGrossAmount(line);
+    lineDiscounts += lineDiscountAmount(line);
+    const kind = line.lineKind ?? "otro";
+    byKindMap.set(kind, (byKindMap.get(kind) ?? 0) + lineAmount(line));
+  }
+  const linesNet = Math.max(0, linesGross - lineDiscounts);
+
+  const discountPercent = clampPercent(config.discountPercent);
+  const rawDiscount =
+    discountPercent > 0
+      ? linesNet * (discountPercent / 100)
+      : Math.max(0, Number(config.discount) || 0);
+  const discountAmount = round2(Math.min(linesNet, rawDiscount));
+
+  const charges = normalizeExtraCharges(config.extraCharges);
+  const taxableCharges = charges
+    .filter((charge) => charge.taxable)
+    .reduce((sum, charge) => sum + charge.amount, 0);
+  const nonTaxableCharges = charges
+    .filter((charge) => !charge.taxable)
+    .reduce((sum, charge) => sum + charge.amount, 0);
+
+  const subtotal = round2(linesNet - discountAmount + taxableCharges);
+  const taxRate = config.taxExempt ? 0 : clampPercent(config.taxRate);
+  const taxAmount = round2(subtotal * (taxRate / 100));
+  const retentionIsr = round2(subtotal * (clampPercent(config.retentionIsrPercent) / 100));
+  const retentionIva = round2(subtotal * (clampPercent(config.retentionIvaPercent) / 100));
+  const retentionAmount = round2(retentionIsr + retentionIva);
+  const total = round2(subtotal + taxAmount + nonTaxableCharges - retentionAmount);
+
+  return {
+    byKind: SERVICE_LINE_KINDS.filter((kind) => byKindMap.has(kind.id)).map((kind) => ({
+      kind: kind.id,
+      label: kind.label,
+      amount: round2(byKindMap.get(kind.id) ?? 0),
+    })),
+    linesGross: round2(linesGross),
+    lineDiscounts: round2(lineDiscounts),
+    linesNet: round2(linesNet),
+    discountPercent,
+    discountAmount,
+    taxableCharges: round2(taxableCharges),
+    nonTaxableCharges: round2(nonTaxableCharges),
+    subtotal,
+    taxRate,
+    taxExempt: config.taxExempt,
+    taxAmount,
+    retentionIsrPercent: clampPercent(config.retentionIsrPercent),
+    retentionIsr,
+    retentionIvaPercent: clampPercent(config.retentionIvaPercent),
+    retentionIva,
+    retentionAmount,
+    total,
   };
 }
 

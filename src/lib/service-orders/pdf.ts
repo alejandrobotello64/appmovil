@@ -13,9 +13,13 @@ import {
   checklistResultLabel,
   formatValidInterval,
   IMAGE_STAGES,
+  clampPercent,
+  computeServiceTotals,
   lineAmount,
+  pricingFromOrder,
   serviceLineKindLabel,
   serviceOrderStatusLabel,
+  serviceTaxLabel,
   serviceTypeLabel,
   type ServiceOrder,
   type ServiceOrderChecklistItem,
@@ -422,7 +426,7 @@ function drawLinesTable(
   y: number,
   options?: { includePrices?: boolean }
 ) {
-  const includePrices = options?.includePrices !== false;
+  const includePrices = options?.includePrices ?? order.showPricesInPdf;
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
   y = ensureSpace(doc, y, 16);
@@ -462,24 +466,86 @@ function drawLinesTable(
     if (includePrices) {
       doc.text(money(line.unitPrice), pageW - margin - 32, y);
       doc.text(money(lineAmount(line)), pageW - margin, y, { align: "right" });
+      const lineDiscount = clampPercent(line.discountPercent);
+      if (lineDiscount > 0) {
+        doc.setFontSize(7);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Desc. ${Number(lineDiscount.toFixed(2))}%`, pageW - margin, y + 3.5, {
+          align: "right",
+        });
+        doc.setFontSize(8);
+        doc.setTextColor(40, 40, 40);
+      }
     }
     y += Math.max(desc.length * 4, 5) + 2;
   });
 
   if (!includePrices) return y + 6;
+  return drawTotalsSummary(doc, order, y + 2);
+}
 
+function drawTotalsSummary(doc: jsPDF, order: ServiceOrder, y: number) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 14;
+  const totals = computeServiceTotals(order.lines, pricingFromOrder(order));
+  const pct = (value: number) => `${Number(value.toFixed(4))}%`;
+  const rows: { label: string; value: string; bold?: boolean }[] = [
+    { label: "Importe de partidas", value: money(totals.linesGross) },
+  ];
+  if (totals.lineDiscounts > 0) {
+    rows.push({ label: "Descuentos por partida", value: `-${money(totals.lineDiscounts)}` });
+  }
+  if (totals.discountAmount > 0) {
+    rows.push({
+      label:
+        totals.discountPercent > 0
+          ? `Descuento general (${pct(totals.discountPercent)})`
+          : "Descuento general",
+      value: `-${money(totals.discountAmount)}`,
+    });
+  }
+  for (const charge of order.extraCharges.filter((c) => c.taxable && c.amount > 0)) {
+    rows.push({ label: charge.label || "Cargo adicional", value: money(charge.amount) });
+  }
+  rows.push({ label: "Subtotal", value: money(totals.subtotal), bold: true });
+  rows.push({ label: serviceTaxLabel(totals), value: money(totals.taxAmount) });
+  for (const charge of order.extraCharges.filter((c) => !c.taxable && c.amount > 0)) {
+    rows.push({
+      label: `${charge.label || "Cargo adicional"} (sin IVA)`,
+      value: money(charge.amount),
+    });
+  }
+  if (totals.retentionIsr > 0) {
+    rows.push({
+      label: `Retención ISR (${pct(totals.retentionIsrPercent)})`,
+      value: `-${money(totals.retentionIsr)}`,
+    });
+  }
+  if (totals.retentionIva > 0) {
+    rows.push({
+      label: `Retención IVA (${pct(totals.retentionIvaPercent)})`,
+      value: `-${money(totals.retentionIva)}`,
+    });
+  }
+
+  y = ensureSpace(doc, y, rows.length * 5 + 14);
+  const labelX = pageW - margin - 38;
+  doc.setFontSize(8);
+  doc.setTextColor(40, 40, 40);
+  for (const row of rows) {
+    doc.setFont("helvetica", row.bold ? "bold" : "normal");
+    doc.text(row.label, labelX, y, { align: "right" });
+    doc.text(row.value, pageW - margin, y, { align: "right" });
+    y += 5;
+  }
+  doc.setDrawColor(200, 200, 210);
+  doc.line(labelX - 50, y - 2.5, pageW - margin, y - 2.5);
   y += 2;
   doc.setFont("helvetica", "bold");
-  doc.text(`Subtotal: ${money(order.subtotal)}`, pageW - margin, y, {
-    align: "right",
-  });
-  y += 5;
-  doc.text(`IVA (${order.taxRate}%): ${money(order.taxAmount)}`, pageW - margin, y, {
-    align: "right",
-  });
-  y += 5;
   doc.setFontSize(11);
-  doc.text(`Total: ${money(order.total)}`, pageW - margin, y, { align: "right" });
+  doc.text("Total", labelX, y, { align: "right" });
+  doc.text(money(totals.total), pageW - margin, y, { align: "right" });
+  doc.setFontSize(8);
   return y + 8;
 }
 

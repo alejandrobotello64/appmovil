@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Loader2,
 } from "lucide-react";
+import { ServicePricingSummary } from "@/components/service-orders/service-pricing-summary";
 import { Button } from "@/components/ui/button";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -90,6 +91,7 @@ import {
 import { downloadRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   CHECKLIST_RESULTS,
+  DEFAULT_SERVICE_PRICING,
   FUNCTION_TEST_RESULTS,
   IMAGE_STAGES,
   LINKED_EQUIPMENT_RELATIONS,
@@ -98,6 +100,7 @@ import {
   SERVICE_ORDER_STATUSES,
   SERVICE_TYPES,
   checklistItemsByKind,
+  clampPercent,
   computeServiceTotals,
   formatValidInterval,
   hasValidInterval,
@@ -105,10 +108,12 @@ import {
   isImageDocumentFile,
   lineAmount,
   parseOptionalNumber,
+  pricingFromOrder,
   serviceLineKindLabel,
   serviceOrderStatusLabel,
   serviceTypeLabel,
   timeInStatus,
+  type ServicePricing,
   type ChecklistResult,
   type ChecklistTemplate,
   type ImageStage,
@@ -249,6 +254,7 @@ export function ServiceOrdersPanel({
   const [form, setForm] = useState<ServiceOrderInput>(emptyForm);
   const [detailTab, setDetailTab] = useState<DetailTab>("recepcion");
   const [draftLines, setDraftLines] = useState<DraftLine[]>([]);
+  const [pricingDraft, setPricingDraft] = useState<ServicePricing>(DEFAULT_SERVICE_PRICING);
   const [note, setNote] = useState("");
   const [imageStage, setImageStage] = useState<ImageStage>("recepcion");
   const [docsOpen, setDocsOpen] = useState(false);
@@ -354,10 +360,12 @@ export function ServiceOrdersPanel({
         quantity: line.quantity,
         unit: line.unit,
         unitPrice: line.unitPrice,
+        discountPercent: line.discountPercent,
         lineStatus: line.lineStatus,
         notes: line.notes,
       }))
     );
+    setPricingDraft(pricingFromOrder(selected));
   }, [selected?.id, selected?.updatedAt]);
 
   const counts = useMemo(() => {
@@ -387,10 +395,34 @@ export function ServiceOrdersPanel({
     });
   }, [orders, query, statusFilter]);
 
-  const lineTotals = useMemo(
-    () => computeServiceTotals(draftLines, form.discount ?? 0, form.taxRate ?? 16),
-    [draftLines, form.discount, form.taxRate]
+  const pricedLines = useMemo(
+    () => draftLines.filter((line) => line.description.trim()),
+    [draftLines]
   );
+
+  const servicesDirty = useMemo(() => {
+    if (!selected) return false;
+    const saved = selected.lines.map((line) => [
+      line.lineKind,
+      line.description,
+      Number(line.quantity),
+      Number(line.unitPrice),
+      clampPercent(line.discountPercent),
+      line.lineStatus,
+    ]);
+    const draft = pricedLines.map((line) => [
+      line.lineKind,
+      line.description.trim(),
+      Number(line.quantity),
+      Number(line.unitPrice),
+      clampPercent(line.discountPercent),
+      line.lineStatus ?? "pendiente",
+    ]);
+    return (
+      JSON.stringify(saved) !== JSON.stringify(draft) ||
+      JSON.stringify(pricingFromOrder(selected)) !== JSON.stringify(pricingDraft)
+    );
+  }, [selected, pricedLines, pricingDraft]);
 
   const verificationTemplates = useMemo(
     () => templates.filter((tpl) => tpl.listKind !== "funcionamiento"),
@@ -485,8 +517,6 @@ export function ServiceOrdersPanel({
       underWarranty: order.underWarranty,
       authorized: order.authorized,
       closed: order.closed,
-      taxRate: order.taxRate,
-      discount: order.discount,
     };
   }
 
@@ -609,10 +639,7 @@ export function ServiceOrdersPanel({
   async function saveLines() {
     if (!selected || !canEdit) return;
     try {
-      await replaceServiceOrderLines(
-        selected.id,
-        draftLines.filter((l) => l.description.trim())
-      );
+      await replaceServiceOrderLines(selected.id, pricedLines, pricingDraft);
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudieron guardar partidas.");
@@ -623,10 +650,7 @@ export function ServiceOrdersPanel({
     if (!selected || !canEdit) return;
     try {
       setError("");
-      await replaceServiceOrderLines(
-        selected.id,
-        draftLines.filter((l) => l.description.trim())
-      );
+      await replaceServiceOrderLines(selected.id, pricedLines, pricingDraft);
       await reload();
       const latest = (await getServiceOrders()).find((o) => o.id === selected.id);
       if (!latest) throw new Error("No se pudo recargar la orden.");
@@ -2176,6 +2200,9 @@ export function ServiceOrdersPanel({
                         <th className="px-3 py-2">Descripción</th>
                         <th className="px-3 py-2">Cant</th>
                         <th className="px-3 py-2">P. unit.</th>
+                        <th className="px-3 py-2" title="Descuento de la partida">
+                          Desc. %
+                        </th>
                         <th className="px-3 py-2">Estatus</th>
                         <th className="px-3 py-2">Importe</th>
                         <th className="px-3 py-2" />
@@ -2302,6 +2329,29 @@ export function ServiceOrdersPanel({
                             />
                           </td>
                           <td className="px-2 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step="any"
+                              className="h-9 w-16 rounded-md border border-input bg-background px-2 text-xs"
+                              value={line.discountPercent ?? 0}
+                              disabled={!canEdit}
+                              onChange={(e) =>
+                                setDraftLines((rows) =>
+                                  rows.map((r) =>
+                                    r.key === line.key
+                                      ? {
+                                          ...r,
+                                          discountPercent: clampPercent(e.target.value),
+                                        }
+                                      : r
+                                  )
+                                )
+                              }
+                            />
+                          </td>
+                          <td className="px-2 py-2">
                             <select
                               className="h-9 rounded-md border border-input bg-background px-2 text-xs"
                               value={line.lineStatus}
@@ -2329,6 +2379,11 @@ export function ServiceOrdersPanel({
                           </td>
                           <td className="px-3 py-2 text-xs">
                             {money(lineAmount(line))}
+                            {clampPercent(line.discountPercent) > 0 ? (
+                              <span className="block text-[10px] text-muted-foreground line-through">
+                                {money(Number(line.quantity) * Number(line.unitPrice))}
+                              </span>
+                            ) : null}
                           </td>
                           <td className="px-2 py-2">
                             {canEdit ? (
@@ -2429,9 +2484,54 @@ export function ServiceOrdersPanel({
                     </a>
                   </div>
                 ) : null}
-                <p className="text-right text-sm font-medium">
-                  Total: {money(lineTotals.total)}
-                </p>
+                <ServicePricingSummary
+                  key={selected.id}
+                  lines={pricedLines}
+                  pricing={pricingDraft}
+                  onChange={setPricingDraft}
+                  canEdit={canEdit}
+                  underWarranty={selected.underWarranty}
+                  dirty={canEdit && servicesDirty}
+                />
+                {canEdit && servicesDirty ? (
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      Tienes cambios en partidas o en el resumen sin guardar.
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setDraftLines(
+                          selected.lines.map((line) => ({
+                            key: line.id,
+                            lineKind: line.lineKind,
+                            productId: line.productId,
+                            description: line.description,
+                            quantity: line.quantity,
+                            unit: line.unit,
+                            unitPrice: line.unitPrice,
+                            discountPercent: line.discountPercent,
+                            lineStatus: line.lineStatus,
+                            notes: line.notes,
+                          }))
+                        );
+                        setPricingDraft(pricingFromOrder(selected));
+                      }}
+                    >
+                      Descartar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                      onClick={() => void saveLines()}
+                    >
+                      Guardar cambios
+                    </Button>
+                  </div>
+                ) : null}
                 <label className="block text-sm">
                   <span className="mb-1 block text-muted-foreground">
                     Notas del servicio (salen en PDF)
@@ -2901,7 +3001,12 @@ export function ServiceOrdersPanel({
               <p>Promesa: {selected.promisedAt || "—"}</p>
               <p>Próximo servicio: {selected.nextServiceAt || "—"}</p>
               <p>Creada: {new Date(selected.createdAt).toLocaleString("es-MX")}</p>
-              <p>Total: {money(selected.total)}</p>
+              <p>
+                Total:{" "}
+                {money(
+                  computeServiceTotals(selected.lines, pricingFromOrder(selected)).total
+                )}
+              </p>
             </div>
           </aside>
         </div>
@@ -3120,7 +3225,9 @@ export function ServiceOrdersPanel({
                       {serviceTypeLabel(order.serviceType)}
                     </p>
                   </td>
-                  <td className="px-3 py-3">{money(order.total)}</td>
+                  <td className="px-3 py-3">
+                    {money(computeServiceTotals(order.lines, pricingFromOrder(order)).total)}
+                  </td>
                   <td className="px-3 py-3 text-xs">{order.technician || "—"}</td>
                   <td className="px-3 py-3">
                     <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
