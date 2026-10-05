@@ -17,16 +17,17 @@ Usuarios iniciales (seed): `alexbazz64@gmail.com` / `admin123` y `masservice.lcs
 
 El catálogo y el resto de datos de negocio viven en `supabase/seed_catalog.sql` y `supabase/seed_cloud_snapshot.sql`. `npm run db:local` los carga después de las migraciones.
 
-Para volver a copiar el proyecto de Supabase en la nube sobre Postgres local (conserva los logins de `app_users`):
+Para volver a copiar el proyecto de Supabase en la nube sobre Postgres local (conserva los logins de `app_users`) y reescribir `supabase/seed_cloud_snapshot.sql`:
 
 ```bash
 # En .env.local:
 # CLOUD_SUPABASE_URL=https://iqfareiwiadqsauejaaf.supabase.co
 # CLOUD_SUPABASE_ANON_KEY=<anon public>
 npm run db:sync-cloud
+npm run db:export-catalog
 ```
 
-Las imágenes siguen en Storage de la nube. Para congelar el catálogo en el repo después de sincronizar: `npm run db:export-catalog`.
+Las imágenes siguen en Storage de la nube. `db:export-catalog` congela `inventory_items` en `supabase/seed_catalog.sql`.
 
 ## Conectar el proyecto de Supabase en la nube
 

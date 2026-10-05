@@ -263,8 +263,50 @@ order by n_live_tup desc, relname;
             print(f"  - {table}: {reason}", file=sys.stderr)
         return 1
 
+    snapshot_path = write_snapshot(snapshots)
+    print(f"Snapshot escrito en {snapshot_path.relative_to(ROOT)} ({loaded} filas).")
     print(f"Listo. {loaded} filas copiadas desde la nube.")
     return 0
+
+
+def write_snapshot(snapshots: dict[str, list[dict]]) -> Path:
+    """Freeze the cloud rows into supabase/seed_cloud_snapshot.sql for db:local."""
+    loaded_tables = [table for table, rows in snapshots.items() if rows]
+    statements: list[str] = []
+    total = 0
+    for table in loaded_tables:
+        columns = local_columns(table)
+        rows = snapshots[table]
+        cloud_keys: set[str] = set()
+        for row in rows:
+            cloud_keys.update(row.keys())
+        usable = [column for column in columns if column in cloud_keys]
+        if not usable:
+            continue
+        filtered = [{column: row.get(column) for column in usable} for row in rows]
+        total += len(filtered)
+        col_sql = ", ".join(quote_ident(column) for column in usable)
+        statements.append(
+            f"""insert into public.{quote_ident(table)} ({col_sql})
+overriding system value
+select {col_sql}
+from json_populate_recordset(null::public.{quote_ident(table)}, {json_literal(filtered)}::json);
+"""
+        )
+
+    truncate_list = ", ".join(f"public.{quote_ident(table)}" for table in snapshots)
+    header = f"""-- Snapshot de las tablas de negocio leídas desde Supabase (proyecto iqfareiwiadqsauejaaf).
+-- No incluye app_users ni la bóveda de contraseñas (el rol anon no puede leerlas).
+-- Regenerar: npm run db:sync-cloud
+-- Filas: {total}
+
+begin;
+set session_replication_role = replica;
+truncate table {truncate_list} restart identity cascade;
+"""
+    path = ROOT / "supabase" / "seed_cloud_snapshot.sql"
+    path.write_text(header + "\n".join(statements) + "\ncommit;\n", encoding="utf-8")
+    return path
 
 
 if __name__ == "__main__":
