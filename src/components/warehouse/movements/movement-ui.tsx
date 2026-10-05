@@ -113,12 +113,12 @@ export function Alert({ tone, children }: { tone: "error" | "success"; children:
   );
 }
 
-/** Buscador de producto por SKU, nombre, marca o modelo. */
+/** Buscador de producto por SKU, nombre, marca, modelo o número de parte. */
 export function ProductPicker({
   products,
   value,
   onChange,
-  placeholder = "Buscar por SKU, nombre, marca o modelo...",
+  placeholder = "Buscar por SKU, nombre, marca, modelo o n.º de parte...",
   disabled,
 }: {
   products: InventoryItem[];
@@ -141,7 +141,9 @@ export function ProductPicker({
     return (
       <div className="flex items-start justify-between gap-3 rounded-xl border border-[#00BFFF]/40 bg-[#00BFFF]/5 px-3 py-2.5">
         <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">{value.name}</p>
+          <p className="truncate font-medium text-foreground">
+            {value.partNumber.trim() ? `${value.name} · n.º ${value.partNumber.trim()}` : value.name}
+          </p>
           <p className="text-xs text-muted-foreground">
             <span className="font-mono">{value.sku}</span> · {categoryLabel(value.category)} ·{" "}
             {value.quantity} {value.unit} en total
@@ -188,7 +190,11 @@ export function ProductPicker({
                 className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
               >
                 <span className="min-w-0">
-                  <span className="block truncate font-medium">{item.name}</span>
+                  <span className="block truncate font-medium">
+                    {item.partNumber.trim()
+                      ? `${item.name} · n.º ${item.partNumber.trim()}`
+                      : item.name}
+                  </span>
                   <span className="block truncate text-xs text-muted-foreground">
                     <span className="font-mono">{item.sku}</span> · {categoryLabel(item.category)}
                   </span>

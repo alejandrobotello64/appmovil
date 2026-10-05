@@ -47,6 +47,15 @@ type CatalogKind = SupplyCategoryId | "equipos";
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
 
+function articleFields(item: InventoryItem) {
+  return [item.sku, item.name, item.brand, item.model, item.serialNumber, item.partNumber];
+}
+
+function withPartNumber(name: string, partNumber: string) {
+  const part = partNumber.trim();
+  return part ? `${name} · n.º ${part}` : name;
+}
+
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
   const [catalogKind, setCatalogKind] = useState<CatalogKind>("insumos");
@@ -146,13 +155,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       items.filter(
         (item) =>
           item.id === itemId ||
-          matchesSearch(itemQuery, [
-            item.sku,
-            item.name,
-            item.brand,
-            item.model,
-            item.serialNumber,
-          ])
+          matchesSearch(itemQuery, articleFields(item))
       ),
     [items, itemQuery, itemId]
   );
@@ -163,6 +166,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           row.folio,
           row.productSku,
           row.productName,
+          row.partNumber,
           row.reason,
           row.note,
           row.createdBy,
@@ -423,20 +427,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   onChange={(value) => {
                     setItemQuery(value);
                     const first = items.find((item) =>
-                      matchesSearch(value, [
-                        item.sku,
-                        item.name,
-                        item.brand,
-                        item.model,
-                        item.serialNumber,
-                      ])
+                      matchesSearch(value, articleFields(item))
                     );
                     if (value.trim() && first) setItemId(first.id);
                   }}
                   placeholder={
                     isEquipmentCatalog
-                      ? "Buscar equipo por código, nombre, marca o serie..."
-                      : "Buscar artículo por código o nombre..."
+                      ? "Buscar equipo por código, nombre, marca, serie o n.º de parte..."
+                      : "Buscar artículo por código, nombre o n.º de parte..."
                   }
                 />
               ) : null}
@@ -457,7 +455,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 ) : (
                   itemOptions.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.sku} — {item.name}
+                      {item.sku} — {withPartNumber(item.name, item.partNumber)}
                       {isEquipmentCatalog && item.serialNumber
                         ? ` · S/N ${item.serialNumber}`
                         : ` (${item.quantity} ${item.unit})`}
@@ -706,7 +704,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           <SearchInput
             value={historyQuery}
             onChange={setHistoryQuery}
-            placeholder="Buscar folio, artículo, motivo..."
+            placeholder="Buscar folio, artículo, n.º de parte o motivo..."
             className="mt-3"
           />
 
@@ -733,7 +731,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">
-                          {row.productSku} — {row.productName}
+                          {row.productSku} — {withPartNumber(row.productName, row.partNumber)}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {row.folio}

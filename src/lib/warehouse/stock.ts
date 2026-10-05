@@ -36,6 +36,7 @@ export type KardexRow = {
   reason: string;
   note: string;
   createdBy: string;
+  partNumber: string;
 };
 
 // New tables live in the SQL migration; keep queries loosely typed until gen:types.
@@ -371,7 +372,43 @@ function mapKardexRow(row: Record<string, unknown>): KardexRow {
     reason: String(row.reason ?? ""),
     note: String(row.note ?? ""),
     createdBy: String(row.created_by ?? ""),
+    partNumber: "",
   };
+}
+
+async function partNumbersByProduct(
+  rows: Array<Record<string, unknown>>
+): Promise<{ byId: Map<string, string>; bySku: Map<string, string> }> {
+  const ids = [
+    ...new Set(rows.map((row) => String(row.product_id ?? "")).filter(Boolean)),
+  ];
+  const skus = [
+    ...new Set(rows.map((row) => String(row.product_sku ?? "")).filter(Boolean)),
+  ];
+  const byId = new Map<string, string>();
+  const bySku = new Map<string, string>();
+
+  async function read(column: "id" | "sku", values: string[]) {
+    if (!values.length) return;
+    const { data, error } = await db
+      .from("inventory_items")
+      .select("id, sku, part_number")
+      .in(column, values);
+    if (error) throw new Error(error.message);
+    for (const row of (data ?? []) as Array<Record<string, unknown>>) {
+      const partNumber = String(row.part_number ?? "");
+      byId.set(String(row.id ?? ""), partNumber);
+      const sku = String(row.sku ?? "");
+      if (sku) bySku.set(sku, partNumber);
+    }
+  }
+
+  await read("id", ids);
+  await read(
+    "sku",
+    skus.filter((sku) => !bySku.has(sku))
+  );
+  return { byId, bySku };
 }
 
 export async function getKardex(productId?: string): Promise<KardexRow[]> {
@@ -398,5 +435,15 @@ export async function getEntryExitHistory(
     .order("occurred_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
-  return (data ?? []).map(mapKardexRow);
+  const raw = (data ?? []) as Array<Record<string, unknown>>;
+  const mapped = raw.map(mapKardexRow);
+  const { byId, bySku } = await partNumbersByProduct(raw);
+  return mapped.map((row, index) => {
+    const source = raw[index];
+    const productId = String(source?.product_id ?? "");
+    return {
+      ...row,
+      partNumber: (productId && byId.get(productId)) || bySku.get(row.productSku) || "",
+    };
+  });
 }
