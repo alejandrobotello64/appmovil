@@ -9,12 +9,12 @@ export const APP_ROLES = [
   {
     id: "almacen",
     label: "Almacén",
-    description: "Inventario, entradas, salidas, apartados y solicitudes de compra.",
+    description: "Inventario, entradas, salidas, apartados, pedidos y proveedores.",
   },
   {
     id: "compras",
     label: "Compras",
-    description: "Solicitudes de almacén, pedidos, surtimiento y proveedores.",
+    description: "Solicitudes y órdenes de compra, proveedores, entradas y licitaciones.",
   },
   {
     id: "ventas",
@@ -48,9 +48,9 @@ export type WarehouseModule =
   | "solicitudes"
   | "movimientos"
   | "kardex"
-  | "solicitudes_compra"
   | "pedidos"
   | "proveedores"
+  | "solicitudes_compra"
   | "clientes"
   | "licitaciones"
   | "cotizaciones"
@@ -64,6 +64,7 @@ export type WarehouseModule =
   | "contrasenas_servicio"
   | "documentos_tecnicos"
   | "flotilla"
+  | "gastos"
   | "educacion"
   | "calidad"
   | "equipo"
@@ -232,11 +233,10 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
       {
         id: "solicitudes",
         label: "Solicitudes de OS",
-        description: "Material pedido desde órdenes de servicio.",
+        description: "Material pedido desde órdenes de servicio; faltantes a compras.",
         actions: [
           { action: "view" },
-          { action: "edit", label: "Surtir / cancelar" },
-          { action: "export", label: "Descargar PDF de surtimiento" },
+          { action: "edit", label: "Surtir, cancelar y pedir compra de faltantes" },
         ],
       },
       {
@@ -284,19 +284,19 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
       {
         id: "solicitudes_compra",
         label: "Solicitudes de compra",
-        description:
-          "Almacén pide a compras cuando un producto no se puede surtir.",
+        description: "Faltantes de surtimiento y compras directas: atender, ordenar y dar seguimiento.",
         actions: [
           { action: "view" },
-          { action: "create", label: "Solicitar a compras" },
-          { action: "edit", label: "Avanzar compra y vincular pedido" },
-          { action: "delete", label: "Cancelar solicitud" },
+          { action: "create", label: "Crear solicitudes directas" },
+          { action: "edit", label: "Atender, generar orden de compra y cerrar" },
+          { action: "delete", label: "Rechazar / cancelar" },
+          { action: "export", label: "Descargar PDF" },
         ],
       },
       {
         id: "pedidos",
-        label: "Pedidos",
-        description: "Órdenes de compra y recepción de surtimiento.",
+        label: "Órdenes de compra",
+        description: "Pedidos a proveedor y su recepción en almacén.",
         actions: CRUD,
       },
       {
@@ -425,6 +425,26 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
     ],
   },
   {
+    id: "finanzas",
+    label: "Finanzas",
+    modules: [
+      {
+        id: "gastos",
+        label: "Gastos",
+        description:
+          "Viáticos, gastos corrientes y caja chica con comprobantes. Sin aprobar solo ve sus propios registros.",
+        actions: [
+          { action: "view" },
+          { action: "create", label: "Registrar gastos" },
+          { action: "edit" },
+          { action: "delete", label: "Eliminar / cancelar" },
+          { action: "export", label: "Descargar reportes PDF" },
+          { action: "approve", label: "Aprobar comprobaciones y ver todos los registros" },
+        ],
+      },
+    ],
+  },
+  {
     id: "administracion",
     label: "Administración",
     modules: [
@@ -504,9 +524,9 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "solicitudes",
     "movimientos",
     "kardex",
-    "solicitudes_compra",
     "pedidos",
     "proveedores",
+    "solicitudes_compra",
     "clientes",
     "equipo",
     "calendario",
@@ -514,21 +534,24 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "registros_sanitarios",
     "herramientas",
     "flotilla",
+    "gastos",
     "educacion",
   ],
   compras: [
     "dashboard",
     ...CATALOG_MODULES,
     "entradas",
-    "solicitudes_compra",
+    "solicitudes",
     "pedidos",
     "proveedores",
+    "solicitudes_compra",
     "kardex",
     "calendario",
     "reporte",
     "registros_sanitarios",
     "herramientas",
     "licitaciones",
+    "gastos",
   ],
   ventas: [
     "dashboard",
@@ -543,6 +566,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "registros_sanitarios",
     "documentos_tecnicos",
     "calidad",
+    "gastos",
   ],
   servicio: [
     "dashboard",
@@ -559,11 +583,13 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "kardex",
     "ordenes_servicio",
     "solicitud_herramientas",
+    "solicitudes_compra",
     "plantillas_checklist",
     "instrumentos",
     "contrasenas_servicio",
     "documentos_tecnicos",
     "flotilla",
+    "gastos",
     "educacion",
     "calidad",
   ],
@@ -575,20 +601,21 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "equipo",
     "clientes",
     "calendario",
-    "solicitudes_compra",
-    "pedidos",
-    "proveedores",
     "licitaciones",
     "cotizaciones",
     "catalogo_ventas",
     "registros_sanitarios",
     "herramientas",
+    "solicitudes_compra",
+    "pedidos",
+    "proveedores",
     "ordenes_servicio",
     "solicitud_herramientas",
     "plantillas_checklist",
     "instrumentos",
     "documentos_tecnicos",
     "flotilla",
+    "gastos",
     "educacion",
     "calidad",
   ],
@@ -606,7 +633,6 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "apartados",
     "solicitudes",
     "movimientos",
-    "solicitudes_compra",
     "pedidos",
     "proveedores",
     "clientes",
@@ -615,17 +641,19 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "registros_sanitarios",
     "herramientas",
     "flotilla",
+    "gastos",
     "educacion",
   ],
   compras: [
-    "solicitudes_compra",
     "pedidos",
     "proveedores",
+    "solicitudes_compra",
     "entradas",
     "registros_sanitarios",
     "licitaciones",
+    "gastos",
   ],
-  ventas: ["clientes", "licitaciones", "cotizaciones", "catalogo_ventas", "calidad"],
+  ventas: ["clientes", "licitaciones", "cotizaciones", "catalogo_ventas", "calidad", "gastos"],
   servicio: [
     "dashboard",
     ...CATALOG_MODULES,
@@ -642,6 +670,7 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "contrasenas_servicio",
     "documentos_tecnicos",
     "flotilla",
+    "gastos",
     "educacion",
     "calidad",
   ],

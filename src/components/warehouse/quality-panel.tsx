@@ -42,6 +42,7 @@ import {
 } from "@/lib/quality/types";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const inputClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20";
@@ -477,7 +478,7 @@ export function QualityPanel() {
                 }))}
               />
               <DesktopTable>
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Folio</th>
@@ -551,7 +552,7 @@ export function QualityPanel() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </SortableTable>
               </DesktopTable>
             </>
           )}

@@ -1,6 +1,17 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import {
+  PDF_BLUE as BLUE,
+  PDF_INK as INK,
+  PDF_MARGIN as MARGIN,
+  PDF_MUTED as MUTED,
+  PdfCursor,
+  drawField as field,
+  drawParagraph,
+  drawSignatures as drawSignatureRow,
+  formatPdfDate as formatDate,
+} from "@/lib/brand/pdf-layout";
+import {
   lineOutstanding,
   requestOutstanding,
   returnConditionLabel,
@@ -12,81 +23,9 @@ import {
   type ToolReturnDetails,
 } from "./types";
 
-const MARGIN = 14;
-const BLUE: [number, number, number] = [59, 70, 165];
-const INK: [number, number, number] = [30, 30, 30];
-const MUTED: [number, number, number] = [110, 110, 110];
-
-function formatDate(value: string, withTime = false) {
-  if (!value) return "—";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const [y, m, d] = value.split("-");
-    return `${d}/${m}/${y}`;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-MX", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
-  });
-}
-
 function conditionText(value: string, kind: "out" | "in") {
   if (!value) return "—";
   return kind === "in" ? returnConditionLabel(value) : toolConditionLabel(value);
-}
-
-class PdfCursor {
-  y: number;
-  constructor(
-    readonly doc: jsPDF,
-    start: number
-  ) {
-    this.y = start;
-  }
-  get pageW() {
-    return this.doc.internal.pageSize.getWidth();
-  }
-  get pageH() {
-    return this.doc.internal.pageSize.getHeight();
-  }
-  get contentW() {
-    return this.pageW - MARGIN * 2;
-  }
-  ensure(height: number) {
-    if (this.y + height > this.pageH - 16) {
-      this.doc.addPage();
-      this.y = 16;
-      return true;
-    }
-    return false;
-  }
-  sectionTitle(text: string) {
-    this.ensure(12);
-    const { doc } = this;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.setTextColor(...BLUE);
-    doc.text(text.toUpperCase(), MARGIN, this.y);
-    doc.setDrawColor(210, 216, 236);
-    doc.line(MARGIN, this.y + 1.6, this.pageW - MARGIN, this.y + 1.6);
-    this.y += 6.5;
-  }
-}
-
-function field(doc: jsPDF, label: string, value: string, x: number, y: number, width: number) {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(...MUTED);
-  doc.text(label, x, y);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(...INK);
-  const lines = doc.splitTextToSize(value || "—", width) as string[];
-  doc.text(lines, x, y + 4.2);
-  return 4.2 + lines.length * 4;
 }
 
 function personCard(
@@ -305,55 +244,14 @@ function drawReturns(cursor: PdfCursor, request: ToolRequest) {
   });
 }
 
-function drawParagraph(cursor: PdfCursor, label: string, text: string) {
-  if (!text) return;
-  const { doc } = cursor;
-  const lines = doc.splitTextToSize(text, cursor.contentW) as string[];
-  cursor.ensure(6 + lines.length * 4);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  doc.text(label, MARGIN, cursor.y);
-  cursor.y += 4;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...INK);
-  doc.text(lines, MARGIN, cursor.y);
-  cursor.y += lines.length * 4 + 2.5;
-}
-
 function drawSignatures(cursor: PdfCursor, request: ToolRequest) {
-  const { doc } = cursor;
   const lastReturn = [...request.events].reverse().find((event) => event.eventType === "devolucion");
   const receiver = (lastReturn?.details as ToolReturnDetails | undefined)?.receivedBy ?? "";
-  const boxes = [
+  drawSignatureRow(cursor, [
     { title: "Entrega (almacén)", name: request.deliverer.name },
     { title: "Recibe herramientas (solicitante)", name: request.requester.name },
     { title: "Recibe devolución (almacén)", name: receiver },
-  ];
-  const gap = 8;
-  const w = (cursor.contentW - gap * 2) / 3;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  const names = boxes.map((box) => doc.splitTextToSize(box.name || " ", w) as string[]);
-  const nameLines = Math.max(...names.map((lines) => lines.length));
-  const blockH = 11 + nameLines * 3.8 + 4;
-  cursor.ensure(blockH);
-  cursor.y += 11;
-  boxes.forEach((box, i) => {
-    const x = MARGIN + i * (w + gap);
-    doc.setDrawColor(120, 120, 130);
-    doc.line(x, cursor.y, x + w, cursor.y);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...INK);
-    doc.text(names[i], x + w / 2, cursor.y + 4.2, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(...MUTED);
-    doc.text(box.title, x + w / 2, cursor.y + 4.2 + nameLines * 3.8, { align: "center", maxWidth: w });
-  });
-  cursor.y += nameLines * 3.8 + 8;
+  ]);
 }
 
 /** Herramientas que siguen fuera del almacén, agrupadas por la persona que las tiene. */

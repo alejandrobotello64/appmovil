@@ -5,6 +5,7 @@ import { AppShell } from "@/components/dashboard/app-shell";
 import { SalesCatalogPanel } from "@/components/documents/document-library-panel";
 import { SalesDashboard } from "@/components/sales/sales-dashboard";
 import { QuotesPanel } from "@/components/warehouse/quotes-panel";
+import { ServiceRequisitionsPanel } from "@/components/warehouse/service-requisitions-panel";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { SALES_TAB_MODULES, SALES_TABS, normalizeSalesTab } from "@/lib/sales/tabs";
 
@@ -36,6 +37,15 @@ export function SalesPage() {
           <>
             {activeTab === "dashboard" ? <SalesDashboard /> : null}
             {activeTab === "cotizaciones" ? <QuotesPanel /> : null}
+            {activeTab === "surtimientos" ? (
+              <ServiceRequisitionsPanel
+                source="cotizacion"
+                permissionModule="cotizaciones"
+                allowFulfill={false}
+                title="Surtimientos de ventas"
+                subtitle="Solicitudes enviadas a almacén desde cotizaciones: qué se pidió, qué ya se surtió y qué está en compra."
+              />
+            ) : null}
             {activeTab === "catalogo" ? <SalesCatalogPanel /> : null}
           </>
         ) : (

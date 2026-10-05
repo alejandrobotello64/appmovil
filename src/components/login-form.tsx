@@ -70,102 +70,112 @@ export function LoginForm() {
   return (
     <div className="login-shell relative flex min-h-dvh flex-1 items-center justify-center overflow-hidden">
       <LoginCarousel />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.22),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.28),transparent_45%)]"
+      />
 
-      <div className="relative z-10 w-full max-w-[420px] px-4">
-        <div className="mb-4 flex justify-end">
-          <ThemeToggle className="touch-target bg-card/90 shadow-sm backdrop-blur" />
+      <div className="relative w-full max-w-[420px] px-4">
+        <div className="mb-6 flex justify-end">
+          <ThemeToggle className="touch-target bg-card/80 shadow-sm backdrop-blur" />
         </div>
 
         <form
           method="post"
           action="/"
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-border/80 bg-card/92 p-5 shadow-[0_24px_70px_-24px_rgba(8,12,28,0.55)] backdrop-blur-md sm:p-8"
+          className="relative rounded-2xl border border-border/80 bg-card/95 p-5 text-card-foreground shadow-[0_24px_70px_-24px_rgba(0,0,0,0.6)] backdrop-blur-md sm:p-8"
         >
-          <div className="mb-6 flex flex-col items-center text-center">
-            <Image
-              src="/assets/logo.png"
-              alt="Medical Advanced Supplies"
-              width={280}
-              height={120}
-              priority
-              className="h-auto w-full max-w-[220px] object-contain sm:max-w-[240px] dark:brightness-110"
-            />
-            <p className="mt-4 text-sm text-muted-foreground">
-              Accede al panel de administración
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Usuario / correo</span>
-              <input
-                type="text"
-                name="username"
-                autoComplete="username"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder="correo@empresa.com"
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#00BFFF] focus:ring-3 focus:ring-[#00BFFF]/30"
-                required
+          <div>
+            <div className="mb-6 flex flex-col items-center text-center">
+              <Image
+                src="/assets/logo.png"
+                alt="Medical Advanced Supplies"
+                width={280}
+                height={120}
+                priority
+                className="h-auto w-full max-w-[220px] object-contain sm:max-w-[240px] dark:brightness-110"
               />
-            </label>
-
-            <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Contraseña</span>
-              <input
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="••••••••"
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#00BFFF] focus:ring-3 focus:ring-[#00BFFF]/30"
-                required
-              />
-            </label>
-
-            <label className="flex cursor-pointer items-center gap-2.5 select-none">
-              <span className="relative inline-flex size-5 shrink-0 items-center justify-center">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(event) => setRemember(event.target.checked)}
-                  className="peer sr-only"
-                />
-                <span
-                  className={cn(
-                    "flex size-5 items-center justify-center rounded-md border-2 transition-colors",
-                    remember
-                      ? "border-[#00BFFF] bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-                      : "border-input bg-background"
-                  )}
-                  aria-hidden
-                >
-                  {remember ? <Check className="size-3.5 stroke-[3]" /> : null}
-                </span>
-              </span>
-              <span className="text-sm text-muted-foreground">
-                Recordar datos de inicio
-              </span>
-            </label>
-
-            {error ? (
-              <p
-                role="alert"
-                className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-              >
-                {error}
+              <p className="mt-4 text-sm text-muted-foreground">
+                Accede al panel de administración
               </p>
-            ) : null}
+            </div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="h-11 w-full rounded-lg border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-md hover:opacity-90"
-            >
-              {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
-            </Button>
+            <div className="space-y-4">
+              <label className="block space-y-1.5">
+                <span className="text-sm font-medium">
+                  Usuario / correo
+                </span>
+                <input
+                  type="text"
+                  name="username"
+                  autoComplete="username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  placeholder="correo@empresa.com"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#00BFFF] focus:ring-3 focus:ring-[#00BFFF]/30"
+                  required
+                />
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="text-sm font-medium">
+                  Contraseña
+                </span>
+                <input
+                  type="password"
+                  name="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#00BFFF] focus:ring-3 focus:ring-[#00BFFF]/30"
+                  required
+                />
+              </label>
+
+              <label className="flex cursor-pointer items-center gap-2.5 select-none">
+                <span className="relative inline-flex size-5 shrink-0 items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(event) => setRemember(event.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <span
+                    className={cn(
+                      "flex size-5 items-center justify-center rounded-md border-2 transition-colors",
+                      remember
+                        ? "border-[#00BFFF] bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                        : "border-input bg-background"
+                    )}
+                    aria-hidden
+                  >
+                    {remember ? <Check className="size-3.5 stroke-[3]" /> : null}
+                  </span>
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Recordar datos de inicio
+                </span>
+              </label>
+
+              {error ? (
+                <p
+                  role="alert"
+                  className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                >
+                  {error}
+                </p>
+              ) : null}
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="h-11 w-full rounded-lg border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-md hover:opacity-90"
+              >
+                {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

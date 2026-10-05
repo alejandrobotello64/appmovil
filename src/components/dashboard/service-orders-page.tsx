@@ -54,6 +54,7 @@ export function ServiceOrdersPage() {
             ) : null}
             {activeTab === "solicitudes" ? (
               <ServiceRequisitionsPanel
+                source="orden_servicio"
                 permissionModule="ordenes_servicio"
                 allowFulfill={false}
                 title="Pedidos a almacén"

@@ -62,24 +62,32 @@ function foldName(value: string | null | undefined) {
     .replace(/\s+/g, " ");
 }
 
+/** Carga el directorio una vez y devuelve un buscador por nombre completo o usuario. */
+export async function loadStaffProfileLookup(): Promise<(name: string) => StaffProfile | null> {
+  const { data, error } = await supabase.rpc("list_app_users");
+  const rows = error || !data ? [] : data;
+  return (name: string) => {
+    const target = foldName(name);
+    if (!target) return null;
+    const row = rows.find(
+      (item) => foldName(item.full_name) === target || foldName(item.username) === target
+    );
+    if (!row) return null;
+    return {
+      fullName: staffDisplayName(row.full_name, row.username),
+      jobTitle: row.job_title ?? "",
+      department: row.department ?? "",
+      employeeNumber: row.employee_number ?? "",
+      phone: row.phone ?? "",
+      email: row.email ?? "",
+    };
+  };
+}
+
 /** Busca la ficha de un colaborador por nombre completo o usuario; `null` si no existe. */
 export async function findStaffProfile(name: string): Promise<StaffProfile | null> {
-  const target = foldName(name);
-  if (!target) return null;
-  const { data, error } = await supabase.rpc("list_app_users");
-  if (error || !data) return null;
-  const row = data.find(
-    (item) => foldName(item.full_name) === target || foldName(item.username) === target
-  );
-  if (!row) return null;
-  return {
-    fullName: staffDisplayName(row.full_name, row.username),
-    jobTitle: row.job_title ?? "",
-    department: row.department ?? "",
-    employeeNumber: row.employee_number ?? "",
-    phone: row.phone ?? "",
-    email: row.email ?? "",
-  };
+  if (!foldName(name)) return null;
+  return (await loadStaffProfileLookup())(name);
 }
 
 export async function listStaffMembers(): Promise<StaffMember[]> {

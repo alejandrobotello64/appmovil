@@ -55,8 +55,8 @@ export const WAREHOUSE_TABS = [
   },
   {
     id: "solicitudes",
-    label: "Solicitudes OS",
-    description: "Material pedido por órdenes de servicio",
+    label: "Surtimientos",
+    description: "Material pedido por órdenes de servicio y cotizaciones de venta",
     href: "/dashboard/almacen?tab=solicitudes",
   },
   {
@@ -68,7 +68,7 @@ export const WAREHOUSE_TABS = [
   {
     id: "movimientos",
     label: "Movimientos",
-    description: "Cambios de ubicación y canjes de materiales caducados",
+    description: "Traspasos entre almacenes, cambios de ubicación, canjes de caducados e historial",
     href: "/dashboard/almacen?tab=movimientos",
   },
   {

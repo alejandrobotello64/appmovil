@@ -15,6 +15,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import { ClientQuoteHistory } from "@/components/clients/client-quote-history";
 import { Button } from "@/components/ui/button";
 import {
   DesktopTable,
@@ -66,6 +67,7 @@ import {
   type ServiceOrderSummary,
 } from "@/lib/service-orders/types";
 import { cn } from "@/lib/utils";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 type ViewId = "clientes" | "equipos" | "historial";
 
@@ -1553,6 +1555,8 @@ export function ClientsPanel() {
               </div>
             )}
           </div>
+
+          <ClientQuoteHistory client={fichaClient} />
         </section>
       ) : null}
 
@@ -1642,7 +1646,7 @@ export function ClientsPanel() {
               }))}
             />
             <DesktopTable>
-              <table className="min-w-full text-sm">
+              <SortableTable className="min-w-full text-sm">
                 <thead className="bg-muted/50 text-left text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 font-medium">Cliente</th>
@@ -1720,7 +1724,7 @@ export function ClientsPanel() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </SortableTable>
             </DesktopTable>
           </>
         ) : null}
@@ -1788,7 +1792,7 @@ export function ClientsPanel() {
               }))}
             />
             <DesktopTable>
-              <table className="min-w-full text-sm">
+              <SortableTable className="min-w-full text-sm">
                 <thead className="bg-muted/50 text-left text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 font-medium">Equipo</th>
@@ -1873,7 +1877,7 @@ export function ClientsPanel() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </SortableTable>
             </DesktopTable>
           </>
         ) : null}
@@ -1975,7 +1979,7 @@ export function ClientsPanel() {
               }))}
             />
             <DesktopTable>
-              <table className="min-w-full text-sm">
+              <SortableTable className="min-w-full text-sm">
                 <thead className="bg-muted/50 text-left text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 font-medium">Fecha</th>
@@ -2072,7 +2076,7 @@ export function ClientsPanel() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </SortableTable>
             </DesktopTable>
           </>
         ) : null}

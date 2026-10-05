@@ -12,6 +12,7 @@ export type Warehouse = {
   name: string;
   city: string;
   isDefault: boolean;
+  isActive: boolean;
 };
 
 export type WarehouseLocation = {
@@ -41,12 +42,10 @@ export type KardexRow = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
-export async function getWarehouses(): Promise<Warehouse[]> {
-  const { data, error } = await db
-    .from("warehouses")
-    .select("*")
-    .eq("is_active", true)
-    .order("name");
+export async function getWarehouses(includeInactive = false): Promise<Warehouse[]> {
+  let query = db.from("warehouses").select("*");
+  if (!includeInactive) query = query.eq("is_active", true);
+  const { data, error } = await query.order("name");
   if (error) throw new Error(error.message);
   return (data ?? []).map((row: Record<string, unknown>) => ({
     id: String(row.id),
@@ -54,6 +53,7 @@ export async function getWarehouses(): Promise<Warehouse[]> {
     name: String(row.name),
     city: String(row.city ?? ""),
     isDefault: Boolean(row.is_default),
+    isActive: row.is_active !== false,
   }));
 }
 
@@ -70,6 +70,159 @@ export async function getWarehouseLocations(
     code: String(row.code),
     name: String(row.name),
   }));
+}
+
+/** Ubicaciones genéricas por categoría que se crean con cada almacén; no son un lugar físico. */
+export const DEFAULT_LOCATION_CODES = [
+  "GENERAL",
+  "INSUMOS",
+  "MEDICAMENTOS",
+  "REFACCIONES",
+  "ACCESORIOS",
+  "EQUIPOS",
+];
+
+function locationCode(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .slice(0, 24)
+    .replace(/^-+|-+$/g, "");
+}
+
+export async function createWarehouse(input: {
+  code: string;
+  name: string;
+  city: string;
+}): Promise<Warehouse> {
+  const code = locationCode(input.code);
+  const name = input.name.trim();
+  if (!code || !name) throw new Error("Captura la clave y el nombre del almacén.");
+  const { data, error } = await db
+    .from("warehouses")
+    .insert({ code, name, city: input.city.trim() })
+    .select("*")
+    .single();
+  if (error) {
+    throw new Error(
+      error.code === "23505" ? `Ya existe un almacén con la clave ${code}.` : error.message
+    );
+  }
+  const { error: locError } = await db
+    .from("locations")
+    .insert(
+      DEFAULT_LOCATION_CODES.map((locCode) => ({
+        warehouse_id: data.id,
+        code: locCode,
+        name:
+          locCode === "EQUIPOS"
+            ? "Equipos médicos"
+            : locCode.charAt(0) + locCode.slice(1).toLowerCase(),
+      }))
+    );
+  if (locError) throw new Error(locError.message);
+  return {
+    id: String(data.id),
+    code: String(data.code),
+    name: String(data.name),
+    city: String(data.city ?? ""),
+    isDefault: Boolean(data.is_default),
+    isActive: true,
+  };
+}
+
+export async function setWarehouseActive(id: string, active: boolean) {
+  if (!active) {
+    const { count, error: countError } = await db
+      .from("inventory_balances")
+      .select("id", { count: "exact", head: true })
+      .eq("warehouse_id", id)
+      .gt("qty_on_hand", 0);
+    if (countError) throw new Error(countError.message);
+    if ((count ?? 0) > 0) {
+      throw new Error("No se puede desactivar un almacén que todavía tiene existencias.");
+    }
+  }
+  const { error } = await db.from("warehouses").update({ is_active: active }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function createWarehouseLocation(
+  warehouseId: string,
+  name: string
+): Promise<WarehouseLocation> {
+  const trimmed = name.trim();
+  const code = locationCode(trimmed);
+  if (!code) throw new Error("Captura un nombre de ubicación válido.");
+  const { data, error } = await db
+    .from("locations")
+    .insert({ warehouse_id: warehouseId, code, name: trimmed })
+    .select("*")
+    .single();
+  if (error) {
+    throw new Error(
+      error.code === "23505"
+        ? `Ya existe una ubicación con la clave ${code} en este almacén.`
+        : error.message
+    );
+  }
+  return {
+    id: String(data.id),
+    warehouseId: String(data.warehouse_id),
+    code: String(data.code),
+    name: String(data.name),
+  };
+}
+
+export async function deactivateWarehouseLocation(id: string) {
+  const { count, error: countError } = await db
+    .from("inventory_balances")
+    .select("id", { count: "exact", head: true })
+    .eq("location_id", id)
+    .gt("qty_on_hand", 0);
+  if (countError) throw new Error(countError.message);
+  if ((count ?? 0) > 0) {
+    throw new Error("La ubicación tiene existencias; reubícalas antes de darla de baja.");
+  }
+  const { error } = await db.from("locations").update({ is_active: false }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export type RelocateResult = {
+  folio: string;
+  movedQty: number;
+  locationId: string;
+  locationName: string;
+};
+
+/** Mueve toda la existencia (y series) del producto en el almacén a una ubicación existente o nueva. */
+export async function relocateStock(input: {
+  productId: string;
+  warehouseId: string;
+  locationId?: string | null;
+  locationName?: string | null;
+  note?: string;
+  createdBy: string;
+}): Promise<RelocateResult> {
+  const { data, error } = await db.rpc("relocate_stock", {
+    p_product_id: input.productId,
+    p_warehouse_id: input.warehouseId,
+    p_location_id: input.locationId || null,
+    p_location_name: input.locationName?.trim() || null,
+    p_note: input.note ?? "",
+    p_created_by: input.createdBy,
+  });
+  if (error) throw new Error(error.message);
+  const row = data?.[0];
+  if (!row) throw new Error("La reubicación no devolvió resultado.");
+  return {
+    folio: String(row.folio ?? ""),
+    movedQty: Number(row.moved_qty ?? 0),
+    locationId: String(row.target_location_id),
+    locationName: String(row.target_location_name ?? ""),
+  };
 }
 
 export async function applyStockMovement(input: {
@@ -131,30 +284,6 @@ export async function applyStockMovement(input: {
     }
   }
 
-  return {
-    folio: row.folio,
-    movementId: row.movement_id,
-    newQuantity: row.new_quantity,
-  };
-}
-
-export async function transferStock(input: {
-  productId: string;
-  quantity: number;
-  toLocationName: string;
-  note?: string;
-  createdBy: string;
-}): Promise<StockMovementResult> {
-  const { data, error } = await supabase.rpc("transfer_stock", {
-    p_product_id: input.productId,
-    p_quantity: input.quantity,
-    p_to_location_name: input.toLocationName,
-    p_note: input.note ?? "",
-    p_created_by: input.createdBy,
-  });
-  if (error) throw new Error(error.message);
-  const row = data?.[0];
-  if (!row) throw new Error("El traspaso no devolvió folio.");
   return {
     folio: row.folio,
     movementId: row.movement_id,

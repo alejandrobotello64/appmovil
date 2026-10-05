@@ -14,6 +14,12 @@ export const SALES_TABS = [
     href: "/dashboard/ventas?tab=cotizaciones",
   },
   {
+    id: "surtimientos",
+    label: "Surtimientos",
+    description: "Material pedido a almacén desde cotizaciones y su avance de entrega",
+    href: "/dashboard/ventas?tab=surtimientos",
+  },
+  {
     id: "catalogo",
     label: "Catálogo",
     description: "Brochures, folletos y presentaciones comerciales",
@@ -29,6 +35,7 @@ export const SALES_MODULES: WarehouseModule[] = ["cotizaciones", "catalogo_venta
 export const SALES_TAB_MODULES: Record<SalesTabId, WarehouseModule[]> = {
   dashboard: SALES_MODULES,
   cotizaciones: ["cotizaciones"],
+  surtimientos: ["cotizaciones"],
   catalogo: ["catalogo_ventas"],
 };
 

@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase/client";
 import {
+  clampPercent,
   computeQuoteTotals,
+  lineDiscountAmount,
   quoteStatusLabel,
   type Quote,
   type QuoteEvent,
@@ -31,6 +33,8 @@ function mapLine(
     quantity: Number(row.quantity ?? 0),
     unit: String(row.unit ?? "pza"),
     unitPrice: Number(row.unit_price ?? 0),
+    discountPercent: Number(row.discount_percent ?? 0),
+    discountAmount: Number(row.discount_amount ?? 0),
     sortOrder: Number(row.sort_order ?? 0),
     notes: String(row.notes ?? ""),
   };
@@ -125,33 +129,12 @@ function linePayload(quoteId: string, line: QuoteLineInput, index: number) {
     quantity: Number(line.quantity),
     unit: (line.unit ?? "pza").trim() || "pza",
     unit_price: Number(line.unitPrice),
+    discount_percent: clampPercent(line.discountPercent),
+    discount_amount:
+      clampPercent(line.discountPercent) > 0 ? 0 : lineDiscountAmount(line),
     sort_order: index,
     notes: (line.notes ?? "").trim(),
   };
-}
-
-function isMissingColumnError(error: {
-  message?: string;
-  code?: string;
-  details?: string;
-  hint?: string;
-} | null) {
-  if (!error) return false;
-  const code = String(error.code ?? "");
-  const text = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
-  return (
-    code === "42703" ||
-    code === "PGRST204" ||
-    text.includes("does not exist") ||
-    text.includes("schema cache") ||
-    text.includes("could not find the")
-  );
-}
-
-function withoutDiscountPercent<T extends Record<string, unknown>>(payload: T) {
-  const next = { ...payload };
-  delete next.discount_percent;
-  return next;
 }
 
 function payloadFromInput(input: QuoteInput, lines: QuoteLineInput[]) {
@@ -177,7 +160,7 @@ function payloadFromInput(input: QuoteInput, lines: QuoteLineInput[]) {
     last_contact_at: input.lastContactAt || null,
     tax_rate: Number(input.taxRate ?? 16),
     discount: totals.discountAmount,
-    discount_percent: Number(input.discountPercent ?? 0),
+    discount_percent: totals.discountPercent,
     subtotal: totals.subtotal,
     tax_amount: totals.taxAmount,
     total: totals.total,
@@ -194,8 +177,43 @@ export async function getQuotes(): Promise<Quote[]> {
     .select("*")
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
+  return hydrateQuotes(rows ?? []);
+}
 
-  const quoteRows = rows ?? [];
+/**
+ * Quotes linked to the client by id, plus legacy quotes captured with the
+ * client's name but without `client_id`.
+ */
+export async function getClientQuotes(client: {
+  id: string;
+  name: string;
+}): Promise<Quote[]> {
+  const [byId, byName] = await Promise.all([
+    db.from("quotes").select("*").eq("client_id", client.id),
+    client.name.trim()
+      ? db
+          .from("quotes")
+          .select("*")
+          .is("client_id", null)
+          .ilike("client_name", client.name.trim().replace(/[%_]/g, "\\$&"))
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (byId.error) throw new Error(byId.error.message);
+  if (byName.error) throw new Error(byName.error.message);
+
+  const rows = [...(byId.data ?? []), ...(byName.data ?? [])] as Record<
+    string,
+    unknown
+  >[];
+  rows.sort((a, b) =>
+    String(b.quote_date || b.created_at).localeCompare(
+      String(a.quote_date || a.created_at)
+    )
+  );
+  return hydrateQuotes(rows);
+}
+
+async function hydrateQuotes(quoteRows: Record<string, unknown>[]): Promise<Quote[]> {
   if (!quoteRows.length) return [];
 
   const ids = quoteRows.map((row: Record<string, unknown>) => row.id);
@@ -259,27 +277,16 @@ export async function createQuote(input: QuoteInput): Promise<Quote> {
 
   const folio = await nextFolio();
   const createdBy = (input.createdBy ?? "").trim();
-  const insertPayload = {
-    folio,
-    ...payloadFromInput(input, lines),
-    created_by: createdBy,
-  };
-  let { data, error } = await db
+  const { data, error } = await db
     .from("quotes")
-    .insert(insertPayload)
+    .insert({
+      folio,
+      ...payloadFromInput(input, lines),
+      created_by: createdBy,
+    })
     .select("*")
     .single();
-  if (error && isMissingColumnError(error)) {
-    const retry = await db
-      .from("quotes")
-      .insert(withoutDiscountPercent(insertPayload))
-      .select("*")
-      .single();
-    data = retry.data;
-    error = retry.error;
-  }
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("No se pudo crear la cotización.");
 
   const { error: linesError } = await db
     .from("quote_lines")
@@ -307,18 +314,13 @@ export async function updateQuote(
   );
   if (!lines.length) throw new Error("Agrega al menos una partida.");
 
-  const updatePayload = {
-    ...payloadFromInput(input, lines),
-    updated_at: new Date().toISOString(),
-  };
-  let { error } = await db.from("quotes").update(updatePayload).eq("id", id);
-  if (error && isMissingColumnError(error)) {
-    const retry = await db
-      .from("quotes")
-      .update(withoutDiscountPercent(updatePayload))
-      .eq("id", id);
-    error = retry.error;
-  }
+  const { error } = await db
+    .from("quotes")
+    .update({
+      ...payloadFromInput(input, lines),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
   if (error) throw new Error(error.message);
 
   const { error: delError } = await db

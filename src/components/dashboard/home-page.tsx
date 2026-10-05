@@ -48,6 +48,7 @@ import { computeHomeMetrics, delta, PERIODS, type PeriodId } from "@/lib/analyti
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { quoteStatusLabel } from "@/lib/quotes/types";
 import { cn } from "@/lib/utils";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 type ChartMode = "servicio" | "ventas" | "montos";
 
@@ -513,7 +514,7 @@ function HomeContent({
           >
             {metrics.technicians.length ? (
               <div className="-mx-5 overflow-x-auto">
-                <table className="w-full min-w-[420px] text-sm">
+                <SortableTable className="w-full min-w-[420px] text-sm">
                   <thead className="border-y border-border bg-muted/40 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     <tr>
                       <th className="px-5 py-2 text-left">Técnico</th>
@@ -543,7 +544,7 @@ function HomeContent({
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </SortableTable>
               </div>
             ) : (
               <EmptyState>Sin órdenes asignadas.</EmptyState>

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
 import {
   DesktopTable,
   ResponsiveDataList,
@@ -18,6 +20,7 @@ import {
 } from "@/lib/warehouse/maintenances";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 export function MaintenancesPanel() {
   const { canWrite } = usePermissions("mantenimientos");
@@ -33,6 +36,30 @@ export function MaintenancesPanel() {
   const [technician, setTechnician] = useState("");
   const [cost, setCost] = useState(0);
   const [notes, setNotes] = useState("");
+  const [query, setQuery] = useState("");
+
+  const visibleItems = useMemo(
+    () =>
+      items.filter((item) => {
+        const asset = equipment.find((entry) => entry.id === item.equipmentId);
+        return matchesSearch(query, [
+          asset?.name,
+          asset?.sku,
+          asset?.serialNumber,
+          asset?.brand,
+          asset?.model,
+          item.maintenanceType,
+          item.status.replace("_", " "),
+          item.technician,
+          item.scheduledDate,
+          item.notes,
+        ]);
+      }),
+    [items, equipment, query]
+  );
+  const emptyMessage = query.trim()
+    ? "Ningún mantenimiento coincide con la búsqueda."
+    : "No hay mantenimientos programados.";
 
   async function refresh() {
     const [list, assets] = await Promise.all([
@@ -116,9 +143,16 @@ export function MaintenancesPanel() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card shadow-sm">
+        <div className="border-b border-border p-4">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Buscar equipo, serie, tipo, técnico o estado..."
+          />
+        </div>
         <ResponsiveDataList
-          emptyMessage="No hay mantenimientos programados."
-          items={items.map((item) => {
+          emptyMessage={emptyMessage}
+          items={visibleItems.map((item) => {
             const asset = equipment.find((entry) => entry.id === item.equipmentId);
             return {
               key: item.id,
@@ -159,7 +193,7 @@ export function MaintenancesPanel() {
         />
 
         <DesktopTable>
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
           <thead className="bg-muted/50 text-left text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-medium">Equipo</th>
@@ -171,17 +205,17 @@ export function MaintenancesPanel() {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 ? (
+            {visibleItems.length === 0 ? (
               <tr>
                 <td
                   colSpan={6}
                   className="px-4 py-10 text-center text-muted-foreground"
                 >
-                  No hay mantenimientos programados.
+                  {emptyMessage}
                 </td>
               </tr>
             ) : (
-              items.map((item) => {
+              visibleItems.map((item) => {
                 const asset = equipment.find(
                   (entry) => entry.id === item.equipmentId
                 );
@@ -230,7 +264,7 @@ export function MaintenancesPanel() {
               })
             )}
           </tbody>
-        </table>
+        </SortableTable>
         </DesktopTable>
       </section>
 

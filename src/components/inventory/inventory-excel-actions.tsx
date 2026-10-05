@@ -13,6 +13,7 @@ import {
 import { bulkImportInventoryItems } from "@/lib/inventory/storage";
 import { getSession } from "@/lib/auth";
 import type { InventoryItem, ItemKind } from "@/lib/inventory/types";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 type InventoryExcelActionsProps = {
   items: InventoryItem[];
@@ -195,7 +196,7 @@ export function InventoryExcelActions({
 
             {preview.length > 0 ? (
               <div className="overflow-x-auto rounded-xl border border-border">
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">SKU</th>
@@ -214,7 +215,7 @@ export function InventoryExcelActions({
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </SortableTable>
                 {preview.length > 8 ? (
                   <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
                     Y {preview.length - 8} más...

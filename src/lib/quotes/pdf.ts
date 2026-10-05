@@ -1,10 +1,17 @@
-﻿import { jsPDF } from "jspdf";
+import { jsPDF } from "jspdf";
 import {
   drawBrandedFooter,
   drawBrandedHeader,
   drawCompanySealBlock,
 } from "@/lib/brand/pdf";
-import { lineAmount, type Quote } from "./types";
+import {
+  lineAmount,
+  lineDiscountAmount,
+  lineDiscountLabel,
+  lineGrossAmount,
+  lineHasDiscount,
+  type Quote,
+} from "./types";
 
 function money(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -67,14 +74,24 @@ export async function downloadQuotePdf(quote: Quote) {
   }
   y += blockLines * 4.5 + 6;
 
-  // Table header
-  const colX = {
-    n: margin,
-    desc: margin + 10,
-    qty: pageW - margin - 62,
-    price: pageW - margin - 40,
-    amount: pageW - margin,
-  };
+  const hasLineDiscounts = quote.lines.some(lineHasDiscount);
+  const colX = hasLineDiscounts
+    ? {
+        n: margin,
+        desc: margin + 10,
+        qty: pageW - margin - 80,
+        price: pageW - margin - 56,
+        disc: pageW - margin - 32,
+        amount: pageW - margin,
+      }
+    : {
+        n: margin,
+        desc: margin + 10,
+        qty: pageW - margin - 62,
+        price: pageW - margin - 40,
+        disc: 0,
+        amount: pageW - margin,
+      };
 
   doc.setFillColor(245, 247, 252);
   doc.rect(margin, y - 4, pageW - margin * 2, 8, "F");
@@ -85,6 +102,7 @@ export async function downloadQuotePdf(quote: Quote) {
   doc.text("Descripción", colX.desc, y);
   doc.text("Cant.", colX.qty, y, { align: "right" });
   doc.text("P. unit.", colX.price, y, { align: "right" });
+  if (hasLineDiscounts) doc.text("Desc.", colX.disc, y, { align: "right" });
   doc.text("Importe", colX.amount, y, { align: "right" });
   y += 6;
 
@@ -110,6 +128,9 @@ export async function downloadQuotePdf(quote: Quote) {
       { align: "right" }
     );
     doc.text(money(line.unitPrice), colX.price, y, { align: "right" });
+    if (hasLineDiscounts && lineHasDiscount(line)) {
+      doc.text(lineDiscountLabel(line, money), colX.disc, y, { align: "right" });
+    }
     doc.text(money(lineAmount(line)), colX.amount, y, { align: "right" });
     y += Math.max(descLines.length * 4, 6) + 1;
   });
@@ -123,31 +144,35 @@ export async function downloadQuotePdf(quote: Quote) {
   const labelX = pageW - margin - 50;
   doc.setFontSize(9);
   doc.setTextColor(60, 60, 60);
-  const gross = quote.subtotal + quote.discount;
-  doc.text("Importe", labelX, y, { align: "right" });
-  doc.text(money(gross), totalsX, y, {
+  if (hasLineDiscounts) {
+    const listAmount = quote.lines.reduce((sum, line) => sum + lineGrossAmount(line), 0);
+    const lineDiscounts = quote.lines.reduce((sum, line) => sum + lineDiscountAmount(line), 0);
+    doc.text("Precio de lista", labelX, y, { align: "right" });
+    doc.text(money(listAmount), totalsX, y, { align: "right" });
+    y += 5;
+    doc.text("Descuentos por partida", labelX, y, { align: "right" });
+    doc.text(`- ${money(lineDiscounts)}`, totalsX, y, { align: "right" });
+    y += 5;
+  }
+  doc.text("Subtotal", labelX, y, { align: "right" });
+  doc.text(money(quote.subtotal + quote.discount), totalsX, y, {
     align: "right",
   });
   y += 5;
   if (quote.discount > 0) {
-    const discountLabel =
+    doc.text(
       quote.discountPercent > 0
-        ? `Descuento (${quote.discountPercent}%)`
-        : "Descuento";
-    doc.text(discountLabel, labelX, y, { align: "right" });
+        ? `Descuento general (${quote.discountPercent}%)`
+        : "Descuento general",
+      labelX,
+      y,
+      { align: "right" }
+    );
     doc.text(`- ${money(quote.discount)}`, totalsX, y, { align: "right" });
     y += 5;
-    doc.text("Subtotal", labelX, y, { align: "right" });
-    doc.text(money(quote.subtotal), totalsX, y, { align: "right" });
-    y += 5;
   }
-  if (quote.taxRate > 0) {
-    doc.text(`IVA (${quote.taxRate}%)`, labelX, y, { align: "right" });
-    doc.text(money(quote.taxAmount), totalsX, y, { align: "right" });
-  } else {
-    doc.text("IVA", labelX, y, { align: "right" });
-    doc.text("No aplica", totalsX, y, { align: "right" });
-  }
+  doc.text(`IVA (${quote.taxRate}%)`, labelX, y, { align: "right" });
+  doc.text(money(quote.taxAmount), totalsX, y, { align: "right" });
   y += 6;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);

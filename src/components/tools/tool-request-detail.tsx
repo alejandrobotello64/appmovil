@@ -37,6 +37,7 @@ import {
 } from "@/lib/tools/types";
 import { cn } from "@/lib/utils";
 import { fieldClass, formatDate, Notice, primaryButtonClass, StatusBadge, textareaClass } from "./tools-shared";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 type Mode = "view" | "deliver" | "return" | "reject";
 type Session = { username: string; fullName: string | null };
@@ -248,7 +249,7 @@ export function ToolRequestDetail({
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
                 <th className="px-3 py-2">Herramienta</th>
@@ -395,7 +396,7 @@ export function ToolRequestDetail({
                 );
               })}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
 
         {mode === "deliver" ? (

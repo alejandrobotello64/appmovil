@@ -50,6 +50,9 @@ import {
   RoleSuggestion,
 } from "@/components/warehouse/org-fields";
 import { findOrgArea, suggestedRoleFor } from "@/lib/users/org-catalog";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 type ListedUser = {
   id: string;
@@ -324,6 +327,42 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
     [users]
   );
 
+  const [userQuery, setUserQuery] = useState("");
+  const searchedUsers = useMemo(
+    () =>
+      users.filter((user) =>
+        matchesSearch(userQuery, [
+          user.full_name,
+          user.username,
+          user.employee_number,
+          user.email,
+          user.phone,
+          user.job_title,
+          user.department,
+          roleLabel(user.role),
+        ])
+      ),
+    [users, userQuery]
+  );
+  const searchedActiveUsers = useMemo(
+    () => searchedUsers.filter((user) => user.is_active),
+    [searchedUsers]
+  );
+  const searchedInactiveUsers = useMemo(
+    () => searchedUsers.filter((user) => !user.is_active),
+    [searchedUsers]
+  );
+  const userSearchBox = (
+    <SearchInput
+      value={userQuery}
+      onChange={setUserQuery}
+      placeholder="Buscar por nombre, usuario, no. empleado, puesto, área o rol..."
+    />
+  );
+  const noUserMatches = userQuery.trim()
+    ? "Ningún colaborador coincide con la búsqueda."
+    : null;
+
   const rolesUsed = useMemo(() => {
     const set = new Set(activeUsers.map((user) => normalizeRole(user.role)));
     return set.size;
@@ -361,23 +400,20 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
     if (first) setSelectedUserId(first.id);
   }, [users, activeUsers, selectedUserId]);
 
-  const fichaOptions = useMemo(() => {
-    const q = fichaQuery.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((user) =>
-      [
-        user.full_name,
-        user.username,
-        user.employee_number,
-        user.email,
-        user.job_title,
-        user.department,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [users, fichaQuery]);
+  const fichaOptions = useMemo(
+    () =>
+      users.filter((user) =>
+        matchesSearch(fichaQuery, [
+          user.full_name,
+          user.username,
+          user.employee_number,
+          user.email,
+          user.job_title,
+          user.department,
+        ])
+      ),
+    [users, fichaQuery]
+  );
 
   function updateAlta<K extends keyof AltaFormState>(
     key: K,
@@ -847,9 +883,10 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               <h3 className="text-base font-semibold text-foreground">
                 Colaboradores
               </h3>
+              {userSearchBox}
               <ResponsiveDataList
-                emptyMessage="No hay colaboradores registrados."
-                items={users.map((user) => ({
+                emptyMessage={noUserMatches ?? "No hay colaboradores registrados."}
+                items={searchedUsers.map((user) => ({
                   key: user.id,
                   title: (
                     <span className="inline-flex items-center gap-2">
@@ -905,7 +942,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 }))}
               />
               <DesktopTable>
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Nombre</th>
@@ -923,17 +960,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.length === 0 ? (
+                    {searchedUsers.length === 0 ? (
                       <tr>
                         <td
                           colSpan={12}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
-                          No hay colaboradores registrados.
+                          {noUserMatches ?? "No hay colaboradores registrados."}
                         </td>
                       </tr>
                     ) : (
-                      users.map((user) => (
+                      searchedUsers.map((user) => (
                         <tr key={user.id} className="border-t border-border/70">
                           <td className="px-3 py-2 font-medium">
                             <span className="inline-flex items-center gap-2">
@@ -1021,7 +1058,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       ))
                     )}
                   </tbody>
-                </table>
+                </SortableTable>
               </DesktopTable>
             </section>
           </div>
@@ -1432,13 +1469,15 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               de forma permanente.
             </p>
 
+            {userSearchBox}
+
             <section className="space-y-3">
               <h3 className="text-base font-semibold text-foreground">
                 Colaboradores con acceso activo
               </h3>
               <ResponsiveDataList
-                emptyMessage="No hay colaboradores activos."
-                items={activeUsers.map((user) => ({
+                emptyMessage={noUserMatches ?? "No hay colaboradores activos."}
+                items={searchedActiveUsers.map((user) => ({
                   key: user.id,
                   title: (
                     <span className="inline-flex items-center gap-2">
@@ -1496,7 +1535,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 }))}
               />
               <DesktopTable>
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Nombre</th>
@@ -1509,17 +1548,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {activeUsers.length === 0 ? (
+                    {searchedActiveUsers.length === 0 ? (
                       <tr>
                         <td
                           colSpan={7}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
-                          No hay colaboradores activos.
+                          {noUserMatches ?? "No hay colaboradores activos."}
                         </td>
                       </tr>
                     ) : (
-                      activeUsers.map((user) => (
+                      searchedActiveUsers.map((user) => (
                         <tr key={user.id} className="border-t border-border/70">
                           <td className="px-3 py-2 font-medium">
                             <span className="inline-flex items-center gap-2">
@@ -1582,7 +1621,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       ))
                     )}
                   </tbody>
-                </table>
+                </SortableTable>
               </DesktopTable>
             </section>
 
@@ -1591,8 +1630,8 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 Acceso deshabilitado temporalmente
               </h3>
               <ResponsiveDataList
-                emptyMessage="No hay colaboradores deshabilitados."
-                items={inactiveUsers.map((user) => ({
+                emptyMessage={noUserMatches ?? "No hay colaboradores deshabilitados."}
+                items={searchedInactiveUsers.map((user) => ({
                   key: user.id,
                   title: (
                     <span className="inline-flex items-center gap-2">
@@ -1644,7 +1683,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 }))}
               />
               <DesktopTable>
-                <table className="min-w-full text-sm">
+                <SortableTable className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Nombre</th>
@@ -1657,17 +1696,17 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {inactiveUsers.length === 0 ? (
+                    {searchedInactiveUsers.length === 0 ? (
                       <tr>
                         <td
                           colSpan={7}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
-                          No hay colaboradores deshabilitados.
+                          {noUserMatches ?? "No hay colaboradores deshabilitados."}
                         </td>
                       </tr>
                     ) : (
-                      inactiveUsers.map((user) => (
+                      searchedInactiveUsers.map((user) => (
                         <tr key={user.id} className="border-t border-border/70">
                           <td className="px-3 py-2 font-medium">
                             <span className="inline-flex items-center gap-2">
@@ -1730,7 +1769,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       ))
                     )}
                   </tbody>
-                </table>
+                </SortableTable>
               </DesktopTable>
             </section>
           </div>
@@ -1742,13 +1781,18 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               <h3 className="text-base font-semibold text-foreground">
                 Selecciona colaborador
               </h3>
+              <SearchInput
+                value={userQuery}
+                onChange={setUserQuery}
+                placeholder="Buscar colaborador..."
+              />
               <div className="max-h-[28rem] space-y-2 overflow-y-auto rounded-xl border border-border p-2">
-                {users.length === 0 ? (
+                {searchedUsers.length === 0 ? (
                   <p className="p-3 text-sm text-muted-foreground">
-                    No hay colaboradores registrados.
+                    {noUserMatches ?? "No hay colaboradores registrados."}
                   </p>
                 ) : (
-                  users.map((user) => (
+                  searchedUsers.map((user) => (
                     <button
                       key={user.id}
                       type="button"

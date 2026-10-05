@@ -22,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SortableTable } from "@/components/ui/sortable-table";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -35,7 +36,6 @@ import {
   downloadServiceQuotePdf,
   downloadServiceWorkOrderPdf,
 } from "@/lib/service-orders/pdf";
-import { downloadServiceRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   addLinkedEquipment,
   addServiceOrderFunctionTest,
@@ -87,6 +87,7 @@ import {
   requisitionStatusLabel,
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
+import { downloadRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   CHECKLIST_RESULTS,
   FUNCTION_TEST_RESULTS,
@@ -98,7 +99,6 @@ import {
   SERVICE_TYPES,
   checklistItemsByKind,
   computeServiceTotals,
-  DEFAULT_TAX_RATE,
   formatValidInterval,
   hasValidInterval,
   isHospitalSignedDocument,
@@ -196,7 +196,7 @@ function emptyForm(): ServiceOrderInput {
     serviceNotes: "",
     underWarranty: false,
     authorized: false,
-    taxRate: DEFAULT_TAX_RATE,
+    taxRate: 16,
     discount: 0,
   };
 }
@@ -388,7 +388,7 @@ export function ServiceOrdersPanel({
   }, [orders, query, statusFilter]);
 
   const lineTotals = useMemo(
-    () => computeServiceTotals(draftLines, form.discount ?? 0, form.taxRate ?? DEFAULT_TAX_RATE),
+    () => computeServiceTotals(draftLines, form.discount ?? 0, form.taxRate ?? 16),
     [draftLines, form.discount, form.taxRate]
   );
 
@@ -449,25 +449,6 @@ export function ServiceOrdersPanel({
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar.");
-    }
-  }
-
-  async function saveTaxIncluded(include: boolean) {
-    if (!selected || !canEdit) return;
-    const taxRate = include ? DEFAULT_TAX_RATE : 0;
-    setForm((f) => ({ ...f, taxRate }));
-    try {
-      setError("");
-      await updateServiceOrder(selected.id, {
-        ...formFromOrder(selected),
-        ...form,
-        taxRate,
-        createdBy: actor,
-        lines: undefined,
-      });
-      await reload();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo actualizar el IVA.");
     }
   }
 
@@ -1254,19 +1235,6 @@ export function ServiceOrdersPanel({
             />
             Cubierta por garantía
           </label>
-          <label className="flex items-center gap-2 self-end pb-2 text-sm sm:col-span-2">
-            <input
-              type="checkbox"
-              checked={(form.taxRate ?? DEFAULT_TAX_RATE) > 0}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  taxRate: e.target.checked ? DEFAULT_TAX_RATE : 0,
-                }))
-              }
-            />
-            Aplicar IVA ({DEFAULT_TAX_RATE}%)
-          </label>
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1 block text-muted-foreground">
               Falla reportada por el cliente
@@ -1571,17 +1539,6 @@ export function ServiceOrdersPanel({
                     }
                   />
                   Cubierta por garantía
-                </label>
-                <label className="flex items-center gap-2 self-end pb-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={(form.taxRate ?? DEFAULT_TAX_RATE) > 0}
-                    disabled={!canEdit}
-                    onChange={(e) => {
-                      void saveTaxIncluded(e.target.checked);
-                    }}
-                  />
-                  Aplicar IVA ({DEFAULT_TAX_RATE}%)
                 </label>
 
                 <div className="sm:col-span-2 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
@@ -2433,10 +2390,7 @@ export function ServiceOrdersPanel({
                     </p>
                     <ul className="space-y-1 text-xs text-muted-foreground">
                       {orderRequisitions.map((req) => (
-                        <li
-                          key={req.id}
-                          className="flex flex-wrap items-center gap-2"
-                        >
+                        <li key={req.id} className="flex flex-wrap items-center gap-2">
                           <span className="font-medium text-foreground">
                             {req.folio}
                           </span>
@@ -2445,25 +2399,25 @@ export function ServiceOrdersPanel({
                             {req.lines.length} línea(s) ·{" "}
                             {new Date(req.requestedAt).toLocaleString("es-MX")}
                           </span>
-                          {canExport ? (
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1 font-medium text-[#3B46A5] hover:underline"
-                              onClick={() => {
-                                void downloadServiceRequisitionPdf(req).catch(
-                                  (err) =>
-                                    setError(
-                                      err instanceof Error
-                                        ? err.message
-                                        : "No se pudo generar el PDF de surtimiento."
-                                    )
-                                );
-                              }}
-                            >
-                              <FileDown className="size-3.5" />
-                              PDF
-                            </button>
-                          ) : null}
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 font-medium text-[#3B46A5] hover:underline"
+                            onClick={() =>
+                              void downloadRequisitionPdf(req, {
+                                printedBy: session
+                                  ? { username: session.username, fullName: session.fullName }
+                                  : undefined,
+                              }).catch((err) =>
+                                setError(
+                                  err instanceof Error
+                                    ? err.message
+                                    : "No se pudo generar el PDF de surtimiento."
+                                )
+                              )
+                            }
+                          >
+                            <FileDown className="size-3.5" /> Imprimir
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -2475,26 +2429,9 @@ export function ServiceOrdersPanel({
                     </a>
                   </div>
                 ) : null}
-                <div className="space-y-1 text-right text-sm">
-                  <label className="flex items-center justify-end gap-2 text-sm font-normal">
-                    <input
-                      type="checkbox"
-                      checked={(form.taxRate ?? DEFAULT_TAX_RATE) > 0}
-                      disabled={!canEdit}
-                      onChange={(e) => {
-                        void saveTaxIncluded(e.target.checked);
-                      }}
-                    />
-                    Aplicar IVA ({DEFAULT_TAX_RATE}%)
-                  </label>
-                  <p>Subtotal: {money(lineTotals.subtotal)}</p>
-                  <p>
-                    {(form.taxRate ?? 0) > 0
-                      ? `IVA (${form.taxRate}%): ${money(lineTotals.taxAmount)}`
-                      : "IVA: no aplica"}
-                  </p>
-                  <p className="font-medium">Total: {money(lineTotals.total)}</p>
-                </div>
+                <p className="text-right text-sm font-medium">
+                  Total: {money(lineTotals.total)}
+                </p>
                 <label className="block text-sm">
                   <span className="mb-1 block text-muted-foreground">
                     Notas del servicio (salen en PDF)
@@ -2964,12 +2901,7 @@ export function ServiceOrdersPanel({
               <p>Promesa: {selected.promisedAt || "—"}</p>
               <p>Próximo servicio: {selected.nextServiceAt || "—"}</p>
               <p>Creada: {new Date(selected.createdAt).toLocaleString("es-MX")}</p>
-              <p>
-                Total: {money(selected.total)}
-                {(selected.taxRate ?? 0) > 0
-                  ? ` · IVA ${selected.taxRate}%`
-                  : " · sin IVA"}
-              </p>
+              <p>Total: {money(selected.total)}</p>
             </div>
           </aside>
         </div>
@@ -3064,7 +2996,7 @@ export function ServiceOrdersPanel({
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-        <table className="min-w-full text-sm">
+        <SortableTable className="min-w-full text-sm">
           <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
             <tr>
               <th className="px-3 py-3">Cliente</th>
@@ -3214,7 +3146,7 @@ export function ServiceOrdersPanel({
               ))
             )}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
     </section>
   );

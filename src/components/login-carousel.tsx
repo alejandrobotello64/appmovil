@@ -58,7 +58,7 @@ export function LoginCarousel() {
               priority={index === 0}
               sizes="100vw"
               className={cn(
-                "object-cover object-center transition-transform duration-[6500ms] ease-out",
+                "object-cover transition-transform duration-[6500ms] ease-out",
                 isActive ? "scale-105" : "scale-100"
               )}
             />
@@ -66,16 +66,16 @@ export function LoginCarousel() {
         );
       })}
 
-      <div className="absolute inset-0 bg-black/25" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(8,12,28,0.28)_70%,rgba(8,12,28,0.45)_100%)]" />
+      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,28,0.25)_0%,rgba(8,12,28,0.45)_55%,rgba(8,12,28,0.7)_100%)]" />
 
-      <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-1.5 sm:bottom-7">
+      <div className="absolute bottom-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] left-1/2 flex -translate-x-1/2 gap-1.5">
         {LOGIN_SLIDES.map((slide, index) => (
           <span
             key={slide.src}
             className={cn(
               "h-1.5 rounded-full transition-all duration-500",
-              index === active ? "w-5 bg-white" : "w-1.5 bg-white/55"
+              index === active ? "w-5 bg-white" : "w-1.5 bg-white/45"
             )}
           />
         ))}

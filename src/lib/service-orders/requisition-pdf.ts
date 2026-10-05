@@ -1,483 +1,345 @@
 import { jsPDF } from "jspdf";
+import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import {
-  drawBrandedFooter,
-  drawBrandedHeader,
-  drawCompanySealBlock,
-} from "@/lib/brand/pdf";
-import { getServiceOrder } from "@/lib/service-orders/storage";
-import { findStaffProfile, type StaffProfile } from "@/lib/users/staff";
+  PDF_INK,
+  PDF_MARGIN,
+  PDF_MUTED,
+  PdfCursor,
+  drawFieldRow,
+  drawParagraph,
+  drawPersonCards,
+  drawSignatures,
+  drawTable,
+  formatPdfDate,
+  formatPdfQty,
+  type PdfColumn,
+  type PdfPersonCard,
+  type PdfRow,
+} from "@/lib/brand/pdf-layout";
+import { getPurchaseRequests } from "@/lib/purchasing/storage";
+import { isPurchaseOpen, purchaseStatusLabel, type PurchaseRequest } from "@/lib/purchasing/types";
+import { supabase } from "@/lib/supabase/client";
+import { loadStaffProfileLookup, type StaffProfile } from "@/lib/users/staff";
+import { getRequisitionFulfillments } from "./requisition-storage";
 import {
-  serviceOrderStatusLabel,
-  serviceTypeLabel,
-  type ServiceOrder,
-} from "@/lib/service-orders/types";
-import {
+  requisitionLinePending,
   requisitionLineStatusLabel,
   requisitionStatusLabel,
   type ServiceOrderRequisition,
-} from "@/lib/service-orders/requisitions";
+} from "./requisitions";
+import { serviceOrderStatusLabel, serviceTypeLabel } from "./types";
 
-const MARGIN = 14;
-const BLUE: [number, number, number] = [59, 70, 165];
-const INK: [number, number, number] = [30, 30, 30];
-const MUTED: [number, number, number] = [110, 110, 110];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 
-function formatDateTime(value: string) {
-  if (!value) return "—";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const [y, m, d] = value.split("-");
-    return `${d}/${m}/${y}`;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-MX", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+type Row = Record<string, unknown>;
+const str = (value: unknown) => (value === null || value === undefined ? "" : String(value));
 
-class Cursor {
-  y: number;
-  constructor(
-    readonly doc: jsPDF,
-    start: number
-  ) {
-    this.y = start;
-  }
-  get pageW() {
-    return this.doc.internal.pageSize.getWidth();
-  }
-  get pageH() {
-    return this.doc.internal.pageSize.getHeight();
-  }
-  get contentW() {
-    return this.pageW - MARGIN * 2;
-  }
-  ensure(height: number) {
-    if (this.y + height > this.pageH - 18) {
-      this.doc.addPage();
-      this.y = 16;
-    }
-  }
-  section(title: string) {
-    this.ensure(8);
-    const { doc } = this;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...BLUE);
-    doc.text(title.toUpperCase(), MARGIN, this.y);
-    doc.setDrawColor(210, 216, 236);
-    doc.line(MARGIN, this.y + 1.2, this.pageW - MARGIN, this.y + 1.2);
-    this.y += 5;
-  }
-}
-
-function kv(
-  doc: jsPDF,
-  label: string,
-  value: string,
-  x: number,
-  y: number,
-  width: number
-) {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6);
-  doc.setTextColor(...MUTED);
-  doc.text(label, x, y);
-  const labelW = Math.min(doc.getTextWidth(`${label}  `), width * 0.42);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...INK);
-  const lines = doc.splitTextToSize(value || "—", width - labelW) as string[];
-  doc.text(lines.slice(0, 2), x + labelW, y);
-  return Math.max(3.6, Math.min(lines.length, 2) * 3.2);
-}
-
-function signatureCard(
-  doc: jsPDF,
-  title: string,
-  subtitle: string,
-  name: string,
-  profile: StaffProfile | null,
-  x: number,
-  y: number,
-  w: number,
-  h: number
-) {
-  doc.setFillColor(252, 252, 254);
-  doc.setDrawColor(190, 190, 198);
-  doc.roundedRect(x, y, w, h, 1.2, 1.2, "FD");
-  doc.setFillColor(...BLUE);
-  doc.rect(x, y + 1.1, 1.1, h - 2.2, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(6.8);
-  doc.setTextColor(...BLUE);
-  doc.text(title.toUpperCase(), x + 3.5, y + 5);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(5.8);
-  doc.setTextColor(...MUTED);
-  doc.text(subtitle, x + 3.5, y + 8.5, { maxWidth: w - 7 });
-
-  const displayName = profile?.fullName || name || "Nombre y firma";
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...INK);
-  const nameLines = doc.splitTextToSize(displayName, w - 7) as string[];
-  doc.text(nameLines.slice(0, 2), x + 3.5, y + 13.4);
-
-  const rows: [string, string][] = [
-    ["Puesto", [profile?.jobTitle, profile?.department].filter(Boolean).join(" · ")],
-    ["No. emp.", profile?.employeeNumber ?? ""],
-    ["Teléfono", profile?.phone ?? ""],
-    ["Correo", profile?.email ?? ""],
-  ];
-  let rowY = y + 18.8;
-  for (const [label, value] of rows) {
-    rowY += kv(doc, label, value || "—", x + 3.5, rowY, w - 7);
-  }
-
-  doc.setDrawColor(150, 150, 160);
-  doc.line(x + 10, y + h - 8, x + w - 10, y + h - 8);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.5);
-  doc.setTextColor(...MUTED);
-  doc.text("Firma", x + w / 2, y + h - 4.5, { align: "center" });
-}
-
-function noteBlock(cursor: Cursor, title: string, text: string) {
-  if (!text.trim()) return;
-  cursor.ensure(10);
-  const { doc } = cursor;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...BLUE);
-  doc.text(title, MARGIN, cursor.y);
-  cursor.y += 3.2;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...INK);
-  const lines = doc.splitTextToSize(text.trim(), cursor.contentW) as string[];
-  for (const line of lines.slice(0, 4)) {
-    cursor.ensure(4);
-    doc.text(line, MARGIN, cursor.y);
-    cursor.y += 3.4;
-  }
-  cursor.y += 2;
-}
-
-type Column = {
-  key: string;
-  label: string;
-  width: number;
-  align?: "left" | "center" | "right";
-};
-
-const COLUMNS: Column[] = [
-  { key: "n", label: "#", width: 8, align: "center" },
-  { key: "sku", label: "SKU", width: 34 },
-  { key: "desc", label: "Descripción", width: 62 },
-  { key: "unit", label: "Unid.", width: 14, align: "center" },
-  { key: "req", label: "Pedido", width: 16, align: "center" },
-  { key: "ok", label: "Surtido", width: 16, align: "center" },
-  { key: "pend", label: "Pend.", width: 16, align: "center" },
-  { key: "st", label: "Estatus", width: 16, align: "center" },
+const COLUMNS: PdfColumn[] = [
+  { key: "n", label: "#", width: 7, align: "center" },
+  { key: "sku", label: "SKU", width: 24 },
+  { key: "desc", label: "Material", width: 58 },
+  { key: "unit", label: "Unidad", width: 14, align: "center" },
+  { key: "req", label: "Solic.", width: 14, align: "center" },
+  { key: "ful", label: "Surtido", width: 15, align: "center" },
+  { key: "pend", label: "Pend.", width: 14, align: "center" },
+  { key: "buy", label: "Estatus / compra", width: 36 },
 ];
 
-function cellX(col: Column, x: number) {
-  if (col.align === "center") return x + col.width / 2;
-  if (col.align === "right") return x + col.width - 1.4;
-  return x + 1.4;
-}
+export type RequisitionPrintOptions = {
+  /** Usuario que imprime; si es de almacén y aún no hay surtido, aparece como quien surte. */
+  printedBy?: { username: string; fullName: string | null };
+  printedByWarehouse?: boolean;
+};
 
-function drawLines(cursor: Cursor, req: ServiceOrderRequisition) {
-  const { doc } = cursor;
-  cursor.ensure(16);
-  doc.setFillColor(...BLUE);
-  doc.rect(MARGIN, cursor.y, cursor.contentW, 7, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(255, 255, 255);
-  let x = MARGIN;
-  for (const col of COLUMNS) {
-    doc.text(col.label, cellX(col, x), cursor.y + 4.6, {
-      align: col.align ?? "left",
-    });
-    x += col.width;
-  }
-  cursor.y += 7;
-
-  req.lines.forEach((line, index) => {
-    const pending = Math.max(0, line.quantityRequested - line.quantityFulfilled);
-    const desc = [
-      line.description || line.productName || "—",
-      line.productName && line.productName !== line.description
-        ? line.productName
-        : "",
-      line.notes ? `Nota: ${line.notes}` : "",
-    ].filter(Boolean);
-    const descLines = doc.splitTextToSize(desc.join(" · "), COLUMNS[2].width - 3) as string[];
-    const rowH = Math.max(8, descLines.length * 3.6 + 4);
-    cursor.ensure(rowH + 2);
-    if (index % 2 === 1) {
-      doc.setFillColor(246, 248, 253);
-      doc.rect(MARGIN, cursor.y, cursor.contentW, rowH, "F");
-    }
-    const values: Record<string, string | string[]> = {
-      n: String(index + 1),
-      sku: line.productSku || "—",
-      desc: descLines,
-      unit: line.unit || "pza",
-      req: String(line.quantityRequested),
-      ok: String(line.quantityFulfilled),
-      pend: String(pending),
-      st: requisitionLineStatusLabel(line.lineStatus),
-    };
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...INK);
-    x = MARGIN;
-    for (const col of COLUMNS) {
-      const value = values[col.key];
-      const textY = cursor.y + 4.4;
-      if (Array.isArray(value)) {
-        doc.text(value, cellX(col, x), textY);
-      } else {
-        doc.text(value, cellX(col, x), textY, {
-          align: col.align ?? "left",
-          maxWidth: col.width - 2.4,
-        });
-      }
-      x += col.width;
-    }
-    cursor.y += rowH;
-  });
-
-  const requested = req.lines.reduce((sum, line) => sum + line.quantityRequested, 0);
-  const fulfilled = req.lines.reduce((sum, line) => sum + line.quantityFulfilled, 0);
-  const pending = Math.max(0, requested - fulfilled);
-  cursor.ensure(10);
-  doc.setFillColor(243, 245, 251);
-  doc.rect(MARGIN, cursor.y, cursor.contentW, 8, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(...BLUE);
-  doc.text(
-    `${req.lines.length} partida(s) · Pedido ${requested} · Surtido ${fulfilled} · Pendiente ${pending}`,
-    MARGIN + 2,
-    cursor.y + 5.2
-  );
-  cursor.y += 12;
-}
-
-function drawSignatures(
-  cursor: Cursor,
-  advisorName: string,
-  advisorProfile: StaffProfile | null,
-  warehouseName: string,
-  warehouseProfile: StaffProfile | null,
-  technicianName: string,
-  technicianProfile: StaffProfile | null
-) {
-  const h = 50;
-  cursor.ensure(h + 4);
-  const { doc } = cursor;
-  const gap = 3;
-  const w = (cursor.contentW - gap * 2) / 3;
-  const cards = [
-    {
-      title: "Asesor de servicio",
-      subtitle: "Autoriza el surtimiento",
-      name: advisorName,
-      profile: advisorProfile,
-    },
-    {
-      title: "Almacén",
-      subtitle: "Entrega el material",
-      name: warehouseName,
-      profile: warehouseProfile,
-    },
-    {
-      title: "Técnico que recibe",
-      subtitle: "Recibe el surtimiento",
-      name: technicianName,
-      profile: technicianProfile,
-    },
+function personRows(profile: StaffProfile | null, extra: [string, string][] = []): [string, string][] {
+  return [
+    ["Puesto", profile?.jobTitle ?? ""],
+    ["Departamento", profile?.department ?? ""],
+    ["No. empleado", profile?.employeeNumber ?? ""],
+    ["Teléfono", profile?.phone ?? ""],
+    ...extra,
   ];
-  cards.forEach((card, index) => {
-    signatureCard(
-      doc,
-      card.title,
-      card.subtitle,
-      card.name,
-      card.profile,
-      MARGIN + index * (w + gap),
-      cursor.y,
-      w,
-      h
-    );
-  });
-  cursor.y += h + 4;
 }
 
-/** PDF de la orden de surtimiento (solicitud de material de una OS). */
-export async function downloadServiceRequisitionPdf(
-  requisition: ServiceOrderRequisition
+function purchaseForLine(lineId: string, purchases: PurchaseRequest[]) {
+  return purchases.filter((purchase) => purchase.lines.some((line) => line.requisitionLineId === lineId));
+}
+
+async function loadOrigin(requisition: ServiceOrderRequisition): Promise<Row> {
+  if (requisition.sourceType === "cotizacion") {
+    if (!requisition.quoteId) return {};
+    const { data } = await db
+      .from("quotes")
+      .select("folio, title, status, client_name, contact_name, contact_phone, contact_email, city, state, salesperson, quote_date")
+      .eq("id", requisition.quoteId)
+      .maybeSingle();
+    return (data ?? {}) as Row;
+  }
+  if (!requisition.serviceOrderId) return {};
+  const { data } = await db
+    .from("service_orders")
+    .select(
+      "folio, status, priority, service_type, client_name, contact_name, contact_phone, equipment_name, equipment_brand, equipment_model, equipment_serial, equipment_location, technician, advisor, reception_at, promised_at, fault_reported"
+    )
+    .eq("id", requisition.serviceOrderId)
+    .maybeSingle();
+  return (data ?? {}) as Row;
+}
+
+/** Orden de surtimiento con su origen (OS o cotización), personas, surtidos y compras de faltantes. */
+export async function downloadRequisitionPdf(
+  requisition: ServiceOrderRequisition,
+  options: RequisitionPrintOptions = {}
 ) {
-  let order: ServiceOrder | null = null;
-  try {
-    order = await getServiceOrder(requisition.serviceOrderId);
-  } catch {
-    order = null;
+  const [order, fulfillments, purchases, lookup] = await Promise.all([
+    loadOrigin(requisition),
+    getRequisitionFulfillments(requisition.id).catch(() => []),
+    getPurchaseRequests({ requisitionId: requisition.id }).catch(() => [] as PurchaseRequest[]),
+    loadStaffProfileLookup(),
+  ]);
+  const fromQuote = requisition.sourceType === "cotizacion";
+
+  const fulfillers = [...new Set(fulfillments.map((item) => item.fulfilledBy).filter(Boolean))];
+  let fulfillerKey = fulfillers.at(-1) || requisition.fulfilledBy;
+  let fulfillerLabel = requisition.fulfilledAt ? formatPdfDate(requisition.fulfilledAt, true) : "";
+  if (!fulfillerKey && options.printedByWarehouse && options.printedBy) {
+    fulfillerKey = options.printedBy.fullName || options.printedBy.username;
+    fulfillerLabel = "Por surtir";
   }
 
-  const [advisorProfile, technicianProfile, warehouseProfile] = await Promise.all([
-    order?.advisor ? findStaffProfile(order.advisor) : Promise.resolve(null),
-    order?.technician ? findStaffProfile(order.technician) : Promise.resolve(null),
-    requisition.fulfilledBy
-      ? findStaffProfile(requisition.fulfilledBy)
-      : Promise.resolve(null),
-  ]);
+  const requester = lookup(requisition.requestedBy);
+  const advisor = lookup(str(fromQuote ? order.salesperson : order.advisor));
+  const technician = lookup(str(order.technician));
+  const fulfiller = fulfillerKey ? lookup(fulfillerKey) : null;
+  const nameOf = (profile: StaffProfile | null, raw: string) => profile?.fullName || raw;
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const generated = new Date().toLocaleString("es-MX");
-  let y = await drawBrandedHeader(doc, {
-    title: "Orden de surtimiento de servicio",
+  const start = await drawBrandedHeader(doc, {
+    title: "Orden de surtimiento de material",
     folio: requisition.folio,
-    rightLines: [requisitionStatusLabel(requisition.status), generated],
+    rightLines: [
+      `Estatus: ${requisitionStatusLabel(requisition.status)}`,
+      ...(requisition.priority === "urgente" ? ["Prioridad: URGENTE"] : []),
+    ],
   });
+  const cursor = new PdfCursor(doc, start);
 
-  const cursor = new Cursor(doc, y);
-
-  const pad = 3;
-  const orderH = 20;
-  const col = (cursor.contentW - pad * 2 - 4) / 3;
-
-  doc.setFillColor(246, 248, 253);
-  doc.setDrawColor(210, 216, 236);
-  doc.roundedRect(MARGIN, cursor.y, cursor.contentW, orderH, 1.2, 1.2, "FD");
-  doc.setFillColor(...BLUE);
-  doc.rect(MARGIN, cursor.y + 1, 1.1, orderH - 2, "F");
-
-  let rowY = cursor.y + 4.2;
-  const left = MARGIN + pad;
-  const mid = left + col + 2;
-  const right = mid + col + 2;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(...BLUE);
-  doc.text("ORDEN DE SERVICIO", left, rowY);
-  rowY += 4.2;
-  kv(
-    doc,
-    "Folio OS",
-    order?.folio || requisition.serviceOrderFolio || "—",
-    left,
-    rowY,
-    col
-  );
-  kv(
-    doc,
-    "Tipo",
-    order
-      ? `${serviceTypeLabel(order.serviceType)} · ${serviceOrderStatusLabel(order.status)}`
-      : "—",
-    mid,
-    rowY,
-    col
-  );
-  kv(
-    doc,
-    "Cliente",
-    order?.clientName || requisition.clientName || "—",
-    right,
-    rowY,
-    col
-  );
-  rowY += 3.6;
-  const equipmentLine = [
-    order?.equipmentName || requisition.equipmentName,
-    order?.equipmentBrand,
-    order?.equipmentModel,
-    order?.equipmentSerial,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  kv(doc, "Equipo", equipmentLine || "—", left, rowY, cursor.contentW - pad * 2);
-  cursor.y += orderH + 3;
-
-  cursor.section("Solicitud a almacén");
-  let h5 = kv(doc, "Solicitó", requisition.requestedBy || "—", MARGIN, cursor.y, col);
-  h5 = Math.max(
-    h5,
-    kv(doc, "Fecha", formatDateTime(requisition.requestedAt), MARGIN + col + 3, cursor.y, col)
-  );
-  h5 = Math.max(
-    h5,
-    kv(
-      doc,
-      "Estatus",
-      requisitionStatusLabel(requisition.status),
-      MARGIN + (col + 3) * 2,
-      cursor.y,
-      col
-    )
-  );
-  cursor.y += h5 + 0.4;
-  let h6 = kv(
-    doc,
-    "Surtido por",
-    requisition.fulfilledBy || "Pendiente",
-    MARGIN,
-    cursor.y,
-    col
-  );
-  h6 = Math.max(
-    h6,
-    kv(
-      doc,
-      "Fecha surtido",
-      formatDateTime(requisition.fulfilledAt),
-      MARGIN + col + 3,
-      cursor.y,
-      col
-    )
-  );
-  h6 = Math.max(
-    h6,
-    kv(doc, "Partidas", String(requisition.lines.length), MARGIN + (col + 3) * 2, cursor.y, col)
-  );
-  cursor.y += h6 + 3;
-
-  if (order?.faultReported) {
-    noteBlock(cursor, "Falla / trabajo reportado", order.faultReported);
+  if (fromQuote) {
+    drawQuoteOrigin(cursor, requisition, order);
+  } else {
+    drawServiceOrderOrigin(cursor, requisition, order);
   }
 
-  cursor.section("Material a surtir");
-  drawLines(cursor, requisition);
+  cursor.sectionTitle("Personas involucradas");
+  const fulfillerCard: PdfPersonCard = {
+    title: "Surte (almacén)",
+    name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
+    emptyName: "Pendiente de surtir",
+    rows: personRows(fulfiller, [["Surtido", fulfillerLabel]]),
+  };
+  const requesterCard: PdfPersonCard = {
+    title: "Solicita",
+    name: nameOf(requester, requisition.requestedBy),
+    rows: personRows(requester, [["Fecha", formatPdfDate(requisition.requestedAt, true)]]),
+  };
+  const cards: PdfPersonCard[] = fromQuote
+    ? [
+        requesterCard,
+        {
+          title: "Vendedor",
+          name: nameOf(advisor, str(order.salesperson)),
+          emptyName: "Sin vendedor asignado",
+          rows: personRows(advisor),
+        },
+        fulfillerCard,
+      ]
+    : [
+        requesterCard,
+        {
+          title: "Asesor de servicio",
+          name: nameOf(advisor, str(order.advisor)),
+          emptyName: "Sin asesor asignado",
+          rows: personRows(advisor),
+        },
+        {
+          title: "Técnico asignado",
+          name: nameOf(technician, str(order.technician)),
+          emptyName: "Sin técnico asignado",
+          rows: personRows(technician),
+        },
+        fulfillerCard,
+      ];
+  drawPersonCards(cursor, cards, 2);
 
-  noteBlock(cursor, "Notas de la solicitud", requisition.notes);
-  noteBlock(cursor, "Notas de almacén", requisition.warehouseNotes);
+  drawRequisitionBody(cursor, requisition, fulfillments, purchases, (key) => nameOf(lookup(key), key));
 
-  cursor.section("Firmas");
+  drawParagraph(cursor, fromQuote ? "Notas de ventas" : "Notas de servicio", requisition.notes);
+  drawParagraph(cursor, "Notas de almacén", requisition.warehouseNotes);
+
   drawSignatures(
     cursor,
-    order?.advisor || "",
-    advisorProfile,
-    requisition.fulfilledBy || "",
-    warehouseProfile,
-    order?.technician || "",
-    technicianProfile
+    fromQuote
+      ? [
+          { title: "Entrega material (almacén)", name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "" },
+          { title: "Recibe material (cliente / ventas)", name: "" },
+          { title: "Vo. Bo. ventas", name: nameOf(advisor, str(order.salesperson)) || nameOf(requester, requisition.requestedBy) },
+        ]
+      : [
+          { title: "Entrega material (almacén)", name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "" },
+          { title: "Recibe material (técnico)", name: nameOf(technician, str(order.technician)) },
+          { title: "Vo. Bo. asesor de servicio", name: nameOf(advisor, str(order.advisor)) },
+        ]
   );
 
-  await drawCompanySealBlock(doc, cursor.y);
-  drawBrandedFooter(
-    doc,
-    "Orden de surtimiento de material para orden de servicio · MAS almacén"
+  drawBrandedFooter(doc);
+  doc.save(`${requisition.folio}-orden-surtimiento.pdf`);
+}
+
+function drawQuoteOrigin(cursor: PdfCursor, requisition: ServiceOrderRequisition, quote: Row) {
+  cursor.sectionTitle("Venta / cotización");
+  drawFieldRow(cursor, [
+    ["Cotización", requisition.quoteFolio || str(quote.folio)],
+    ["Proyecto", str(quote.title)],
+    ["Fecha de solicitud", formatPdfDate(requisition.requestedAt, true)],
+    ["Requerido para", formatPdfDate(requisition.neededBy)],
+  ]);
+  drawFieldRow(cursor, [
+    ["Cliente", requisition.clientName || str(quote.client_name)],
+    ["Contacto", [str(quote.contact_name), str(quote.contact_phone)].filter(Boolean).join(" · ")],
+    ["Ciudad", [str(quote.city), str(quote.state)].filter(Boolean).join(", ")],
+  ]);
+  if (requisition.deliveryAddress) drawParagraph(cursor, "Entrega en", requisition.deliveryAddress);
+}
+
+function drawServiceOrderOrigin(cursor: PdfCursor, requisition: ServiceOrderRequisition, order: Row) {
+  cursor.sectionTitle("Orden de servicio");
+  drawFieldRow(cursor, [
+    ["Orden de servicio", requisition.serviceOrderFolio || str(order.folio)],
+    ["Tipo de servicio", order.service_type ? serviceTypeLabel(str(order.service_type)) : ""],
+    ["Estatus de la OS", order.status ? serviceOrderStatusLabel(str(order.status)) : ""],
+    ["Prioridad", str(order.priority) === "urgente" ? "Urgente" : "Normal"],
+  ]);
+  drawFieldRow(cursor, [
+    ["Cliente", requisition.clientName || str(order.client_name)],
+    ["Contacto", [str(order.contact_name), str(order.contact_phone)].filter(Boolean).join(" · ")],
+    ["Ubicación del equipo", str(order.equipment_location)],
+  ]);
+  drawFieldRow(cursor, [
+    ["Equipo", requisition.equipmentName || str(order.equipment_name)],
+    ["Marca / modelo", [str(order.equipment_brand), str(order.equipment_model)].filter(Boolean).join(" ")],
+    ["No. de serie", str(order.equipment_serial)],
+    ["Fecha de solicitud", formatPdfDate(requisition.requestedAt, true)],
+  ]);
+  if (order.fault_reported) drawParagraph(cursor, "Falla reportada", str(order.fault_reported));
+}
+
+function drawRequisitionBody(
+  cursor: PdfCursor,
+  requisition: ServiceOrderRequisition,
+  fulfillments: Awaited<ReturnType<typeof getRequisitionFulfillments>>,
+  purchases: PurchaseRequest[],
+  displayName: (key: string) => string
+) {
+  const doc = cursor.doc;
+  cursor.sectionTitle("Material solicitado");
+  const rows: PdfRow[] = requisition.lines.map((line, index) => {
+    const pending = requisitionLinePending(line);
+    const linked = purchaseForLine(line.id, purchases);
+    const buy = linked.map((purchase) => `${purchase.folio} · ${purchaseStatusLabel(purchase.status)}`);
+    return {
+      cells: {
+        n: String(index + 1),
+        sku: line.productSku || "—",
+        desc: [line.description || line.productName, line.notes ? `Nota: ${line.notes}` : ""],
+        unit: line.unit,
+        req: formatPdfQty(line.quantityRequested),
+        ful: formatPdfQty(line.quantityFulfilled),
+        pend: formatPdfQty(pending),
+        buy: [requisitionLineStatusLabel(line.lineStatus), ...buy],
+      },
+      styles: {
+        req: "bold",
+        ful: line.quantityFulfilled > 0 ? "success" : "muted",
+        pend: pending > 0 ? "danger" : "bold",
+      },
+    };
+  });
+  drawTable(cursor, COLUMNS, rows);
+
+  const totals = requisition.lines.reduce(
+    (acc, line) => ({
+      req: acc.req + line.quantityRequested,
+      ful: acc.ful + line.quantityFulfilled,
+      pend: acc.pend + requisitionLinePending(line),
+    }),
+    { req: 0, ful: 0, pend: 0 }
   );
-  doc.save(`${requisition.folio}-surtimiento.pdf`);
+  cursor.ensure(7);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_INK);
+  doc.text(
+    `Total: ${formatPdfQty(totals.req)} solicitadas · ${formatPdfQty(totals.ful)} surtidas · ${formatPdfQty(totals.pend)} pendientes`,
+    PDF_MARGIN + cursor.contentW,
+    cursor.y + 3,
+    { align: "right" }
+  );
+  cursor.y += 8;
+
+  if (fulfillments.length) {
+    cursor.sectionTitle("Surtidos registrados");
+    const lineById = new Map(requisition.lines.map((line) => [line.id, line]));
+    for (const item of fulfillments) {
+      const line = item.lineId ? lineById.get(item.lineId) : undefined;
+      cursor.ensure(5);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...PDF_MUTED);
+      doc.text(formatPdfDate(item.createdAt, true), PDF_MARGIN, cursor.y);
+      doc.setTextColor(...PDF_INK);
+      doc.text(
+        `${formatPdfQty(item.quantity)} × ${line ? `${line.productSku ? `${line.productSku} · ` : ""}${line.description}` : "Material"}`,
+        PDF_MARGIN + 32,
+        cursor.y,
+        { maxWidth: 100 }
+      );
+      doc.setTextColor(...PDF_MUTED);
+      doc.text(`Surtió: ${displayName(item.fulfilledBy)}`, PDF_MARGIN + cursor.contentW, cursor.y, {
+        align: "right",
+      });
+      cursor.y += 4.6;
+    }
+    cursor.y += 2;
+  }
+
+  if (purchases.length) {
+    cursor.sectionTitle("Compras por faltantes");
+    for (const purchase of purchases) {
+      const detail = [
+        purchaseStatusLabel(purchase.status),
+        purchase.purchaseOrderNumber && `OC ${purchase.purchaseOrderNumber}`,
+        purchase.supplierName,
+        purchase.neededBy && `Requerida ${formatPdfDate(purchase.neededBy)}`,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      cursor.ensure(9);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...PDF_INK);
+      doc.text(purchase.folio, PDF_MARGIN, cursor.y);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...(isPurchaseOpen(purchase.status) ? PDF_INK : PDF_MUTED));
+      doc.text(detail, PDF_MARGIN + 28, cursor.y);
+      cursor.y += 4.2;
+      doc.setFontSize(7.5);
+      doc.setTextColor(...PDF_MUTED);
+      const items = purchase.lines.map((line) => `${formatPdfQty(line.quantity)} ${line.unit} ${line.description}`).join(" · ");
+      const wrapped = doc.splitTextToSize(items, cursor.contentW - 28) as string[];
+      cursor.ensure(wrapped.length * 3.6);
+      doc.text(wrapped, PDF_MARGIN + 28, cursor.y);
+      cursor.y += wrapped.length * 3.6 + 2;
+    }
+  }
 }

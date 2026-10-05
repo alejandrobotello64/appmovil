@@ -17,6 +17,7 @@ import type { Supplier, SupplierInput } from "@/lib/suppliers/types";
 import { cn } from "@/lib/utils";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const EMPTY_FORM: SupplierInput = {
   name: "",
@@ -247,7 +248,7 @@ export function SuppliersPanel() {
           />
 
           <DesktopTable>
-            <table className="min-w-full text-sm">
+            <SortableTable className="min-w-full text-sm">
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">Proveedor</th>
@@ -333,7 +334,7 @@ export function SuppliersPanel() {
                   ))
                 )}
               </tbody>
-            </table>
+            </SortableTable>
           </DesktopTable>
           </>
         )}

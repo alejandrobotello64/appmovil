@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { ComprasPage } from "@/components/compras/compras-page";
+import { PurchasingPage } from "@/components/dashboard/purchasing-page";
 
 export default function ComprasRoutePage() {
   return (
@@ -10,7 +10,7 @@ export default function ComprasRoutePage() {
         </div>
       }
     >
-      <ComprasPage />
+      <PurchasingPage />
     </Suspense>
   );
 }

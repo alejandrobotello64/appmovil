@@ -9,6 +9,9 @@ import { getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
 import { getKardex, type KardexRow } from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchesSearch } from "@/lib/search";
+import { SortableTable } from "@/components/ui/sortable-table";
 
 const TYPE_LABELS: Record<string, string> = {
   entrada: "Entrada",
@@ -31,6 +34,7 @@ export function KardexPanel() {
   const [rows, setRows] = useState<KardexRow[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [productId, setProductId] = useState("all");
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -47,10 +51,25 @@ export function KardexPanel() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (productId === "all") return rows;
-    const sku = products.find((item) => item.id === productId)?.sku;
-    return rows.filter((row) => row.productSku === sku);
-  }, [rows, productId, products]);
+    const sku =
+      productId === "all"
+        ? null
+        : products.find((item) => item.id === productId)?.sku;
+    return rows.filter(
+      (row) =>
+        (sku === null || row.productSku === sku) &&
+        matchesSearch(query, [
+          row.folio,
+          row.productName,
+          row.productSku,
+          TYPE_LABELS[row.movementType] ?? row.movementType,
+          row.createdBy,
+        ])
+    );
+  }, [rows, productId, products, query]);
+  const emptyMessage = query.trim()
+    ? "Ningún movimiento coincide con la búsqueda."
+    : "Aún no hay movimientos de kardex.";
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Cargando kardex...</p>;
@@ -66,18 +85,26 @@ export function KardexPanel() {
             estos documentos.
           </p>
         </div>
-        <select
-          value={productId}
-          onChange={(event) => setProductId(event.target.value)}
-          className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
-        >
-          <option value="all">Todos los productos</option>
-          {products.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.sku} — {item.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Buscar folio, producto, tipo..."
+            className="sm:w-64"
+          />
+          <select
+            value={productId}
+            onChange={(event) => setProductId(event.target.value)}
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          >
+            <option value="all">Todos los productos</option>
+            {products.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.sku} — {item.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {error ? (
@@ -87,7 +114,7 @@ export function KardexPanel() {
       ) : null}
 
       <ResponsiveDataList
-        emptyMessage="Aún no hay movimientos de kardex."
+        emptyMessage={emptyMessage}
         items={filtered.map((row) => ({
           key: row.id,
           title: row.productName,
@@ -111,7 +138,7 @@ export function KardexPanel() {
       />
 
       <DesktopTable>
-        <table className="min-w-full text-sm">
+        <SortableTable className="min-w-full text-sm">
           <thead className="bg-muted/50 text-left text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-medium">Fecha</th>
@@ -132,7 +159,7 @@ export function KardexPanel() {
                   colSpan={9}
                   className="px-4 py-10 text-center text-muted-foreground"
                 >
-                  Aún no hay movimientos de kardex.
+                  {emptyMessage}
                 </td>
               </tr>
             ) : (
@@ -175,7 +202,7 @@ export function KardexPanel() {
               ))
             )}
           </tbody>
-        </table>
+        </SortableTable>
       </DesktopTable>
     </section>
   );
