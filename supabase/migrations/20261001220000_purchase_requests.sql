@@ -46,8 +46,19 @@ create table if not exists public.purchase_request_lines (
 
 create index if not exists purchase_requests_status_idx
   on public.purchase_requests (status, requested_at desc);
-create index if not exists purchase_requests_source_idx
-  on public.purchase_requests (source_type, source_id);
+-- Si 20261001120000 ya creó la tabla, source_type llega en
+-- 20261002090000_purchase_requests_cloud_columns.sql.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'purchase_requests'
+      and column_name = 'source_type'
+  ) then
+    execute 'create index if not exists purchase_requests_source_idx on public.purchase_requests (source_type, source_id)';
+  end if;
+end $$;
 create index if not exists purchase_requests_order_idx
   on public.purchase_requests (purchase_order_id);
 create index if not exists purchase_request_lines_request_idx
