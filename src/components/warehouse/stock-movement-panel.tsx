@@ -16,11 +16,7 @@ import type {
   InventoryItemInput,
   SupplyCategoryId,
 } from "@/lib/inventory/types";
-import {
-  SUPPLY_CATEGORIES,
-  categoryRequiresExpiry,
-  categoryRequiresManufactureDate,
-} from "@/lib/inventory/types";
+import { SUPPLY_CATEGORIES } from "@/lib/inventory/types";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
@@ -82,11 +78,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [creatingEquipment, setCreatingEquipment] = useState(false);
 
   const isEquipmentCatalog = catalogKind === "equipos";
-  const requiresExpiry =
-    !isEquipmentCatalog && categoryRequiresExpiry(catalogKind);
-  const requiresManufactureDate =
-    !isEquipmentCatalog && categoryRequiresManufactureDate(catalogKind);
-
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
@@ -259,22 +250,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (!session?.username) {
         throw new Error("Inicia sesión para registrar el movimiento.");
       }
-      if (mode === "entrada" && (selected.tracksLot || requiresExpiry) && !lotNumber.trim()) {
-        throw new Error(
-          requiresExpiry
-            ? "Insumos, medicamentos y reactivos exigen número de lote."
-            : "Este producto exige número de lote."
-        );
-      }
-      if (mode === "entrada" && (selected.tracksExpiry || requiresExpiry) && !expiryDate) {
-        throw new Error(
-          requiresExpiry
-            ? "Insumos, medicamentos y reactivos exigen fecha de caducidad."
-            : "Este producto exige fecha de caducidad."
-        );
-      }
-      if (mode === "entrada" && requiresManufactureDate && !manufacturedAt) {
-        throw new Error("Los accesorios exigen fecha de fabricación.");
+      if (mode === "entrada" && selected.tracksLot && !lotNumber.trim()) {
+        throw new Error("Este producto exige número de lote.");
       }
       if (selected.tracksSerial && !serialNumber.trim()) {
         throw new Error(
@@ -307,11 +284,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         warehouseId: warehouseId || null,
         locationId: locationId || null,
         lotNumber: isEquipmentCatalog ? null : lotNumber || null,
-        expiryDate:
-          isEquipmentCatalog || requiresManufactureDate
-            ? null
-            : expiryDate || null,
-        manufacturedAt: requiresManufactureDate ? manufacturedAt || null : null,
+        expiryDate: isEquipmentCatalog ? null : expiryDate || null,
+        manufacturedAt: manufacturedAt || null,
         serialNumber: serialNumber || null,
       });
       const updated = {
@@ -567,13 +541,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     {lots.map((lot) => (
                       <option key={lot.id} value={lot.lotNumber}>
                         {lot.lotNumber}
-                        {requiresManufactureDate
-                          ? lot.manufacturedAt
-                            ? ` · fab. ${lot.manufacturedAt}`
-                            : ""
-                          : lot.expiryDate
-                            ? ` · cad. ${lot.expiryDate}`
-                            : ""}
+                        {lot.manufacturedAt ? ` · fab. ${lot.manufacturedAt}` : ""}
+                        {lot.expiryDate ? ` · cad. ${lot.expiryDate}` : ""}
                       </option>
                     ))}
                   </select>
@@ -583,49 +552,37 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium">
                       Lote
-                      {selected?.tracksLot || requiresExpiry
-                        ? " (obligatorio)"
-                        : ""}
+                      {selected?.tracksLot ? " (obligatorio)" : ""}
                     </span>
                     <input
                       value={lotNumber}
                       disabled={!canWrite}
-                      required={Boolean(
-                        (selected?.tracksLot || requiresExpiry) &&
-                          mode === "entrada"
-                      )}
+                      required={Boolean(selected?.tracksLot && mode === "entrada")}
                       onChange={(event) => setLotNumber(event.target.value)}
                       className={fieldClass}
                     />
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium">
-                      {requiresManufactureDate
-                        ? "Fecha de fabricación"
-                        : "Caducidad"}
-                      {requiresManufactureDate ||
-                      selected?.tracksExpiry ||
-                      requiresExpiry
-                        ? " (obligatoria)"
-                        : ""}
+                      Fecha de fabricación (opcional)
                     </span>
                     <input
                       type="date"
-                      value={
-                        requiresManufactureDate ? manufacturedAt : expiryDate
-                      }
+                      value={manufacturedAt}
                       disabled={!canWrite}
-                      required={Boolean(
-                        mode === "entrada" &&
-                          (requiresManufactureDate ||
-                            selected?.tracksExpiry ||
-                            requiresExpiry)
-                      )}
-                      onChange={(event) =>
-                        requiresManufactureDate
-                          ? setManufacturedAt(event.target.value)
-                          : setExpiryDate(event.target.value)
-                      }
+                      onChange={(event) => setManufacturedAt(event.target.value)}
+                      className={fieldClass}
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      Caducidad (opcional)
+                    </span>
+                    <input
+                      type="date"
+                      value={expiryDate}
+                      disabled={!canWrite}
+                      onChange={(event) => setExpiryDate(event.target.value)}
                       className={fieldClass}
                     />
                   </label>

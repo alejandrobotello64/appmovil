@@ -8,8 +8,8 @@ import type { InventoryItem } from "@/lib/inventory/types";
 import { cn } from "@/lib/utils";
 import { SortableTable } from "@/components/ui/sortable-table";
 
-/** expiry: lote + caducidad · manufacture: lote + fabricación · auto: lo que tenga cada lote */
-export type TrackingDateMode = "expiry" | "manufacture" | "auto";
+/** expiry: lote + caducidad · manufacture: lote + fabricación · both: las dos fechas · auto: lo que tenga cada lote */
+export type TrackingDateMode = "expiry" | "manufacture" | "both" | "auto";
 
 const EXPIRY_WARNING_DAYS = 90;
 const SUMMARY_LOTS = 2;
@@ -17,6 +17,7 @@ const SUMMARY_LOTS = 2;
 export function trackingColumnLabel(mode: TrackingDateMode) {
   if (mode === "expiry") return "Lote / caducidad";
   if (mode === "manufacture") return "Lote / fabricación";
+  if (mode === "both") return "Lote / fechas";
   return "Lote / serie";
 }
 
@@ -51,7 +52,27 @@ function LotDate({
   manufacturedAt: string;
   mode: TrackingDateMode;
 }) {
-  const showExpiry = mode === "expiry" || (mode === "auto" && Boolean(expiryDate));
+  if (mode === "both" || mode === "auto") {
+    if (!expiryDate && !manufacturedAt) {
+      return <span className="text-muted-foreground">Sin fechas</span>;
+    }
+    const expiry = expiryDate ? expiryState(expiryDate) : null;
+    return (
+      <span>
+        {manufacturedAt ? (
+          <span className="text-muted-foreground">Fab. {manufacturedAt}</span>
+        ) : null}
+        {manufacturedAt && expiryDate ? " · " : null}
+        {expiryDate ? (
+          <span className={expiry?.tone}>
+            Cad. {expiryDate}
+            {expiry?.hint ? ` · ${expiry.hint}` : ""}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+  const showExpiry = mode === "expiry";
   if (showExpiry) {
     if (!expiryDate) {
       return <span className="text-amber-700 dark:text-amber-300">Sin caducidad</span>;
@@ -163,7 +184,11 @@ export function TrackingDetail({ item, tracking, mode }: TrackingProps) {
   const lots = tracking?.lots ?? [];
   const serials = tracking?.serials ?? [];
   const dateHeader =
-    mode === "expiry" ? "Caducidad" : mode === "manufacture" ? "Fabricación" : "Caducidad / fabricación";
+    mode === "expiry"
+      ? "Caducidad"
+      : mode === "manufacture"
+        ? "Fabricación"
+        : "Caducidad / fabricación";
 
   if (lots.length === 0 && serials.length === 0) {
     return (

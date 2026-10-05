@@ -11,8 +11,6 @@ import type {
   SupplyCategoryId,
 } from "./types";
 import {
-  categoryRequiresExpiry,
-  categoryRequiresManufactureDate,
   skuPrefixForCategory,
   SUPPLY_CATEGORY_IDS,
 } from "./types";
@@ -111,11 +109,7 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     serial_number: input.serialNumber ?? "",
     unit_price: input.unitPrice,
     supplier: input.supplier ?? "",
-    expiry_date: categoryRequiresManufactureDate(input.category)
-      ? null
-      : input.expiryDate
-        ? input.expiryDate
-        : null,
+    expiry_date: input.expiryDate ? input.expiryDate : null,
     manufactured_at: input.manufacturedAt ? input.manufacturedAt : null,
     notes: input.notes ?? "",
     asset_status: input.assetStatus || "operativo",
@@ -126,16 +120,9 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
       ? input.nextMaintenanceDate
       : null,
     is_active: input.isActive !== false,
-    tracks_lot:
-      Boolean(input.tracksLot) ||
-      (itemKind !== "equipo" &&
-        (categoryRequiresExpiry(input.category) || Boolean(input.expiryDate))),
+    tracks_lot: Boolean(input.tracksLot),
     tracks_serial: input.tracksSerial || itemKind === "equipo",
-    tracks_expiry:
-      !categoryRequiresManufactureDate(input.category) &&
-      (input.tracksExpiry ||
-        categoryRequiresExpiry(input.category) ||
-        Boolean(input.expiryDate)),
+    tracks_expiry: Boolean(input.tracksExpiry),
     max_stock: input.maxStock ?? 0,
     reorder_point: input.reorderPoint || input.minStock,
     part_number: input.partNumber ?? "",
@@ -285,9 +272,7 @@ export async function createInventoryItem(
       createdBy,
       note: "Existencia inicial de alta de producto",
       lotNumber: input.tracksLot ? input.serialNumber || "INICIAL" : null,
-      expiryDate: categoryRequiresManufactureDate(input.category)
-        ? null
-        : input.expiryDate || null,
+      expiryDate: input.expiryDate || null,
       manufacturedAt: input.manufacturedAt || null,
       serialNumber: input.itemKind === "equipo" ? input.serialNumber : null,
       supplierName: input.supplier,

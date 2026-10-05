@@ -11,7 +11,6 @@ import {
   ASSET_STATUS_OPTIONS,
   INVENTORY_CATEGORIES,
   INVENTORY_UNITS,
-  categoryRequiresManufactureDate,
 } from "@/lib/inventory/types";
 
 export const PRODUCT_EXCEL_HEADERS = [
@@ -569,16 +568,10 @@ export async function parseProductWorkbook(
     const category = parseCategory(record.categoria);
     const itemKind = parseKind(record.tipo, category, defaultKind);
     const resolvedCategory = itemKind === "equipo" ? "equipos" : category;
-    const isAccessory = categoryRequiresManufactureDate(resolvedCategory);
-    const tracksExpiry = isAccessory
-      ? false
-      : cellBoolean(
-          record.controla_caducidad,
-          resolvedCategory === "medicamentos" ||
-            resolvedCategory === "insumos" ||
-            resolvedCategory === "reactivos" ||
-            Boolean(excelDate(record.caducidad))
-        );
+    const tracksExpiry = cellBoolean(
+      record.controla_caducidad,
+      Boolean(excelDate(record.caducidad))
+    );
 
     rows.push({
       rowNumber,
@@ -596,7 +589,7 @@ export async function parseProductWorkbook(
       serialNumber: cellText(record.serie),
       unitPrice: Math.max(0, cellNumber(record.precio, 0)),
       supplier: cellText(record.proveedor),
-      expiryDate: isAccessory ? "" : excelDate(record.caducidad),
+      expiryDate: excelDate(record.caducidad),
       manufacturedAt: excelDate(record.fecha_fabricacion),
       notes: cellText(record.notas),
       assetStatus: parseAssetStatus(record.estado_equipo),
@@ -605,7 +598,7 @@ export async function parseProductWorkbook(
       isActive: cellBoolean(record.activo, true),
       tracksLot: cellBoolean(
         record.controla_lote,
-        itemKind !== "equipo" && (resolvedCategory === "medicamentos" || tracksExpiry)
+        itemKind !== "equipo" && tracksExpiry
       ),
       tracksSerial: cellBoolean(record.controla_serie, itemKind === "equipo"),
       tracksExpiry,

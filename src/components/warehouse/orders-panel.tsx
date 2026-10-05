@@ -19,10 +19,7 @@ import { cn } from "@/lib/utils";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { getInventoryItems } from "@/lib/inventory/storage";
-import {
-  categoryRequiresManufactureDate,
-  type InventoryItem,
-} from "@/lib/inventory/types";
+import { type InventoryItem } from "@/lib/inventory/types";
 import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
 import {
@@ -567,7 +564,7 @@ export function OrdersPanel() {
                           </td>
                           <td className="px-3 py-2">{Math.max(pending - receiveNow, 0)}</td>
                           <td className="px-3 py-2">
-                            <div className="grid gap-2 sm:grid-cols-3">
+                            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                               <input
                                 value={draft?.lotNumber ?? ""}
                                 onChange={(event) =>
@@ -578,34 +575,26 @@ export function OrdersPanel() {
                               />
                               <input
                                 type="date"
-                                value={
-                                  categoryRequiresManufactureDate(
-                                    products.find((item) => item.id === line.itemId)
-                                      ?.category ?? "insumos"
-                                  )
-                                    ? (draft?.manufacturedAt ?? "")
-                                    : (draft?.expiryDate ?? "")
-                                }
+                                value={draft?.manufacturedAt ?? ""}
                                 onChange={(event) =>
-                                  categoryRequiresManufactureDate(
-                                    products.find((item) => item.id === line.itemId)
-                                      ?.category ?? "insumos"
-                                  )
-                                    ? updateDraft(line.id, {
-                                        manufacturedAt: event.target.value,
-                                      })
-                                    : updateDraft(line.id, {
-                                        expiryDate: event.target.value,
-                                      })
+                                  updateDraft(line.id, {
+                                    manufacturedAt: event.target.value,
+                                  })
                                 }
-                                title={
-                                  categoryRequiresManufactureDate(
-                                    products.find((item) => item.id === line.itemId)
-                                      ?.category ?? "insumos"
-                                  )
-                                    ? "Fecha de fabricación"
-                                    : "Fecha de caducidad"
+                                title="Fecha de fabricación (opcional)"
+                                aria-label="Fecha de fabricación opcional"
+                                className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
+                              />
+                              <input
+                                type="date"
+                                value={draft?.expiryDate ?? ""}
+                                onChange={(event) =>
+                                  updateDraft(line.id, {
+                                    expiryDate: event.target.value,
+                                  })
                                 }
+                                title="Fecha de caducidad (opcional)"
+                                aria-label="Fecha de caducidad opcional"
                                 className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
                               />
                               <input
