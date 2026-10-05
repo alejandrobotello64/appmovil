@@ -1,4 +1,4 @@
--- Catálogo real de MAS. Generado desde la base local (76 productos).
+-- Catálogo real de MAS. Generado desde la base local (74 productos).
 -- Idempotente: inserta o actualiza por sku. No borra filas extra.
 -- La existencia (quantity) solo se carga en SKU nuevos; no pisa stock ya existente.
 -- Regenerar: bash scripts/export-catalog.sh
@@ -94,9 +94,7 @@ insert into public.inventory_items (
   ('EQUIPO-000048', 'EFFICIA DFM100', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de cámaras ', 'Philips ', 'EFFICIA DFM100', 'CN32672787', 0.0, 'Philips ', NULL, '2022-11-02', 'Completo ', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '866199', 'Philips ', ''),
   ('EQUIPO-000049', 'EFFICIA DFM100', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de cámaras ', 'Philips ', '', 'CN32672797', 0.0, 'Philips ', NULL, '2022-11-26', 'Completo', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '', 'Philips ', ''),
   ('EQUIPO-000050', 'Desfibrilador', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de Camaras', 'Philips ', '', 'CN32672742', 0.0, 'Philips ', NULL, '2022-10-20', 'REVISAR ACCESORIOS ', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '', 'Philips ', ''),
-  ('INSUMOS-000001', 'Mask silicona inf small 0 reusable', 'insumos', 'producto', '', 10, 0, 'pieza', 'A/2', 'Drager', '', '1230613004', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01910', 'Drager', ''),
-  ('INSUMOS-000002', 'Mask silicona inf small 0 reusable', 'insumos', 'producto', '', 2, 0, 'pieza', 'A/2', 'Drager', '', '1200214005', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01910', 'Drager ', ''),
-  ('INSUMOS-000003', 'Mask silicone inf small 0 reusable', 'insumos', 'producto', '', 2, 0, 'pieza', 'A/2', 'Drager', '', '1201015010', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01910', 'Drager ', ''),
+  ('INSUMOS-000001', 'Mask silicone inf small 0 reusable', 'insumos', 'producto', '', 14, 0, 'pieza', 'A/2', 'Drager', '', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01910', 'Drager', ''),
   ('INSUMOS-000004', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 2, 0, 'caja', 'Insumos', 'ASP', '', '2851828433', 0.0, 'ASP', '2025-11-15', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12435', 'ASP', ''),
   ('INSUMOS-000005', 'Biological Indicators/Process Challenge Devices', 'insumos', 'producto', '', 25, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', '2025-01-29', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '43210-30', '', ''),
   ('INSUMOS-000006', 'Tyvek Heat Seal Pouch with STERRAD Chemical Indicator', 'insumos', 'producto', '', 0, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12532', 'ASP', ''),
