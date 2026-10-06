@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ImageLightbox, type LightboxImage } from "@/components/ui/image-lightbox";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { attachEntryEvidence } from "@/lib/warehouse/entry-evidence";
+import { matchesSearch } from "@/lib/search";
 import { InventoryForm } from "@/components/inventory/inventory-form";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import {
