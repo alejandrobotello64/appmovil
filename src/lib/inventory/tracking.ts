@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { DEFAULT_LOCATION_CODES } from "@/lib/warehouse/stock";
-import type { InventoryCategoryId } from "./types";
+import { parseGalleryImages } from "./unit-media";
+import type { InventoryCategoryId, InventoryGalleryImage } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -20,6 +21,16 @@ export type InventoryBalance = {
   expiryDate: string;
   manufacturedAt: string;
   quantity: number;
+  lot: LotDetails | null;
+};
+
+/** Datos propios del lote (no dependen del almacén). */
+export type LotDetails = {
+  id: string;
+  notes: string;
+  imagePath: string;
+  imageUrl: string;
+  galleryImages: InventoryGalleryImage[];
 };
 
 export type InventoryLotStock = {
@@ -28,13 +39,25 @@ export type InventoryLotStock = {
   manufacturedAt: string;
   quantity: number;
   locations: string[];
+  lot: LotDetails | null;
 };
 
 export type InventorySerial = {
+  id: string;
   serialNumber: string;
+  inventoryNumber: string;
   status: string;
   warehouseId: string;
   location: string;
+  notes: string;
+  manufacturedAt: string;
+  lastMaintenanceDate: string;
+  nextMaintenanceDate: string;
+  warrantyStart: string;
+  warrantyEnd: string;
+  imagePath: string;
+  imageUrl: string;
+  galleryImages: InventoryGalleryImage[];
 };
 
 /** Existencias y series crudas de un producto, en todos los almacenes. */
@@ -105,6 +128,7 @@ export function trackingFor(
         manufacturedAt: balance.manufacturedAt,
         quantity: 0,
         locations: [],
+        lot: balance.lot,
       };
       lots.push(lot);
     }
@@ -172,14 +196,14 @@ export async function getInventoryStock(
     db
       .from("inventory_balances")
       .select(
-        "product_id, qty_on_hand, lot:lots(lot_number, expiry_date, manufactured_at), warehouse:warehouses(id, code, name), location:locations(id, code, name), item:inventory_items!inner(category)"
+        "product_id, qty_on_hand, lot:lots(id, lot_number, expiry_date, manufactured_at, notes, image_path, image_url, gallery_images), warehouse:warehouses(id, code, name), location:locations(id, code, name), item:inventory_items!inner(category)"
       )
       .eq("item.category", category)
       .gt("qty_on_hand", 0),
     db
       .from("serial_numbers")
       .select(
-        "product_id, serial_number, status, warehouse_id, warehouse:warehouses(code), location:locations(name), item:inventory_items!inner(category)"
+        "id, product_id, serial_number, inventory_number, status, warehouse_id, notes, manufactured_at, last_maintenance_date, next_maintenance_date, warranty_start, warranty_end, image_path, image_url, gallery_images, warehouse:warehouses(code), location:locations(name), item:inventory_items!inner(category)"
       )
       .eq("item.category", category)
       .neq("status", "baja")
@@ -213,6 +237,15 @@ export async function getInventoryStock(
       expiryDate: str(lot.expiry_date),
       manufacturedAt: str(lot.manufactured_at),
       quantity: Number(row.qty_on_hand ?? 0) || 0,
+      lot: lot.id
+        ? {
+            id: str(lot.id),
+            notes: str(lot.notes),
+            imagePath: str(lot.image_path),
+            imageUrl: str(lot.image_url),
+            galleryImages: parseGalleryImages(lot.gallery_images),
+          }
+        : null,
     });
   }
 
@@ -220,10 +253,21 @@ export async function getInventoryStock(
     const warehouse = (row.warehouse ?? {}) as Row;
     const location = (row.location ?? {}) as Row;
     entry(str(row.product_id)).serials.push({
+      id: str(row.id),
       serialNumber: str(row.serial_number),
+      inventoryNumber: str(row.inventory_number),
       status: str(row.status),
       warehouseId: str(row.warehouse_id),
       location: [str(warehouse.code), str(location.name)].filter(Boolean).join(" — "),
+      notes: str(row.notes),
+      manufacturedAt: str(row.manufactured_at),
+      lastMaintenanceDate: str(row.last_maintenance_date),
+      nextMaintenanceDate: str(row.next_maintenance_date),
+      warrantyStart: str(row.warranty_start),
+      warrantyEnd: str(row.warranty_end),
+      imagePath: str(row.image_path),
+      imageUrl: str(row.image_url),
+      galleryImages: parseGalleryImages(row.gallery_images),
     });
   }
 

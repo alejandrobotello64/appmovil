@@ -58,8 +58,11 @@ import {
   placementsFor,
   quantityIn,
   trackingFor,
+  type InventoryLotStock,
+  type InventorySerial,
   type InventoryStock,
 } from "@/lib/inventory/tracking";
+import { LotUnitDialog, SerialUnitDialog } from "@/components/inventory/unit-dialogs";
 import { getWarehouses, type Warehouse } from "@/lib/warehouse/stock";
 import {
   RelocateStockModal,
@@ -157,6 +160,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [viewingItem, setViewingItem] = useState<InventoryItem | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [openSerial, setOpenSerial] = useState<InventorySerial | null>(null);
+  const [openLot, setOpenLot] = useState<InventoryLotStock | null>(null);
   const [imageBusy, setImageBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -342,6 +347,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
 
   function handleView(item: InventoryItem) {
     setLightboxIndex(null);
+    setOpenSerial(null);
+    setOpenLot(null);
     setViewingItem(item);
   }
 
@@ -935,6 +942,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                   variant="outline"
                   onClick={() => {
                     setLightboxIndex(null);
+                    setOpenSerial(null);
+                    setOpenLot(null);
                     setViewingItem(null);
                   }}
                 >
@@ -1097,6 +1106,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 item={viewingItem}
                 tracking={trackingFor(stockByProduct.get(viewingItem.id))}
                 mode={trackingMode}
+                onOpenSerial={setOpenSerial}
+                onOpenLot={setOpenLot}
+                canEditUnits={canEdit}
               />
             </div>
 
@@ -1162,6 +1174,29 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 }
               : undefined
           }
+        />
+      ) : null}
+
+      {viewingItem && openSerial ? (
+        <SerialUnitDialog
+          key={openSerial.id}
+          productName={viewingItem.name}
+          serial={openSerial}
+          canEdit={canEdit}
+          onClose={() => setOpenSerial(null)}
+          onChanged={() => void refreshItems()}
+        />
+      ) : null}
+
+      {viewingItem && openLot ? (
+        <LotUnitDialog
+          key={openLot.lot?.id ?? openLot.lotNumber}
+          productName={viewingItem.name}
+          lot={openLot}
+          unit={viewingItem.unit}
+          canEdit={canEdit}
+          onClose={() => setOpenLot(null)}
+          onChanged={() => void refreshItems()}
         />
       ) : null}
 

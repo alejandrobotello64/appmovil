@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
+import type { InventoryGalleryImage } from "@/lib/inventory/types";
+import { parseGalleryImages } from "@/lib/inventory/unit-media";
 
 export type StockMovementResult = {
   folio: string;
@@ -37,6 +39,7 @@ export type KardexRow = {
   note: string;
   createdBy: string;
   partNumber: string;
+  evidenceImages: InventoryGalleryImage[];
 };
 
 // New tables live in the SQL migration; keep queries loosely typed until gen:types.
@@ -373,6 +376,7 @@ function mapKardexRow(row: Record<string, unknown>): KardexRow {
     note: String(row.note ?? ""),
     createdBy: String(row.created_by ?? ""),
     partNumber: "",
+    evidenceImages: parseGalleryImages(row.evidence_images),
   };
 }
 

@@ -14,6 +14,7 @@ import {
   skuPrefixForCategory,
   SUPPLY_CATEGORY_IDS,
 } from "./types";
+import { removeStoredImage } from "./unit-media";
 
 type InventoryRow = Database["public"]["Tables"]["inventory_items"]["Row"];
 type InventoryInsert =
@@ -461,11 +462,7 @@ export async function uploadInventoryItemImage(
     .from(INVENTORY_MEDIA_BUCKET)
     .getPublicUrl(path);
 
-  if (current.imagePath) {
-    await supabase.storage
-      .from(INVENTORY_MEDIA_BUCKET)
-      .remove([current.imagePath]);
-  }
+  if (current.imagePath) await removeStoredImage(current.imagePath);
 
   const { data, error } = await supabase
     .from("inventory_items")
@@ -566,13 +563,30 @@ export async function addInventoryItemImages(
   return saveItemImages(itemId, primary, [...current.galleryImages, ...extra]);
 }
 
+/** Agrega imágenes ya subidas (p. ej. evidencia de entrada) a la galería del producto. */
+export async function attachInventoryItemImages(
+  itemId: string,
+  images: InventoryGalleryImage[]
+): Promise<InventoryItem> {
+  const current = await fetchInventoryItem(itemId);
+  if (images.length === 0) return current;
+  let primary = { path: current.imagePath, url: current.imageUrl };
+  let extra = images;
+  if (!primary.path || !primary.url) {
+    const [first, ...rest] = images;
+    primary = { path: first.path, url: first.url };
+    extra = rest;
+  }
+  return saveItemImages(itemId, primary, [...current.galleryImages, ...extra]);
+}
+
 /** Quita una imagen; si era la principal, la siguiente de la galería toma su lugar. */
 export async function removeInventoryItemImage(
   itemId: string,
   path: string
 ): Promise<InventoryItem> {
   const current = await fetchInventoryItem(itemId);
-  await supabase.storage.from(INVENTORY_MEDIA_BUCKET).remove([path]);
+  await removeStoredImage(path);
 
   if (path === current.imagePath) {
     const [next, ...rest] = current.galleryImages;

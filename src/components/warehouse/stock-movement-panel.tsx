@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Plus } from "lucide-react";
+import { Camera, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ImageLightbox, type LightboxImage } from "@/components/ui/image-lightbox";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { attachEntryEvidence } from "@/lib/warehouse/entry-evidence";
 import { InventoryForm } from "@/components/inventory/inventory-form";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import {
@@ -85,6 +87,20 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [error, setError] = useState("");
   const [equipmentFormOpen, setEquipmentFormOpen] = useState(false);
   const [creatingEquipment, setCreatingEquipment] = useState(false);
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
+  const [evidenceViewer, setEvidenceViewer] = useState<{
+    images: LightboxImage[];
+    index: number;
+  } | null>(null);
+  const requiresEvidence = mode === "entrada";
+  const evidencePreviews = useMemo(
+    () => evidenceFiles.map((file) => URL.createObjectURL(file)),
+    [evidenceFiles]
+  );
+  useEffect(
+    () => () => evidencePreviews.forEach((url) => URL.revokeObjectURL(url)),
+    [evidencePreviews]
+  );
 
   const isEquipmentCatalog = catalogKind === "equipos";
   const loadHistory = useCallback(async () => {
@@ -264,6 +280,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             : "Este producto exige número de serie."
         );
       }
+      if (requiresEvidence && evidenceFiles.length === 0) {
+        throw new Error("Agrega al menos una foto de evidencia de la entrada.");
+      }
 
       const reasonLabel =
         mode === "entrada"
@@ -300,9 +319,33 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       setItems((current) =>
         current.map((item) => (item.id === updated.id ? updated : item))
       );
+
+      let evidenceNote = "";
+      if (requiresEvidence && evidenceFiles.length > 0) {
+        try {
+          const evidence = await attachEntryEvidence(result.movementId, evidenceFiles);
+          const targetLabel =
+            evidence.target === "serie"
+              ? "la serie"
+              : evidence.target === "lote"
+                ? "el lote"
+                : "el producto";
+          evidenceNote = ` ${evidence.images.length} foto${
+            evidence.images.length === 1 ? "" : "s"
+          } de evidencia integrada${evidence.images.length === 1 ? "" : "s"} a ${targetLabel}.`;
+          setEvidenceFiles([]);
+        } catch (evidenceError) {
+          setError(
+            `La entrada ${result.folio} se registró, pero no se pudo guardar la evidencia: ${
+              evidenceError instanceof Error ? evidenceError.message : "error desconocido"
+            }`
+          );
+        }
+      }
+
       setMessage(
         mode === "entrada"
-          ? `Entrada ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.`
+          ? `Entrada ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.${evidenceNote}`
           : `Salida ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.`
       );
       setQuantity(1);
@@ -641,6 +684,87 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               />
             </label>
 
+            {requiresEvidence ? (
+              <div className="space-y-2 rounded-xl border border-dashed border-[#3B46A5]/40 bg-muted/20 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">Fotos de evidencia (obligatorio)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Se guardan en el movimiento y se agregan a las fotos de la serie, del lote
+                      o del producto recibido.
+                    </p>
+                  </div>
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted",
+                      (!canWrite || submitting) && "pointer-events-none opacity-60"
+                    )}
+                  >
+                    <Camera className="size-4" />
+                    {evidenceFiles.length ? "Agregar más" : "Agregar fotos"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="sr-only"
+                      disabled={!canWrite || submitting}
+                      onChange={(event) => {
+                        const files = Array.from(event.target.files ?? []).filter((file) =>
+                          file.type.startsWith("image/")
+                        );
+                        event.target.value = "";
+                        if (files.length) setEvidenceFiles((current) => [...current, ...files]);
+                      }}
+                    />
+                  </label>
+                </div>
+                {evidenceFiles.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                    {evidencePreviews.map((url, index) => (
+                      <div
+                        key={url}
+                        className="group relative aspect-square overflow-hidden rounded-lg border border-border"
+                      >
+                        <button
+                          type="button"
+                          className="block size-full"
+                          onClick={() =>
+                            setEvidenceViewer({
+                              images: evidencePreviews.map((src, i) => ({
+                                src,
+                                caption: `Evidencia ${i + 1} · ${evidenceFiles[i]?.name ?? ""}`,
+                              })),
+                              index,
+                            })
+                          }
+                          aria-label={`Ver evidencia ${index + 1}`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={url} alt="" className="size-full object-cover" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={submitting}
+                          onClick={() =>
+                            setEvidenceFiles((current) => current.filter((_, i) => i !== index))
+                          }
+                          className="absolute right-1 top-1 rounded-full bg-red-500/85 p-1 text-white hover:bg-red-500 disabled:opacity-50"
+                          title="Quitar foto"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    Aún no hay fotos. Toma o selecciona al menos una (factura, empaque, etiqueta
+                    del lote o la serie).
+                  </p>
+                )}
+              </div>
+            ) : null}
+
             {selected ? (
               <p className="text-sm text-muted-foreground">
                 {isEquipmentCatalog ? "Existencia actual: " : "Stock actual: "}
@@ -666,7 +790,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
             <Button
               type="submit"
-              disabled={!canWrite || submitting || items.length === 0}
+              disabled={
+                !canWrite ||
+                submitting ||
+                items.length === 0 ||
+                (requiresEvidence && evidenceFiles.length === 0)
+              }
               className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
             >
               {submitting
@@ -765,6 +894,30 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                         {row.note}
                       </p>
                     ) : null}
+                    {row.evidenceImages.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {row.evidenceImages.map((image, index) => (
+                          <button
+                            key={image.path}
+                            type="button"
+                            className="size-10 overflow-hidden rounded-md border border-border hover:opacity-85"
+                            onClick={() =>
+                              setEvidenceViewer({
+                                images: row.evidenceImages.map((evidence, i) => ({
+                                  src: evidence.url,
+                                  caption: `${row.folio} · evidencia ${i + 1}`,
+                                })),
+                                index,
+                              })
+                            }
+                            aria-label={`Ver evidencia ${index + 1} de ${row.folio}`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={image.url} alt="" className="size-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                   </article>
                 );
               })
@@ -772,6 +925,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           </div>
         </aside>
       </div>
+
+      {evidenceViewer && evidenceViewer.images[evidenceViewer.index] ? (
+        <ImageLightbox
+          images={evidenceViewer.images}
+          index={evidenceViewer.index}
+          onClose={() => setEvidenceViewer(null)}
+          onIndexChange={(index) =>
+            setEvidenceViewer((current) => (current ? { ...current, index } : current))
+          }
+        />
+      ) : null}
 
       {equipmentFormOpen && canWrite ? (
         <ModalShell
