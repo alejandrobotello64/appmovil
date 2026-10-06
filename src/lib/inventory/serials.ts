@@ -25,6 +25,23 @@ export function isEditableSerialStatus(status: string) {
   return (EDITABLE_SERIAL_STATUSES as readonly string[]).includes(status);
 }
 
+/** Una serie por línea (también acepta comas o punto y coma). */
+export function parseSerialNumbers(raw: string): string[] {
+  const seen = new Set<string>();
+  const serials: string[] = [];
+  for (const part of raw.split(/[\n,;]+/)) {
+    const value = part.trim();
+    if (!value) continue;
+    const key = value.toLocaleLowerCase("es");
+    if (seen.has(key)) {
+      throw new Error(`La serie ${value} está repetida en esta entrada.`);
+    }
+    seen.add(key);
+    serials.push(value);
+  }
+  return serials;
+}
+
 const dateOrNull = (value: string) => (value.trim() ? value.trim() : null);
 
 /** Actualiza los datos propios de una pieza serializada (no su ubicación ni existencias). */

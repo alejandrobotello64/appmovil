@@ -471,7 +471,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               </h2>
               <p className="text-sm text-muted-foreground">
                 {isEquipment
-                  ? "Activos con número de serie, fecha de fabricación opcional, estado y mantenimiento."
+                  ? "Catálogo por modelo. Las series de cada pieza se registran al dar entrada."
                   : `${supplyMeta?.description ?? "Catálogo"}. El número de parte se muestra junto a la marca.`}
               </p>
             </div>

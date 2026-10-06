@@ -34,7 +34,7 @@ function emptyForm(
     category,
     itemKind: kind,
     description: "",
-    quantity: kind === "equipo" ? 1 : 0,
+    quantity: 0,
     minStock: kind === "equipo" ? 0 : 0,
     unit: "pieza",
     location: "",
@@ -146,7 +146,7 @@ export function InventoryForm({
         ...form,
         itemKind,
         category,
-        quantity: itemKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
+        quantity: itemKind === "equipo" && !item ? 0 : form.quantity,
         expiryDate: itemKind === "equipo" ? "" : form.expiryDate,
         manufacturedAt: form.manufacturedAt,
       },
@@ -164,7 +164,7 @@ export function InventoryForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
         {isEquipment
-          ? "Registro de equipo médico (activo): serie, fecha de fabricación opcional, estado y mantenimiento."
+          ? "Registro de equipo médico por modelo. La serie no es obligatoria aquí: se captura al dar entrada en Almacén."
           : `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"}. La caducidad y la fecha de fabricación son opcionales.`}
       </div>
 
@@ -317,15 +317,15 @@ export function InventoryForm({
             {item
               ? "Existencia (solo por movimientos)"
               : isEquipment
-                ? "Existencia inicial"
+                ? "Existencia"
                 : "Existencia inicial"}
           </span>
           <input
-            required={!item}
+            required={!item && !isEquipment}
             type="number"
             min={0}
             value={form.quantity}
-            disabled={Boolean(item)}
+            disabled={Boolean(item) || isEquipment}
             onChange={(event) =>
               handleChange("quantity", Number(event.target.value))
             }
@@ -334,6 +334,11 @@ export function InventoryForm({
           {item ? (
             <span className="text-xs text-muted-foreground">
               La existencia se actualiza con entradas, salidas o traspasos.
+            </span>
+          ) : isEquipment ? (
+            <span className="text-xs text-muted-foreground">
+              Da de alta el modelo aquí. Las piezas y series se registran en
+              Almacén → Entradas.
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">
@@ -358,15 +363,21 @@ export function InventoryForm({
           </label>
         ) : (
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Número de serie</span>
+            <span className="text-sm font-medium">
+              Número de serie (opcional)
+            </span>
             <input
-              required
               value={form.serialNumber}
+              placeholder="Se captura al dar entrada"
               onChange={(event) =>
                 handleChange("serialNumber", event.target.value)
               }
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             />
+            <span className="text-xs text-muted-foreground">
+              El catálogo es el modelo. Cada pieza recibe su serie en el
+              registro de entradas.
+            </span>
           </label>
         )}
 
@@ -456,16 +467,18 @@ export function InventoryForm({
           />
           Control por lote
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={form.tracksSerial}
-            onChange={(event) =>
-              handleChange("tracksSerial", event.target.checked)
-            }
-          />
-          Control por número de serie
-        </label>
+        {!isEquipment ? (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.tracksSerial}
+              onChange={(event) =>
+                handleChange("tracksSerial", event.target.checked)
+              }
+            />
+            Control por número de serie
+          </label>
+        ) : null}
         {!isEquipment ? (
           <label className="flex items-center gap-2 text-sm">
             <input

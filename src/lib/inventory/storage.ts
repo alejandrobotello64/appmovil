@@ -275,7 +275,10 @@ export async function createInventoryItem(
       lotNumber: input.tracksLot ? input.serialNumber || "INICIAL" : null,
       expiryDate: input.expiryDate || null,
       manufacturedAt: input.manufacturedAt || null,
-      serialNumber: input.itemKind === "equipo" ? input.serialNumber : null,
+      serialNumber:
+        input.itemKind === "equipo"
+          ? input.serialNumber?.trim() || null
+          : null,
       supplierName: input.supplier,
     });
     return { ...created, quantity: result.newQuantity };

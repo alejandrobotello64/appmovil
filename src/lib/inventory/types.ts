@@ -49,7 +49,8 @@ export const CATALOG_CATEGORIES = [
   {
     id: "equipos",
     label: "Equipos",
-    description: "Equipos y dispositivos médicos con fecha de fabricación",
+    description:
+      "Equipos y dispositivos médicos. El catálogo es por modelo; las series se registran al dar entrada",
   },
 ] as const;
 
@@ -61,7 +62,8 @@ export const PRODUCT_CATEGORIES = [
 export const EQUIPMENT_CATEGORY = {
   id: "equipos",
   label: "Equipos médicos",
-  description: "Equipos y dispositivos con fecha de fabricación",
+  description:
+    "Equipos y dispositivos. Alta por modelo; las series se capturan en el registro de entradas",
 } as const;
 
 export const INVENTORY_CATEGORIES = [

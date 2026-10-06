@@ -38,7 +38,7 @@ import {
 } from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
-import { matchesSearch } from "@/lib/search";
+import { parseSerialNumbers } from "@/lib/inventory/serials";
 
 type StockMovementPanelProps = {
   mode: "entrada" | "salida";
@@ -207,13 +207,13 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   }, [itemId, mode, isEquipmentCatalog]);
 
   useEffect(() => {
-    if (isEquipmentCatalog) {
+    if (isEquipmentCatalog && mode !== "entrada") {
       setQuantity(1);
       setLotNumber("");
       setExpiryDate("");
       setManufacturedAt("");
     }
-  }, [isEquipmentCatalog]);
+  }, [isEquipmentCatalog, mode]);
 
   async function handleCreateEquipment(data: InventoryItemInput) {
     try {
@@ -229,7 +229,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           ...data,
           itemKind: "equipo",
           category: "equipos",
-          quantity: Math.max(1, data.quantity || 1),
+          quantity: 0,
         },
         session.username
       );
@@ -239,12 +239,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setItems([created, ...next]);
       }
       setItemId(created.id);
-      setSerialNumber(created.serialNumber || "");
+      setSerialNumber("");
       setEquipmentFormOpen(false);
       setMessage(
-        `Equipo ${created.sku} dado de alta${
-          created.quantity > 0 ? ` con existencia ${created.quantity}` : ""
-        }.`
+        `Equipo ${created.sku} dado de alta. Captura las series en esta entrada.`
       );
     } catch (err) {
       setError(
@@ -273,10 +271,22 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (mode === "entrada" && selected.tracksLot && !lotNumber.trim()) {
         throw new Error("Este producto exige número de lote.");
       }
-      if (selected.tracksSerial && !serialNumber.trim()) {
+
+      const serials =
+        isEquipmentCatalog && mode === "entrada"
+          ? parseSerialNumbers(serialNumber)
+          : serialNumber.trim()
+            ? [serialNumber.trim()]
+            : [];
+      if (isEquipmentCatalog && mode === "entrada" && serials.length === 0) {
+        throw new Error(
+          "Captura al menos un número de serie. Una línea por pieza."
+        );
+      }
+      if (selected.tracksSerial && !(isEquipmentCatalog && mode === "entrada") && serials.length === 0) {
         throw new Error(
           isEquipmentCatalog
-            ? "El equipo exige número de serie."
+            ? "Indica el número de serie de la pieza que sale."
             : "Este producto exige número de serie."
         );
       }
@@ -297,10 +307,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         .join(" · ");
 
       const { applyStockMovement } = await import("@/lib/warehouse/stock");
-      const result = await applyStockMovement({
+      const movementBase = {
         productId: selected.id,
         movementType: mode,
-        quantity: isEquipmentCatalog ? 1 : quantity,
         createdBy: session.username,
         note: extraNote,
         reason: reasonLabel,
@@ -309,8 +318,34 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         lotNumber: isEquipmentCatalog ? null : lotNumber || null,
         expiryDate: isEquipmentCatalog ? null : expiryDate || null,
         manufacturedAt: manufacturedAt || null,
-        serialNumber: serialNumber || null,
-      });
+      } as const;
+
+      const results: Array<{
+        folio: string;
+        movementId: string;
+        newQuantity: number;
+      }> = [];
+      if (isEquipmentCatalog && mode === "entrada") {
+        for (const serial of serials) {
+          results.push(
+            await applyStockMovement({
+              ...movementBase,
+              quantity: 1,
+              serialNumber: serial,
+            })
+          );
+        }
+      } else {
+        results.push(
+          await applyStockMovement({
+            ...movementBase,
+            quantity: isEquipmentCatalog ? 1 : quantity,
+            serialNumber: serials[0] ?? null,
+          })
+        );
+      }
+      const result = results[results.length - 1];
+      const folios = results.map((item) => item.folio);
       const updated = {
         ...selected,
         quantity: result.newQuantity,
@@ -323,29 +358,38 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       let evidenceNote = "";
       if (requiresEvidence && evidenceFiles.length > 0) {
         try {
-          const evidence = await attachEntryEvidence(result.movementId, evidenceFiles);
+          let lastTarget: "serie" | "lote" | "producto" = "producto";
+          for (const movement of results) {
+            const evidence = await attachEntryEvidence(
+              movement.movementId,
+              evidenceFiles
+            );
+            lastTarget = evidence.target;
+          }
           const targetLabel =
-            evidence.target === "serie"
-              ? "la serie"
-              : evidence.target === "lote"
+            lastTarget === "serie"
+              ? serials.length > 1
+                ? "las series"
+                : "la serie"
+              : lastTarget === "lote"
                 ? "el lote"
                 : "el producto";
-          evidenceNote = ` ${evidence.images.length} foto${
-            evidence.images.length === 1 ? "" : "s"
-          } de evidencia integrada${evidence.images.length === 1 ? "" : "s"} a ${targetLabel}.`;
+          evidenceNote = ` Evidencia integrada a ${targetLabel}.`;
           setEvidenceFiles([]);
         } catch (evidenceError) {
           setError(
-            `La entrada ${result.folio} se registró, pero no se pudo guardar la evidencia: ${
+            `La entrada ${folios.join(", ")} se registró, pero no se pudo guardar la evidencia: ${
               evidenceError instanceof Error ? evidenceError.message : "error desconocido"
             }`
           );
         }
       }
 
+      const folioLabel =
+        folios.length > 1 ? `Entradas ${folios.join(", ")}` : `Entrada ${result.folio}`;
       setMessage(
         mode === "entrada"
-          ? `Entrada ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.${evidenceNote}`
+          ? `${folioLabel}. Nuevo stock: ${updated.quantity} ${updated.unit}.${evidenceNote}`
           : `Salida ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.`
       );
       setQuantity(1);
@@ -393,7 +437,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {mode === "entrada"
-                  ? "Elige categoría y tipo de registro, o da de alta un equipo."
+                  ? "Elige categoría y tipo de registro. Los equipos se dan de alta por modelo; las series se capturan aquí."
                   : "Descuenta unidades por categoría. Insumos/medicamentos/reactivos usan caducidad."}
               </p>
             </div>
@@ -498,10 +542,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 ) : (
                   itemOptions.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.sku} — {withPartNumber(item.name, item.partNumber)}
-                      {isEquipmentCatalog && item.serialNumber
-                        ? ` · S/N ${item.serialNumber}`
-                        : ` (${item.quantity} ${item.unit})`}
+                      {item.sku} — {withPartNumber(item.name, item.partNumber)} (
+                      {item.quantity} {item.unit})
                     </option>
                   ))
                 )}
@@ -555,9 +597,15 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   className={fieldClass}
                 />
               </label>
+            ) : mode === "entrada" ? (
+              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                Cada línea de serie es una pieza. La cantidad de la entrada es el
+                número de series capturadas.
+              </p>
             ) : (
               <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-                Los equipos se mueven de 1 en 1 como activos (serie obligatoria).
+                Las salidas de equipo se registran de 1 en 1, indicando la serie
+                de la pieza.
               </p>
             )}
 
@@ -631,21 +679,52 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               )
             ) : null}
 
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium">
-                Número de serie
-                {selected?.tracksSerial || isEquipmentCatalog
-                  ? " (obligatorio)"
-                  : ""}
-              </span>
-              <input
-                value={serialNumber}
-                disabled={!canWrite}
-                required={Boolean(selected?.tracksSerial || isEquipmentCatalog)}
-                onChange={(event) => setSerialNumber(event.target.value)}
-                className={fieldClass}
-              />
-            </label>
+            {isEquipmentCatalog && mode === "entrada" ? (
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">
+                  Números de serie (obligatorio)
+                </span>
+                <textarea
+                  value={serialNumber}
+                  disabled={!canWrite}
+                  required
+                  rows={4}
+                  placeholder={"Una serie por línea\nSN-001\nSN-002"}
+                  onChange={(event) => setSerialNumber(event.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
+                />
+                <span className="text-xs text-muted-foreground">
+                  {(() => {
+                    try {
+                      const count = parseSerialNumbers(serialNumber).length;
+                      return count
+                        ? `${count} pieza${count === 1 ? "" : "s"} en esta entrada.`
+                        : "Pega o escribe las series de las piezas que entran.";
+                    } catch (err) {
+                      return err instanceof Error
+                        ? err.message
+                        : "Revisa las series capturadas.";
+                    }
+                  })()}
+                </span>
+              </label>
+            ) : (
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium">
+                  Número de serie
+                  {selected?.tracksSerial || isEquipmentCatalog
+                    ? " (obligatorio)"
+                    : ""}
+                </span>
+                <input
+                  value={serialNumber}
+                  disabled={!canWrite}
+                  required={Boolean(selected?.tracksSerial || isEquipmentCatalog)}
+                  onChange={(event) => setSerialNumber(event.target.value)}
+                  className={fieldClass}
+                />
+              </label>
+            )}
 
             {showServiceFields ? (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -940,7 +1019,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       {equipmentFormOpen && canWrite ? (
         <ModalShell
           title="Dar de alta equipo"
-          description="Registra un equipo médico nuevo desde entradas o salidas. Quedará disponible de inmediato para el movimiento."
+          description="Da de alta el modelo (sin serie). Después captura las series en el registro de entradas."
         >
           {creatingEquipment ? (
             <p className="mb-3 text-sm text-muted-foreground">
