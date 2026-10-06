@@ -12,6 +12,7 @@ import {
   type SupplyCategoryId,
 } from "@/lib/inventory/types";
 import type { Supplier } from "@/lib/suppliers/types";
+import { createPurchaseOrderFromRequest } from "@/lib/compras/storage";
 import { createPurchaseOrder } from "@/lib/warehouse/orders";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,17 @@ type NewOrderFormProps = {
   suppliers: Supplier[];
   onCancel: () => void;
   onCreated: () => Promise<void> | void;
+  fromRequestId?: string;
+  initialNotes?: string;
+  heading?: string;
+  initialLines?: Array<{
+    itemId: string;
+    itemSku: string;
+    itemName: string;
+    unit: string;
+    quantity: number;
+    unitPrice: number;
+  }>;
 };
 
 function formatCurrency(value: number) {
@@ -84,14 +96,20 @@ export function NewOrderForm({
   suppliers,
   onCancel,
   onCreated,
+  fromRequestId,
+  initialNotes = "",
+  heading,
+  initialLines = [],
 }: NewOrderFormProps) {
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id ?? "");
   const [expectedDate, setExpectedDate] = useState("");
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(initialNotes);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [quantity, setQuantity] = useState(1);
-  const [lines, setLines] = useState<DraftLine[]>([]);
+  const [lines, setLines] = useState<DraftLine[]>(() =>
+    initialLines.map((line) => ({ ...line, supplierId: "" }))
+  );
   const [error, setError] = useState("");
   const [hint, setHint] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -192,14 +210,26 @@ export function NewOrderForm({
       const session = getSession();
       while (remaining.length) {
         const group = remaining[0];
-        const order = await createPurchaseOrder({
+        const payload = {
           supplierId: group.supplier?.id ?? null,
           supplierName: group.supplier?.name ?? "Sin proveedor",
           expectedDate,
           notes,
           createdBy: session?.username ?? "",
           items: group.lines,
-        });
+        };
+        const order =
+          fromRequestId && created.length === 0
+            ? (
+                await createPurchaseOrderFromRequest(fromRequestId, payload.createdBy, {
+                  supplierId: payload.supplierId,
+                  supplierName: payload.supplierName,
+                  expectedDate: payload.expectedDate,
+                  notes: payload.notes,
+                  items: payload.items,
+                })
+              ).order
+            : await createPurchaseOrder(payload);
         created.push(order.orderNumber);
         remaining.shift();
         setLines((current) =>
@@ -248,7 +278,7 @@ export function NewOrderForm({
     >
       <div className="flex shrink-0 flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold">Nuevo pedido</h2>
+          <h2 className="text-lg font-semibold">{heading || "Nuevo pedido"}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Busca por código MAS o nombre, arma las líneas y confirma la orden.
           </p>

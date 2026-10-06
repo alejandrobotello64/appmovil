@@ -3,12 +3,12 @@ export const SUPPLY_CATEGORIES = [
   {
     id: "insumos",
     label: "Insumos",
-    description: "Material de consumo médico con caducidad",
+    description: "Material de consumo médico. Caducidad y fecha de fabricación opcionales",
   },
   {
     id: "medicamentos",
     label: "Medicamentos",
-    description: "Fármacos y soluciones con caducidad",
+    description: "Fármacos y soluciones. Caducidad y fecha de fabricación opcionales",
   },
   {
     id: "refacciones",
@@ -23,7 +23,7 @@ export const SUPPLY_CATEGORIES = [
   {
     id: "reactivos",
     label: "Reactivos",
-    description: "Reactivos de laboratorio con caducidad",
+    description: "Reactivos de laboratorio. Caducidad y fecha de fabricación opcionales",
   },
 ] as const;
 

@@ -387,6 +387,111 @@ export type Database = {
         };
         Relationships: [];
       };
+      purchase_requests: {
+        Row: {
+          id: string;
+          folio: string;
+          status: string;
+          source_type: string;
+          source_id: string | null;
+          source_folio: string;
+          reason: string;
+          requested_by: string;
+          requested_at: string;
+          taken_by: string;
+          taken_at: string | null;
+          warehouse_notes: string;
+          compras_notes: string;
+          purchase_order_id: string | null;
+          purchase_order_number: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          folio: string;
+          status?: string;
+          source_type?: string;
+          source_id?: string | null;
+          source_folio?: string;
+          reason?: string;
+          requested_by?: string;
+          requested_at?: string;
+          taken_by?: string;
+          taken_at?: string | null;
+          warehouse_notes?: string;
+          compras_notes?: string;
+          purchase_order_id?: string | null;
+          purchase_order_number?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          folio?: string;
+          status?: string;
+          source_type?: string;
+          source_id?: string | null;
+          source_folio?: string;
+          reason?: string;
+          requested_by?: string;
+          requested_at?: string;
+          taken_by?: string;
+          taken_at?: string | null;
+          warehouse_notes?: string;
+          compras_notes?: string;
+          purchase_order_id?: string | null;
+          purchase_order_number?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      purchase_request_lines: {
+        Row: {
+          id: string;
+          request_id: string;
+          source_line_id: string | null;
+          product_id: string | null;
+          product_sku: string;
+          product_name: string;
+          quantity_requested: number;
+          quantity_ordered: number;
+          quantity_received: number;
+          unit: string;
+          notes: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_id: string;
+          source_line_id?: string | null;
+          product_id?: string | null;
+          product_sku?: string;
+          product_name: string;
+          quantity_requested: number;
+          quantity_ordered?: number;
+          quantity_received?: number;
+          unit?: string;
+          notes?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          request_id?: string;
+          source_line_id?: string | null;
+          product_id?: string | null;
+          product_sku?: string;
+          product_name?: string;
+          quantity_requested?: number;
+          quantity_ordered?: number;
+          quantity_received?: number;
+          unit?: string;
+          notes?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       equipment_maintenances: {
         Row: {
           id: string;

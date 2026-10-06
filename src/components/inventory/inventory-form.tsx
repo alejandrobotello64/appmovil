@@ -5,8 +5,6 @@ import { Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ASSET_STATUS_OPTIONS,
-  categoryRequiresExpiry,
-  categoryRequiresManufactureDate,
   getSupplyCategoryMeta,
   INVENTORY_UNITS,
   type InventoryItem,
@@ -30,9 +28,6 @@ function emptyForm(
 ): InventoryItemInput {
   const category =
     kind === "equipo" ? "equipos" : lockedCategory ?? "insumos";
-  const requiresExpiry =
-    kind !== "equipo" && categoryRequiresExpiry(category);
-  const requiresManufactureDate = categoryRequiresManufactureDate(category);
   return {
     sku: "",
     name: "",
@@ -55,9 +50,9 @@ function emptyForm(
     lastMaintenanceDate: "",
     nextMaintenanceDate: "",
     isActive: true,
-    tracksLot: kind !== "equipo" ? requiresExpiry : false,
+    tracksLot: false,
     tracksSerial: kind === "equipo",
-    tracksExpiry: requiresExpiry && !requiresManufactureDate,
+    tracksExpiry: false,
     maxStock: 0,
     reorderPoint: 0,
     partNumber: "",
@@ -102,16 +97,12 @@ export function InventoryForm({
       itemKind === "equipo"
         ? "equipos"
         : lockedCategory ?? item.category;
-    const requiresExpiry = categoryRequiresExpiry(category);
-    const requiresManufactureDate = categoryRequiresManufactureDate(category);
     setForm({
       ...rest,
       itemKind: item.itemKind || itemKind,
       category,
-      expiryDate: requiresManufactureDate ? "" : rest.expiryDate,
+      expiryDate: rest.expiryDate ?? "",
       manufacturedAt: rest.manufacturedAt ?? "",
-      tracksExpiry: requiresExpiry,
-      tracksLot: requiresExpiry || Boolean(rest.tracksLot),
     });
     setImageFile(null);
     setImagePreview(item.imageUrl || "");
@@ -150,18 +141,14 @@ export function InventoryForm({
     event.preventDefault();
     const category =
       itemKind === "equipo" ? "equipos" : lockedCategory ?? form.category;
-    const requiresExpiry = categoryRequiresExpiry(category);
-    const requiresManufactureDate = categoryRequiresManufactureDate(category);
     onSubmit(
       {
         ...form,
         itemKind,
         category,
         quantity: itemKind === "equipo" ? Math.max(1, form.quantity) : form.quantity,
-        expiryDate: requiresManufactureDate ? "" : form.expiryDate,
+        expiryDate: itemKind === "equipo" ? "" : form.expiryDate,
         manufacturedAt: form.manufacturedAt,
-        tracksExpiry: requiresExpiry,
-        tracksLot: requiresExpiry || form.tracksLot,
       },
       imageFile ? imageFile : clearExistingImage ? null : undefined
     );
@@ -171,24 +158,14 @@ export function InventoryForm({
   const lockedMeta = lockedCategory
     ? getSupplyCategoryMeta(lockedCategory)
     : null;
-  const requiresExpiry =
-    !isEquipment &&
-    categoryRequiresExpiry(lockedCategory ?? form.category);
-  const requiresManufactureDate = categoryRequiresManufactureDate(
-    isEquipment ? "equipos" : lockedCategory ?? form.category
-  );
   const showPreview = Boolean(imagePreview) && !clearExistingImage;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
         {isEquipment
-          ? "Registro de equipo médico (activo): serie, fecha de fabricación, estado y mantenimiento."
-          : requiresExpiry
-            ? `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} con caducidad y lote obligatorios.`
-            : requiresManufactureDate
-              ? `Registro de ${lockedMeta?.label.toLowerCase() ?? "accesorio"} con fecha de fabricación. No lleva caducidad.`
-              : `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"} en tabla propia.`}
+          ? "Registro de equipo médico (activo): serie, fecha de fabricación opcional, estado y mantenimiento."
+          : `Registro de ${lockedMeta?.label.toLowerCase() ?? "artículo"}. La caducidad y la fecha de fabricación son opcionales.`}
       </div>
 
       <div className="flex flex-wrap items-start gap-4 rounded-xl border border-border bg-background p-3">
@@ -401,14 +378,24 @@ export function InventoryForm({
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
           />
         </label>
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium">Marca</span>
-          <input
-            value={form.brand}
-            onChange={(event) => handleChange("brand", event.target.value)}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-          />
-        </label>
+        <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Marca</span>
+            <input
+              value={form.brand}
+              onChange={(event) => handleChange("brand", event.target.value)}
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">N.º de parte</span>
+            <input
+              value={form.partNumber}
+              onChange={(event) => handleChange("partNumber", event.target.value)}
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            />
+          </label>
+        </div>
         <label className="space-y-1.5">
           <span className="text-sm font-medium">Modelo</span>
           <input
@@ -451,14 +438,6 @@ export function InventoryForm({
           />
         </label>
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">Número de parte</span>
-          <input
-            value={form.partNumber}
-            onChange={(event) => handleChange("partNumber", event.target.value)}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-          />
-        </label>
-        <label className="space-y-1.5">
           <span className="text-sm font-medium">Fabricante</span>
           <input
             value={form.manufacturer}
@@ -472,11 +451,10 @@ export function InventoryForm({
         <label className="flex items-center gap-2 text-sm md:col-span-2">
           <input
             type="checkbox"
-            checked={form.tracksLot || requiresExpiry}
-            disabled={requiresExpiry}
+            checked={form.tracksLot}
             onChange={(event) => handleChange("tracksLot", event.target.checked)}
           />
-          Control por lote{requiresExpiry ? " (obligatorio)" : ""}
+          Control por lote
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -488,46 +466,37 @@ export function InventoryForm({
           />
           Control por número de serie
         </label>
-        {!isEquipment && !requiresManufactureDate ? (
+        {!isEquipment ? (
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              checked={form.tracksExpiry || requiresExpiry}
-              disabled={requiresExpiry}
+              checked={form.tracksExpiry}
               onChange={(event) =>
                 handleChange("tracksExpiry", event.target.checked)
               }
             />
-            Control de caducidad{requiresExpiry ? " (obligatorio)" : ""}
-          </label>
-        ) : requiresManufactureDate && !isEquipment ? (
-          <p className="text-sm text-muted-foreground">
-            Los accesorios no controlan caducidad.
-          </p>
-        ) : null}
-
-        {requiresManufactureDate ? (
-          <label className="space-y-1.5 md:col-span-2">
-            <span className="text-sm font-medium">
-              Fecha de fabricación (obligatoria)
-            </span>
-            <input
-              type="date"
-              required
-              value={form.manufacturedAt}
-              onChange={(event) =>
-                handleChange("manufacturedAt", event.target.value)
-              }
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            />
+            Control de caducidad
           </label>
         ) : null}
 
-        {!isEquipment && !requiresManufactureDate ? (
+        <label className="space-y-1.5 md:col-span-2">
+          <span className="text-sm font-medium">
+            Fecha de fabricación (opcional)
+          </span>
+          <input
+            type="date"
+            value={form.manufacturedAt}
+            onChange={(event) =>
+              handleChange("manufacturedAt", event.target.value)
+            }
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+          />
+        </label>
+
+        {!isEquipment ? (
           <label className="space-y-1.5 md:col-span-2">
             <span className="text-sm font-medium">
-              Fecha de caducidad
-              {requiresExpiry ? " (se captura en entradas)" : ""}
+              Fecha de caducidad (opcional)
             </span>
             <input
               type="date"

@@ -1,6 +1,6 @@
 # Medical Advanced Supplies (MAS)
 
-App de almacén e inventario: login, inventario, proveedores, órdenes, movimientos, mantenimientos, calendario operativo y **calidad** (encuestas de satisfacción enviables por WhatsApp al cliente, con enlace público `/encuesta/{token}`). El código vive en GitHub (`alejandrobotello64/appmovil`) y los datos en Postgres con la API de Supabase.
+App de almacén, **compras** e inventario: login, inventario, solicitudes de compra de almacén a compras, pedidos, proveedores, órdenes, movimientos, mantenimientos, calendario operativo y **calidad** (encuestas de satisfacción enviables por WhatsApp al cliente, con enlace público `/encuesta/{token}`). El código vive en GitHub (`alejandrobotello64/appmovil`) y los datos en Postgres con la API de Supabase.
 
 ## Arranque local
 
@@ -15,7 +15,19 @@ npm run dev               # http://127.0.0.1:43145
 
 Usuarios iniciales (seed): `alexbazz64@gmail.com` / `admin123` y `masservice.lcs@gmail.com` / `mas101012`.
 
-El catálogo real (más de 1500 SKU) está en `supabase/seed_catalog.sql` y se carga con `npm run db:local`. Para volver a volcar la base local al repo: `npm run db:export-catalog`.
+El catálogo y el resto de datos de negocio viven en `supabase/seed_catalog.sql` y `supabase/seed_cloud_snapshot.sql`. `npm run db:local` los carga después de las migraciones.
+
+Para volver a copiar el proyecto de Supabase en la nube sobre Postgres local (conserva los logins de `app_users`) y reescribir `supabase/seed_cloud_snapshot.sql`:
+
+```bash
+# En .env.local:
+# CLOUD_SUPABASE_URL=https://iqfareiwiadqsauejaaf.supabase.co
+# CLOUD_SUPABASE_ANON_KEY=<anon public>
+npm run db:sync-cloud
+npm run db:export-catalog
+```
+
+Las imágenes siguen en Storage de la nube. `db:export-catalog` congela `inventory_items` en `supabase/seed_catalog.sql`.
 
 ## Conectar el proyecto de Supabase en la nube
 
@@ -43,11 +55,35 @@ La recepción de pedidos puede ser **parcial**. Entradas y salidas piden almacé
 
 Migración: `supabase/migrations/20260916000000_inventory_core_structure.sql` (aditiva; no borra `inventory_items` ni datos).
 
+## Compras
+
+El módulo **Compras** vive aparte de Almacén (`/dashboard/compras`): dashboard, solicitudes de almacén, pedidos y proveedores.
+
+Cuando almacén no puede surtir un producto (solicitud de OS o reabasto), genera una orden `SC-YYYY-####` hacia Compras. Compras toma la solicitud, arma el pedido y el estatus recorre *solicitada → en compra → pedida → recepción parcial → recibida*. La recepción del pedido actualiza el surtimiento.
+
+Si las tablas `purchase_requests` aún no están en la nube, o si existen pero les faltan columnas (`source_type`, `quantity_requested`, etc.), aplica en el [SQL Editor](https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new):
+
+1. `supabase/migrations/20261001220000_purchase_requests.sql`
+2. `supabase/migrations/20261001204500_lock_own_technician_advisor.sql`
+3. `supabase/migrations/20261002090000_purchase_requests_cloud_columns.sql`
+
+Hasta que el esquema esté completo, Compras sigue funcionando (localStorage o el esquema stub de la nube).
+
+## Vercel
+
+El proyecto de producción es `medicaladvancedsupplies`. Variables ya configuradas:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Para publicar el código actual: `git push origin main` en GitHub (`alejandrobotello64/appmovil`) — Vercel despliega `main` automáticamente. Framework: Next.js, Node 24.x.
+
 
 | Script | Qué hace |
 | --- | --- |
 | `npm run dev` | Next.js en el puerto 43145 |
-| `npm run db:local` | Crea la base `mas`, aplica migraciones, usuarios y el catálogo |
+| `npm run db:local` | Crea la base `mas`, aplica migraciones, usuarios, catálogo y el snapshot de la nube |
+| `npm run db:sync-cloud` | Copia el snapshot vivo de Supabase (nube) sobre Postgres local |
 | `npm run db:export-catalog` | Vuelca `inventory_items` local a `supabase/seed_catalog.sql` |
 | `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
 | `npm run db:push` | Empuja migraciones al proyecto linkeado |

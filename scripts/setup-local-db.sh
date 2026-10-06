@@ -46,6 +46,10 @@ set
   expiry_date = null
 where category = 'accesorios';
 SQL
+# El snapshot de Supabase reemplaza el catálogo de ejemplo con los datos vivos.
+if [ -f "$ROOT/supabase/seed_cloud_snapshot.sql" ]; then
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/supabase/seed_cloud_snapshot.sql"
+fi
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas <<'SQL'
 grant usage on schema public to anon, authenticated, authenticator;
 grant select, insert, update, delete on all tables in schema public to anon, authenticated;

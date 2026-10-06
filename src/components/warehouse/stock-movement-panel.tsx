@@ -16,11 +16,7 @@ import type {
   InventoryItemInput,
   SupplyCategoryId,
 } from "@/lib/inventory/types";
-import {
-  SUPPLY_CATEGORIES,
-  categoryRequiresExpiry,
-  categoryRequiresManufactureDate,
-} from "@/lib/inventory/types";
+import { SUPPLY_CATEGORIES } from "@/lib/inventory/types";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
@@ -50,6 +46,15 @@ type CatalogKind = SupplyCategoryId | "equipos";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
+
+function articleFields(item: InventoryItem) {
+  return [item.sku, item.name, item.brand, item.model, item.serialNumber, item.partNumber];
+}
+
+function withPartNumber(name: string, partNumber: string) {
+  const part = partNumber.trim();
+  return part ? `${name} · n.º ${part}` : name;
+}
 
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
@@ -82,11 +87,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [creatingEquipment, setCreatingEquipment] = useState(false);
 
   const isEquipmentCatalog = catalogKind === "equipos";
-  const requiresExpiry =
-    !isEquipmentCatalog && categoryRequiresExpiry(catalogKind);
-  const requiresManufactureDate =
-    !isEquipmentCatalog && categoryRequiresManufactureDate(catalogKind);
-
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
@@ -155,13 +155,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       items.filter(
         (item) =>
           item.id === itemId ||
-          matchesSearch(itemQuery, [
-            item.sku,
-            item.name,
-            item.brand,
-            item.model,
-            item.serialNumber,
-          ])
+          matchesSearch(itemQuery, articleFields(item))
       ),
     [items, itemQuery, itemId]
   );
@@ -172,6 +166,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           row.folio,
           row.productSku,
           row.productName,
+          row.partNumber,
           row.reason,
           row.note,
           row.createdBy,
@@ -259,22 +254,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (!session?.username) {
         throw new Error("Inicia sesión para registrar el movimiento.");
       }
-      if (mode === "entrada" && (selected.tracksLot || requiresExpiry) && !lotNumber.trim()) {
-        throw new Error(
-          requiresExpiry
-            ? "Insumos, medicamentos y reactivos exigen número de lote."
-            : "Este producto exige número de lote."
-        );
-      }
-      if (mode === "entrada" && (selected.tracksExpiry || requiresExpiry) && !expiryDate) {
-        throw new Error(
-          requiresExpiry
-            ? "Insumos, medicamentos y reactivos exigen fecha de caducidad."
-            : "Este producto exige fecha de caducidad."
-        );
-      }
-      if (mode === "entrada" && requiresManufactureDate && !manufacturedAt) {
-        throw new Error("Los accesorios exigen fecha de fabricación.");
+      if (mode === "entrada" && selected.tracksLot && !lotNumber.trim()) {
+        throw new Error("Este producto exige número de lote.");
       }
       if (selected.tracksSerial && !serialNumber.trim()) {
         throw new Error(
@@ -307,11 +288,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         warehouseId: warehouseId || null,
         locationId: locationId || null,
         lotNumber: isEquipmentCatalog ? null : lotNumber || null,
-        expiryDate:
-          isEquipmentCatalog || requiresManufactureDate
-            ? null
-            : expiryDate || null,
-        manufacturedAt: requiresManufactureDate ? manufacturedAt || null : null,
+        expiryDate: isEquipmentCatalog ? null : expiryDate || null,
+        manufacturedAt: manufacturedAt || null,
         serialNumber: serialNumber || null,
       });
       const updated = {
@@ -449,20 +427,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   onChange={(value) => {
                     setItemQuery(value);
                     const first = items.find((item) =>
-                      matchesSearch(value, [
-                        item.sku,
-                        item.name,
-                        item.brand,
-                        item.model,
-                        item.serialNumber,
-                      ])
+                      matchesSearch(value, articleFields(item))
                     );
                     if (value.trim() && first) setItemId(first.id);
                   }}
                   placeholder={
                     isEquipmentCatalog
-                      ? "Buscar equipo por código, nombre, marca o serie..."
-                      : "Buscar artículo por código o nombre..."
+                      ? "Buscar equipo por código, nombre, marca, serie o n.º de parte..."
+                      : "Buscar artículo por código, nombre o n.º de parte..."
                   }
                 />
               ) : null}
@@ -483,7 +455,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 ) : (
                   itemOptions.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.sku} — {item.name}
+                      {item.sku} — {withPartNumber(item.name, item.partNumber)}
                       {isEquipmentCatalog && item.serialNumber
                         ? ` · S/N ${item.serialNumber}`
                         : ` (${item.quantity} ${item.unit})`}
@@ -567,13 +539,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     {lots.map((lot) => (
                       <option key={lot.id} value={lot.lotNumber}>
                         {lot.lotNumber}
-                        {requiresManufactureDate
-                          ? lot.manufacturedAt
-                            ? ` · fab. ${lot.manufacturedAt}`
-                            : ""
-                          : lot.expiryDate
-                            ? ` · cad. ${lot.expiryDate}`
-                            : ""}
+                        {lot.manufacturedAt ? ` · fab. ${lot.manufacturedAt}` : ""}
+                        {lot.expiryDate ? ` · cad. ${lot.expiryDate}` : ""}
                       </option>
                     ))}
                   </select>
@@ -583,49 +550,37 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium">
                       Lote
-                      {selected?.tracksLot || requiresExpiry
-                        ? " (obligatorio)"
-                        : ""}
+                      {selected?.tracksLot ? " (obligatorio)" : ""}
                     </span>
                     <input
                       value={lotNumber}
                       disabled={!canWrite}
-                      required={Boolean(
-                        (selected?.tracksLot || requiresExpiry) &&
-                          mode === "entrada"
-                      )}
+                      required={Boolean(selected?.tracksLot && mode === "entrada")}
                       onChange={(event) => setLotNumber(event.target.value)}
                       className={fieldClass}
                     />
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium">
-                      {requiresManufactureDate
-                        ? "Fecha de fabricación"
-                        : "Caducidad"}
-                      {requiresManufactureDate ||
-                      selected?.tracksExpiry ||
-                      requiresExpiry
-                        ? " (obligatoria)"
-                        : ""}
+                      Fecha de fabricación (opcional)
                     </span>
                     <input
                       type="date"
-                      value={
-                        requiresManufactureDate ? manufacturedAt : expiryDate
-                      }
+                      value={manufacturedAt}
                       disabled={!canWrite}
-                      required={Boolean(
-                        mode === "entrada" &&
-                          (requiresManufactureDate ||
-                            selected?.tracksExpiry ||
-                            requiresExpiry)
-                      )}
-                      onChange={(event) =>
-                        requiresManufactureDate
-                          ? setManufacturedAt(event.target.value)
-                          : setExpiryDate(event.target.value)
-                      }
+                      onChange={(event) => setManufacturedAt(event.target.value)}
+                      className={fieldClass}
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      Caducidad (opcional)
+                    </span>
+                    <input
+                      type="date"
+                      value={expiryDate}
+                      disabled={!canWrite}
+                      onChange={(event) => setExpiryDate(event.target.value)}
                       className={fieldClass}
                     />
                   </label>
@@ -749,7 +704,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           <SearchInput
             value={historyQuery}
             onChange={setHistoryQuery}
-            placeholder="Buscar folio, artículo, motivo..."
+            placeholder="Buscar folio, artículo, n.º de parte o motivo..."
             className="mt-3"
           />
 
@@ -776,7 +731,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">
-                          {row.productSku} — {row.productName}
+                          {row.productSku} — {withPartNumber(row.productName, row.partNumber)}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {row.folio}

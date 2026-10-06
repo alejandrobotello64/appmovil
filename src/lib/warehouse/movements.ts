@@ -41,6 +41,7 @@ export type MovementRecord = {
   productId: string;
   productSku: string;
   productName: string;
+  partNumber: string;
   unit: string;
   quantity: number;
   qtyIn: number;
@@ -96,6 +97,7 @@ function mapMovement(row: Row): MovementRecord {
     productId: str(row.product_id),
     productSku: str(row.product_sku),
     productName: str(row.product_name),
+    partNumber: str(product.part_number),
     unit: str(product.unit),
     quantity: Math.max(qtyIn, qtyOut),
     qtyIn,
@@ -115,7 +117,7 @@ function mapMovement(row: Row): MovementRecord {
 
 const MOVEMENT_SELECT = `id, folio, occurred_at, movement_type, product_id, product_sku, product_name,
   qty_in, qty_out, resulting_qty, reason, note, created_by, related_serial, related_technician,
-  product:inventory_items(unit),
+  product:inventory_items(unit, part_number),
   warehouse:warehouses!inventory_movements_warehouse_id_fkey(id, code),
   location:locations!inventory_movements_location_id_fkey(name),
   from_warehouse:warehouses!inventory_movements_from_warehouse_id_fkey(id, code),

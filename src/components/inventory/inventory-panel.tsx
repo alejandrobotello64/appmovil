@@ -37,8 +37,6 @@ import {
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import {
   ASSET_STATUS_OPTIONS,
-  categoryRequiresExpiry,
-  categoryRequiresManufactureDate,
   getSupplyCategoryMeta,
   INVENTORY_CATEGORIES,
   type InventoryCategoryId,
@@ -101,6 +99,12 @@ function itemImages(item: InventoryItem): ItemImage[] {
   return images;
 }
 
+function brandWithPartNumber(item: InventoryItem) {
+  return [item.brand, item.partNumber ? `n.º ${item.partNumber}` : "", item.model]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function getCategoryLabel(category: InventoryCategoryId) {
   return (
     INVENTORY_CATEGORIES.find((item) => item.id === category)?.label ?? category
@@ -133,14 +137,6 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const supplyMeta = supplyCategory
     ? getSupplyCategoryMeta(supplyCategory)
     : null;
-  const requiresExpiry = supplyCategory
-    ? categoryRequiresExpiry(supplyCategory)
-    : false;
-  const requiresManufactureDate = isEquipment
-    ? true
-    : supplyCategory
-      ? categoryRequiresManufactureDate(supplyCategory)
-      : false;
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [reservedByProduct, setReservedByProduct] = useState<Map<string, number>>(
     new Map()
@@ -154,11 +150,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const [managerOpen, setManagerOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const selectedWarehouse = warehouses.find((w) => w.id === warehouseFilter);
-  const trackingMode: TrackingDateMode = requiresExpiry
-    ? "expiry"
-    : requiresManufactureDate
-      ? "manufacture"
-      : "auto";
+  const trackingMode: TrackingDateMode = isEquipment ? "manufacture" : "both";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -184,14 +176,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
         ...data,
         itemKind: formItemKind,
         category,
-        tracksExpiry:
-          categoryRequiresExpiry(category) &&
-          !categoryRequiresManufactureDate(category),
-        tracksLot:
-          categoryRequiresExpiry(category) || Boolean(data.tracksLot),
-        expiryDate: categoryRequiresManufactureDate(category)
-          ? ""
-          : data.expiryDate,
+        expiryDate: isEquipment ? "" : data.expiryDate,
         manufacturedAt: data.manufacturedAt,
       };
       let savedId = editingItem?.id ?? "";
@@ -235,6 +220,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           item.sku,
           item.name,
           item.brand,
+          item.partNumber,
           item.model,
           item.supplier,
           item.serialNumber,
@@ -478,12 +464,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               </h2>
               <p className="text-sm text-muted-foreground">
                 {isEquipment
-                  ? "Activos con número de serie, fecha de fabricación, estado y mantenimiento."
-                  : requiresExpiry
-                    ? `${supplyMeta?.description ?? ""}. Caducidad y lote obligatorios.`
-                    : requiresManufactureDate
-                      ? `${supplyMeta?.description ?? ""}. Fecha de fabricación obligatoria; no lleva caducidad.`
-                      : `${supplyMeta?.description ?? ""}. Tabla propia sin caducidad obligatoria.`}
+                  ? "Activos con número de serie, fecha de fabricación opcional, estado y mantenimiento."
+                  : `${supplyMeta?.description ?? "Catálogo"}. El número de parte se muestra junto a la marca.`}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -576,7 +558,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               return {
                 key: item.id,
                 title: item.name,
-                subtitle: `${item.sku} · ${item.brand}${item.model ? ` · ${item.model}` : ""}`,
+                subtitle: `${item.sku} · ${brandWithPartNumber(item) || "Sin marca"}`,
                 badge:
                   item.itemKind === "equipo" ? (
                     <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs">
@@ -631,17 +613,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                       ]
                     : []),
                   { label: "Almacén / ubicación", value: renderPlacements(item) },
-                  {
-                    label: requiresManufactureDate
-                      ? "Fabricación"
-                      : "Precio",
-                    value: requiresManufactureDate
-                      ? item.manufacturedAt || "—"
-                      : formatCurrency(item.unitPrice),
-                  },
-                  ...(requiresManufactureDate
-                    ? [{ label: "Precio", value: formatCurrency(item.unitPrice) }]
-                    : []),
+                  { label: "Precio", value: formatCurrency(item.unitPrice) },
                 ],
                 actions: (
                   <>
@@ -716,9 +688,6 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     <th className="px-4 py-3 font-medium">Próx. mant.</th>
                   )}
                   <th className="px-4 py-3 font-medium">Almacén / ubicación</th>
-                  {requiresManufactureDate ? (
-                    <th className="px-4 py-3 font-medium">Fabricación</th>
-                  ) : null}
                   <th className="px-4 py-3 font-medium">Precio</th>
                   <th className="px-4 py-3 font-medium">Acciones</th>
                 </tr>
@@ -727,7 +696,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8 + (requiresManufactureDate ? 1 : 0) + (isEquipment ? 0 : 1)}
+                      colSpan={isEquipment ? 8 : 9}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isEquipment
@@ -751,8 +720,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                             {item.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {item.brand}
-                            {item.model ? ` · ${item.model}` : ""}
+                            {brandWithPartNumber(item) || "—"}
                           </p>
                         </td>
                         <td className="px-4 py-3">
@@ -823,11 +791,6 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                           )}
                         </td>
                         <td className="px-4 py-3 align-top">{renderPlacements(item)}</td>
-                        {requiresManufactureDate ? (
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {item.manufacturedAt || "—"}
-                          </td>
-                        ) : null}
                         <td className="px-4 py-3">
                           {formatCurrency(item.unitPrice)}
                         </td>
@@ -909,12 +872,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
               </h3>
               <p className="text-sm text-muted-foreground">
                 {isEquipment
-                  ? "Los equipos se gestionan como activos. La fecha de fabricación es obligatoria."
-                  : requiresExpiry
-                    ? "Esta tabla exige control de caducidad y lote en entradas."
-                    : requiresManufactureDate
-                      ? "Los accesorios llevan fecha de fabricación y no caducan."
-                      : "Tabla propia de refacciones/accesorios sin caducidad obligatoria."}
+                  ? "Los equipos se gestionan como activos. La fecha de fabricación es opcional."
+                  : "La caducidad y la fecha de fabricación son opcionales. El número de parte queda junto a la marca."}
               </p>
             </div>
             <InventoryForm
@@ -1072,8 +1031,9 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  ["Categoría", getCategoryLabel(viewingItem.category)],
                   ["Marca", viewingItem.brand || "—"],
+                  ["N.º de parte", viewingItem.partNumber || "—"],
+                  ["Categoría", getCategoryLabel(viewingItem.category)],
                   ["Modelo", viewingItem.model || "—"],
                   [
                     isEquipment || viewingItem.tracksSerial ? "Serie" : "Serie / lote",
@@ -1107,11 +1067,11 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     )?.label ?? viewingItem.assetStatus,
                   ],
                   ["Fabricación", viewingItem.manufacturedAt || "—"],
-                  ...(trackingMode === "manufacture"
+                  ...(isEquipment
                     ? []
                     : [
                         [
-                          trackingMode === "expiry" ? "Próxima caducidad" : "Caducidad",
+                          "Caducidad",
                           viewingItem.expiryDate ||
                             trackingFor(stockByProduct.get(viewingItem.id))?.lots.find(
                               (lot) => lot.expiryDate

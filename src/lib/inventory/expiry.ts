@@ -25,3 +25,12 @@ export function expiryBucket(days: number): ExpiryBucket | null {
   if (days <= 180) return "180";
   return null;
 }
+
+/** Fecha ISO (`YYYY-MM-DD` o timestamptz) a `dd/mm/aaaa`. */
+export function formatIsoDateEs(iso: string): string {
+  if (!iso) return "";
+  const date = iso.slice(0, 10);
+  const [year, month, day] = date.split("-");
+  if (!year || !month || !day) return iso;
+  return `${day}/${month}/${year}`;
+}

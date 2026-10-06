@@ -68,6 +68,7 @@ function downloadCsv(rows: MovementRecord[]) {
     "Tipo",
     "SKU",
     "Producto",
+    "N.º de parte",
     "Cantidad",
     "Origen",
     "Destino",
@@ -85,6 +86,7 @@ function downloadCsv(rows: MovementRecord[]) {
       MOVEMENT_KIND_LABELS[row.kind] ?? row.kind,
       row.productSku,
       row.productName,
+      row.partNumber,
       row.quantity,
       placeLabel(row.from),
       placeLabel(row.to),
@@ -179,6 +181,7 @@ export function MovementHistory({ warehouses, refreshKey }: Props) {
             movement.folio,
             movement.productSku,
             movement.productName,
+            movement.partNumber,
             MOVEMENT_KIND_LABELS[movement.kind],
             placeLabel(movement.from),
             placeLabel(movement.to),
@@ -358,7 +361,7 @@ export function MovementHistory({ warehouses, refreshKey }: Props) {
           <SearchInput
             value={query}
             onChange={setQuery}
-            placeholder="Buscar folio, producto, lote, serie, usuario..."
+            placeholder="Buscar folio, producto, n.º de parte, lote, serie, usuario..."
           />
         </div>
 
@@ -369,7 +372,9 @@ export function MovementHistory({ warehouses, refreshKey }: Props) {
         emptyMessage={emptyMessage}
         items={visible.map((movement) => ({
           key: movement.id,
-          title: movement.productName,
+          title: movement.partNumber.trim()
+            ? `${movement.productName} · n.º ${movement.partNumber.trim()}`
+            : movement.productName,
           subtitle: `${movement.productSku} · ${movement.folio || "sin folio"}`,
           badge: <KindBadge kind={movement.kind} />,
           fields: [
@@ -425,7 +430,11 @@ export function MovementHistory({ warehouses, refreshKey }: Props) {
                     <KindBadge kind={movement.kind} />
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium">{movement.productName}</p>
+                    <p className="font-medium">
+                      {movement.partNumber.trim()
+                        ? `${movement.productName} · n.º ${movement.partNumber.trim()}`
+                        : movement.productName}
+                    </p>
                     <p className="font-mono text-xs text-muted-foreground">{movement.productSku}</p>
                   </td>
                   <td className="px-4 py-3 text-right font-medium" data-sort={movement.quantity}>

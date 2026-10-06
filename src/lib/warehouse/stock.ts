@@ -36,6 +36,7 @@ export type KardexRow = {
   reason: string;
   note: string;
   createdBy: string;
+  partNumber: string;
 };
 
 // New tables live in the SQL migration; keep queries loosely typed until gen:types.
@@ -298,6 +299,15 @@ export type ProductLot = {
   manufacturedAt: string;
 };
 
+function mapLotRow(row: Record<string, unknown>): ProductLot {
+  return {
+    id: String(row.id),
+    lotNumber: String(row.lot_number ?? ""),
+    expiryDate: String(row.expiry_date ?? ""),
+    manufacturedAt: String(row.manufactured_at ?? ""),
+  };
+}
+
 export async function getProductLots(productId: string): Promise<ProductLot[]> {
   const { data, error } = await db
     .from("lots")
@@ -305,12 +315,34 @@ export async function getProductLots(productId: string): Promise<ProductLot[]> {
     .eq("product_id", productId)
     .order("expiry_date", { ascending: true, nullsFirst: false });
   if (error) throw new Error(error.message);
-  return (data ?? []).map((row: Record<string, unknown>) => ({
-    id: String(row.id),
-    lotNumber: String(row.lot_number ?? ""),
-    expiryDate: String(row.expiry_date ?? ""),
-    manufacturedAt: String(row.manufactured_at ?? ""),
-  }));
+  return (data ?? []).map((row: Record<string, unknown>) => mapLotRow(row));
+}
+
+/** Carga lotes de varios productos en una sola consulta (listas de inventario). */
+export async function getLotsByProductIds(
+  productIds: string[]
+): Promise<Map<string, ProductLot[]>> {
+  const result = new Map<string, ProductLot[]>();
+  const uniqueIds = [...new Set(productIds.filter(Boolean))];
+  const chunkSize = 150;
+  for (let index = 0; index < uniqueIds.length; index += chunkSize) {
+    const chunk = uniqueIds.slice(index, index + chunkSize);
+    const { data, error } = await db
+      .from("lots")
+      .select("id, product_id, lot_number, expiry_date, manufactured_at")
+      .in("product_id", chunk)
+      .order("expiry_date", { ascending: true, nullsFirst: false });
+    if (error) throw new Error(error.message);
+    for (const row of (data ?? []) as Record<string, unknown>[]) {
+      const productId = String(row.product_id ?? "");
+      if (!productId) continue;
+      const list = result.get(productId);
+      const lot = mapLotRow(row);
+      if (list) list.push(lot);
+      else result.set(productId, [lot]);
+    }
+  }
+  return result;
 }
 
 export async function getOpenTransferCount(): Promise<number> {
@@ -340,7 +372,43 @@ function mapKardexRow(row: Record<string, unknown>): KardexRow {
     reason: String(row.reason ?? ""),
     note: String(row.note ?? ""),
     createdBy: String(row.created_by ?? ""),
+    partNumber: "",
   };
+}
+
+async function partNumbersByProduct(
+  rows: Array<Record<string, unknown>>
+): Promise<{ byId: Map<string, string>; bySku: Map<string, string> }> {
+  const ids = [
+    ...new Set(rows.map((row) => String(row.product_id ?? "")).filter(Boolean)),
+  ];
+  const skus = [
+    ...new Set(rows.map((row) => String(row.product_sku ?? "")).filter(Boolean)),
+  ];
+  const byId = new Map<string, string>();
+  const bySku = new Map<string, string>();
+
+  async function read(column: "id" | "sku", values: string[]) {
+    if (!values.length) return;
+    const { data, error } = await db
+      .from("inventory_items")
+      .select("id, sku, part_number")
+      .in(column, values);
+    if (error) throw new Error(error.message);
+    for (const row of (data ?? []) as Array<Record<string, unknown>>) {
+      const partNumber = String(row.part_number ?? "");
+      byId.set(String(row.id ?? ""), partNumber);
+      const sku = String(row.sku ?? "");
+      if (sku) bySku.set(sku, partNumber);
+    }
+  }
+
+  await read("id", ids);
+  await read(
+    "sku",
+    skus.filter((sku) => !bySku.has(sku))
+  );
+  return { byId, bySku };
 }
 
 export async function getKardex(productId?: string): Promise<KardexRow[]> {
@@ -367,5 +435,15 @@ export async function getEntryExitHistory(
     .order("occurred_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
-  return (data ?? []).map(mapKardexRow);
+  const raw = (data ?? []) as Array<Record<string, unknown>>;
+  const mapped = raw.map(mapKardexRow);
+  const { byId, bySku } = await partNumbersByProduct(raw);
+  return mapped.map((row, index) => {
+    const source = raw[index];
+    const productId = String(source?.product_id ?? "");
+    return {
+      ...row,
+      partNumber: (productId && byId.get(productId)) || bySku.get(row.productSku) || "",
+    };
+  });
 }
