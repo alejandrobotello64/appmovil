@@ -59,6 +59,27 @@ function withPartNumber(name: string, partNumber: string) {
   return part ? `${name} · n.º ${part}` : name;
 }
 
+function formatLotQty(quantity: number, unit: string) {
+  return `${quantity} ${unit}`;
+}
+
+function lotSelectLabel(lot: ProductLot, unit: string, scopedToWarehouse: boolean) {
+  const here = formatLotQty(lot.warehouseQuantity, unit);
+  const total = formatLotQty(lot.quantity, unit);
+  const qty =
+    scopedToWarehouse && lot.warehouseQuantity !== lot.quantity
+      ? `${here} aquí · ${total} total`
+      : here;
+  return [
+    lot.lotNumber,
+    qty,
+    lot.manufacturedAt ? `fab. ${lot.manufacturedAt}` : "",
+    lot.expiryDate ? `cad. ${lot.expiryDate}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
   const [catalogKind, setCatalogKind] = useState<CatalogKind>("insumos");
@@ -164,6 +185,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     () => items.find((item) => item.id === itemId) ?? null,
     [items, itemId]
   );
+  const selectedLot = useMemo(
+    () => lots.find((lot) => lot.lotNumber === lotNumber) ?? null,
+    [lots, lotNumber]
+  );
+  const unitLabel = selected?.unit || "pza";
 
   const [itemQuery, setItemQuery] = useState("");
   const [historyQuery, setHistoryQuery] = useState("");
@@ -192,20 +218,37 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     [history, historyQuery]
   );
 
-  useEffect(() => {
-    if (!itemId || mode !== "salida" || isEquipmentCatalog) {
+  const loadLots = useCallback(async () => {
+    if (!itemId || isEquipmentCatalog) {
       setLots([]);
-      return;
+      return [];
     }
-    void getProductLots(itemId)
-      .then((rows) => {
-        setLots(rows);
-        setLotNumber(rows[0]?.lotNumber ?? "");
-        setExpiryDate(rows[0]?.expiryDate ?? "");
-        setManufacturedAt(rows[0]?.manufacturedAt ?? "");
-      })
-      .catch(() => setLots([]));
-  }, [itemId, mode, isEquipmentCatalog]);
+    try {
+      const rows = await getProductLots(itemId, warehouseId || null);
+      setLots(rows);
+      return rows;
+    } catch {
+      setLots([]);
+      return [];
+    }
+  }, [itemId, isEquipmentCatalog, warehouseId]);
+
+  useEffect(() => {
+    void loadLots().then((rows) => {
+      if (mode !== "salida") return;
+      const pick = rows[0];
+      setLotNumber(pick?.lotNumber ?? "");
+      setExpiryDate(pick?.expiryDate ?? "");
+      setManufacturedAt(pick?.manufacturedAt ?? "");
+    });
+  }, [loadLots, mode]);
+
+  useEffect(() => {
+    if (mode !== "entrada") return;
+    setLotNumber("");
+    setExpiryDate("");
+    setManufacturedAt("");
+  }, [itemId, mode]);
 
   useEffect(() => {
     if (isEquipmentCatalog && mode !== "entrada") {
@@ -398,7 +441,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setExpiryDate("");
         setSerialNumber("");
       }
-      await loadHistory();
+      await Promise.all([loadHistory(), loadLots()]);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo registrar el movimiento."
@@ -626,28 +669,79 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     <option value="">Sin lote / automático</option>
                     {lots.map((lot) => (
                       <option key={lot.id} value={lot.lotNumber}>
-                        {lot.lotNumber}
-                        {lot.manufacturedAt ? ` · fab. ${lot.manufacturedAt}` : ""}
-                        {lot.expiryDate ? ` · cad. ${lot.expiryDate}` : ""}
+                        {lotSelectLabel(lot, unitLabel, Boolean(warehouseId))}
                       </option>
                     ))}
                   </select>
+                  {selectedLot ? (
+                    <span className="block text-xs text-muted-foreground">
+                      {selectedLot.warehouseQuantity > 0
+                        ? `Hay ${formatLotQty(selectedLot.warehouseQuantity, unitLabel)} de este lote en el almacén.`
+                        : `No hay existencia de este lote en este almacén.`}
+                      {selectedLot.quantity !== selectedLot.warehouseQuantity
+                        ? ` Total: ${formatLotQty(selectedLot.quantity, unitLabel)}.`
+                        : null}
+                    </span>
+                  ) : null}
                 </label>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-1.5">
-                    <span className="text-sm font-medium">
-                      Lote
-                      {selected?.tracksLot ? " (obligatorio)" : ""}
-                    </span>
-                    <input
-                      value={lotNumber}
-                      disabled={!canWrite}
-                      required={Boolean(selected?.tracksLot && mode === "entrada")}
-                      onChange={(event) => setLotNumber(event.target.value)}
-                      className={fieldClass}
-                    />
-                  </label>
+                  {lots.length > 0 ? (
+                    <label className="space-y-1.5 sm:col-span-2">
+                      <span className="text-sm font-medium">
+                        Lote existente
+                      </span>
+                      <select
+                        value={selectedLot?.lotNumber ?? ""}
+                        disabled={!canWrite}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          const lot = lots.find((item) => item.lotNumber === value);
+                          setLotNumber(value);
+                          setExpiryDate(lot?.expiryDate ?? "");
+                          setManufacturedAt(lot?.manufacturedAt ?? "");
+                        }}
+                        className={fieldClass}
+                      >
+                        <option value="">Nuevo lote…</option>
+                        {lots.map((lot) => (
+                          <option key={lot.id} value={lot.lotNumber}>
+                            {lotSelectLabel(lot, unitLabel, Boolean(warehouseId))}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedLot ? (
+                        <span className="block text-xs text-muted-foreground">
+                          {selectedLot.warehouseQuantity > 0
+                            ? `Este lote ya tiene ${formatLotQty(selectedLot.warehouseQuantity, unitLabel)} en el almacén seleccionado.`
+                            : "Este lote no tiene existencia en el almacén seleccionado."}
+                          {selectedLot.quantity !== selectedLot.warehouseQuantity
+                            ? ` Total: ${formatLotQty(selectedLot.quantity, unitLabel)}.`
+                            : null}
+                        </span>
+                      ) : (
+                        <span className="block text-xs text-muted-foreground">
+                          Elige un lote para ver cuántas piezas hay, o captura uno nuevo abajo.
+                        </span>
+                      )}
+                    </label>
+                  ) : null}
+                  {selectedLot ? null : (
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">
+                        Lote
+                        {selected?.tracksLot ? " (obligatorio)" : ""}
+                      </span>
+                      <input
+                        value={lotNumber}
+                        disabled={!canWrite}
+                        required={Boolean(selected?.tracksLot && mode === "entrada")}
+                        onChange={(event) => setLotNumber(event.target.value)}
+                        placeholder={lots.length > 0 ? "Número del lote nuevo" : undefined}
+                        className={fieldClass}
+                      />
+                    </label>
+                  )}
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium">
                       Fecha de fabricación (opcional)

@@ -300,25 +300,64 @@ export type ProductLot = {
   lotNumber: string;
   expiryDate: string;
   manufacturedAt: string;
+  quantity: number;
+  warehouseQuantity: number;
 };
 
-function mapLotRow(row: Record<string, unknown>): ProductLot {
+function mapLotRow(
+  row: Record<string, unknown>,
+  quantity = 0,
+  warehouseQuantity = 0
+): ProductLot {
   return {
     id: String(row.id),
     lotNumber: String(row.lot_number ?? ""),
     expiryDate: String(row.expiry_date ?? ""),
     manufacturedAt: String(row.manufactured_at ?? ""),
+    quantity,
+    warehouseQuantity,
   };
 }
 
-export async function getProductLots(productId: string): Promise<ProductLot[]> {
-  const { data, error } = await db
-    .from("lots")
-    .select("id, lot_number, expiry_date, manufactured_at")
-    .eq("product_id", productId)
-    .order("expiry_date", { ascending: true, nullsFirst: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((row: Record<string, unknown>) => mapLotRow(row));
+export async function getProductLots(
+  productId: string,
+  warehouseId?: string | null
+): Promise<ProductLot[]> {
+  const [lotsRes, balancesRes] = await Promise.all([
+    db
+      .from("lots")
+      .select("id, lot_number, expiry_date, manufactured_at")
+      .eq("product_id", productId)
+      .order("expiry_date", { ascending: true, nullsFirst: false }),
+    db
+      .from("inventory_balances")
+      .select("lot_id, warehouse_id, qty_on_hand")
+      .eq("product_id", productId),
+  ]);
+  if (lotsRes.error) throw new Error(lotsRes.error.message);
+  if (balancesRes.error) throw new Error(balancesRes.error.message);
+
+  const totals = new Map<string, { quantity: number; warehouseQuantity: number }>();
+  for (const row of (balancesRes.data ?? []) as Record<string, unknown>[]) {
+    const lotId = String(row.lot_id ?? "");
+    if (!lotId) continue;
+    const qty = Number(row.qty_on_hand ?? 0) || 0;
+    const current = totals.get(lotId) ?? { quantity: 0, warehouseQuantity: 0 };
+    current.quantity += qty;
+    if (warehouseId && String(row.warehouse_id ?? "") === warehouseId) {
+      current.warehouseQuantity += qty;
+    }
+    totals.set(lotId, current);
+  }
+
+  return ((lotsRes.data ?? []) as Record<string, unknown>[]).map((row) => {
+    const stock = totals.get(String(row.id)) ?? { quantity: 0, warehouseQuantity: 0 };
+    return mapLotRow(
+      row,
+      stock.quantity,
+      warehouseId ? stock.warehouseQuantity : stock.quantity
+    );
+  });
 }
 
 /** Carga lotes de varios productos en una sola consulta (listas de inventario). */
