@@ -291,10 +291,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             : "Este producto exige número de serie."
         );
       }
-      if (requiresEvidence && evidenceFiles.length === 0) {
-        throw new Error("Agrega al menos una foto de evidencia de la entrada.");
-      }
-
       const reasonLabel =
         mode === "entrada"
           ? ENTRY_REASONS.find((item) => item.id === reason)?.label ?? reason
@@ -768,10 +764,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               <div className="space-y-2 rounded-xl border border-dashed border-[#3B46A5]/40 bg-muted/20 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium">Fotos de evidencia (obligatorio)</p>
+                    <p className="text-sm font-medium">Fotos de evidencia (opcional)</p>
                     <p className="text-xs text-muted-foreground">
-                      Se guardan en el movimiento y se agregan a las fotos de la serie, del lote
-                      o del producto recibido.
+                      Si las agregas, se guardan en el movimiento y en las fotos de la serie, del
+                      lote o del producto recibido.
                     </p>
                   </div>
                   <label
@@ -837,9 +833,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
-                    Aún no hay fotos. Toma o selecciona al menos una (factura, empaque, etiqueta
-                    del lote o la serie).
+                  <p className="text-xs text-muted-foreground">
+                    Sin fotos por ahora. Puedes adjuntar factura, empaque o etiqueta si las tienes.
                   </p>
                 )}
               </div>
@@ -870,12 +865,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
             <Button
               type="submit"
-              disabled={
-                !canWrite ||
-                submitting ||
-                items.length === 0 ||
-                (requiresEvidence && evidenceFiles.length === 0)
-              }
+              disabled={!canWrite || submitting || items.length === 0}
               className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
             >
               {submitting
