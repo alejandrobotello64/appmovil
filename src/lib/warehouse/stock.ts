@@ -61,6 +61,36 @@ export async function getWarehouses(includeInactive = false): Promise<Warehouse[
   }));
 }
 
+export type WarehouseStock = {
+  warehouseId: string;
+  quantity: number;
+};
+
+/** Existencia del artículo agrupada por almacén. */
+export async function getProductWarehouseQuantities(
+  productId: string
+): Promise<WarehouseStock[]> {
+  const { data, error } = await db
+    .from("inventory_balances")
+    .select("warehouse_id, qty_on_hand")
+    .eq("product_id", productId)
+    .gt("qty_on_hand", 0);
+  if (error) throw new Error(error.message);
+
+  const totals = new Map<string, number>();
+  for (const row of (data ?? []) as Record<string, unknown>[]) {
+    const warehouseId = String(row.warehouse_id ?? "");
+    if (!warehouseId) continue;
+    totals.set(
+      warehouseId,
+      (totals.get(warehouseId) ?? 0) + (Number(row.qty_on_hand ?? 0) || 0)
+    );
+  }
+  return [...totals.entries()]
+    .map(([warehouseId, quantity]) => ({ warehouseId, quantity }))
+    .sort((a, b) => b.quantity - a.quantity);
+}
+
 export async function getWarehouseLocations(
   warehouseId?: string
 ): Promise<WarehouseLocation[]> {

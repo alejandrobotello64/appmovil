@@ -30,12 +30,14 @@ import {
 import {
   getEntryExitHistory,
   getProductLots,
+  getProductWarehouseQuantities,
   getWarehouseLocations,
   getWarehouses,
   type KardexRow,
   type ProductLot,
   type Warehouse,
   type WarehouseLocation,
+  type WarehouseStock,
 } from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
@@ -85,6 +87,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [catalogKind, setCatalogKind] = useState<CatalogKind>("insumos");
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [warehouseStock, setWarehouseStock] = useState<WarehouseStock[] | null>(null);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [lots, setLots] = useState<ProductLot[]>([]);
   const [history, setHistory] = useState<KardexRow[]>([]);
@@ -155,9 +158,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     void Promise.all([loadCatalog(catalogKind), getWarehouses(), loadHistory()])
       .then(([, warehouseList]) => {
         setWarehouses(warehouseList);
-        const defaultWarehouse =
-          warehouseList.find((item) => item.isDefault) ?? warehouseList[0];
-        if (defaultWarehouse) setWarehouseId(defaultWarehouse.id);
       })
       .catch((err) => {
         setError(
@@ -217,6 +217,57 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       ),
     [history, historyQuery]
   );
+
+  const warehouseQty = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of warehouseStock ?? []) map.set(row.warehouseId, row.quantity);
+    return map;
+  }, [warehouseStock]);
+
+  const stockedWarehouses = useMemo(() => {
+    if (!itemId || warehouseStock === null) return warehouses;
+    const withStock = warehouses.filter((warehouse) => (warehouseQty.get(warehouse.id) ?? 0) > 0);
+    if (withStock.length > 0) return withStock;
+    return mode === "entrada" ? warehouses : [];
+  }, [itemId, warehouseStock, warehouses, warehouseQty, mode]);
+
+  const listingStockedWarehouses =
+    Boolean(itemId) &&
+    warehouseStock !== null &&
+    stockedWarehouses.length > 0 &&
+    stockedWarehouses.length < warehouses.length;
+
+  const loadWarehouseStock = useCallback(async () => {
+    if (!itemId) {
+      setWarehouseStock([]);
+      return [];
+    }
+    try {
+      const rows = await getProductWarehouseQuantities(itemId);
+      setWarehouseStock(rows);
+      return rows;
+    } catch {
+      setWarehouseStock([]);
+      return [];
+    }
+  }, [itemId]);
+
+  useEffect(() => {
+    setWarehouseStock(null);
+    void loadWarehouseStock();
+  }, [loadWarehouseStock]);
+
+  useEffect(() => {
+    if (stockedWarehouses.length === 0) {
+      if (mode === "salida") setWarehouseId("");
+      return;
+    }
+    setWarehouseId((current) =>
+      stockedWarehouses.some((warehouse) => warehouse.id === current)
+        ? current
+        : stockedWarehouses[0].id
+    );
+  }, [stockedWarehouses, mode]);
 
   const loadLots = useCallback(async () => {
     if (!itemId || isEquipmentCatalog) {
@@ -441,7 +492,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setExpiryDate("");
         setSerialNumber("");
       }
-      await Promise.all([loadHistory(), loadLots()]);
+      await Promise.all([loadHistory(), loadLots(), loadWarehouseStock()]);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo registrar el movimiento."
@@ -597,15 +648,41 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   required
                   value={warehouseId}
                   onChange={(event) => setWarehouseId(event.target.value)}
-                  disabled={!canWrite}
+                  disabled={!canWrite || stockedWarehouses.length === 0}
                   className={fieldClass}
                 >
-                  {warehouses.map((warehouse) => (
-                    <option key={warehouse.id} value={warehouse.id}>
-                      {warehouse.code} — {warehouse.name}
+                  {stockedWarehouses.length === 0 ? (
+                    <option value="">
+                      {mode === "salida"
+                        ? "Sin existencia en ningún almacén"
+                        : "No hay almacenes disponibles"}
                     </option>
-                  ))}
+                  ) : (
+                    stockedWarehouses.map((warehouse) => {
+                      const qty = warehouseQty.get(warehouse.id);
+                      return (
+                        <option key={warehouse.id} value={warehouse.id}>
+                          {warehouse.code} — {warehouse.name}
+                          {qty != null && qty > 0
+                            ? ` · ${formatLotQty(qty, unitLabel)}`
+                            : ""}
+                        </option>
+                      );
+                    })
+                  )}
                 </select>
+                {listingStockedWarehouses ? (
+                  <span className="block text-xs text-muted-foreground">
+                    Solo almacenes con existencia de este artículo.
+                  </span>
+                ) : mode === "entrada" &&
+                  warehouseStock !== null &&
+                  warehouseStock.length === 0 ? (
+                  <span className="block text-xs text-muted-foreground">
+                    Este artículo aún no tiene existencia; elige el almacén de la
+                    entrada.
+                  </span>
+                ) : null}
               </label>
               <label className="space-y-1.5">
                 <span className="text-sm font-medium">Ubicación</span>
