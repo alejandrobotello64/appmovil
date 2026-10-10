@@ -11,15 +11,13 @@ import { InventoryForm } from "@/components/inventory/inventory-form";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import {
   createInventoryItem,
-  getEquipmentItems,
-  getSupplyItemsByCategory,
+  getInventoryItems,
 } from "@/lib/inventory/storage";
 import type {
   InventoryItem,
   InventoryItemInput,
-  SupplyCategoryId,
 } from "@/lib/inventory/types";
-import { SUPPLY_CATEGORIES } from "@/lib/inventory/types";
+import { CATALOG_CATEGORIES } from "@/lib/inventory/types";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
@@ -47,13 +45,28 @@ type StockMovementPanelProps = {
   mode: "entrada" | "salida";
 };
 
-type CatalogKind = SupplyCategoryId | "equipos";
-
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
 
+function categoryLabel(item: InventoryItem) {
+  if (item.itemKind === "equipo" || item.category === "equipos") return "Equipos";
+  return (
+    CATALOG_CATEGORIES.find((entry) => entry.id === item.category)?.label ??
+    item.category
+  );
+}
+
 function articleFields(item: InventoryItem) {
-  return [item.sku, item.name, item.brand, item.model, item.serialNumber, item.partNumber];
+  return [
+    item.sku,
+    item.name,
+    item.brand,
+    item.model,
+    item.serialNumber,
+    item.partNumber,
+    item.category,
+    categoryLabel(item),
+  ];
 }
 
 function withPartNumber(name: string, partNumber: string) {
@@ -84,7 +97,6 @@ function lotSelectLabel(lot: ProductLot, unit: string, scopedToWarehouse: boolea
 
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
-  const [catalogKind, setCatalogKind] = useState<CatalogKind>("insumos");
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [warehouseStock, setWarehouseStock] = useState<WarehouseStock[] | null>(null);
@@ -127,7 +139,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     [evidencePreviews]
   );
 
-  const isEquipmentCatalog = catalogKind === "equipos";
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
@@ -141,21 +152,24 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     }
   }, [mode]);
 
-  async function loadCatalog(kind: CatalogKind) {
-    const data =
-      kind === "equipos"
-        ? await getEquipmentItems()
-        : await getSupplyItemsByCategory(kind);
+  async function loadCatalog() {
+    const data = await getInventoryItems();
+    data.sort(
+      (a, b) =>
+        categoryLabel(a).localeCompare(categoryLabel(b), "es") ||
+        a.name.localeCompare(b.name, "es") ||
+        a.sku.localeCompare(b.sku, "es")
+    );
     setItems(data);
     setItemId((current) =>
-      data.some((item) => item.id === current) ? current : data[0]?.id ?? ""
+      data.some((item) => item.id === current) ? current : ""
     );
     return data;
   }
 
   useEffect(() => {
     setLoading(true);
-    void Promise.all([loadCatalog(catalogKind), getWarehouses(), loadHistory()])
+    void Promise.all([loadCatalog(), getWarehouses(), loadHistory()])
       .then(([, warehouseList]) => {
         setWarehouses(warehouseList);
       })
@@ -165,7 +179,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         );
       })
       .finally(() => setLoading(false));
-  }, [catalogKind, loadHistory]);
+  }, [loadHistory]);
 
   useEffect(() => {
     if (!warehouseId) return;
@@ -185,6 +199,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     () => items.find((item) => item.id === itemId) ?? null,
     [items, itemId]
   );
+  const isEquipmentCatalog =
+    selected?.itemKind === "equipo" || selected?.category === "equipos";
   const selectedLot = useMemo(
     () => lots.find((lot) => lot.lotNumber === lotNumber) ?? null,
     [lots, lotNumber]
@@ -328,12 +344,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         },
         session.username
       );
-      setCatalogKind("equipos");
-      const next = await loadCatalog("equipos");
+      const next = await loadCatalog();
       if (!next.some((item) => item.id === created.id)) {
         setItems([created, ...next]);
       }
       setItemId(created.id);
+      setItemQuery("");
       setSerialNumber("");
       setEquipmentFormOpen(false);
       setMessage(
@@ -505,17 +521,13 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   if (loading) {
     return (
       <p className="text-sm text-muted-foreground">
-        Cargando {isEquipmentCatalog ? "equipos" : catalogKind}...
+        Cargando catálogo...
       </p>
     );
   }
 
   const reasons = mode === "entrada" ? ENTRY_REASONS : ISSUE_REASONS;
   const showServiceFields = mode === "salida" && isServiceIssue(reason);
-  const catalogOptions = [
-    ...SUPPLY_CATEGORIES.map((item) => ({ id: item.id as CatalogKind, label: item.label })),
-    { id: "equipos" as const, label: "Equipos" },
-  ];
 
   return (
     <>
@@ -528,8 +540,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {mode === "entrada"
-                  ? "Elige categoría y tipo de registro. Los equipos se dan de alta por modelo; las series se capturan aquí."
-                  : "Descuenta unidades por categoría. Insumos/medicamentos/reactivos usan caducidad."}
+                  ? "Busca el artículo o equipo en una sola lista. Los equipos se dan de alta por modelo; las series se capturan aquí."
+                  : "Busca y descuenta unidades de cualquier categoría. Insumos, medicamentos y reactivos usan caducidad."}
               </p>
             </div>
             {canWrite ? (
@@ -553,51 +565,28 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="mt-5 grid gap-4">
-            <div className="grid gap-3 rounded-xl border border-border bg-muted/25 p-3 sm:grid-cols-2">
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Categoría</span>
-                <select
-                  value={catalogKind}
-                  disabled={!canWrite}
-                  onChange={(event) => {
-                    setCatalogKind(event.target.value as CatalogKind);
-                    setItemQuery("");
-                    setError("");
-                    setMessage("");
-                  }}
-                  className={fieldClass}
-                >
-                  {catalogOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Tipo de registro</span>
-                <select
-                  value={reason}
-                  disabled={!canWrite}
-                  onChange={(event) => setReason(event.target.value)}
-                  className={cn(
-                    fieldClass,
-                    "border-[#3B46A5]/35 bg-background font-medium"
-                  )}
-                >
-                  {reasons.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">Tipo de registro</span>
+              <select
+                value={reason}
+                disabled={!canWrite}
+                onChange={(event) => setReason(event.target.value)}
+                className={cn(
+                  fieldClass,
+                  "border-[#3B46A5]/35 bg-background font-medium"
+                )}
+              >
+                {reasons.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <div className="space-y-1.5">
               <label htmlFor="stock-movement-item" className="text-sm font-medium">
-                {isEquipmentCatalog ? "Equipo" : "Artículo"}
+                Artículo o equipo
               </label>
               {items.length > 0 ? (
                 <SearchInput
@@ -609,11 +598,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     );
                     if (value.trim() && first) setItemId(first.id);
                   }}
-                  placeholder={
-                    isEquipmentCatalog
-                      ? "Buscar equipo por código, nombre, marca, serie o n.º de parte..."
-                      : "Buscar artículo por código, nombre o n.º de parte..."
-                  }
+                  placeholder="Buscar por código, nombre, n.º de parte, marca, serie o categoría..."
                 />
               ) : null}
               <select
@@ -625,20 +610,33 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 className={fieldClass}
               >
                 {items.length === 0 ? (
-                  <option value="">
-                    {isEquipmentCatalog
-                      ? "No hay equipos. Da de alta uno nuevo."
-                      : `No hay ${catalogKind} disponibles.`}
-                  </option>
+                  <option value="">No hay artículos en el catálogo.</option>
+                ) : itemOptions.length === 0 ? (
+                  <option value="">Sin coincidencias. Prueba otro término.</option>
                 ) : (
-                  itemOptions.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.sku} — {withPartNumber(item.name, item.partNumber)} (
-                      {item.quantity} {item.unit})
-                    </option>
-                  ))
+                  <>
+                    <option value="">Busca o elige un artículo…</option>
+                    {itemOptions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {categoryLabel(item)} · {item.sku} —{" "}
+                        {withPartNumber(item.name, item.partNumber)} (
+                        {item.quantity} {item.unit})
+                      </option>
+                    ))}
+                  </>
                 )}
               </select>
+              {selected ? (
+                <span className="block text-xs text-muted-foreground">
+                  Categoría: {categoryLabel(selected)}
+                  {isEquipmentCatalog ? " · se capturan series" : ""}
+                </span>
+              ) : (
+                <span className="block text-xs text-muted-foreground">
+                  Insumos, medicamentos, refacciones, accesorios, reactivos y
+                  equipos en la misma lista.
+                </span>
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
