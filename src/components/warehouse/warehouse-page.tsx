@@ -84,12 +84,10 @@ export function WarehousePage() {
 
             {supplyTab ? <InventoryPanel panelMode={supplyTab} /> : null}
 
-            {activeTab === "entradas" ? (
-              <StockMovementPanel mode="entrada" />
-            ) : null}
-
-            {activeTab === "salidas" ? (
-              <StockMovementPanel mode="salida" />
+            {activeTab === "entradas" || activeTab === "salidas" ? (
+              <StockMovementPanel
+                mode={activeTab === "salidas" ? "salida" : "entrada"}
+              />
             ) : null}
 
             {activeTab === "apartados" ? <HoldsPanel /> : null}

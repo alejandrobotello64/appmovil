@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Camera, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowDownToLine, ArrowUpFromLine, Camera, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImageLightbox, type LightboxImage } from "@/components/ui/image-lightbox";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -19,7 +20,7 @@ import type {
 } from "@/lib/inventory/types";
 import { CATALOG_CATEGORIES } from "@/lib/inventory/types";
 import { getSession } from "@/lib/auth";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
 import {
   ENTRY_REASONS,
   ISSUE_REASONS,
@@ -41,9 +42,59 @@ import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { parseSerialNumbers } from "@/lib/inventory/serials";
 
+type MovementMode = "entrada" | "salida";
+
 type StockMovementPanelProps = {
-  mode: "entrada" | "salida";
+  mode: MovementMode;
 };
+
+const MODE_TABS: {
+  id: MovementMode;
+  label: string;
+  icon: typeof ArrowDownToLine;
+}[] = [
+  { id: "entrada", label: "Entrada", icon: ArrowDownToLine },
+  { id: "salida", label: "Salida", icon: ArrowUpFromLine },
+];
+
+function ModeSwitch({
+  mode,
+  onChange,
+}: {
+  mode: MovementMode;
+  onChange: (next: MovementMode) => void;
+}) {
+  return (
+    <div
+      className="flex w-full gap-1 rounded-xl border border-border bg-muted/40 p-1 sm:max-w-sm"
+      role="tablist"
+      aria-label="Cambiar entre entrada y salida"
+    >
+      {MODE_TABS.map((item) => {
+        const Icon = item.icon;
+        const active = mode === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(item.id)}
+            className={cn(
+              "inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium sm:py-2",
+              active
+                ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Icon className="size-4" />
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -96,7 +147,12 @@ function lotSelectLabel(lot: ProductLot, unit: string, scopedToWarehouse: boolea
 }
 
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
+  const router = useRouter();
+  const access = useSessionAccess();
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
+  const canViewEntradas = !access.ready || access.canView("entradas");
+  const canViewSalidas = !access.ready || access.canView("salidas");
+  const canSwitchModes = canViewEntradas && canViewSalidas;
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [warehouseStock, setWarehouseStock] = useState<WarehouseStock[] | null>(null);
@@ -169,7 +225,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   useEffect(() => {
     setLoading(true);
-    void Promise.all([loadCatalog(), getWarehouses(), loadHistory()])
+    void Promise.all([loadCatalog(), getWarehouses()])
       .then(([, warehouseList]) => {
         setWarehouses(warehouseList);
       })
@@ -179,7 +235,28 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         );
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    void loadHistory();
   }, [loadHistory]);
+
+  useEffect(() => {
+    setReason(mode === "entrada" ? ENTRY_REASONS[0].id : ISSUE_REASONS[3].id);
+    setMessage("");
+    setError("");
+    if (mode !== "entrada") {
+      setEvidenceFiles([]);
+    }
+  }, [mode]);
+
+  function switchMode(next: MovementMode) {
+    if (next === mode) return;
+    const tab = next === "entrada" ? "entradas" : "salidas";
+    const allowed = next === "entrada" ? canViewEntradas : canViewSalidas;
+    if (!allowed) return;
+    router.push(`/dashboard/almacen?tab=${tab}`, { scroll: false });
+  }
 
   useEffect(() => {
     if (!warehouseId) return;
@@ -520,9 +597,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   if (loading) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Cargando catálogo...
-      </p>
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        {canSwitchModes ? (
+          <div className="mb-4">
+            <ModeSwitch mode={mode} onChange={switchMode} />
+          </div>
+        ) : null}
+        <p className="text-sm text-muted-foreground">Cargando catálogo...</p>
+      </section>
     );
   }
 
@@ -533,30 +615,35 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     <>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(280px,0.95fr)] lg:items-start">
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">
-                {mode === "entrada" ? "Registrar entrada" : "Registrar salida"}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {mode === "entrada"
-                  ? "Busca el artículo o equipo en una sola lista. Los equipos se dan de alta por modelo; las series se capturan aquí."
-                  : "Busca y descuenta unidades de cualquier categoría. Insumos, medicamentos y reactivos usan caducidad."}
-              </p>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  {mode === "entrada" ? "Registrar entrada" : "Registrar salida"}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {mode === "entrada"
+                    ? "Busca el artículo o equipo en una sola lista. Los equipos se dan de alta por modelo; las series se capturan aquí."
+                    : "Busca y descuenta unidades de cualquier categoría. Insumos, medicamentos y reactivos usan caducidad."}
+                </p>
+              </div>
+              {canWrite ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setError("");
+                    setEquipmentFormOpen(true);
+                  }}
+                  className="shrink-0"
+                >
+                  <Plus className="size-4" />
+                  Dar de alta equipo
+                </Button>
+              ) : null}
             </div>
-            {canWrite ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setError("");
-                  setEquipmentFormOpen(true);
-                }}
-                className="shrink-0"
-              >
-                <Plus className="size-4" />
-                Dar de alta equipo
-              </Button>
+            {canSwitchModes ? (
+              <ModeSwitch mode={mode} onChange={switchMode} />
             ) : null}
           </div>
 
@@ -1068,6 +1155,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               Actualizar
             </button>
           </div>
+          {canSwitchModes ? (
+            <div className="mt-3 lg:hidden">
+              <ModeSwitch mode={mode} onChange={switchMode} />
+            </div>
+          ) : null}
 
           <SearchInput
             value={historyQuery}
