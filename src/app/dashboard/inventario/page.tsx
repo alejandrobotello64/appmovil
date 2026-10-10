@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function InventarioRedirectPage() {
-  redirect("/dashboard/almacen?tab=insumos");
+  redirect("/dashboard/almacen?tab=inventario");
 }

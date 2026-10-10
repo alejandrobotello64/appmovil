@@ -15,28 +15,23 @@ import { ReportPanel } from "@/components/warehouse/report-panel";
 import { KardexPanel } from "@/components/warehouse/kardex-panel";
 import { SanitaryRegistrationsPanel } from "@/components/documents/document-library-panel";
 import { WarehouseToolsPanel } from "@/components/tools/tools-module";
-import type { WarehouseModule } from "@/lib/auth/permissions";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import {
   WAREHOUSE_TABS,
   normalizeWarehouseTab,
+  warehouseTabIsVisible,
   type WarehouseTabId,
 } from "@/lib/warehouse/tabs";
-import type { SupplyCategoryId } from "@/lib/inventory/types";
-
-const SUPPLY_TABS: SupplyCategoryId[] = [
-  "insumos",
-  "medicamentos",
-  "refacciones",
-  "accesorios",
-  "reactivos",
-];
+import { normalizeCatalogCategory } from "@/lib/inventory/types";
 
 export function WarehousePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const activeTab: WarehouseTabId = normalizeWarehouseTab(tabParam) ?? "dashboard";
+  const catalogCategory =
+    normalizeCatalogCategory(searchParams.get("categoria")) ??
+    normalizeCatalogCategory(tabParam === "equipo" ? "equipos" : tabParam);
   const access = useSessionAccess();
 
   useEffect(() => {
@@ -59,10 +54,7 @@ export function WarehousePage() {
 
   const activeTabMeta = WAREHOUSE_TABS.find((tab) => tab.id === activeTab);
   const allowed =
-    !access.ready || access.canView(activeTab as WarehouseModule);
-  const supplyTab = SUPPLY_TABS.includes(activeTab as SupplyCategoryId)
-    ? (activeTab as SupplyCategoryId)
-    : null;
+    !access.ready || warehouseTabIsVisible(activeTab, access.canView);
 
   return (
     <AppShell
@@ -82,7 +74,12 @@ export function WarehousePage() {
           <>
             {activeTab === "dashboard" ? <WarehouseDashboard /> : null}
 
-            {supplyTab ? <InventoryPanel panelMode={supplyTab} /> : null}
+            {activeTab === "inventario" ? (
+              <InventoryPanel
+                panelMode="catalog"
+                initialCategory={catalogCategory}
+              />
+            ) : null}
 
             {activeTab === "entradas" || activeTab === "salidas" ? (
               <StockMovementPanel
@@ -101,10 +98,6 @@ export function WarehousePage() {
             {activeTab === "movimientos" ? <MovementsPanel /> : null}
 
             {activeTab === "kardex" ? <KardexPanel /> : null}
-
-            {activeTab === "equipo" ? (
-              <InventoryPanel panelMode="equipment" />
-            ) : null}
 
             {activeTab === "mantenimientos" ? <MaintenancesPanel /> : null}
 

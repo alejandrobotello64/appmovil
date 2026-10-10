@@ -51,7 +51,11 @@ import {
   X,
 } from "lucide-react";
 import { EXPENSE_TABS, normalizeExpenseTab } from "@/lib/expenses/tabs";
-import { WAREHOUSE_TABS, normalizeWarehouseTab } from "@/lib/warehouse/tabs";
+import {
+  WAREHOUSE_TABS,
+  normalizeWarehouseTab,
+  warehouseTabIsVisible,
+} from "@/lib/warehouse/tabs";
 import { SALES_TABS, SALES_TAB_MODULES, normalizeSalesTab } from "@/lib/sales/tabs";
 import {
   PURCHASING_TABS,
@@ -65,13 +69,13 @@ import {
   SERVICE_ORDER_TABS,
   normalizeServiceOrderTab,
 } from "@/lib/service-orders/tabs";
-import type { WarehouseModule } from "@/lib/auth/permissions";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { cn } from "@/lib/utils";
 import { AnesthesiaMachineIcon } from "@/components/icons/anesthesia-machine-icon";
 
 const TAB_ICONS = {
   dashboard: LayoutDashboard,
+  inventario: Package,
   insumos: Package,
   medicamentos: Pill,
   refacciones: Settings2,
@@ -346,7 +350,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             {warehouseOpen ? (
               <div className="mt-1 ml-3 space-y-1 border-l border-border pl-3">
                 {WAREHOUSE_TABS.filter((tab) =>
-                  canView(tab.id as WarehouseModule)
+                  warehouseTabIsVisible(tab.id, canView)
                 ).map((tab) => {
                   const Icon = TAB_ICONS[tab.id] ?? LayoutDashboard;
                   const isActive =

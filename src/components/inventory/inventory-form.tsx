@@ -5,8 +5,11 @@ import { Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ASSET_STATUS_OPTIONS,
+  CATALOG_CATEGORIES,
+  categoryToItemKind,
   getSupplyCategoryMeta,
   INVENTORY_UNITS,
+  type CatalogCategoryId,
   type InventoryItem,
   type InventoryItemInput,
   type ItemKind,
@@ -18,6 +21,8 @@ type InventoryFormProps = {
   itemKind?: ItemKind;
   /** Bloquea la categoría a una tabla propia */
   lockedCategory?: SupplyCategoryId;
+  /** Categorías que el usuario puede elegir en el catálogo unificado */
+  allowedCategories?: CatalogCategoryId[];
   onSubmit: (data: InventoryItemInput, imageFile?: File | null) => void;
   onCancel: () => void;
 };
@@ -65,6 +70,7 @@ export function InventoryForm({
   item,
   itemKind = "producto",
   lockedCategory,
+  allowedCategories,
   onSubmit,
   onCancel,
 }: InventoryFormProps) {
@@ -78,7 +84,18 @@ export function InventoryForm({
 
   useEffect(() => {
     if (!item) {
-      setForm(emptyForm(itemKind, lockedCategory));
+      const next = emptyForm(itemKind, lockedCategory);
+      if (
+        !lockedCategory &&
+        itemKind !== "equipo" &&
+        allowedCategories?.length &&
+        !allowedCategories.includes(next.category as CatalogCategoryId)
+      ) {
+        const first = allowedCategories[0];
+        next.category = first;
+        next.itemKind = categoryToItemKind(first);
+      }
+      setForm(next);
       setImageFile(null);
       setImagePreview("");
       setClearExistingImage(false);
@@ -107,7 +124,7 @@ export function InventoryForm({
     setImageFile(null);
     setImagePreview(item.imageUrl || "");
     setClearExistingImage(false);
-  }, [item, itemKind, lockedCategory]);
+  }, [item, itemKind, lockedCategory, allowedCategories]);
 
   useEffect(() => {
     if (!imageFile) return;
@@ -140,24 +157,36 @@ export function InventoryForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const category =
-      itemKind === "equipo" ? "equipos" : lockedCategory ?? form.category;
+      itemKind === "equipo"
+        ? "equipos"
+        : lockedCategory ?? form.category;
+    const kind = categoryToItemKind(category);
     onSubmit(
       {
         ...form,
-        itemKind,
+        itemKind: kind,
         category,
-        quantity: itemKind === "equipo" && !item ? 0 : form.quantity,
-        expiryDate: itemKind === "equipo" ? "" : form.expiryDate,
+        quantity: kind === "equipo" && !item ? 0 : form.quantity,
+        expiryDate: kind === "equipo" ? "" : form.expiryDate,
         manufacturedAt: form.manufacturedAt,
       },
       imageFile ? imageFile : clearExistingImage ? null : undefined
     );
   }
 
-  const isEquipment = itemKind === "equipo";
+  const categoryOptions = (allowedCategories?.length
+    ? CATALOG_CATEGORIES.filter((entry) =>
+        allowedCategories.includes(entry.id)
+      )
+    : CATALOG_CATEGORIES);
+  const isEquipment =
+    itemKind === "equipo" ||
+    form.itemKind === "equipo" ||
+    form.category === "equipos";
   const lockedMeta = lockedCategory
     ? getSupplyCategoryMeta(lockedCategory)
     : null;
+  const showCategoryPicker = !item && !lockedCategory && itemKind !== "equipo";
   const showPreview = Boolean(imagePreview) && !clearExistingImage;
 
   return (
@@ -264,9 +293,34 @@ export function InventoryForm({
           />
         </label>
 
-        {!isEquipment && lockedMeta ? (
+        {showCategoryPicker ? (
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium">Categoría</span>
+            <select
+              value={form.category}
+              onChange={(event) => {
+                const next = event.target.value as CatalogCategoryId;
+                const kind = categoryToItemKind(next);
+                setForm((current) => ({
+                  ...current,
+                  category: next,
+                  itemKind: kind,
+                  tracksSerial: kind === "equipo" ? true : current.tracksSerial,
+                  quantity: kind === "equipo" ? 0 : current.quantity,
+                }));
+              }}
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
+            >
+              {categoryOptions.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : !isEquipment && lockedMeta ? (
           <div className="space-y-1.5">
-            <span className="text-sm font-medium">Tabla</span>
+            <span className="text-sm font-medium">Categoría</span>
             <p className="flex h-10 items-center rounded-lg border border-input bg-muted/40 px-3 text-sm">
               {lockedMeta.label}
             </p>

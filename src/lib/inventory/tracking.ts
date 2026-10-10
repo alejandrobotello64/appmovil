@@ -187,27 +187,31 @@ export function hasStockIn(stock: InventoryStock | undefined, warehouseId: strin
 
 /**
  * Existencias (con almacén, ubicación y lote) y números de serie vigentes de todos los
- * artículos de una categoría, agrupados por producto.
+ * artículos (de una categoría, o de todo el catálogo), agrupados por producto.
  */
 export async function getInventoryStock(
-  category: InventoryCategoryId
+  category?: InventoryCategoryId
 ): Promise<Map<string, InventoryStock>> {
+  let balancesQuery = db
+    .from("inventory_balances")
+    .select(
+      "product_id, qty_on_hand, lot:lots(id, lot_number, expiry_date, manufactured_at, notes, image_path, image_url, gallery_images), warehouse:warehouses(id, code, name), location:locations(id, code, name), item:inventory_items!inner(category)"
+    )
+    .gt("qty_on_hand", 0);
+  let serialsQuery = db
+    .from("serial_numbers")
+    .select(
+      "id, product_id, serial_number, inventory_number, status, warehouse_id, notes, manufactured_at, last_maintenance_date, next_maintenance_date, warranty_start, warranty_end, image_path, image_url, gallery_images, warehouse:warehouses(code), location:locations(name), item:inventory_items!inner(category)"
+    )
+    .neq("status", "baja")
+    .order("serial_number", { ascending: true });
+  if (category) {
+    balancesQuery = balancesQuery.eq("item.category", category);
+    serialsQuery = serialsQuery.eq("item.category", category);
+  }
   const [balancesRes, serialsRes] = await Promise.all([
-    db
-      .from("inventory_balances")
-      .select(
-        "product_id, qty_on_hand, lot:lots(id, lot_number, expiry_date, manufactured_at, notes, image_path, image_url, gallery_images), warehouse:warehouses(id, code, name), location:locations(id, code, name), item:inventory_items!inner(category)"
-      )
-      .eq("item.category", category)
-      .gt("qty_on_hand", 0),
-    db
-      .from("serial_numbers")
-      .select(
-        "id, product_id, serial_number, inventory_number, status, warehouse_id, notes, manufactured_at, last_maintenance_date, next_maintenance_date, warranty_start, warranty_end, image_path, image_url, gallery_images, warehouse:warehouses(code), location:locations(name), item:inventory_items!inner(category)"
-      )
-      .eq("item.category", category)
-      .neq("status", "baja")
-      .order("serial_number", { ascending: true }),
+    balancesQuery,
+    serialsQuery,
   ]);
   if (balancesRes.error) throw new Error(balancesRes.error.message);
   if (serialsRes.error) throw new Error(serialsRes.error.message);

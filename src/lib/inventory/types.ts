@@ -74,6 +74,19 @@ export const INVENTORY_CATEGORIES = [
 
 export type InventoryCategoryId = (typeof INVENTORY_CATEGORIES)[number]["id"];
 export type CatalogCategoryId = (typeof CATALOG_CATEGORIES)[number]["id"];
+
+export function isCatalogCategoryId(
+  value: string | null | undefined
+): value is CatalogCategoryId {
+  return CATALOG_CATEGORIES.some((item) => item.id === value);
+}
+
+export function normalizeCatalogCategory(
+  value: string | null | undefined
+): CatalogCategoryId | null {
+  if (value === "equipo") return "equipos";
+  return isCatalogCategoryId(value) ? value : null;
+}
 export type ProductCategoryId = (typeof PRODUCT_CATEGORIES)[number]["id"];
 export type SupplyCategoryId = (typeof SUPPLY_CATEGORIES)[number]["id"];
 export type ExpirySupplyCategoryId =

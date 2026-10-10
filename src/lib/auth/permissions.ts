@@ -501,6 +501,20 @@ const CATALOG_MODULES: WarehouseModule[] = [
   "reactivos",
 ];
 
+/** Módulos que alimentan la pestaña unificada de inventario. */
+export const INVENTORY_TAB_MODULES: WarehouseModule[] = [
+  ...CATALOG_MODULES,
+  "equipo",
+];
+
+export function inventoryModuleForCategory(category: string): WarehouseModule {
+  if (category === "equipos" || category === "equipo") return "equipo";
+  if ((CATALOG_MODULES as string[]).includes(category)) {
+    return category as WarehouseModule;
+  }
+  return "insumos";
+}
+
 const ROLE_ALIASES: Record<string, AppRole> = {
   admin: "administrador",
   administrador: "administrador",

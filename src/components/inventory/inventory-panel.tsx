@@ -27,6 +27,7 @@ import {
   createInventoryItem,
   deleteInventoryItem,
   getEquipmentItems,
+  getInventoryItems,
   getStockStatus,
   getSupplyItemsByCategory,
   removeInventoryItemImage,
@@ -37,8 +38,10 @@ import {
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import {
   ASSET_STATUS_OPTIONS,
+  CATALOG_CATEGORIES,
   getSupplyCategoryMeta,
   INVENTORY_CATEGORIES,
+  type CatalogCategoryId,
   type InventoryCategoryId,
   type InventoryItem,
   type InventoryItemInput,
@@ -50,7 +53,13 @@ import { cn } from "@/lib/utils";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
 import { InventoryExcelActions } from "@/components/inventory/inventory-excel-actions";
-import type { WarehouseModule } from "@/lib/auth/permissions";
+import {
+  INVENTORY_TAB_MODULES,
+  inventoryModuleForCategory,
+  permissionKey,
+  type PermissionAction,
+  type WarehouseModule,
+} from "@/lib/auth/permissions";
 import { getReservedQuantities } from "@/lib/holds/storage";
 import {
   getInventoryStock,
@@ -122,24 +131,65 @@ function formatCurrency(value: number) {
 }
 
 type InventoryPanelProps = {
-  /** Tabla propia por categoría, o equipos */
-  panelMode?: SupplyCategoryId | "equipment";
+  /** Catálogo unificado, una categoría, o solo equipos */
+  panelMode?: SupplyCategoryId | "equipment" | "catalog";
+  initialCategory?: CatalogCategoryId | null;
 };
 
-export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
+export function InventoryPanel({
+  panelMode = "catalog",
+  initialCategory = null,
+}: InventoryPanelProps) {
+  const isCatalog = panelMode === "catalog";
   const isEquipment = panelMode === "equipment";
-  const supplyCategory: SupplyCategoryId | null = isEquipment
-    ? null
-    : panelMode;
+  const supplyCategory: SupplyCategoryId | null =
+    isCatalog || isEquipment ? null : panelMode;
   const permissionModule: WarehouseModule = isEquipment
     ? "equipo"
-    : (supplyCategory as WarehouseModule);
-  const { canWrite, canCreate, canEdit, canDelete, canImport, canExport, role } =
-    usePermissions(permissionModule);
-  const { session } = useSessionAccess();
+    : (supplyCategory as WarehouseModule) ?? "insumos";
+  const scoped = usePermissions(permissionModule);
+  const access = useSessionAccess();
+  const { session } = access;
   const supplyMeta = supplyCategory
     ? getSupplyCategoryMeta(supplyCategory)
     : null;
+  const [categoryFilter, setCategoryFilter] = useState<
+    CatalogCategoryId | "all"
+  >(initialCategory ?? "all");
+
+  function catalogCan(action: PermissionAction) {
+    return INVENTORY_TAB_MODULES.some(
+      (module) => !access.ready || access.can(permissionKey(module, action))
+    );
+  }
+
+  function itemCan(item: InventoryItem, action: PermissionAction) {
+    if (!isCatalog) return scoped.can(action);
+    return (
+      !access.ready ||
+      access.can(permissionKey(inventoryModuleForCategory(item.category), action))
+    );
+  }
+
+  const canCreate = isCatalog ? catalogCan("create") : scoped.canCreate;
+  const canEdit = isCatalog ? catalogCan("edit") : scoped.canEdit;
+  const canDelete = isCatalog ? catalogCan("delete") : scoped.canDelete;
+  const canImport = isCatalog ? catalogCan("import") : scoped.canImport;
+  const canExport = isCatalog ? catalogCan("export") : scoped.canExport;
+  const canWrite = canCreate || canEdit || canDelete;
+  const role = scoped.role;
+  const visibleCategories = CATALOG_CATEGORIES.filter(
+    (entry) =>
+      !access.ready ||
+      access.canView(inventoryModuleForCategory(entry.id))
+  );
+  const creatableCategories = CATALOG_CATEGORIES.filter(
+    (entry) =>
+      !access.ready ||
+      access.can(
+        permissionKey(inventoryModuleForCategory(entry.id), "create")
+      )
+  ).map((entry) => entry.id);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [reservedByProduct, setReservedByProduct] = useState<Map<string, number>>(
     new Map()
@@ -166,7 +216,13 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const formItemKind: ItemKind = isEquipment ? "equipo" : "producto";
+  const formItemKind: ItemKind = isEquipment
+    ? "equipo"
+    : editingItem?.itemKind ?? "producto";
+
+  useEffect(() => {
+    setCategoryFilter(initialCategory ?? "all");
+  }, [initialCategory]);
 
   async function handleSubmit(
     data: InventoryItemInput,
@@ -176,12 +232,18 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
       setError("");
       const category = isEquipment
         ? "equipos"
-        : (supplyCategory ?? data.category);
+        : isCatalog
+          ? data.category
+          : (supplyCategory ?? data.category);
+      const itemKind =
+        category === "equipos" || data.itemKind === "equipo"
+          ? "equipo"
+          : "producto";
       const payload: InventoryItemInput = {
         ...data,
-        itemKind: formItemKind,
+        itemKind,
         category,
-        expiryDate: isEquipment ? "" : data.expiryDate,
+        expiryDate: itemKind === "equipo" ? "" : data.expiryDate,
         manufacturedAt: data.manufacturedAt,
       };
       let savedId = editingItem?.id ?? "";
@@ -219,6 +281,10 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const status = getStockStatus(item.quantity, item.minStock);
+      const matchesCategory =
+        !isCatalog ||
+        categoryFilter === "all" ||
+        item.category === categoryFilter;
       const matchesSearch =
         search.trim().length === 0 ||
         [
@@ -230,6 +296,8 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           item.supplier,
           item.serialNumber,
           item.location,
+          item.category,
+          getCategoryLabel(item.category),
           trackingSearchText(trackingFor(stockByProduct.get(item.id))),
           placementsFor(stockByProduct.get(item.id))
             .map((placement) => placement.locationName)
@@ -245,9 +313,18 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
         status === statusFilter;
       const matchesWarehouse =
         !warehouseFilter || hasStockIn(stockByProduct.get(item.id), warehouseFilter);
-      return matchesSearch && matchesStatus && matchesWarehouse;
+      return matchesCategory && matchesSearch && matchesStatus && matchesWarehouse;
     });
-  }, [items, search, statusFilter, isEquipment, stockByProduct, warehouseFilter]);
+  }, [
+    items,
+    search,
+    statusFilter,
+    isEquipment,
+    isCatalog,
+    categoryFilter,
+    stockByProduct,
+    warehouseFilter,
+  ]);
 
   function itemTracking(item: InventoryItem) {
     return trackingFor(stockByProduct.get(item.id), warehouseFilter || undefined);
@@ -311,19 +388,34 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
       setError("");
       let trackingError = "";
       const [data, reservedMap, stockMap, warehouseRows] = await Promise.all([
-        isEquipment
-          ? getEquipmentItems()
-          : getSupplyItemsByCategory(supplyCategory ?? "insumos"),
-        isEquipment ? Promise.resolve(new Map<string, number>()) : getReservedQuantities(),
-        getInventoryStock(isEquipment ? "equipos" : (supplyCategory ?? "insumos")).catch(
-          (err: unknown) => {
-            trackingError = err instanceof Error ? err.message : String(err);
-            return new Map<string, InventoryStock>();
-          }
-        ),
+        isCatalog
+          ? getInventoryItems()
+          : isEquipment
+            ? getEquipmentItems()
+            : getSupplyItemsByCategory(supplyCategory ?? "insumos"),
+        isEquipment && !isCatalog
+          ? Promise.resolve(new Map<string, number>())
+          : getReservedQuantities(),
+        getInventoryStock(
+          isCatalog
+            ? undefined
+            : isEquipment
+              ? "equipos"
+              : (supplyCategory ?? "insumos")
+        ).catch((err: unknown) => {
+          trackingError = err instanceof Error ? err.message : String(err);
+          return new Map<string, InventoryStock>();
+        }),
         getWarehouses().catch(() => [] as Warehouse[]),
       ]);
-      setItems(data);
+      const visible = isCatalog
+        ? data.filter(
+            (item) =>
+              !access.ready ||
+              access.canView(inventoryModuleForCategory(item.category))
+          )
+        : data;
+      setItems(visible);
       setReservedByProduct(reservedMap);
       setStockByProduct(stockMap);
       setWarehouses(warehouseRows);
@@ -343,7 +435,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
 
   useEffect(() => {
     void refreshItems();
-  }, [panelMode, isEquipment, supplyCategory]);
+  }, [panelMode, isEquipment, isCatalog, supplyCategory]);
 
   function handleView(item: InventoryItem) {
     setLightboxIndex(null);
@@ -378,7 +470,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   }
 
   async function handleAddImages(files: File[]) {
-    if (!viewingItem || files.length === 0 || !canWrite) return;
+    if (!viewingItem || files.length === 0 || !itemCan(viewingItem, "edit")) return;
     await runImageAction(
       () => addInventoryItemImages(viewingItem.id, files),
       "No se pudieron subir las imágenes."
@@ -386,7 +478,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   }
 
   async function handleRemoveImage(path: string) {
-    if (!viewingItem || !canWrite) return;
+    if (!viewingItem || !itemCan(viewingItem, "edit")) return;
     if (!window.confirm("¿Quitar esta imagen del equipo?")) return;
     const updated = await runImageAction(
       () => removeInventoryItemImage(viewingItem.id, path),
@@ -400,7 +492,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   }
 
   async function handleMakePrimary(path: string) {
-    if (!viewingItem || !canWrite) return;
+    if (!viewingItem || !itemCan(viewingItem, "edit")) return;
     const updated = await runImageAction(
       () => setInventoryItemPrimaryImage(viewingItem.id, path),
       "No se pudo cambiar la imagen principal."
@@ -411,7 +503,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
   const viewingImages = viewingItem ? itemImages(viewingItem) : [];
 
   async function handleDelete(item: InventoryItem) {
-    if (!canDelete) return;
+    if (!itemCan(item, "delete")) return;
     const confirmed = window.confirm(
       `¿Desactivar "${item.name}"? El historial de movimientos se conserva.`
     );
@@ -465,14 +557,18 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           <div className="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                {isEquipment
-                  ? "Equipos médicos"
-                  : supplyMeta?.label ?? "Catálogo"}
+                {isCatalog
+                  ? "Inventario"
+                  : isEquipment
+                    ? "Equipos médicos"
+                    : supplyMeta?.label ?? "Catálogo"}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {isEquipment
-                  ? "Catálogo por modelo. Las series de cada pieza se registran al dar entrada."
-                  : `${supplyMeta?.description ?? "Catálogo"}. El número de parte se muestra junto a la marca.`}
+                {isCatalog
+                  ? "Una sola lista para insumos, medicamentos, refacciones, accesorios, reactivos y equipos. Filtra por categoría si lo necesitas."
+                  : isEquipment
+                    ? "Catálogo por modelo. Las series de cada pieza se registran al dar entrada."
+                    : `${supplyMeta?.description ?? "Catálogo"}. El número de parte se muestra junto a la marca.`}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -497,13 +593,58 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                   className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
                 >
                   <Plus className="size-4" />
-                  {isEquipment
-                    ? "Nuevo equipo"
-                    : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
+                  {isCatalog
+                    ? "Nuevo artículo"
+                    : isEquipment
+                      ? "Nuevo equipo"
+                      : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
                 </Button>
               ) : null}
             </div>
           </div>
+
+          {isCatalog && visibleCategories.length > 1 ? (
+            <div
+              className="flex flex-wrap gap-1 border-b border-border bg-muted/20 p-3"
+              role="tablist"
+              aria-label="Filtrar por categoría"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={categoryFilter === "all"}
+                onClick={() => setCategoryFilter("all")}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-sm font-medium",
+                  categoryFilter === "all"
+                    ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                Todas
+              </button>
+              {visibleCategories.map((entry) => {
+                const active = categoryFilter === entry.id;
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setCategoryFilter(entry.id)}
+                    className={cn(
+                      "rounded-lg px-3 py-1.5 text-sm font-medium",
+                      active
+                        ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {entry.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
 
           <div
             className={cn(
@@ -517,9 +658,11 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={
-                  isEquipment
-                    ? "Buscar por SKU, nombre, marca, proveedor o serie..."
-                    : "Buscar por SKU, nombre, marca, proveedor, lote o serie..."
+                  isCatalog
+                    ? "Buscar por código, nombre, n.º de parte, marca, serie o categoría..."
+                    : isEquipment
+                      ? "Buscar por SKU, nombre, marca, proveedor o serie..."
+                      : "Buscar por SKU, nombre, marca, proveedor, lote o serie..."
                 }
                 className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-10 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20"
               />
@@ -556,9 +699,11 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
 
           <ResponsiveDataList
             emptyMessage={
-              isEquipment
-                ? "No hay equipos que coincidan con los filtros."
-                : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`
+              isCatalog
+                ? "No hay artículos que coincidan con los filtros."
+                : isEquipment
+                  ? "No hay equipos que coincidan con los filtros."
+                  : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`
             }
             items={filteredItems.map((item) => {
               const status = getStockStatus(item.quantity, item.minStock);
@@ -632,7 +777,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                       <Eye className="size-3.5" />
                       Ficha
                     </button>
-                    {canEdit ? (
+                    {itemCan(item, "edit") ? (
                       <button
                         type="button"
                         onClick={() => openRelocate(item)}
@@ -642,7 +787,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                         Ubicar
                       </button>
                     ) : null}
-                    {canWrite ? (
+                    {itemCan(item, "edit") ? (
                       <>
                         <button
                           type="button"
@@ -652,7 +797,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                           <Pencil className="size-3.5" />
                           Editar
                         </button>
-                        {canDelete ? (
+                        {itemCan(item, "delete") ? (
                           <button
                             type="button"
                             onClick={() => handleDelete(item)}
@@ -676,10 +821,10 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 <tr>
                   <th className="px-4 py-3 font-medium">SKU</th>
                   <th className="px-4 py-3 font-medium">
-                    {isEquipment ? "Equipo" : "Producto"}
+                    {isCatalog ? "Artículo" : isEquipment ? "Equipo" : "Producto"}
                   </th>
                   <th className="px-4 py-3 font-medium">
-                    {isEquipment ? "Serie" : "Categoría"}
+                    {isEquipment && !isCatalog ? "Serie" : "Categoría"}
                   </th>
                   <th className="px-4 py-3 font-medium">
                     {isEquipment ? "Estado" : "Stock"}
@@ -706,9 +851,11 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                       colSpan={isEquipment ? 8 : 9}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
-                      {isEquipment
-                        ? "No hay equipos que coincidan con los filtros."
-                        : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`}
+                      {isCatalog
+                        ? "No hay artículos que coincidan con los filtros."
+                        : isEquipment
+                          ? "No hay equipos que coincidan con los filtros."
+                          : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`}
                     </td>
                   </tr>
                 ) : (
@@ -811,7 +958,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                             >
                               <Eye className="size-4" />
                             </button>
-                            {canEdit ? (
+                            {itemCan(item, "edit") ? (
                               <button
                                 type="button"
                                 onClick={() => openRelocate(item)}
@@ -822,7 +969,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                                 <MapPin className="size-4" />
                               </button>
                             ) : null}
-                            {canWrite ? (
+                            {itemCan(item, "edit") ? (
                               <>
                                 <button
                                   type="button"
@@ -832,7 +979,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                                 >
                                   <Pencil className="size-4" />
                                 </button>
-                                {canDelete ? (
+                                {itemCan(item, "delete") ? (
                                   <button
                                     type="button"
                                     onClick={() => handleDelete(item)}
@@ -870,23 +1017,44 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 className="text-lg font-semibold text-foreground"
               >
                 {editingItem
-                  ? isEquipment
-                    ? "Editar equipo"
-                    : `Editar ${supplyMeta?.label.toLowerCase() ?? "artículo"}`
-                  : isEquipment
-                    ? "Nuevo equipo médico"
-                    : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
+                  ? isCatalog
+                    ? editingItem.itemKind === "equipo"
+                      ? "Editar equipo"
+                      : "Editar artículo"
+                    : isEquipment
+                      ? "Editar equipo"
+                      : `Editar ${supplyMeta?.label.toLowerCase() ?? "artículo"}`
+                  : isCatalog
+                    ? "Nuevo artículo"
+                    : isEquipment
+                      ? "Nuevo equipo médico"
+                      : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {isEquipment
-                  ? "Los equipos se gestionan como activos. La fecha de fabricación es opcional."
-                  : "La caducidad y la fecha de fabricación son opcionales. El número de parte queda junto a la marca."}
+                {isCatalog
+                  ? "Elige la categoría. En equipos el catálogo es por modelo; las series se capturan al dar entrada."
+                  : isEquipment
+                    ? "Los equipos se gestionan como activos. La fecha de fabricación es opcional."
+                    : "La caducidad y la fecha de fabricación son opcionales. El número de parte queda junto a la marca."}
               </p>
             </div>
             <InventoryForm
               item={editingItem}
-              itemKind={formItemKind}
-              lockedCategory={supplyCategory ?? undefined}
+              itemKind={
+                isCatalog
+                  ? editingItem?.itemKind === "equipo"
+                    ? "equipo"
+                    : "producto"
+                  : formItemKind
+              }
+              lockedCategory={
+                isCatalog
+                  ? editingItem && editingItem.itemKind !== "equipo"
+                    ? (editingItem.category as SupplyCategoryId)
+                    : undefined
+                  : (supplyCategory ?? undefined)
+              }
+              allowedCategories={isCatalog ? creatableCategories : undefined}
               onSubmit={handleSubmit}
               onCancel={() => {
                 setFormOpen(false);
@@ -915,7 +1083,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {canEdit ? (
+                {itemCan(viewingItem, "edit") ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -928,7 +1096,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     <MapPin className="size-4" /> Ubicar
                   </Button>
                 ) : null}
-                {canWrite ? (
+                {itemCan(viewingItem, "edit") ? (
                   <Button
                     type="button"
                     onClick={() => handleEdit(viewingItem)}
@@ -1009,7 +1177,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                     : `${viewingImages.length} ${viewingImages.length === 1 ? "imagen" : "imágenes"} · clic para ampliar`}
                 </p>
 
-                {canWrite ? (
+                {itemCan(viewingItem, "edit") ? (
                   <label
                     className={cn(
                       "flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted",
@@ -1108,7 +1276,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
                 mode={trackingMode}
                 onOpenSerial={setOpenSerial}
                 onOpenLot={setOpenLot}
-                canEditUnits={canEdit}
+                canEditUnits={itemCan(viewingItem, "edit")}
               />
             </div>
 
@@ -1145,7 +1313,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           onClose={() => setLightboxIndex(null)}
           onIndexChange={setLightboxIndex}
           renderActions={
-            canWrite
+            itemCan(viewingItem, "edit")
               ? (index) => {
                   const image = viewingImages[index];
                   if (!image) return null;
@@ -1182,7 +1350,7 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           key={openSerial.id}
           productName={viewingItem.name}
           serial={openSerial}
-          canEdit={canEdit}
+          canEdit={itemCan(viewingItem, "edit")}
           onClose={() => setOpenSerial(null)}
           onChanged={() => void refreshItems()}
         />
@@ -1194,13 +1362,13 @@ export function InventoryPanel({ panelMode = "insumos" }: InventoryPanelProps) {
           productName={viewingItem.name}
           lot={openLot}
           unit={viewingItem.unit}
-          canEdit={canEdit}
+          canEdit={itemCan(viewingItem, "edit")}
           onClose={() => setOpenLot(null)}
           onChanged={() => void refreshItems()}
         />
       ) : null}
 
-      {relocatingItem && canEdit ? (
+      {relocatingItem && itemCan(relocatingItem, "edit") ? (
         <RelocateStockModal
           item={relocatingItem}
           stock={stockByProduct.get(relocatingItem.id)}

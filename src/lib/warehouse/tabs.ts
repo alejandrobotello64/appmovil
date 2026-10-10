@@ -1,3 +1,8 @@
+import {
+  INVENTORY_TAB_MODULES,
+  type WarehouseModule,
+} from "@/lib/auth/permissions";
+
 export const WAREHOUSE_TABS = [
   {
     id: "dashboard",
@@ -6,34 +11,11 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=dashboard",
   },
   {
-    id: "insumos",
-    label: "Insumos",
-    description: "Material de consumo con caducidad",
-    href: "/dashboard/almacen?tab=insumos",
-  },
-  {
-    id: "medicamentos",
-    label: "Medicamentos",
-    description: "Fármacos con caducidad y lote",
-    href: "/dashboard/almacen?tab=medicamentos",
-  },
-  {
-    id: "refacciones",
-    label: "Refacciones",
-    description: "Piezas y componentes de equipos",
-    href: "/dashboard/almacen?tab=refacciones",
-  },
-  {
-    id: "accesorios",
-    label: "Accesorios",
-    description: "Complementos con fecha de fabricación, sin caducidad",
-    href: "/dashboard/almacen?tab=accesorios",
-  },
-  {
-    id: "reactivos",
-    label: "Reactivos",
-    description: "Reactivos de laboratorio con caducidad",
-    href: "/dashboard/almacen?tab=reactivos",
+    id: "inventario",
+    label: "Inventario",
+    description:
+      "Catálogo unificado: insumos, medicamentos, refacciones, accesorios, reactivos y equipos",
+    href: "/dashboard/almacen?tab=inventario",
   },
   {
     id: "entradas",
@@ -78,12 +60,6 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=kardex",
   },
   {
-    id: "equipo",
-    label: "Equipos",
-    description: "Equipos médicos del almacén",
-    href: "/dashboard/almacen?tab=equipo",
-  },
-  {
     id: "mantenimientos",
     label: "Mantenimientos",
     description: "Servicios y calendario de mantenimiento",
@@ -112,7 +88,13 @@ export const WAREHOUSE_TABS = [
 export type WarehouseTabId = (typeof WAREHOUSE_TABS)[number]["id"];
 
 const LEGACY_TAB_ALIASES: Record<string, WarehouseTabId> = {
-  productos: "insumos",
+  productos: "inventario",
+  insumos: "inventario",
+  medicamentos: "inventario",
+  refacciones: "inventario",
+  accesorios: "inventario",
+  reactivos: "inventario",
+  equipo: "inventario",
   registros: "registros_sanitarios",
 };
 
@@ -128,4 +110,14 @@ export function normalizeWarehouseTab(
 
 export function isWarehouseTabId(value: string | null): value is WarehouseTabId {
   return WAREHOUSE_TABS.some((tab) => tab.id === value);
+}
+
+export function warehouseTabIsVisible(
+  tabId: WarehouseTabId,
+  canView: (module: WarehouseModule) => boolean
+) {
+  if (tabId === "inventario") {
+    return INVENTORY_TAB_MODULES.some((module) => canView(module));
+  }
+  return canView(tabId as WarehouseModule);
 }
