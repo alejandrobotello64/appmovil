@@ -47,7 +47,7 @@ Si el esquema de la nube está vacío: `npx supabase link --project-ref iqfareiw
 
 ## Inventario MAS
 
-La existencia **no se edita a mano**. El catálogo se trabaja en una sola pestaña **Inventario** (insumos, medicamentos, refacciones, accesorios, reactivos y equipos), con filtro opcional por categoría. Productos, almacenes y ubicaciones viven en Postgres; entradas (`EM-`), salidas (`SAL-`) y traspasos (`TR-`) pasan por `apply_stock_movement` / `transfer_stock` y dejan kardex inmutable.
+La existencia **no se edita a mano**. El catálogo se trabaja en una sola pestaña **Inventario** (insumos, medicamentos, refacciones, accesorios, reactivos y equipos), con filtro por categoría y **marcas rápidas** (Dräger, Philips, Masimo, 3M, ASP…). Productos, almacenes y ubicaciones viven en Postgres; entradas (`EM-`), salidas (`SAL-`) y traspasos (`TR-`) pasan por `apply_stock_movement` / `transfer_stock` y dejan kardex inmutable.
 
 ## Kits de servicio
 
