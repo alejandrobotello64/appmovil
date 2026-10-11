@@ -52,13 +52,5 @@ update public.inventory_items
 set name = 'Mascarilla de silicona infante pequeña 0 reutilizable'
 where regexp_replace(upper(trim(part_number)), '[^A-Z0-9]', '', 'g') = 'MP01910';
 
--- Color de separación por marca (no pisa un color ya elegido).
-update public.inventory_items set color_tag = 'turquesa' where brand = 'Dräger' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'azul' where brand = 'Philips' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'morado' where brand = 'Masimo' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'amarillo' where brand = '3M' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'verde' where brand = 'ASP' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'naranja' where brand = 'Welch Allyn' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'rosa' where brand = 'Halyard' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'gris' where brand = 'Edwards Lifesciences' and coalesce(color_tag, '') = '';
-update public.inventory_items set color_tag = 'rojo' where brand = 'Hill-Rom' and coalesce(color_tag, '') = '';
+-- El catálogo arranca sin color; se etiqueta a mano en Inventario.
+update public.inventory_items set color_tag = '';
