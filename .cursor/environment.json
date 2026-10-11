@@ -11,6 +11,11 @@
       "name": "web",
       "command": "npm run dev",
       "description": "MAS on 0.0.0.0:43145"
+    },
+    {
+      "name": "ipv6-preview",
+      "command": "python3 scripts/ipv6-preview-proxy.py",
+      "description": "Forward [::1]:43145 to Next for Preview"
     }
   ],
   "ports": [{ "name": "web", "port": 43145 }]
