@@ -18,6 +18,13 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=inventario",
   },
   {
+    id: "kits",
+    label: "Kits",
+    description:
+      "Listas típicas de insumos para no armar cada orden de servicio desde cero",
+    href: "/dashboard/almacen?tab=kits",
+  },
+  {
     id: "entradas",
     label: "Entradas",
     description: "Registrar ingreso de mercancía",
@@ -118,6 +125,12 @@ export function warehouseTabIsVisible(
 ) {
   if (tabId === "inventario") {
     return INVENTORY_TAB_MODULES.some((module) => canView(module));
+  }
+  if (tabId === "kits") {
+    return (
+      INVENTORY_TAB_MODULES.some((module) => canView(module)) ||
+      canView("ordenes_servicio")
+    );
   }
   return canView(tabId as WarehouseModule);
 }

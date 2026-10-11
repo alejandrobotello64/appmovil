@@ -50,6 +50,9 @@ SQL
 if [ -f "$ROOT/supabase/seed_cloud_snapshot.sql" ]; then
   sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/supabase/seed_cloud_snapshot.sql"
 fi
+if [ -f "$ROOT/supabase/seed_kits.sql" ]; then
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas -f "$ROOT/supabase/seed_kits.sql"
+fi
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d mas <<'SQL'
 grant usage on schema public to anon, authenticated, authenticator;
 grant select, insert, update, delete on all tables in schema public to anon, authenticated;

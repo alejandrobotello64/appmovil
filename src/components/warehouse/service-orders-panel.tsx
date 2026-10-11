@@ -91,6 +91,9 @@ import {
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
 import { downloadRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
+import { ApplySupplyKitBar } from "@/components/warehouse/apply-supply-kit";
+import { getSupplyKits, type KitServiceLine } from "@/lib/kits/storage";
+import type { SupplyKit } from "@/lib/kits/types";
 import {
   CHECKLIST_RESULTS,
   DEFAULT_SERVICE_PRICING,
@@ -247,6 +250,7 @@ export function ServiceOrdersPanel({
   >([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
+  const [kits, setKits] = useState<SupplyKit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
@@ -304,7 +308,7 @@ export function ServiceOrdersPanel({
     setLoading(true);
     setError("");
     try {
-      const [list, tpls, clientList, inventory, instruments, staffList, contractList] =
+      const [list, tpls, clientList, inventory, instruments, staffList, contractList, kitList] =
         await Promise.all([
           getServiceOrders(),
           getChecklistTemplates(),
@@ -313,6 +317,7 @@ export function ServiceOrdersPanel({
           getBiomedicalInstruments(),
           listStaffMembers().catch(() => [] as StaffMember[]),
           getServiceContracts().catch(() => [] as ServiceContract[]),
+          getSupplyKits().catch(() => [] as SupplyKit[]),
         ]);
       setOrders(list);
       setTemplates(tpls);
@@ -321,6 +326,7 @@ export function ServiceOrdersPanel({
       setProducts(inventory);
       setInstrumentsCatalog(instruments);
       setStaff(staffList);
+      setKits(kitList);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar órdenes.");
     } finally {
@@ -1061,6 +1067,34 @@ export function ServiceOrdersPanel({
   function productsForKind(kind: ServiceLineKind) {
     if (kind === "mano_obra" || kind === "otro") return [];
     return products.filter((p) => p.category === kind);
+  }
+
+  function applyKitLines(lines: KitServiceLine[]) {
+    setDraftLines((rows) => {
+      const next = rows.map((row) => ({ ...row }));
+      for (const line of lines) {
+        const existing = next.find(
+          (row) => row.productId && row.productId === line.productId
+        );
+        if (existing) {
+          existing.quantity = Number(existing.quantity) + Number(line.quantity);
+          if (line.notes && !existing.notes) existing.notes = line.notes;
+        } else {
+          next.push({
+            key: crypto.randomUUID(),
+            lineKind: line.lineKind,
+            productId: line.productId,
+            description: line.description,
+            quantity: line.quantity,
+            unit: line.unit,
+            unitPrice: line.unitPrice,
+            lineStatus: "pendiente",
+            notes: line.notes,
+          });
+        }
+      }
+      return next;
+    });
   }
 
   if (showReception) {
@@ -2250,6 +2284,24 @@ export function ServiceOrdersPanel({
 
             {detailTab === "servicios" ? (
               <div className="space-y-3">
+                <ApplySupplyKitBar
+                  kits={kits}
+                  canEdit={canEdit}
+                  serviceType={selected.serviceType}
+                  equipmentName={selected.equipmentName}
+                  equipmentBrand={selected.equipmentBrand}
+                  equipmentModel={selected.equipmentModel}
+                  currentLines={draftLines}
+                  actor={actor}
+                  onApply={(lines) => applyKitLines(lines)}
+                  onKitCreated={(kit) =>
+                    setKits((rows) =>
+                      [kit, ...rows.filter((item) => item.id !== kit.id)].sort(
+                        (a, b) => a.name.localeCompare(b.name, "es")
+                      )
+                    )
+                  }
+                />
                 <div className="overflow-x-auto rounded-xl border border-border">
                   <table className="min-w-full text-sm">
                     <thead className="bg-muted/50 text-left text-xs text-muted-foreground">

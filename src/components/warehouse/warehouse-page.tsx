@@ -15,6 +15,7 @@ import { ReportPanel } from "@/components/warehouse/report-panel";
 import { KardexPanel } from "@/components/warehouse/kardex-panel";
 import { SanitaryRegistrationsPanel } from "@/components/documents/document-library-panel";
 import { WarehouseToolsPanel } from "@/components/tools/tools-module";
+import { SupplyKitsPanel } from "@/components/warehouse/supply-kits-panel";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import {
   WAREHOUSE_TABS,
@@ -80,6 +81,8 @@ export function WarehousePage() {
                 initialCategory={catalogCategory}
               />
             ) : null}
+
+            {activeTab === "kits" ? <SupplyKitsPanel /> : null}
 
             {activeTab === "entradas" || activeTab === "salidas" ? (
               <StockMovementPanel

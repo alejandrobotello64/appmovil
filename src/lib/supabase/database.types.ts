@@ -624,6 +624,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      supply_kits: {
+        Row: {
+          id: string;
+          code: string;
+          name: string;
+          description: string;
+          service_type: string;
+          equipment_kind: string;
+          is_active: boolean;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          name: string;
+          description?: string;
+          service_type?: string;
+          equipment_kind?: string;
+          is_active?: boolean;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          name?: string;
+          description?: string;
+          service_type?: string;
+          equipment_kind?: string;
+          is_active?: boolean;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      supply_kit_lines: {
+        Row: {
+          id: string;
+          kit_id: string;
+          product_id: string;
+          quantity: number;
+          sort_order: number;
+          notes: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          kit_id: string;
+          product_id: string;
+          quantity: number;
+          sort_order?: number;
+          notes?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          kit_id?: string;
+          product_id?: string;
+          quantity?: number;
+          sort_order?: number;
+          notes?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

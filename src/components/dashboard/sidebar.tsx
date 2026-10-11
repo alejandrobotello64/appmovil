@@ -29,6 +29,7 @@ import {
   History,
   Bookmark,
   BookOpen,
+  Boxes,
   Car,
   CalendarDays,
   Gavel,
@@ -76,6 +77,7 @@ import { AnesthesiaMachineIcon } from "@/components/icons/anesthesia-machine-ico
 const TAB_ICONS = {
   dashboard: LayoutDashboard,
   inventario: Package,
+  kits: Boxes,
   insumos: Package,
   medicamentos: Pill,
   refacciones: Settings2,
@@ -133,6 +135,7 @@ const SERVICE_ORDER_TAB_ICONS = {
   solicitudes: Package,
   herramientas: HandHelping,
   plantillas: ClipboardList,
+  kits: Boxes,
   documentos: BookText,
   contrasenas: KeyRound,
 } as const;

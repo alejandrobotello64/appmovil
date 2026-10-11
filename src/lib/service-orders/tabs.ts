@@ -39,6 +39,13 @@ export const SERVICE_ORDER_TABS = [
     href: "/dashboard/ordenes-servicio?tab=plantillas",
   },
   {
+    id: "kits",
+    label: "Kits",
+    description:
+      "Catálogo de insumos típicos para aplicar en órdenes de servicio",
+    href: "/dashboard/ordenes-servicio?tab=kits",
+  },
+  {
     id: "documentos",
     label: "Documentos técnicos",
     description:
@@ -62,6 +69,7 @@ export const SERVICE_ORDER_TAB_MODULE: Record<ServiceOrderTabId, WarehouseModule
   solicitudes: "ordenes_servicio",
   herramientas: "solicitud_herramientas",
   plantillas: "plantillas_checklist",
+  kits: "ordenes_servicio",
   documentos: "documentos_tecnicos",
   contrasenas: "contrasenas_servicio",
 };

@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { BiomedicalInstrumentsPanel } from "@/components/warehouse/biomedical-instruments-panel";
 import { ChecklistTemplatesPanel } from "@/components/warehouse/checklist-templates-panel";
+import { SupplyKitsPanel } from "@/components/warehouse/supply-kits-panel";
 import { ServiceOrdersDashboard } from "@/components/warehouse/service-orders-dashboard";
 import { ServiceOrdersPanel } from "@/components/warehouse/service-orders-panel";
 import { ServicePasswordsPanel } from "@/components/warehouse/service-passwords-panel";
@@ -63,6 +64,7 @@ export function ServiceOrdersPage() {
             ) : null}
             {activeTab === "herramientas" ? <BiomedicalToolRequestsPanel /> : null}
             {activeTab === "plantillas" ? <ChecklistTemplatesPanel /> : null}
+            {activeTab === "kits" ? <SupplyKitsPanel /> : null}
             {activeTab === "documentos" ? <TechnicalDocumentsPanel /> : null}
             {activeTab === "contrasenas" ? <ServicePasswordsPanel /> : null}
           </>

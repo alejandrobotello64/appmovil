@@ -49,6 +49,12 @@ Si el esquema de la nube está vacío: `npx supabase link --project-ref iqfareiw
 
 La existencia **no se edita a mano**. El catálogo se trabaja en una sola pestaña **Inventario** (insumos, medicamentos, refacciones, accesorios, reactivos y equipos), con filtro opcional por categoría. Productos, almacenes y ubicaciones viven en Postgres; entradas (`EM-`), salidas (`SAL-`) y traspasos (`TR-`) pasan por `apply_stock_movement` / `transfer_stock` y dejan kardex inmutable.
 
+## Kits de servicio
+
+El catálogo de **kits** guarda listas típicas de insumos (SKU + cantidad) para no armar cada orden desde cero. Se edita en **Almacén → Kits** o **Biomédica → Kits**. En la pestaña Servicios de una orden se puede **Aplicar kit** (suma cantidades si el artículo ya está) o **Guardar como kit** las partidas actuales del catálogo.
+
+Los ejemplos locales viven en `supabase/seed_kits.sql` (preventivo STERRAD, circuito Dräger e instalación de sondas). Migración: `supabase/migrations/20261011080000_supply_kits.sql`.
+
 El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nuevo producto. Acepta la plantilla MAS o un inventario con columnas habituales (`Código`, `Descripción`, `Cantidad`, `Precio`). Los SKU nuevos se dan de alta; los que ya existen se actualizan. La columna de existencia solo carga stock inicial en altas nuevas.
 
 La recepción de pedidos puede ser **parcial**. Entradas y salidas piden almacén, ubicación, lote/caducidad/serie cuando el producto lo exige. Los roles (`administrador`, `almacén`, `compras`, `ventas`, `servicio`, `dirección`) filtran el menú y bloquean escritura.
