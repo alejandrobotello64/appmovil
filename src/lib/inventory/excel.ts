@@ -12,6 +12,7 @@ import {
   INVENTORY_CATEGORIES,
   INVENTORY_UNITS,
 } from "@/lib/inventory/types";
+import { normalizeBrand } from "@/lib/inventory/brands";
 
 export const PRODUCT_EXCEL_HEADERS = [
   "sku",
@@ -584,7 +585,7 @@ export async function parseProductWorkbook(
       minStock: Math.max(0, Math.round(cellNumber(record.stock_minimo, 0))),
       unit: parseUnit(record.unidad),
       location: cellText(record.ubicacion),
-      brand: cellText(record.marca),
+      brand: normalizeBrand(cellText(record.marca)),
       model: cellText(record.modelo),
       serialNumber: cellText(record.serie),
       unitPrice: Math.max(0, cellNumber(record.precio, 0)),
@@ -605,7 +606,7 @@ export async function parseProductWorkbook(
       maxStock: Math.max(0, Math.round(cellNumber(record.stock_maximo, 0))),
       reorderPoint: Math.max(0, Math.round(cellNumber(record.punto_reorden, 0))),
       partNumber: cellText(record.numero_parte),
-      manufacturer: cellText(record.fabricante),
+      manufacturer: normalizeBrand(cellText(record.fabricante)),
       subcategory: cellText(record.subcategoria),
     });
   }

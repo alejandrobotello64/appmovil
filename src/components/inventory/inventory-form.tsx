@@ -15,6 +15,8 @@ import {
   type ItemKind,
   type SupplyCategoryId,
 } from "@/lib/inventory/types";
+import { QUICK_BRANDS, normalizeBrand, uniqueBrands } from "@/lib/inventory/brands";
+import { cn } from "@/lib/utils";
 
 type InventoryFormProps = {
   item?: InventoryItem | null;
@@ -23,6 +25,8 @@ type InventoryFormProps = {
   lockedCategory?: SupplyCategoryId;
   /** Categorías que el usuario puede elegir en el catálogo unificado */
   allowedCategories?: CatalogCategoryId[];
+  /** Marcas del catálogo para elegir en un toque. */
+  quickBrands?: string[];
   onSubmit: (data: InventoryItemInput, imageFile?: File | null) => void;
   onCancel: () => void;
 };
@@ -71,6 +75,7 @@ export function InventoryForm({
   itemKind = "producto",
   lockedCategory,
   allowedCategories,
+  quickBrands,
   onSubmit,
   onCancel,
 }: InventoryFormProps) {
@@ -164,6 +169,8 @@ export function InventoryForm({
     onSubmit(
       {
         ...form,
+        brand: normalizeBrand(form.brand),
+        manufacturer: normalizeBrand(form.manufacturer) || normalizeBrand(form.brand),
         itemKind: kind,
         category,
         quantity: kind === "equipo" && !item ? 0 : form.quantity,
@@ -446,11 +453,38 @@ export function InventoryForm({
         <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
           <label className="space-y-1.5">
             <span className="text-sm font-medium">Marca</span>
+            <div className="mb-1.5 flex flex-wrap gap-1" aria-label="Marcas rápidas">
+              {uniqueBrands([...(quickBrands ?? []), ...QUICK_BRANDS]).map((brand) => {
+                const active = normalizeBrand(form.brand) === brand;
+                return (
+                  <button
+                    key={brand}
+                    type="button"
+                    onClick={() => handleChange("brand", brand)}
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-xs font-medium",
+                      active
+                        ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                        : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {brand}
+                  </button>
+                );
+              })}
+            </div>
             <input
               value={form.brand}
               onChange={(event) => handleChange("brand", event.target.value)}
+              list="inventory-quick-brands"
+              placeholder="Elige una marca rápida o escribe otra"
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             />
+            <datalist id="inventory-quick-brands">
+              {uniqueBrands([...(quickBrands ?? []), ...QUICK_BRANDS]).map((brand) => (
+                <option key={brand} value={brand} />
+              ))}
+            </datalist>
           </label>
           <label className="space-y-1.5">
             <span className="text-sm font-medium">N.º de parte</span>

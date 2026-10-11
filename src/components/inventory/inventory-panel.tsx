@@ -85,6 +85,7 @@ import {
   type TrackingDateMode,
 } from "@/components/inventory/inventory-tracking";
 import { SortableTable } from "@/components/ui/sortable-table";
+import { uniqueBrands } from "@/lib/inventory/brands";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -156,6 +157,7 @@ export function InventoryPanel({
   const [categoryFilter, setCategoryFilter] = useState<
     CatalogCategoryId | "all"
   >(initialCategory ?? "all");
+  const [brandFilter, setBrandFilter] = useState("todas");
 
   function catalogCan(action: PermissionAction) {
     return INVENTORY_TAB_MODULES.some(
@@ -313,7 +315,18 @@ export function InventoryPanel({
         status === statusFilter;
       const matchesWarehouse =
         !warehouseFilter || hasStockIn(stockByProduct.get(item.id), warehouseFilter);
-      return matchesCategory && matchesSearch && matchesStatus && matchesWarehouse;
+      const matchesBrand =
+        brandFilter === "todas" ||
+        (brandFilter === "sin_marca"
+          ? !item.brand.trim()
+          : item.brand.trim().toLowerCase() === brandFilter.toLowerCase());
+      return (
+        matchesCategory &&
+        matchesSearch &&
+        matchesStatus &&
+        matchesWarehouse &&
+        matchesBrand
+      );
     });
   }, [
     items,
@@ -324,7 +337,13 @@ export function InventoryPanel({
     categoryFilter,
     stockByProduct,
     warehouseFilter,
+    brandFilter,
   ]);
+
+  const catalogBrands = useMemo(
+    () => uniqueBrands(items.map((item) => item.brand)),
+    [items]
+  );
 
   function itemTracking(item: InventoryItem) {
     return trackingFor(stockByProduct.get(item.id), warehouseFilter || undefined);
@@ -646,6 +665,70 @@ export function InventoryPanel({
             </div>
           ) : null}
 
+          {catalogBrands.length > 0 ? (
+            <div className="space-y-2 border-b border-border bg-muted/10 px-3 py-3">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Marcas rápidas
+              </p>
+              <div
+                className="flex flex-wrap gap-1"
+                role="tablist"
+                aria-label="Filtrar por marca"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={brandFilter === "todas"}
+                  onClick={() => setBrandFilter("todas")}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-medium",
+                    brandFilter === "todas"
+                      ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                      : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  Todas
+                </button>
+                {catalogBrands.map((brand) => {
+                  const active = brandFilter === brand;
+                  return (
+                    <button
+                      key={brand}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setBrandFilter(brand)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-medium",
+                        active
+                          ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                          : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {brand}
+                    </button>
+                  );
+                })}
+                {items.some((item) => !item.brand.trim()) ? (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={brandFilter === "sin_marca"}
+                    onClick={() => setBrandFilter("sin_marca")}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-medium",
+                      brandFilter === "sin_marca"
+                        ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                        : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    Sin marca
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           <div
             className={cn(
               "grid gap-3 border-b border-border p-4",
@@ -728,6 +811,10 @@ export function InventoryPanel({
                     </span>
                   ),
                 fields: [
+                  {
+                    label: "Marca",
+                    value: item.brand || "Sin marca",
+                  },
                   {
                     label: isEquipment ? "Serie" : "Categoría",
                     value: isEquipment
@@ -823,6 +910,7 @@ export function InventoryPanel({
                   <th className="px-4 py-3 font-medium">
                     {isCatalog ? "Artículo" : isEquipment ? "Equipo" : "Producto"}
                   </th>
+                  <th className="px-4 py-3 font-medium">Marca</th>
                   <th className="px-4 py-3 font-medium">
                     {isEquipment && !isCatalog ? "Serie" : "Categoría"}
                   </th>
@@ -848,7 +936,7 @@ export function InventoryPanel({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isEquipment ? 8 : 9}
+                      colSpan={isEquipment ? 9 : 10}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isCatalog
@@ -874,8 +962,19 @@ export function InventoryPanel({
                             {item.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {brandWithPartNumber(item) || "—"}
+                            {item.partNumber
+                              ? `n.º ${item.partNumber}${item.model ? ` · ${item.model}` : ""}`
+                              : item.model || "—"}
                           </p>
+                        </td>
+                        <td className="px-4 py-3">
+                          {item.brand ? (
+                            <span className="inline-flex rounded-full bg-[#3B46A5]/10 px-2.5 py-1 text-xs font-medium text-[#3B46A5]">
+                              {item.brand}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sin marca</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
@@ -1055,6 +1154,7 @@ export function InventoryPanel({
                   : (supplyCategory ?? undefined)
               }
               allowedCategories={isCatalog ? creatableCategories : undefined}
+              quickBrands={catalogBrands}
               onSubmit={handleSubmit}
               onCancel={() => {
                 setFormOpen(false);
