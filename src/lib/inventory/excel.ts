@@ -13,6 +13,7 @@ import {
   INVENTORY_UNITS,
 } from "@/lib/inventory/types";
 import { normalizeBrand } from "@/lib/inventory/brands";
+import { resolveProductColor } from "@/lib/inventory/colors";
 
 export const PRODUCT_EXCEL_HEADERS = [
   "sku",
@@ -25,6 +26,7 @@ export const PRODUCT_EXCEL_HEADERS = [
   "unidad",
   "ubicacion",
   "marca",
+  "color",
   "modelo",
   "serie",
   "numero_parte",
@@ -109,6 +111,10 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_EXCEL_HEADERS)[number]> = {
   bodega: "ubicacion",
   marca: "marca",
   brand: "marca",
+  color: "color",
+  color_tag: "color",
+  etiqueta_color: "color",
+  color_etiqueta: "color",
   modelo: "modelo",
   model: "modelo",
   serie: "serie",
@@ -299,6 +305,7 @@ export function itemToExcelRecord(item: InventoryItem): Record<string, string | 
     unidad: item.unit,
     ubicacion: item.location,
     marca: item.brand,
+    color: resolveProductColor(item.colorTag, item.brand),
     modelo: item.model,
     serie: item.serialNumber,
     numero_parte: item.partNumber,
@@ -333,6 +340,7 @@ function exampleRow(): Record<string, string | number> {
     unidad: "caja",
     ubicacion: "Villahermosa",
     marca: "MAS",
+    color: "azul",
     modelo: "",
     serie: "",
     numero_parte: "",
@@ -586,6 +594,10 @@ export async function parseProductWorkbook(
       unit: parseUnit(record.unidad),
       location: cellText(record.ubicacion),
       brand: normalizeBrand(cellText(record.marca)),
+      colorTag: resolveProductColor(
+        cellText(record.color),
+        cellText(record.marca)
+      ),
       model: cellText(record.modelo),
       serialNumber: cellText(record.serie),
       unitPrice: Math.max(0, cellNumber(record.precio, 0)),

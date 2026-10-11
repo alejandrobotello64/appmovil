@@ -109,6 +109,7 @@ export type Database = {
           unit: string;
           location: string;
           brand: string;
+          color_tag: string;
           model: string;
           serial_number: string;
           unit_price: number;
@@ -146,6 +147,7 @@ export type Database = {
           unit?: string;
           location?: string;
           brand?: string;
+          color_tag?: string;
           model?: string;
           serial_number?: string;
           unit_price?: number;
@@ -183,6 +185,7 @@ export type Database = {
           unit?: string;
           location?: string;
           brand?: string;
+          color_tag?: string;
           model?: string;
           serial_number?: string;
           unit_price?: number;

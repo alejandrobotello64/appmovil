@@ -62,6 +62,7 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     unit: row.unit as InventoryUnit,
     location: row.location ?? "",
     brand: row.brand ?? "",
+    colorTag: String((row as { color_tag?: string }).color_tag ?? ""),
     model: row.model ?? "",
     serialNumber: row.serial_number ?? "",
     unitPrice: Number(row.unit_price ?? 0),
@@ -106,6 +107,7 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     unit: input.unit,
     location: input.location ?? "",
     brand: input.brand ?? "",
+    color_tag: input.colorTag ?? "",
     model: input.model ?? "",
     serial_number: input.serialNumber ?? "",
     unit_price: input.unitPrice,
@@ -358,6 +360,7 @@ export async function bulkImportInventoryItems(
       ...raw,
       sku: raw.sku.trim(),
       name: raw.name.trim(),
+      colorTag: raw.colorTag || "",
       expiryDate:
         raw.expiryDate && !Number.isNaN(Date.parse(raw.expiryDate))
           ? raw.expiryDate

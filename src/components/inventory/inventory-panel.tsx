@@ -86,6 +86,12 @@ import {
 } from "@/components/inventory/inventory-tracking";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { uniqueBrands } from "@/lib/inventory/brands";
+import {
+  PRODUCT_COLORS,
+  productColorLabel,
+  productColorMeta,
+  resolveProductColor,
+} from "@/lib/inventory/colors";
 
 const STATUS_LABELS: Record<StockStatus, string> = {
   disponible: "Disponible",
@@ -158,6 +164,7 @@ export function InventoryPanel({
     CatalogCategoryId | "all"
   >(initialCategory ?? "all");
   const [brandFilter, setBrandFilter] = useState("todas");
+  const [colorFilter, setColorFilter] = useState("todos");
 
   function catalogCan(action: PermissionAction) {
     return INVENTORY_TAB_MODULES.some(
@@ -245,6 +252,7 @@ export function InventoryPanel({
         ...data,
         itemKind,
         category,
+        colorTag: resolveProductColor(data.colorTag, data.brand),
         expiryDate: itemKind === "equipo" ? "" : data.expiryDate,
         manufacturedAt: data.manufacturedAt,
       };
@@ -293,6 +301,7 @@ export function InventoryPanel({
           item.sku,
           item.name,
           item.brand,
+          productColorLabel(resolveProductColor(item.colorTag, item.brand)),
           item.partNumber,
           item.model,
           item.supplier,
@@ -320,12 +329,17 @@ export function InventoryPanel({
         (brandFilter === "sin_marca"
           ? !item.brand.trim()
           : item.brand.trim().toLowerCase() === brandFilter.toLowerCase());
+      const itemColor = resolveProductColor(item.colorTag, item.brand);
+      const matchesColor =
+        colorFilter === "todos" ||
+        (colorFilter === "sin_color" ? !itemColor : itemColor === colorFilter);
       return (
         matchesCategory &&
         matchesSearch &&
         matchesStatus &&
         matchesWarehouse &&
-        matchesBrand
+        matchesBrand &&
+        matchesColor
       );
     });
   }, [
@@ -338,6 +352,7 @@ export function InventoryPanel({
     stockByProduct,
     warehouseFilter,
     brandFilter,
+    colorFilter,
   ]);
 
   const catalogBrands = useMemo(
@@ -729,6 +744,53 @@ export function InventoryPanel({
             </div>
           ) : null}
 
+          <div className="space-y-2 border-b border-border px-3 py-3">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Colores para separar
+            </p>
+            <div
+              className="flex flex-wrap gap-1"
+              role="tablist"
+              aria-label="Filtrar por color"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={colorFilter === "todos"}
+                onClick={() => setColorFilter("todos")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium",
+                  colorFilter === "todos"
+                    ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                    : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                Todos
+              </button>
+              {PRODUCT_COLORS.map((color) => {
+                const active = colorFilter === color.id;
+                return (
+                  <button
+                    key={color.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setColorFilter(color.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium",
+                      active
+                        ? cn(color.chip, "ring-1 ring-foreground/20")
+                        : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <span className={cn("size-2.5 rounded-full", color.swatch)} />
+                    {color.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div
             className={cn(
               "grid gap-3 border-b border-border p-4",
@@ -811,6 +873,12 @@ export function InventoryPanel({
                     </span>
                   ),
                 fields: [
+                  {
+                    label: "Color",
+                    value: productColorLabel(
+                      resolveProductColor(item.colorTag, item.brand)
+                    ),
+                  },
                   {
                     label: "Marca",
                     value: item.brand || "Sin marca",
@@ -907,6 +975,7 @@ export function InventoryPanel({
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">SKU</th>
+                  <th className="px-4 py-3 font-medium">Color</th>
                   <th className="px-4 py-3 font-medium">
                     {isCatalog ? "Artículo" : isEquipment ? "Equipo" : "Producto"}
                   </th>
@@ -936,7 +1005,7 @@ export function InventoryPanel({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isEquipment ? 9 : 10}
+                      colSpan={isEquipment ? 10 : 11}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isCatalog
@@ -949,13 +1018,33 @@ export function InventoryPanel({
                 ) : (
                   filteredItems.map((item) => {
                     const status = getStockStatus(item.quantity, item.minStock);
+                    const colorId = resolveProductColor(item.colorTag, item.brand);
+                    const color = productColorMeta(colorId);
                     return (
                       <tr
                         key={item.id}
-                        className="border-t border-border/70 hover:bg-muted/30"
+                        className={cn(
+                          "border-t border-border/70 hover:bg-muted/30",
+                          color?.bar && `border-l-4 ${color.bar}`
+                        )}
                       >
                         <td className="px-4 py-3 font-mono text-xs">
                           {item.sku}
+                        </td>
+                        <td className="px-4 py-3">
+                          {color ? (
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+                                color.chip
+                              )}
+                            >
+                              <span className={cn("size-2.5 rounded-full", color.swatch)} />
+                              {color.label}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sin color</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <p className="font-medium text-foreground">
@@ -1308,6 +1397,12 @@ export function InventoryPanel({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
+                  [
+                    "Color",
+                    productColorLabel(
+                      resolveProductColor(viewingItem.colorTag, viewingItem.brand)
+                    ),
+                  ],
                   ["Marca", viewingItem.brand || "—"],
                   ["N.º de parte", viewingItem.partNumber || "—"],
                   ["Categoría", getCategoryLabel(viewingItem.category)],

@@ -16,6 +16,12 @@ import {
   type SupplyCategoryId,
 } from "@/lib/inventory/types";
 import { QUICK_BRANDS, normalizeBrand, uniqueBrands } from "@/lib/inventory/brands";
+import {
+  PRODUCT_COLORS,
+  colorForBrand,
+  productColorMeta,
+  resolveProductColor,
+} from "@/lib/inventory/colors";
 import { cn } from "@/lib/utils";
 
 type InventoryFormProps = {
@@ -67,6 +73,7 @@ function emptyForm(
     partNumber: "",
     manufacturer: "",
     subcategory: "",
+    colorTag: "",
   };
 }
 
@@ -171,6 +178,7 @@ export function InventoryForm({
         ...form,
         brand: normalizeBrand(form.brand),
         manufacturer: normalizeBrand(form.manufacturer) || normalizeBrand(form.brand),
+        colorTag: resolveProductColor(form.colorTag, form.brand),
         itemKind: kind,
         category,
         quantity: kind === "equipo" && !item ? 0 : form.quantity,
@@ -456,15 +464,29 @@ export function InventoryForm({
             <div className="mb-1.5 flex flex-wrap gap-1" aria-label="Marcas rápidas">
               {uniqueBrands([...(quickBrands ?? []), ...QUICK_BRANDS]).map((brand) => {
                 const active = normalizeBrand(form.brand) === brand;
+                const tone = productColorMeta(colorForBrand(brand));
                 return (
                   <button
                     key={brand}
                     type="button"
-                    onClick={() => handleChange("brand", brand)}
+                    onClick={() =>
+                      setForm((current) => {
+                        const keepCustom =
+                          Boolean(current.colorTag) &&
+                          current.colorTag !== colorForBrand(current.brand);
+                        return {
+                          ...current,
+                          brand,
+                          colorTag: keepCustom
+                            ? current.colorTag
+                            : colorForBrand(brand),
+                        };
+                      })
+                    }
                     className={cn(
                       "rounded-full px-2.5 py-1 text-xs font-medium",
                       active
-                        ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                        ? cn(tone?.chip ?? "bg-[#3B46A5] text-white")
                         : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
@@ -494,6 +516,30 @@ export function InventoryForm({
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             />
           </label>
+          <div className="space-y-1.5 md:col-span-2">
+            <span className="text-sm font-medium">Color para separar</span>
+            <div className="flex flex-wrap gap-1.5" aria-label="Color del producto">
+              {PRODUCT_COLORS.map((color) => {
+                const active = resolveProductColor(form.colorTag, form.brand) === color.id;
+                return (
+                  <button
+                    key={color.id}
+                    type="button"
+                    onClick={() => handleChange("colorTag", color.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                      active
+                        ? cn(color.chip, "border-transparent ring-2 ring-offset-1 ring-ring")
+                        : "border-border text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    <span className={cn("size-2.5 rounded-full", color.swatch)} />
+                    {color.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
         <label className="space-y-1.5">
           <span className="text-sm font-medium">Modelo</span>

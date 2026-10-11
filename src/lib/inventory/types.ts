@@ -172,6 +172,8 @@ export type InventoryItem = {
   unit: InventoryUnit;
   location: string;
   brand: string;
+  /** Color de etiqueta para separar el producto en listas. */
+  colorTag: string;
   model: string;
   serialNumber: string;
   unitPrice: number;
