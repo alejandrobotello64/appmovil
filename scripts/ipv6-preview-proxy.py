@@ -47,6 +47,17 @@ def main() -> None:
             upstream.connect(TARGET)
             upstream.settimeout(None)
         except OSError:
+            try:
+                client.sendall(
+                    b"HTTP/1.1 502 Bad Gateway\r\n"
+                    b"Content-Type: text/plain; charset=utf-8\r\n"
+                    b"Connection: close\r\n"
+                    b"Content-Length: 52\r\n"
+                    b"\r\n"
+                    b"Preview proxy: Next.js is not listening on 127.0.0.1:43145\n"
+                )
+            except OSError:
+                pass
             client.close()
             upstream.close()
             continue
