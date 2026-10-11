@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0 --port 43145",
+    "dev": "next dev --hostname :: --port 43145",
     "build": "next build",
-    "start": "next start --hostname 0.0.0.0 --port 43145",
+    "start": "next start --hostname :: --port 43145",
     "lint": "eslint",
     "db:local": "bash scripts/setup-local-db.sh",
     "db:sync-cloud": "python3 scripts/sync-from-cloud.py",
