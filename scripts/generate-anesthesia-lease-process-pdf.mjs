@@ -345,7 +345,7 @@ y = bullet(
 );
 y = bullet(
   doc,
-  "El contrato: arrendamiento con vigencia, renta y obligaciones de mantenimiento y surtido. Se da de alta en Licitaciones → Contratos y se vincula al equipo del cliente.",
+  "El contrato: arrendamiento con vigencia, renta y obligaciones de mantenimiento y surtido. Se da de alta en Licitaciones  >  Contratos y se vincula al equipo del cliente.",
   y
 );
 y = bullet(
@@ -364,7 +364,7 @@ y = stepBox(
   doc,
   1,
   "Cliente y sitio",
-  "Clientes → ficha del hospital",
+  "Clientes  >  ficha del hospital",
   "Alta del hospital, contactos (biomédica, quirófano, compras) y ubicación exacta (torre, piso, quirófano). Sin ficha no hay equipo instalado ni OS ligada.",
   y
 );
@@ -372,15 +372,15 @@ y = stepBox(
   doc,
   2,
   "Contrato de arrendamiento",
-  "Licitaciones → Contratos",
-  "Número de contrato, título «Arrendamiento máquina de anestesia», vigencia (inicio/fin), cliente y notas del kit pactado (mensual / anual). El equipo instalado se marca con ese contrato vigente.",
+  "Licitaciones  >  Contratos",
+  'Número de contrato, título "Arrendamiento máquina de anestesia", vigencia (inicio/fin), cliente y notas del kit pactado (mensual / anual). El equipo instalado se marca con ese contrato vigente.',
   y
 );
 y = stepBox(
   doc,
   3,
   "Equipo en el cliente",
-  "Clientes → Equipos instalados",
+  "Clientes  >  Equipos instalados",
   "Nombre, marca, modelo, serie, estado Operativo, fecha de instalación y contrato. Si hay vaporizador o monitor, se ligan como equipo relacionado (máquina de anestesia / vaporizador).",
   y
 );
@@ -388,7 +388,7 @@ y = stepBox(
   doc,
   4,
   "Modelo en inventario MAS",
-  "Almacén → Inventario (categoría Equipos)",
+  "Almacén  >  Inventario (categoría Equipos)",
   "El catálogo es por modelo. La serie de la pieza que sale a renta se captura en Entradas al dar de alta la unidad y se descuenta del almacén al instalar (Salida o surtimiento de instalación).",
   y
 );
@@ -396,7 +396,7 @@ y = stepBox(
   doc,
   5,
   "Kit de consumo en catálogo",
-  "Almacén → Inventario (insumos, accesorios, refacciones)",
+  "Almacén  >  Inventario (insumos, accesorios, refacciones)",
   "Cada línea del kit debe existir como artículo (SKU). Así el surtido periódico no depende de elegir categoría: se busca en la lista unificada y se arma la solicitud.",
   y
 );
@@ -405,7 +405,7 @@ y = stepBox(
   6,
   "Calendario de visitas",
   "Calendario + Órdenes de servicio",
-  "Programar la visita mensual de surtido y la anual de preventivo sobre ese equipo. El recordatorio abre la OS del periodo; no se surte «de memoria».",
+  'Programar la visita mensual de surtido y la anual de preventivo sobre ese equipo. El recordatorio abre la OS del periodo; no se surte "de memoria".',
   y
 );
 
@@ -422,23 +422,23 @@ y = stepBox(
   doc,
   "A",
   "Abrir la OS del periodo",
-  "Órdenes de servicio → nueva OS (mantenimiento / surtimiento)",
-  "Cliente, equipo de anestesia, contrato, técnico y fecha. En notas: «Surtido mensual contrato [número] — quirófano X».",
+  "Órdenes de servicio  >  nueva OS (mantenimiento / surtimiento)",
+  'Cliente, equipo de anestesia, contrato, técnico y fecha. En notas: "Surtido mensual contrato [número] — quirófano X".',
   y
 );
 y = stepBox(
   doc,
   "B",
   "Pedir el kit a almacén",
-  "Desde la OS → solicitud de surtimiento",
-  "Cargar las líneas del kit mensual (cantidades pactadas). Folio tipo SOL-OS. Almacén ve la bandeja en Almacén → Surtimientos.",
+  "Desde la OS  >  solicitud de surtimiento",
+  "Cargar las líneas del kit mensual (cantidades pactadas). Folio tipo SOL-OS. Almacén ve la bandeja en Almacén  >  Surtimientos.",
   y
 );
 y = stepBox(
   doc,
   "C",
   "Surtir o comprar",
-  "Almacén → Surtimientos (y Compras si falta)",
+  "Almacén  >  Surtimientos (y Compras si falta)",
   "Si hay existencia: se surte y se descuenta del almacén (almacenes con stock, lote y caducidad cuando aplique). Si no alcanza: Solicitar compra (SC-). Compras arma el pedido; al recibir (Entrada EM-) se termina el surtido pendiente.",
   y
 );
@@ -510,8 +510,8 @@ y = table(
   ["Periodicidad", "Qué se entrega / hace", "Módulo MAS", "Folio típico"],
   [
     ["Alta / instalación", "Máquina + accesorios de arranque", "Inventario, Entrada, Salida, Cliente", "EM- / SAL- / OS-"],
-    ["Mensual", "Kit de consumo de quirófano", "OS → Surtimientos → Salida", "SOL-OS / SAL-"],
-    ["Cuando falta stock", "Reposición de compra", "Solicitar compra → Pedido → Entrada", "SC- / EM-"],
+    ["Mensual", "Kit de consumo de quirófano", "OS  >  Surtimientos  >  Salida", "SOL-OS / SAL-"],
+    ["Cuando falta stock", "Reposición de compra", "Solicitar compra  >  Pedido  >  Entrada", "SC- / EM-"],
     ["Anual", "Preventivo mayor + refacciones", "OS + checklist + Surtimientos", "OS- / SAL-"],
     ["Correctivo", "Falla en sitio o préstamo de equipo", "OS reparación; Movimientos si hay cambio", "OS- / TR- / SAL-"],
   ],
@@ -543,7 +543,7 @@ y = table(
   doc,
   ["Rol", "Hace", "Módulo"],
   [
-    ["Ventas / contratos", "Vigencia, kit pactado, cobro de renta", "Licitaciones → Contratos"],
+    ["Ventas / contratos", "Vigencia, kit pactado, cobro de renta", "Licitaciones  >  Contratos"],
     ["Clientes", "Ficha, equipo instalado, contactos", "Clientes"],
     ["Técnico / biomédica", "OS, checklist, entrega en sitio", "Órdenes de servicio, Calendario"],
     ["Almacén", "Surtir, salida, lotes/caducidad, kardex", "Inventario, Surtimientos, Salidas"],
@@ -556,7 +556,7 @@ y = table(
 y = sectionTitle(doc, "7. Reglas que no se saltan", y);
 y = bullet(
   doc,
-  "La máquina arrendada no se «edita a mano» el stock: entra y sale con movimientos (EM-, SAL-, TR-).",
+  'La máquina arrendada no se "edita a mano" el stock: entra y sale con movimientos (EM-, SAL-, TR-).',
   y
 );
 y = bullet(
@@ -601,7 +601,7 @@ doc.setFontSize(8.4);
 doc.setTextColor(...INK);
 const nextLines = wrap(
   doc,
-  "1) Contratos: alta ARR-ANEST-…  2) Clientes: máquina + serie + quirófano  3) Inventario: SKUs del kit  4) Calendario: visita del mes  5) OS → Surtimientos → Salida. El mismo camino, cada mes y cada año.",
+  "1) Contratos: alta ARR-ANEST-…  2) Clientes: máquina + serie + quirófano  3) Inventario: SKUs del kit  4) Calendario: visita del mes  5) OS  >  Surtimientos  >  Salida. El mismo camino, cada mes y cada año.",
   CONTENT_W - 8
 );
 let ny = y + 11;
