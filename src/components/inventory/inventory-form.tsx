@@ -20,7 +20,6 @@ import {
   PRODUCT_COLORS,
   colorForBrand,
   productColorMeta,
-  resolveProductColor,
 } from "@/lib/inventory/colors";
 import { cn } from "@/lib/utils";
 
@@ -178,7 +177,7 @@ export function InventoryForm({
         ...form,
         brand: normalizeBrand(form.brand),
         manufacturer: normalizeBrand(form.manufacturer) || normalizeBrand(form.brand),
-        colorTag: resolveProductColor(form.colorTag, form.brand),
+        colorTag: form.colorTag || "",
         itemKind: kind,
         category,
         quantity: kind === "equipo" && !item ? 0 : form.quantity,
@@ -472,7 +471,6 @@ export function InventoryForm({
                     onClick={() =>
                       setForm((current) => {
                         const keepCustom =
-                          Boolean(current.colorTag) &&
                           current.colorTag !== colorForBrand(current.brand);
                         return {
                           ...current,
@@ -519,13 +517,27 @@ export function InventoryForm({
           <div className="space-y-1.5 md:col-span-2">
             <span className="text-sm font-medium">Color para separar</span>
             <div className="flex flex-wrap gap-1.5" aria-label="Color del producto">
+              <button
+                type="button"
+                onClick={() => handleChange("colorTag", "")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                  !form.colorTag
+                    ? "border-transparent bg-muted text-foreground ring-2 ring-offset-1 ring-ring"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Sin color
+              </button>
               {PRODUCT_COLORS.map((color) => {
-                const active = resolveProductColor(form.colorTag, form.brand) === color.id;
+                const active = form.colorTag === color.id;
                 return (
                   <button
                     key={color.id}
                     type="button"
-                    onClick={() => handleChange("colorTag", color.id)}
+                    onClick={() =>
+                      handleChange("colorTag", active ? "" : color.id)
+                    }
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
                       active
@@ -539,6 +551,11 @@ export function InventoryForm({
                 );
               })}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Elige un color para separar el producto en la lista. Pulsa el color
+              activo o <span className="font-medium text-foreground">Sin color</span>{" "}
+              para quitarlo; no se vuelve a aplicar el de la marca.
+            </p>
           </div>
         </div>
         <label className="space-y-1.5">

@@ -113,11 +113,9 @@ export function colorForBrand(brand: string | null | undefined): ProductColorId 
 
 export function resolveProductColor(
   colorTag: string | null | undefined,
-  brand?: string | null
+  _brand?: string | null
 ) {
-  const stored = normalizeProductColor(colorTag);
-  if (stored) return stored;
-  return colorForBrand(brand);
+  return normalizeProductColor(colorTag);
 }
 
 export function productColorMeta(id: string | null | undefined) {

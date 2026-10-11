@@ -15,6 +15,7 @@ import {
   SUPPLY_CATEGORY_IDS,
 } from "./types";
 import { removeStoredImage } from "./unit-media";
+import { normalizeProductColor } from "./colors";
 
 type InventoryRow = Database["public"]["Tables"]["inventory_items"]["Row"];
 type InventoryInsert =
@@ -307,6 +308,25 @@ export async function updateInventoryItem(
 
   if (error) {
     console.error("Error updating inventory item:", error.message);
+    throw new Error(error.message);
+  }
+
+  return mapRowToItem(data);
+}
+
+export async function setInventoryItemColor(
+  id: string,
+  colorTag: string | null | undefined
+): Promise<InventoryItem> {
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .update({ color_tag: normalizeProductColor(colorTag) })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error updating inventory item color:", error.message);
     throw new Error(error.message);
   }
 

@@ -12,6 +12,7 @@ import {
   Star,
   Trash2,
   Warehouse as WarehouseIcon,
+  X,
   ZoomIn,
 } from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
@@ -31,6 +32,7 @@ import {
   getStockStatus,
   getSupplyItemsByCategory,
   removeInventoryItemImage,
+  setInventoryItemColor,
   setInventoryItemPrimaryImage,
   updateInventoryItem,
   uploadInventoryItemImage,
@@ -252,7 +254,7 @@ export function InventoryPanel({
         ...data,
         itemKind,
         category,
-        colorTag: resolveProductColor(data.colorTag, data.brand),
+        colorTag: data.colorTag || "",
         expiryDate: itemKind === "equipo" ? "" : data.expiryDate,
         manufacturedAt: data.manufacturedAt,
       };
@@ -406,6 +408,62 @@ export function InventoryPanel({
   function openRelocate(item: InventoryItem) {
     setNotice("");
     setRelocatingItem(item);
+  }
+
+  async function handleClearColor(item: InventoryItem) {
+    if (!itemCan(item, "edit")) return;
+    try {
+      setError("");
+      const saved = await setInventoryItemColor(item.id, "");
+      setItems((current) =>
+        current.map((row) => (row.id === saved.id ? { ...row, colorTag: "" } : row))
+      );
+      setViewingItem((current) =>
+        current?.id === saved.id ? { ...current, colorTag: "" } : current
+      );
+      setEditingItem((current) =>
+        current?.id === saved.id ? { ...current, colorTag: "" } : current
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo quitar el color del producto."
+      );
+    }
+  }
+
+  function renderColorTag(item: InventoryItem) {
+    const colorId = resolveProductColor(item.colorTag);
+    const color = productColorMeta(colorId);
+    if (!color) {
+      return <span className="text-xs text-muted-foreground">Sin color</span>;
+    }
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+          color.chip
+        )}
+      >
+        <span className={cn("size-2.5 rounded-full", color.swatch)} />
+        {color.label}
+        {itemCan(item, "edit") ? (
+          <button
+            type="button"
+            title="Quitar color"
+            aria-label={`Quitar color de ${item.name}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              void handleClearColor(item);
+            }}
+            className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full text-current/70 hover:bg-black/10 hover:text-current dark:hover:bg-white/15"
+          >
+            <X className="size-3" />
+          </button>
+        ) : null}
+      </span>
+    );
   }
 
   function defaultWarehouseFor(item: InventoryItem) {
@@ -767,6 +825,20 @@ export function InventoryPanel({
               >
                 Todos
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={colorFilter === "sin_color"}
+                onClick={() => setColorFilter("sin_color")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium",
+                  colorFilter === "sin_color"
+                    ? "bg-muted text-foreground ring-1 ring-foreground/20"
+                    : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                Sin color
+              </button>
               {PRODUCT_COLORS.map((color) => {
                 const active = colorFilter === color.id;
                 return (
@@ -875,9 +947,7 @@ export function InventoryPanel({
                 fields: [
                   {
                     label: "Color",
-                    value: productColorLabel(
-                      resolveProductColor(item.colorTag, item.brand)
-                    ),
+                    value: renderColorTag(item),
                   },
                   {
                     label: "Marca",
@@ -1031,21 +1101,7 @@ export function InventoryPanel({
                         <td className="px-4 py-3 font-mono text-xs">
                           {item.sku}
                         </td>
-                        <td className="px-4 py-3">
-                          {color ? (
-                            <span
-                              className={cn(
-                                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-                                color.chip
-                              )}
-                            >
-                              <span className={cn("size-2.5 rounded-full", color.swatch)} />
-                              {color.label}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Sin color</span>
-                          )}
-                        </td>
+                        <td className="px-4 py-3">{renderColorTag(item)}</td>
                         <td className="px-4 py-3">
                           <p className="font-medium text-foreground">
                             {item.name}
@@ -1397,12 +1453,7 @@ export function InventoryPanel({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  [
-                    "Color",
-                    productColorLabel(
-                      resolveProductColor(viewingItem.colorTag, viewingItem.brand)
-                    ),
-                  ],
+                  ["Color", renderColorTag(viewingItem)],
                   ["Marca", viewingItem.brand || "—"],
                   ["N.º de parte", viewingItem.partNumber || "—"],
                   ["Categoría", getCategoryLabel(viewingItem.category)],
@@ -1453,9 +1504,9 @@ export function InventoryPanel({
                       ]),
                   ["Próx. mant.", viewingItem.nextMaintenanceDate || "—"],
                 ].map(([label, value]) => (
-                  <div key={label}>
+                  <div key={String(label)}>
                     <p className="text-xs text-muted-foreground">{label}</p>
-                    <p className="text-sm font-medium">{value}</p>
+                    <div className="text-sm font-medium">{value}</div>
                   </div>
                 ))}
               </div>
