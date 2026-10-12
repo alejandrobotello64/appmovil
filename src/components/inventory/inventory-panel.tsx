@@ -262,6 +262,7 @@ export function InventoryPanel({
   ) {
     try {
       setError("");
+      setNotice("");
       const category = isEquipment
         ? "equipos"
         : isCatalog
@@ -293,9 +294,25 @@ export function InventoryPanel({
       }
 
       if (imageFile) {
-        await uploadInventoryItemImage(savedId, imageFile);
+        try {
+          await uploadInventoryItemImage(savedId, imageFile);
+        } catch (photoError) {
+          setNotice(
+            photoError instanceof Error
+              ? `El producto se guardó, pero la foto no se subió: ${photoError.message}`
+              : "El producto se guardó, pero la foto no se subió."
+          );
+        }
       } else if (imageFile === null && editingItem?.imageUrl) {
-        await clearInventoryItemImage(savedId);
+        try {
+          await clearInventoryItemImage(savedId);
+        } catch (photoError) {
+          setNotice(
+            photoError instanceof Error
+              ? `El producto se guardó, pero no se pudo quitar la foto: ${photoError.message}`
+              : "El producto se guardó, pero no se pudo quitar la foto."
+          );
+        }
       }
 
       await refreshItems();

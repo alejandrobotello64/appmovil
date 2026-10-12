@@ -46,10 +46,31 @@ function parseGallery(value: unknown): InventoryGalleryImage[] {
     .filter((image) => image.path && image.url);
 }
 
+const COLOR_NOTE_RE = /\n?<!--mas-color:([a-z]*)-->\s*$/;
+
+function splitColorNote(notes: string) {
+  const match = notes.match(COLOR_NOTE_RE);
+  return {
+    notes: notes.replace(COLOR_NOTE_RE, ""),
+    color: normalizeProductColor(match?.[1]),
+  };
+}
+
+function withColorNote(notes: string, color: string) {
+  const cleaned = splitColorNote(notes).notes;
+  const tag = normalizeProductColor(color);
+  if (!tag) return cleaned;
+  return `${cleaned}\n<!--mas-color:${tag}-->`;
+}
+
 function mapRowToItem(row: InventoryRow): InventoryItem {
   const category = row.category as InventoryCategoryId;
   const inferredKind: ItemKind =
     row.item_kind === "equipo" || category === "equipos" ? "equipo" : "producto";
+  const parsedNotes = splitColorNote(row.notes ?? "");
+  const colorTag =
+    normalizeProductColor((row as { color_tag?: string }).color_tag) ||
+    parsedNotes.color;
 
   return {
     id: row.id,
@@ -63,14 +84,14 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     unit: row.unit as InventoryUnit,
     location: row.location ?? "",
     brand: row.brand ?? "",
-    colorTag: String((row as { color_tag?: string }).color_tag ?? ""),
+    colorTag,
     model: row.model ?? "",
     serialNumber: row.serial_number ?? "",
     unitPrice: Number(row.unit_price ?? 0),
     supplier: row.supplier ?? "",
     expiryDate: row.expiry_date ?? "",
     manufacturedAt: row.manufactured_at ?? "",
-    notes: row.notes ?? "",
+    notes: parsedNotes.notes,
     assetStatus: (row.asset_status as AssetStatus) || "operativo",
     lastMaintenanceDate: row.last_maintenance_date ?? "",
     nextMaintenanceDate: row.next_maintenance_date ?? "",
@@ -157,23 +178,34 @@ function isMissingColorTagError(error: {
 
 let colorColumnReady: boolean | null = null;
 
-function withoutColorTag<T extends Record<string, unknown>>(payload: T): T {
-  if (!("color_tag" in payload)) return payload;
-  const next = { ...payload };
-  delete next.color_tag;
-  return next;
+async function ensureColorColumn() {
+  if (colorColumnReady !== null) return colorColumnReady;
+  const { error } = await supabase
+    .from("inventory_items")
+    .select("id, color_tag")
+    .limit(1);
+  colorColumnReady = !isMissingColorTagError(error);
+  return colorColumnReady;
 }
 
-function payloadForWrite(payload: InventoryInsert): InventoryInsert {
-  if (colorColumnReady === false) {
-    return withoutColorTag(payload as Record<string, unknown>) as InventoryInsert;
-  }
-  return payload;
+function payloadForWrite(
+  payload: InventoryInsert,
+  colorTag: string | null | undefined
+): InventoryInsert {
+  const useMarker = colorColumnReady === false;
+  const next: InventoryInsert = {
+    ...payload,
+    notes: useMarker
+      ? withColorNote(String(payload.notes ?? ""), colorTag ?? "")
+      : splitColorNote(String(payload.notes ?? "")).notes,
+  };
+  if (useMarker) delete (next as { color_tag?: string }).color_tag;
+  return next;
 }
 
 function inventoryWriteMessage(error: { message?: string }) {
   if (isMissingColorTagError(error)) {
-    return "El producto no se pudo guardar con color: falta la columna color_tag en Supabase.";
+    return "No se pudo guardar el producto en Supabase.";
   }
   return error.message || "No se pudo guardar el producto en Supabase.";
 }
@@ -296,7 +328,9 @@ export async function createInventoryItem(
       : input.category;
   const sku = input.sku.trim() || (await nextInventorySku(category));
 
-  const payload = payloadForWrite(mapInputToRow({ ...input, sku, category }));
+  await ensureColorColumn();
+  const mapped = mapInputToRow({ ...input, sku, category });
+  let payload = payloadForWrite(mapped, input.colorTag);
   let { data, error } = await supabase
     .from("inventory_items")
     .insert(payload)
@@ -305,9 +339,10 @@ export async function createInventoryItem(
 
   if (error && isMissingColorTagError(error)) {
     colorColumnReady = false;
+    payload = payloadForWrite(mapped, input.colorTag);
     const retry = await supabase
       .from("inventory_items")
-      .insert(withoutColorTag(payload as Record<string, unknown>) as InventoryInsert)
+      .insert(payload)
       .select("*")
       .single();
     data = retry.data;
@@ -323,23 +358,28 @@ export async function createInventoryItem(
 
   const created = mapRowToItem(data);
   if (input.quantity > 0) {
-    const { applyStockMovement } = await import("@/lib/warehouse/stock");
-    const result = await applyStockMovement({
-      productId: created.id,
-      movementType: "entrada",
-      quantity: input.quantity,
-      createdBy,
-      note: "Existencia inicial de alta de producto",
-      lotNumber: input.tracksLot ? input.serialNumber || "INICIAL" : null,
-      expiryDate: input.expiryDate || null,
-      manufacturedAt: input.manufacturedAt || null,
-      serialNumber:
-        input.itemKind === "equipo"
-          ? input.serialNumber?.trim() || null
-          : null,
-      supplierName: input.supplier,
-    });
-    return { ...created, quantity: result.newQuantity };
+    try {
+      const { applyStockMovement } = await import("@/lib/warehouse/stock");
+      const result = await applyStockMovement({
+        productId: created.id,
+        movementType: "entrada",
+        quantity: input.quantity,
+        createdBy,
+        note: "Existencia inicial de alta de producto",
+        lotNumber: input.tracksLot ? input.serialNumber || "INICIAL" : null,
+        expiryDate: input.expiryDate || null,
+        manufacturedAt: input.manufacturedAt || null,
+        serialNumber:
+          input.itemKind === "equipo"
+            ? input.serialNumber?.trim() || null
+            : null,
+        supplierName: input.supplier,
+      });
+      return { ...created, quantity: result.newQuantity };
+    } catch (stockError) {
+      console.error("Error creating opening stock:", stockError);
+      return created;
+    }
   }
 
   return created;
@@ -349,7 +389,9 @@ export async function updateInventoryItem(
   id: string,
   input: InventoryItemInput
 ): Promise<InventoryItem> {
-  const payload = payloadForWrite(mapInputToRow(input));
+  await ensureColorColumn();
+  const mapped = mapInputToRow(input);
+  let payload = payloadForWrite(mapped, input.colorTag);
   delete payload.quantity;
   if (input.imagePath === undefined) delete payload.image_path;
   if (input.imageUrl === undefined) delete payload.image_url;
@@ -363,9 +405,13 @@ export async function updateInventoryItem(
 
   if (error && isMissingColorTagError(error)) {
     colorColumnReady = false;
+    payload = payloadForWrite(mapped, input.colorTag);
+    delete payload.quantity;
+    if (input.imagePath === undefined) delete payload.image_path;
+    if (input.imageUrl === undefined) delete payload.image_url;
     const retry = await supabase
       .from("inventory_items")
-      .update(withoutColorTag(payload as Record<string, unknown>) as InventoryInsert)
+      .update(payload)
       .eq("id", id)
       .select("*")
       .single();
@@ -387,20 +433,37 @@ export async function setInventoryItemColor(
   id: string,
   colorTag: string | null | undefined
 ): Promise<InventoryItem> {
+  const color = normalizeProductColor(colorTag);
+  await ensureColorColumn();
+
+  if (colorColumnReady === false) {
+    const current = await fetchInventoryItem(id);
+    const { data, error } = await supabase
+      .from("inventory_items")
+      .update({ notes: withColorNote(current.notes, color) })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error || !data) {
+      throw new Error(error?.message || "No se pudo actualizar el color.");
+    }
+    return mapRowToItem(data);
+  }
+
   const { data, error } = await supabase
     .from("inventory_items")
-    .update({ color_tag: normalizeProductColor(colorTag) })
+    .update({ color_tag: color })
     .eq("id", id)
     .select("*")
     .single();
 
+  if (error && isMissingColorTagError(error)) {
+    colorColumnReady = false;
+    return setInventoryItemColor(id, color);
+  }
+
   if (error || !data) {
     console.error("Error updating inventory item color:", error?.message);
-    if (isMissingColorTagError(error ?? {})) {
-      throw new Error(
-        "El color no se puede guardar todavía: falta la columna color_tag en la base de Supabase."
-      );
-    }
     throw new Error(error?.message || "No se pudo actualizar el color.");
   }
 
