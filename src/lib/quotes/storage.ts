@@ -15,20 +15,106 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
+type QuoteProductRef = {
+  sku?: string;
+  name?: string;
+  brand?: string;
+  part_number?: string;
+};
+
+const BRAND_NOTE_RE = /\n?<!--mas-qbrand:([^>]*)-->/;
+const REF_NOTE_RE = /\n?<!--mas-qref:([^>]*)-->/;
+
+function decodeMeta(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function encodeMeta(value: string) {
+  return encodeURIComponent(value.trim());
+}
+
+function splitQuoteLineMeta(notes: string) {
+  const brandMatch = notes.match(BRAND_NOTE_RE);
+  const refMatch = notes.match(REF_NOTE_RE);
+  return {
+    notes: notes
+      .replace(new RegExp(BRAND_NOTE_RE, "g"), "")
+      .replace(new RegExp(REF_NOTE_RE, "g"), "")
+      .trimEnd(),
+    brand: brandMatch ? decodeMeta(brandMatch[1]) : "",
+    partNumber: refMatch ? decodeMeta(refMatch[1]) : "",
+  };
+}
+
+function withQuoteLineMeta(notes: string, brand: string, partNumber: string) {
+  const cleaned = splitQuoteLineMeta(notes).notes;
+  const tags: string[] = [];
+  if (brand.trim()) tags.push(`<!--mas-qbrand:${encodeMeta(brand)}-->`);
+  if (partNumber.trim()) tags.push(`<!--mas-qref:${encodeMeta(partNumber)}-->`);
+  if (!tags.length) return cleaned;
+  return cleaned ? `${cleaned}\n${tags.join("\n")}` : tags.join("\n");
+}
+
+function isMissingQuoteLineMetaError(error: {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+} | null) {
+  if (!error) return false;
+  const text =
+    `${error.code ?? ""} ${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+  const mentionsColumn =
+    text.includes("part_number") ||
+    (text.includes("brand") &&
+      (text.includes("quote_lines") ||
+        text.includes("schema cache") ||
+        text.includes("pgrst204")));
+  return (
+    mentionsColumn &&
+    (text.includes("does not exist") ||
+      text.includes("could not find") ||
+      text.includes("schema cache") ||
+      text.includes("42703") ||
+      text.includes("pgrst204"))
+  );
+}
+
+let quoteLineMetaColumnsReady: boolean | null = null;
+
+async function ensureQuoteLineMetaColumns() {
+  if (quoteLineMetaColumnsReady !== null) return quoteLineMetaColumnsReady;
+  const { error } = await db
+    .from("quote_lines")
+    .select("id, brand, part_number")
+    .limit(1);
+  quoteLineMetaColumnsReady = !isMissingQuoteLineMetaError(error);
+  return quoteLineMetaColumnsReady;
+}
+
 function dateOrEmpty(value: unknown) {
   return value ? String(value).slice(0, 10) : "";
 }
 
 function mapLine(
   row: Record<string, unknown>,
-  product?: { sku?: string; name?: string }
+  product?: QuoteProductRef
 ): QuoteLine {
+  const parsed = splitQuoteLineMeta(String(row.notes ?? ""));
   return {
     id: String(row.id),
     quoteId: String(row.quote_id),
     productId: row.product_id ? String(row.product_id) : null,
     productSku: String(product?.sku ?? ""),
     productName: String(product?.name ?? ""),
+    brand: String(row.brand || parsed.brand || product?.brand || ""),
+    partNumber: String(
+      row.part_number || parsed.partNumber || product?.part_number || ""
+    ),
     description: String(row.description ?? ""),
     quantity: Number(row.quantity ?? 0),
     unit: String(row.unit ?? "pza"),
@@ -36,7 +122,7 @@ function mapLine(
     discountPercent: Number(row.discount_percent ?? 0),
     discountAmount: Number(row.discount_amount ?? 0),
     sortOrder: Number(row.sort_order ?? 0),
-    notes: String(row.notes ?? ""),
+    notes: parsed.notes,
   };
 }
 
@@ -122,7 +208,10 @@ async function addEvent(
 }
 
 function linePayload(quoteId: string, line: QuoteLineInput, index: number) {
-  return {
+  const brand = (line.brand ?? "").trim();
+  const partNumber = (line.partNumber ?? "").trim();
+  const notes = (line.notes ?? "").trim();
+  const payload: Record<string, unknown> = {
     quote_id: quoteId,
     product_id: line.productId || null,
     description: line.description.trim(),
@@ -133,8 +222,18 @@ function linePayload(quoteId: string, line: QuoteLineInput, index: number) {
     discount_amount:
       clampPercent(line.discountPercent) > 0 ? 0 : lineDiscountAmount(line),
     sort_order: index,
-    notes: (line.notes ?? "").trim(),
+    notes:
+      quoteLineMetaColumnsReady === false
+        ? withQuoteLineMeta(notes, brand, partNumber)
+        : splitQuoteLineMeta(notes).notes,
+    brand,
+    part_number: partNumber,
   };
+  if (quoteLineMetaColumnsReady === false) {
+    delete payload.brand;
+    delete payload.part_number;
+  }
+  return payload;
 }
 
 function payloadFromInput(input: QuoteInput, lines: QuoteLineInput[]) {
@@ -220,7 +319,7 @@ async function hydrateQuotes(quoteRows: Record<string, unknown>[]): Promise<Quot
   const [linesRes, eventsRes] = await Promise.all([
     db
       .from("quote_lines")
-      .select("*, product:inventory_items(sku, name)")
+      .select("*, product:inventory_items(sku, name, brand, part_number)")
       .in("quote_id", ids)
       .order("sort_order", { ascending: true }),
     db
@@ -237,7 +336,12 @@ async function hydrateQuotes(quoteRows: Record<string, unknown>[]): Promise<Quot
     const quoteId = String(row.quote_id);
     const list = linesBy.get(quoteId) ?? [];
     list.push(
-      mapLine(row, { sku: row.product?.sku, name: row.product?.name })
+      mapLine(row, {
+        sku: row.product?.sku,
+        name: row.product?.name,
+        brand: row.product?.brand,
+        part_number: row.product?.part_number,
+      })
     );
     linesBy.set(quoteId, list);
   }
@@ -264,6 +368,21 @@ export async function getQuote(id: string): Promise<Quote | null> {
   return rows.find((item) => item.id === id) ?? null;
 }
 
+async function insertQuoteLines(quoteId: string, lines: QuoteLineInput[]) {
+  await ensureQuoteLineMetaColumns();
+  const attempt = () =>
+    db
+      .from("quote_lines")
+      .insert(lines.map((line, index) => linePayload(quoteId, line, index)));
+
+  let { error } = await attempt();
+  if (error && isMissingQuoteLineMetaError(error) && quoteLineMetaColumnsReady !== false) {
+    quoteLineMetaColumnsReady = false;
+    ({ error } = await attempt());
+  }
+  if (error) throw new Error(error.message);
+}
+
 export async function createQuote(input: QuoteInput): Promise<Quote> {
   const lines = (input.lines ?? []).filter(
     (line) => line.description.trim() && line.quantity > 0
@@ -288,12 +407,11 @@ export async function createQuote(input: QuoteInput): Promise<Quote> {
     .single();
   if (error) throw new Error(error.message);
 
-  const { error: linesError } = await db
-    .from("quote_lines")
-    .insert(lines.map((line, index) => linePayload(data.id, line, index)));
-  if (linesError) {
+  try {
+    await insertQuoteLines(data.id, lines);
+  } catch (err) {
     await db.from("quotes").delete().eq("id", data.id);
-    throw new Error(linesError.message);
+    throw err;
   }
 
   await addEvent(data.id, `Cotización ${folio} creada`, createdBy, "creacion");
@@ -329,10 +447,7 @@ export async function updateQuote(
     .eq("quote_id", id);
   if (delError) throw new Error(delError.message);
 
-  const { error: linesError } = await db
-    .from("quote_lines")
-    .insert(lines.map((line, index) => linePayload(id, line, index)));
-  if (linesError) throw new Error(linesError.message);
+  await insertQuoteLines(id, lines);
 
   if (input.status && input.status !== current.status) {
     await addEvent(

@@ -25,6 +25,8 @@ export type QuoteLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  brand: string;
+  partNumber: string;
   description: string;
   quantity: number;
   unit: string;
@@ -81,6 +83,8 @@ export type Quote = {
 export type QuoteLineInput = {
   productId?: string | null;
   description: string;
+  brand?: string;
+  partNumber?: string;
   quantity: number;
   unit?: string;
   unitPrice: number;
@@ -88,6 +92,22 @@ export type QuoteLineInput = {
   discountAmount?: number;
   notes?: string;
 };
+
+/** Marca, n.º de parte y SKU para el alta, el detalle y el PDF. */
+export function quoteLineIdentity(line: {
+  brand?: string;
+  partNumber?: string;
+  productSku?: string;
+}) {
+  const parts: string[] = [];
+  const brand = (line.brand ?? "").trim();
+  const partNumber = (line.partNumber ?? "").trim();
+  const sku = (line.productSku ?? "").trim();
+  if (brand) parts.push(`Marca ${brand}`);
+  if (partNumber) parts.push(`Ref. ${partNumber}`);
+  if (sku) parts.push(sku);
+  return parts.join(" · ");
+}
 
 export type QuoteInput = {
   title?: string;

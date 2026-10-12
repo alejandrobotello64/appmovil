@@ -10,6 +10,7 @@ import {
   lineDiscountLabel,
   lineGrossAmount,
   lineHasDiscount,
+  quoteLineIdentity,
   type Quote,
 } from "./types";
 
@@ -115,10 +116,9 @@ export async function downloadQuotePdf(quote: Quote) {
       doc.addPage();
       y = 20;
     }
-    const label = line.productSku
-      ? `${line.description} (${line.productSku})`
-      : line.description;
-    const descLines = doc.splitTextToSize(label, colX.qty - colX.desc - 4);
+    const descWidth = colX.qty - colX.desc - 4;
+    const identity = quoteLineIdentity(line);
+    const descLines = doc.splitTextToSize(line.description || "—", descWidth);
     doc.text(String(index + 1), colX.n, y);
     doc.text(descLines, colX.desc, y);
     doc.text(
@@ -132,7 +132,17 @@ export async function downloadQuotePdf(quote: Quote) {
       doc.text(lineDiscountLabel(line, money), colX.disc, y, { align: "right" });
     }
     doc.text(money(lineAmount(line)), colX.amount, y, { align: "right" });
-    y += Math.max(descLines.length * 4, 6) + 1;
+    let lineHeight = Math.max(descLines.length * 4, 6);
+    if (identity) {
+      doc.setFontSize(7);
+      doc.setTextColor(90, 90, 90);
+      const metaLines = doc.splitTextToSize(identity, descWidth);
+      doc.text(metaLines, colX.desc, y + descLines.length * 4);
+      lineHeight = descLines.length * 4 + metaLines.length * 3.5 + 1;
+      doc.setFontSize(8);
+      doc.setTextColor(40, 40, 40);
+    }
+    y += lineHeight + 1;
   });
 
   y += 4;

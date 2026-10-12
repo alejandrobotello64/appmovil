@@ -44,6 +44,7 @@ import {
   lineDiscountLabel,
   lineGrossAmount,
   lineHasDiscount,
+  quoteLineIdentity,
   quoteStatusLabel,
   type Quote,
   type QuoteInput,
@@ -76,6 +77,29 @@ function dueTone(date: string) {
   if (days <= 3) return "text-rose-700 dark:text-rose-300";
   if (days <= 7) return "text-amber-700 dark:text-amber-300";
   return "text-emerald-700 dark:text-emerald-300";
+}
+
+function emptyDraftLine(): DraftLine {
+  return {
+    key: crypto.randomUUID(),
+    description: "",
+    quantity: 1,
+    unitPrice: 0,
+    unit: "pza",
+    categoryFilter: "all",
+    productId: null,
+    brand: "",
+    partNumber: "",
+  };
+}
+
+function productOptionLabel(item: InventoryItem) {
+  const extra = [item.brand, item.partNumber ? `Ref. ${item.partNumber}` : ""]
+    .filter(Boolean)
+    .join(" · ");
+  return extra
+    ? `${item.sku} — ${item.name} · ${extra}`
+    : `${item.sku} — ${item.name}`;
 }
 
 const EMPTY: QuoteInput = {
@@ -187,6 +211,12 @@ export function QuotesPanel() {
           item.clientName,
           item.contactName,
           item.salesperson,
+          ...item.lines.flatMap((line) => [
+            line.description,
+            line.brand,
+            line.partNumber,
+            line.productSku,
+          ]),
         ]
           .join(" ")
           .toLowerCase()
@@ -261,17 +291,7 @@ export function QuotesPanel() {
       quoteDate: new Date().toISOString().slice(0, 10),
     });
     setDiscountMode("amount");
-    setLines([
-      {
-        key: crypto.randomUUID(),
-        description: "",
-        quantity: 1,
-        unitPrice: 0,
-        unit: "pza",
-        categoryFilter: "all",
-        productId: null,
-      },
-    ]);
+    setLines([emptyDraftLine()]);
     setFormOpen(true);
   }
 
@@ -304,6 +324,8 @@ export function QuotesPanel() {
             key: line.id,
             productId: line.productId,
             description: line.description,
+            brand: line.brand,
+            partNumber: line.partNumber,
             quantity: line.quantity,
             unit: line.unit,
             unitPrice: line.unitPrice,
@@ -316,17 +338,7 @@ export function QuotesPanel() {
             notes: line.notes,
             categoryFilter: "all" as const,
           }))
-        : [
-            {
-              key: crypto.randomUUID(),
-              description: "",
-              quantity: 1,
-              unitPrice: 0,
-              unit: "pza",
-              categoryFilter: "all" as const,
-              productId: null,
-            },
-          ]
+        : [emptyDraftLine()]
     );
     setFormOpen(true);
     setSelectedId(quote.id);
@@ -760,18 +772,7 @@ export function QuotesPanel() {
                 variant="outline"
                 className="h-8"
                 onClick={() =>
-                  setLines((current) => [
-                    ...current,
-                    {
-                      key: crypto.randomUUID(),
-                      description: "",
-                      quantity: 1,
-                      unitPrice: 0,
-                      unit: "pza",
-                      categoryFilter: "all",
-                      productId: null,
-                    },
-                  ])
+                  setLines((current) => [...current, emptyDraftLine()])
                 }
               >
                 <Plus className="size-3.5" />
@@ -836,6 +837,10 @@ export function QuotesPanel() {
                                   row.description || product?.name || "",
                                 unit: product?.unit || row.unit,
                                 unitPrice: product?.unitPrice ?? row.unitPrice,
+                                brand: product ? product.brand : row.brand ?? "",
+                                partNumber: product
+                                  ? product.partNumber
+                                  : row.partNumber ?? "",
                               }
                             : row
                         )
@@ -846,7 +851,7 @@ export function QuotesPanel() {
                     <option value="">Libre</option>
                     {itemsForLine(line).map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.sku} — {item.name}
+                        {productOptionLabel(item)}
                       </option>
                     ))}
                   </select>
@@ -867,6 +872,40 @@ export function QuotesPanel() {
                         )
                       )
                     }
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="space-y-1 lg:col-span-3">
+                  <span className="text-xs text-muted-foreground">Marca</span>
+                  <input
+                    value={line.brand ?? ""}
+                    onChange={(e) =>
+                      setLines((current) =>
+                        current.map((row, i) =>
+                          i === index ? { ...row, brand: e.target.value } : row
+                        )
+                      )
+                    }
+                    placeholder="Marca del producto"
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="space-y-1 lg:col-span-3">
+                  <span className="text-xs text-muted-foreground">
+                    Referencia / n.º de parte
+                  </span>
+                  <input
+                    value={line.partNumber ?? ""}
+                    onChange={(e) =>
+                      setLines((current) =>
+                        current.map((row, i) =>
+                          i === index
+                            ? { ...row, partNumber: e.target.value }
+                            : row
+                        )
+                      )
+                    }
+                    placeholder="Referencia o n.º de parte"
                     className={fieldClass}
                   />
                 </label>
@@ -1211,7 +1250,9 @@ export function QuotesPanel() {
               </div>
 
               <ul className="space-y-2">
-                {selected.lines.map((line) => (
+                {selected.lines.map((line) => {
+                  const identity = quoteLineIdentity(line);
+                  return (
                   <li
                     key={line.id}
                     className="rounded-xl border border-border px-3 py-2 text-sm"
@@ -1219,18 +1260,23 @@ export function QuotesPanel() {
                     <div className="flex justify-between gap-2">
                       <div>
                         <p className="font-medium">{line.description}</p>
+                        {identity ? (
+                          <p className="text-xs text-muted-foreground">
+                            {identity}
+                          </p>
+                        ) : null}
                         <p className="text-xs text-muted-foreground">
                           {line.quantity} {line.unit} × {money(line.unitPrice)}
                           {lineHasDiscount(line)
                             ? ` · desc. ${lineDiscountLabel(line, money)}`
                             : ""}
-                          {line.productSku ? ` · ${line.productSku}` : ""}
                         </p>
                       </div>
                       <p className="font-medium">{money(lineAmount(line))}</p>
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
 
               <QuoteFulfillmentSection

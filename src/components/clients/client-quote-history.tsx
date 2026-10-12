@@ -15,6 +15,7 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import { getClientQuotes } from "@/lib/quotes/storage";
 import {
   lineAmount,
+  quoteLineIdentity,
   quoteStatusLabel,
   type Quote,
   type QuoteStatus,
@@ -364,9 +365,9 @@ export function ClientQuoteHistory({
                                   <tr key={line.id}>
                                     <td className="px-3 py-2">
                                       <p>{line.description || line.productName}</p>
-                                      {line.productSku ? (
+                                      {quoteLineIdentity(line) ? (
                                         <p className="text-muted-foreground">
-                                          {line.productSku}
+                                          {quoteLineIdentity(line)}
                                         </p>
                                       ) : null}
                                     </td>
