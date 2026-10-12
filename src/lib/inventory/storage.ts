@@ -316,9 +316,9 @@ export async function createInventoryItem(
     colorColumnReady = colorColumnReady ?? true;
   }
 
-  if (error) {
-    console.error("Error creating inventory item:", error.message);
-    throw new Error(inventoryWriteMessage(error));
+  if (error || !data) {
+    console.error("Error creating inventory item:", error?.message);
+    throw new Error(inventoryWriteMessage(error ?? {}));
   }
 
   const created = mapRowToItem(data);
@@ -375,9 +375,9 @@ export async function updateInventoryItem(
     colorColumnReady = colorColumnReady ?? true;
   }
 
-  if (error) {
-    console.error("Error updating inventory item:", error.message);
-    throw new Error(inventoryWriteMessage(error));
+  if (error || !data) {
+    console.error("Error updating inventory item:", error?.message);
+    throw new Error(inventoryWriteMessage(error ?? {}));
   }
 
   return mapRowToItem(data);
@@ -394,14 +394,14 @@ export async function setInventoryItemColor(
     .select("*")
     .single();
 
-  if (error) {
-    console.error("Error updating inventory item color:", error.message);
-    if (isMissingColorTagError(error)) {
+  if (error || !data) {
+    console.error("Error updating inventory item color:", error?.message);
+    if (isMissingColorTagError(error ?? {})) {
       throw new Error(
         "El color no se puede guardar todavía: falta la columna color_tag en la base de Supabase."
       );
     }
-    throw new Error(error.message);
+    throw new Error(error?.message || "No se pudo actualizar el color.");
   }
 
   return mapRowToItem(data);
