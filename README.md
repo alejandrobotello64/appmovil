@@ -75,16 +75,20 @@ Si las tablas `purchase_requests` aún no están en la nube, o si existen pero l
 
 Hasta que el esquema esté completo, Compras sigue funcionando (localStorage o el esquema stub de la nube).
 
-Para etiquetas de color y kits, pega `scripts/apply-cloud-cedros-schema.sql` en el mismo SQL Editor. El catálogo Cedros (478 códigos nuevos, sin tocar los que ya existían) se empuja con `npm run db:push-cloud-cedros`. El archivo largo `scripts/apply-cloud-cedros.sql` es el mismo trabajo en un solo pegado (esquema + altas con UUID locales).
+Para etiquetas de color, kits, marca/referencia en cotizaciones y el bucket de fotos, pega `scripts/apply-cloud-online-schema.sql` en el mismo SQL Editor. El catálogo Cedros (478 códigos nuevos, sin tocar los que ya existían) ya está en la nube; `npm run db:push-cloud-cedros` solo sirve para altas REST nuevas.
 
-## Vercel
+## En línea (Vercel + Supabase)
 
-El proyecto de producción es `medicaladvancedsupplies`. Variables ya configuradas:
+App de producción: [https://medicaladvancedsupplies.vercel.app](https://medicaladvancedsupplies.vercel.app)
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+Proyecto Vercel: `medicaladvancedsupplies` (GitHub `alejandrobotello64/appmovil`, rama `main`). Variables:
 
-Para publicar el código actual: `git push origin main` en GitHub (`alejandrobotello64/appmovil`) — Vercel despliega `main` automáticamente. Framework: Next.js, Node 24.x.
+- `NEXT_PUBLIC_SUPABASE_URL=https://iqfareiwiadqsauejaaf.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon public del proyecto)
+
+Un `git push` a `main` en GitHub dispara el deploy. Framework: Next.js, Node 24.x.
+
+La clave `anon` **no puede** crear columnas ni buckets. Si faltan `color_tag`, kits, `quote_lines.brand` / `part_number` o el bucket `inventory-media`, pega `scripts/apply-cloud-online-schema.sql` en el [SQL Editor](https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new) y dale Run. No borra existencias ni códigos.
 
 
 | Script | Qué hace |

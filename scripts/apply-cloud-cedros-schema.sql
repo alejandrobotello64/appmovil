@@ -1,4 +1,6 @@
--- Esquema Cedros para iqfareiwiadqsauejaaf (color_tag + kits + etiqueta roja).
+-- Preferir scripts/apply-cloud-online-schema.sql (más corto: color_tag, kits,
+-- marca/referencia en cotizaciones, bucket de fotos y copia de etiquetas
+-- desde <!--mas-color:...-->). Este archivo largo sigue siendo válido.
 -- Pegar en: https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new
 -- No borra existencias. No cambia nombres/cantidades de códigos que ya existían.
 -- El catálogo nuevo (478 SKU) ya está en la nube; esto solo crea columnas/tablas
