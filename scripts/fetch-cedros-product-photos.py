@@ -233,7 +233,6 @@ def yandex_candidates(query: str, part: str, brand: str, name: str) -> list[str]
     html = raw.decode("utf-8", "replace")
     scored: list[tuple[int, str]] = []
     seen: set[str] = set()
-    short = len(fold(part)) < 6
     for match in re.finditer(
         r"origUrl&quot;:&quot;(https?:[^&]+?)&quot;.{0,400}?title&quot;:&quot;([^&]{0,220})",
         html,
