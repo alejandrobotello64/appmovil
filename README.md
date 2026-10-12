@@ -75,6 +75,8 @@ Si las tablas `purchase_requests` aún no están en la nube, o si existen pero l
 
 Hasta que el esquema esté completo, Compras sigue funcionando (localStorage o el esquema stub de la nube).
 
+Para etiquetas de color y kits, pega `scripts/apply-cloud-cedros-schema.sql` en el mismo SQL Editor. El catálogo Cedros (478 códigos nuevos, sin tocar los que ya existían) se empuja con `npm run db:push-cloud-cedros`. El archivo largo `scripts/apply-cloud-cedros.sql` es el mismo trabajo en un solo pegado (esquema + altas con UUID locales).
+
 ## Vercel
 
 El proyecto de producción es `medicaladvancedsupplies`. Variables ya configuradas:
@@ -90,6 +92,7 @@ Para publicar el código actual: `git push origin main` en GitHub (`alejandrobot
 | `npm run dev` | Next.js en el puerto 43145 |
 | `npm run db:local` | Crea la base `mas`, aplica migraciones, usuarios, catálogo y el snapshot de la nube |
 | `npm run db:sync-cloud` | Copia el snapshot vivo de Supabase (nube) sobre Postgres local |
+| `npm run db:push-cloud-cedros` | Alta REST de códigos Cedros nuevos en la nube (no modifica códigos existentes) |
 | `npm run db:export-catalog` | Vuelca `inventory_items` local a `supabase/seed_catalog.sql` |
 | `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
 | `npm run db:push` | Empuja migraciones al proyecto linkeado |

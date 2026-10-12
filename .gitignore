@@ -44,6 +44,10 @@ next-env.d.ts
 # local supabase CLI
 supabase/.temp/
 
+# python
+scripts/__pycache__/
+*.pyc
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
