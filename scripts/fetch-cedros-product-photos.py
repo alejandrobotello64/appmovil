@@ -51,6 +51,14 @@ FAMILY = re.compile(
     r"\b(TEGADERM|ATTEST|COBAN|DURAPORE|TRANSPORE|LOBAN|BAIR|COMPLY|LNCS|NELLCOR|MICROSTREAM|SIDESTREAM|FAST\s?CUFF|FLEXIPORT|PANOPTIC|MACROVIEW)\b",
     re.I,
 )
+BRAND_ALIASES = {
+    "Dräger": ["draeger", "drager", "dräger"],
+    "Philips": ["philips"],
+    "Masimo": ["masimo"],
+    "3M": ["3m", "solventum"],
+    "Welch Allyn": ["welch", "hillrom", "hill-rom", "tycos"],
+    "ASP": ["asp", "sterrad"],
+}
 
 
 def fold(value: str) -> str:
@@ -238,9 +246,11 @@ def yandex_candidates(query: str, part: str, brand: str, name: str) -> list[str]
         blob = f"{img} {title}"
         if not part_in(blob, part):
             continue
-        brand_hit = bool(fold(brand) and fold(brand) in fold(f"{title} {img}"))
+        hay = fold(f"{title} {img}")
+        aliases = BRAND_ALIASES.get(brand, [brand])
+        brand_hit = any(fold(alias) and fold(alias) in hay for alias in aliases)
         family_hit = bool(FAMILY.search(name) and FAMILY.search(title) and FAMILY.search(title).group(1).upper() in name.upper())
-        if short and not brand_hit and not family_hit:
+        if not brand_hit and not family_hit:
             continue
         score = 10
         if brand_hit:
