@@ -31,6 +31,10 @@ BAD_IMG = re.compile(
     r"(logo|sprite|fallback|placeholder|favicon|1x1|pixel|blank\.|spacer|icon[-_/]|avatar|catalog-fallback|facebook_sharing)",
     re.I,
 )
+BAD_TITLE = re.compile(
+    r"(epox|epoxy|resin|h[aä]rter|spray glue|knife|knives|navaja|srm\b|plumbing|stroy-mart|valve manifold)",
+    re.I,
+)
 VENDOR = {
     "Dräger": ["draeger-inc", "draeger", "drager"],
     "Philips": ["philips-healthcare", "philips"],
@@ -217,62 +221,65 @@ def yandex_candidates(query: str, part: str, brand: str, name: str) -> list[str]
     html = raw.decode("utf-8", "replace")
     scored: list[tuple[int, str]] = []
     seen: set[str] = set()
+    short = len(fold(part)) < 6
     for match in re.finditer(
         r"origUrl&quot;:&quot;(https?:[^&]+?)&quot;.{0,400}?title&quot;:&quot;([^&]{0,220})",
         html,
     ):
         img = unescape(match.group(1)).replace("\\/", "/")
         title = unescape(match.group(2))
-        if img in seen or SKIP_HOST.search(img) or BAD_IMG.search(img):
+        if img in seen or SKIP_HOST.search(img) or BAD_IMG.search(img) or BAD_TITLE.search(f"{img} {title}"):
             continue
         seen.add(img)
-        score = 0
         blob = f"{img} {title}"
-        if part_in(blob, part):
-            score += 10
-        if fold(brand) and fold(brand) in fold(title):
+        if not part_in(blob, part):
+            continue
+        brand_hit = bool(fold(brand) and fold(brand) in fold(f"{title} {img}"))
+        family_hit = bool(FAMILY.search(name) and FAMILY.search(title) and FAMILY.search(title).group(1).upper() in name.upper())
+        if short and not brand_hit and not family_hit:
+            continue
+        score = 10
+        if brand_hit:
             score += 3
-        if FAMILY.search(title) and FAMILY.search(name):
-            fam = FAMILY.search(title).group(1).upper()
-            if fam in name.upper():
-                score += 4
+        if family_hit:
+            score += 4
         tokens = [t for t in re.split(r"\W+", name.upper()) if len(t) >= 5][:4]
         score += sum(1 for t in tokens if t in title.upper())
         if TRUSTED_HOST.search(img):
             score += 3
-        # A different catalog number in the title is a strong negative.
-        extras = re.findall(r"\b\d{4,}\b", title)
-        ours = fold(part)
-        if extras and ours and not any(fold(x) == ours or ours.startswith(fold(x)) or fold(x).startswith(ours) for x in extras):
-            if not part_in(title, part):
-                score -= 6
-        if score >= 4:
-            scored.append((score, img))
+        scored.append((score, img))
     scored.sort(key=lambda item: -item[0])
-    return [img for _, img in scored[:6]]
+    return [img for _, img in scored[:8]]
 
 
-def find_photo(brand: str, part: str, name: str) -> str | None:
+def find_photos(brand: str, part: str, name: str) -> list[str]:
+    found: list[str] = []
     for url in vendor_urls(brand, part):
-        images = images_from_page(url, part)
-        if images:
-            return images[0]
+        for img in images_from_page(url, part):
+            if img not in found:
+                found.append(img)
+        if found:
+            return found[:5]
     brand_q = "Draeger Drager" if brand == "Dräger" else brand
+    fam = FAMILY.search(name).group(0) if FAMILY.search(name) else ""
     queries = [
-        f'"{part}" {brand_q}',
-        f"{part} {brand_q} {FAMILY.search(name).group(0) if FAMILY.search(name) else ' '.join(name.split()[:3])}",
+        f'"{part}" {brand_q} medical',
+        f'"{part}" {brand_q} {fam}'.strip(),
+        f"{part} {brand_q} {fam or ' '.join(name.split()[:3])}",
     ]
-    seen_q = set()
+    seen_q: set[str] = set()
     for query in queries:
         query = " ".join(query.split())
         if query in seen_q:
             continue
         seen_q.add(query)
-        images = yandex_candidates(query, part, brand, name)
-        time.sleep(0.45)
-        if images:
-            return images[0]
-    return None
+        for img in yandex_candidates(query, part, brand, name):
+            if img not in found:
+                found.append(img)
+        time.sleep(0.4)
+        if len(found) >= 4:
+            break
+    return found[:8]
 
 
 def download(image_url: str, dest_stem: Path, known_hashes: dict[str, int]) -> Path | None:
@@ -390,8 +397,14 @@ def main() -> None:
     print(f"pending={len(pending)} already_ok={len(state['ok'])}", flush=True)
     for index, (item_id, sku, brand, part, name) in enumerate(pending, start=1):
         try:
-            url = find_photo(brand, part, name)
-            saved = download(url, OUT_DIR / item_id, known_hashes) if url else None
+            urls = find_photos(brand, part, name)
+            saved = None
+            used = ""
+            for url in urls:
+                saved = download(url, OUT_DIR / item_id, known_hashes)
+                if saved:
+                    used = url
+                    break
             if saved:
                 rel = "/" + str(saved.relative_to(ROOT / "public"))
                 state["ok"][item_id] = rel
@@ -399,9 +412,9 @@ def main() -> None:
                 status = "ok"
                 payload = rel
             else:
-                state.setdefault("miss", {})[item_id] = url or ""
+                state.setdefault("miss", {})[item_id] = urls[0] if urls else ""
                 status = "miss"
-                payload = url or ""
+                payload = urls[0] if urls else ""
         except Exception as exc:
             state.setdefault("error", {})[item_id] = str(exc)
             status = "error"
