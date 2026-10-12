@@ -120,6 +120,27 @@ function itemImages(item: InventoryItem): ItemImage[] {
   return images;
 }
 
+function ProductThumb({
+  item,
+  className,
+}: {
+  item: InventoryItem;
+  className?: string;
+}) {
+  if (!item.imageUrl) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={item.imageUrl}
+      alt=""
+      className={cn(
+        "shrink-0 rounded-lg border border-border bg-muted object-cover",
+        className
+      )}
+    />
+  );
+}
+
 function brandWithPartNumber(item: InventoryItem) {
   return [item.brand, item.partNumber ? `n.º ${item.partNumber}` : "", item.model]
     .filter(Boolean)
@@ -926,7 +947,12 @@ export function InventoryPanel({
               const status = getStockStatus(item.quantity, item.minStock);
               return {
                 key: item.id,
-                title: item.name,
+                title: (
+                  <span className="flex items-center gap-2">
+                    <ProductThumb item={item} className="size-11" />
+                    <span className="min-w-0 truncate">{item.name}</span>
+                  </span>
+                ),
                 subtitle: `${item.sku} · ${brandWithPartNumber(item) || "Sin marca"}`,
                 badge:
                   item.itemKind === "equipo" ? (
@@ -1045,6 +1071,7 @@ export function InventoryPanel({
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">SKU</th>
+                  <th className="px-4 py-3 font-medium">Foto</th>
                   <th className="px-4 py-3 font-medium">Color</th>
                   <th className="px-4 py-3 font-medium">
                     {isCatalog ? "Artículo" : isEquipment ? "Equipo" : "Producto"}
@@ -1075,7 +1102,7 @@ export function InventoryPanel({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isEquipment ? 10 : 11}
+                      colSpan={isEquipment ? 11 : 12}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isCatalog
@@ -1100,6 +1127,13 @@ export function InventoryPanel({
                       >
                         <td className="px-4 py-3 font-mono text-xs">
                           {item.sku}
+                        </td>
+                        <td className="px-4 py-3">
+                          {item.imageUrl ? (
+                            <ProductThumb item={item} className="size-12" />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">{renderColorTag(item)}</td>
                         <td className="px-4 py-3">

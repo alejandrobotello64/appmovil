@@ -308,6 +308,13 @@ select
 from fresh f
 left join seq on seq.prefix = f.sku_prefix;
 
+update public.inventory_items
+set
+  image_path = 'catalog/photo/' || id::text,
+  image_url = '/catalog/photo/' || id::text
+where color_tag = 'rojo'
+  and coalesce(image_url, '') = '';
+
 commit;
 
 notify pgrst, 'reload schema';
