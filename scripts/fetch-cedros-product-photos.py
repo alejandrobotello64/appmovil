@@ -59,26 +59,30 @@ def fold(value: str) -> str:
 
 def part_in(text: str, part: str) -> bool:
     raw = (part or "").strip()
-    if len(fold(raw)) < 4:
-        return False
-    variants = {raw, raw.replace(" ", ""), raw.replace("-", ""), raw.replace(".", "")}
-    for variant in variants:
-        if len(variant) < 4:
-            continue
-        if re.search(r"(?<![A-Za-z0-9])" + re.escape(variant) + r"(?![A-Za-z0-9])", text, re.I):
-            return True
     key = fold(raw)
-    folded = fold(text)
-    idx = 0
-    while True:
-        i = folded.find(key, idx)
-        if i < 0:
-            return False
-        before = folded[i - 1] if i else ""
-        after = folded[i + len(key)] if i + len(key) < len(folded) else ""
-        if (not before.isalnum()) and (not after.isalnum()):
+    if len(key) < 4:
+        return False
+    # Reject longer catalog numbers such as 3586-12 when the SKU is 3586,
+    # unless 3586 also appears as its own token.
+    escaped = re.escape(raw)
+    specific = re.search(rf"(?<![A-Za-z0-9]){escaped}-\d+", text, re.I)
+    standalone = re.search(rf"(?<![A-Za-z0-9]){escaped}(?![A-Za-z0-9-])", text, re.I)
+    if specific and not standalone:
+        return False
+    if standalone:
+        return True
+    for tok in re.findall(r"[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*", text):
+        folded_tok = fold(tok)
+        if folded_tok == key:
             return True
-        idx = i + 1
+        idx = folded_tok.find(key)
+        if idx < 0:
+            continue
+        before = folded_tok[idx - 1] if idx else ""
+        after = folded_tok[idx + len(key) : idx + len(key) + 1]
+        if (not before.isdigit()) and (not after.isdigit()):
+            return True
+    return False
 
 
 def http_get(url: str, timeout: int = 16, max_bytes: int = 2_800_000) -> tuple[str, bytes, str]:
