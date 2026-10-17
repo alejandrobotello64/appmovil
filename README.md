@@ -75,7 +75,7 @@ Si las tablas `purchase_requests` aún no están en la nube, o si existen pero l
 
 Hasta que el esquema esté completo, Compras sigue funcionando (localStorage o el esquema stub de la nube).
 
-Para etiquetas de color, kits, marca/referencia en cotizaciones y el bucket de fotos, pega `scripts/apply-cloud-online-schema.sql` en el mismo SQL Editor. El catálogo Cedros (478 códigos nuevos, sin tocar los que ya existían) ya está en la nube; `npm run db:push-cloud-cedros` solo sirve para altas REST nuevas.
+Para etiquetas de color, kits, marca/referencia en cotizaciones y el bucket de fotos, pega `scripts/apply-cloud-online-schema.sql` en el mismo SQL Editor. El catálogo Cedros (478 códigos nuevos, sin tocar los que ya existían) ya está en la nube; `npm run db:push-cloud-cedros` solo sirve para altas REST nuevas. Las cantidades y lotes del Excel se cargan con `npm run db:cedros-stock` (entrada de almacén; no pisa existencias que ya tenían stock).
 
 ## En línea (Vercel + Supabase)
 
