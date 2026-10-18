@@ -92,15 +92,22 @@ import {
 } from "@/lib/service-orders/requisitions";
 import { downloadRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 import { ApplySupplyKitBar } from "@/components/warehouse/apply-supply-kit";
+import {
+  ServiceCatalogPicker,
+  ServiceLineStockCell,
+} from "@/components/service-orders/service-catalog-picker";
 import { getSupplyKits, type KitServiceLine } from "@/lib/kits/storage";
-import type { SupplyKit } from "@/lib/kits/types";
+import { serviceLineKindForCategory, type SupplyKit } from "@/lib/kits/types";
+import {
+  getInventoryStock,
+  type InventoryStock,
+} from "@/lib/inventory/tracking";
 import {
   CHECKLIST_RESULTS,
   DEFAULT_SERVICE_PRICING,
   FUNCTION_TEST_RESULTS,
   IMAGE_STAGES,
   LINKED_EQUIPMENT_RELATIONS,
-  SERVICE_LINE_KINDS,
   SERVICE_LINE_STATUSES,
   SERVICE_ORDER_STATUSES,
   SERVICE_TYPES,
@@ -250,6 +257,9 @@ export function ServiceOrdersPanel({
   >([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
+  const [stockByProduct, setStockByProduct] = useState<Map<string, InventoryStock> | null>(
+    null
+  );
   const [kits, setKits] = useState<SupplyKit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -337,6 +347,21 @@ export function ServiceOrdersPanel({
   useEffect(() => {
     void reload();
   }, []);
+
+  useEffect(() => {
+    if (detailTab !== "servicios" || stockByProduct) return;
+    let active = true;
+    getInventoryStock()
+      .then((map) => {
+        if (active) setStockByProduct(map);
+      })
+      .catch(() => {
+        if (active) setStockByProduct(new Map());
+      });
+    return () => {
+      active = false;
+    };
+  }, [detailTab, stockByProduct]);
 
   useEffect(() => {
     if (!form.clientId) {
@@ -1064,9 +1089,33 @@ export function ServiceOrdersPanel({
     }));
   }
 
-  function productsForKind(kind: ServiceLineKind) {
-    if (kind === "mano_obra" || kind === "otro") return [];
-    return products.filter((p) => p.category === kind);
+  const productById = useMemo(() => {
+    const map = new Map<string, InventoryItem>();
+    for (const item of products) map.set(item.id, item);
+    return map;
+  }, [products]);
+
+  function addCatalogProduct(item: InventoryItem) {
+    setDraftLines((rows) => {
+      const existing = rows.find((row) => row.productId === item.id);
+      if (existing) {
+        return rows.map((row) =>
+          row.key === existing.key
+            ? { ...row, quantity: Number(row.quantity) + 1 }
+            : row
+        );
+      }
+      return [
+        ...rows,
+        {
+          ...newDraftLine(serviceLineKindForCategory(item.category)),
+          productId: item.id,
+          description: item.name,
+          unit: item.unit || "pza",
+          unitPrice: Number(item.unitPrice) || 0,
+        },
+      ];
+    });
   }
 
   function applyKitLines(lines: KitServiceLine[]) {
@@ -2302,12 +2351,19 @@ export function ServiceOrdersPanel({
                     )
                   }
                 />
+                {canEdit ? (
+                  <ServiceCatalogPicker
+                    products={products}
+                    stockByProduct={stockByProduct}
+                    onAdd={addCatalogProduct}
+                  />
+                ) : null}
                 <div className="overflow-x-auto rounded-xl border border-border">
                   <table className="min-w-full text-sm">
                     <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                       <tr>
-                        <th className="px-3 py-2">Tipo</th>
-                        <th className="px-3 py-2">Descripción</th>
+                        <th className="px-3 py-2">Producto</th>
+                        <th className="px-3 py-2">Existencia</th>
                         <th className="px-3 py-2">Cant</th>
                         <th className="px-3 py-2">P. unit.</th>
                         <th className="px-3 py-2" title="Descuento de la partida">
@@ -2319,217 +2375,239 @@ export function ServiceOrdersPanel({
                       </tr>
                     </thead>
                     <tbody>
-                      {draftLines.map((line) => (
-                        <tr key={line.key} className="border-t border-border">
-                          <td className="px-2 py-2">
-                            <select
-                              className="h-9 rounded-md border border-input bg-background px-2 text-xs"
-                              value={line.lineKind}
-                              disabled={!canEdit}
-                              onChange={(e) =>
-                                setDraftLines((rows) =>
-                                  rows.map((r) =>
-                                    r.key === line.key
-                                      ? {
-                                          ...r,
-                                          lineKind: e.target.value as ServiceLineKind,
-                                          productId: null,
-                                        }
-                                      : r
-                                  )
-                                )
-                              }
-                            >
-                              {SERVICE_LINE_KINDS.map((k) => (
-                                <option key={k.id} value={k.id}>
-                                  {k.label}
-                                </option>
-                              ))}
-                            </select>
+                      {draftLines.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={8}
+                            className="px-3 py-8 text-center text-sm text-muted-foreground"
+                          >
+                            Busca un código o descripción para agregar material a la orden.
                           </td>
-                          <td className="px-2 py-2">
-                            <div className="space-y-1">
-                              {productsForKind(line.lineKind).length ? (
-                                <select
-                                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
-                                  value={line.productId ?? ""}
+                        </tr>
+                      ) : (
+                        draftLines.map((line) => {
+                          const product = line.productId
+                            ? productById.get(line.productId)
+                            : undefined;
+                          return (
+                            <tr key={line.key} className="border-t border-border align-top">
+                              <td className="px-2 py-2">
+                                <div className="min-w-[180px] space-y-1">
+                                  {product || line.productId ? (
+                                    <>
+                                      <p className="font-medium">
+                                        {product?.name || line.description}
+                                      </p>
+                                      <p className="font-mono text-[11px] text-muted-foreground">
+                                        {product?.sku || "Catálogo"}
+                                        {product?.brand ? ` · ${product.brand}` : ""}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {line.lineKind === "mano_obra" ||
+                                      line.lineKind === "otro" ? (
+                                        <select
+                                          className="h-8 rounded-md border border-input bg-background px-2 text-[11px]"
+                                          value={line.lineKind}
+                                          disabled={!canEdit}
+                                          onChange={(e) =>
+                                            setDraftLines((rows) =>
+                                              rows.map((r) =>
+                                                r.key === line.key
+                                                  ? {
+                                                      ...r,
+                                                      lineKind: e.target
+                                                        .value as ServiceLineKind,
+                                                    }
+                                                  : r
+                                              )
+                                            )
+                                          }
+                                        >
+                                          <option value="mano_obra">Mano de obra</option>
+                                          <option value="otro">Línea libre</option>
+                                        </select>
+                                      ) : (
+                                        <p className="text-[11px] text-muted-foreground">
+                                          {serviceLineKindLabel(line.lineKind)}
+                                        </p>
+                                      )}
+                                      <input
+                                        className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
+                                        placeholder="Descripción"
+                                        value={line.description}
+                                        disabled={!canEdit}
+                                        onChange={(e) =>
+                                          setDraftLines((rows) =>
+                                            rows.map((r) =>
+                                              r.key === line.key
+                                                ? { ...r, description: e.target.value }
+                                                : r
+                                            )
+                                          )
+                                        }
+                                      />
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-2 py-2">
+                                <ServiceLineStockCell
+                                  item={product}
+                                  stock={
+                                    line.productId
+                                      ? stockByProduct?.get(line.productId)
+                                      : undefined
+                                  }
+                                  requested={Number(line.quantity) || 0}
+                                />
+                              </td>
+                              <td className="px-2 py-2">
+                                <input
+                                  type="number"
+                                  min={0.01}
+                                  step="any"
+                                  className="h-9 w-20 rounded-md border border-input bg-background px-2 text-xs"
+                                  value={line.quantity}
                                   disabled={!canEdit}
-                                  onChange={(e) => {
-                                    const product = products.find(
-                                      (p) => p.id === e.target.value
-                                    );
+                                  onChange={(e) =>
+                                    setDraftLines((rows) =>
+                                      rows.map((r) =>
+                                        r.key === line.key
+                                          ? { ...r, quantity: Number(e.target.value) }
+                                          : r
+                                      )
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td className="px-2 py-2">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step="any"
+                                  className="h-9 w-24 rounded-md border border-input bg-background px-2 text-xs"
+                                  value={line.unitPrice}
+                                  disabled={!canEdit}
+                                  onChange={(e) =>
+                                    setDraftLines((rows) =>
+                                      rows.map((r) =>
+                                        r.key === line.key
+                                          ? { ...r, unitPrice: Number(e.target.value) }
+                                          : r
+                                      )
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td className="px-2 py-2">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  step="any"
+                                  className="h-9 w-16 rounded-md border border-input bg-background px-2 text-xs"
+                                  value={line.discountPercent ?? 0}
+                                  disabled={!canEdit}
+                                  onChange={(e) =>
                                     setDraftLines((rows) =>
                                       rows.map((r) =>
                                         r.key === line.key
                                           ? {
                                               ...r,
-                                              productId: e.target.value || null,
-                                              description:
-                                                product?.name ?? r.description,
-                                              unitPrice:
-                                                Number(product?.unitPrice ?? r.unitPrice) ||
-                                                0,
-                                              unit: product?.unit || r.unit,
+                                              discountPercent: clampPercent(e.target.value),
                                             }
                                           : r
                                       )
-                                    );
-                                  }}
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td className="px-2 py-2">
+                                <select
+                                  className="h-9 rounded-md border border-input bg-background px-2 text-xs"
+                                  value={line.lineStatus}
+                                  disabled={!canEdit}
+                                  onChange={(e) =>
+                                    setDraftLines((rows) =>
+                                      rows.map((r) =>
+                                        r.key === line.key
+                                          ? {
+                                              ...r,
+                                              lineStatus: e.target
+                                                .value as ServiceOrderLineInput["lineStatus"],
+                                            }
+                                          : r
+                                      )
+                                    )
+                                  }
                                 >
-                                  <option value="">Catálogo o libre…</option>
-                                  {productsForKind(line.lineKind).map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.sku} · {p.name}
+                                  {SERVICE_LINE_STATUSES.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                      {s.label}
                                     </option>
                                   ))}
                                 </select>
-                              ) : null}
-                              <input
-                                className="h-9 w-full min-w-[180px] rounded-md border border-input bg-background px-2 text-xs"
-                                value={line.description}
-                                disabled={!canEdit}
-                                onChange={(e) =>
-                                  setDraftLines((rows) =>
-                                    rows.map((r) =>
-                                      r.key === line.key
-                                        ? { ...r, description: e.target.value }
-                                        : r
-                                    )
-                                  )
-                                }
-                              />
-                            </div>
-                          </td>
-                          <td className="px-2 py-2">
-                            <input
-                              type="number"
-                              min={0.01}
-                              step="any"
-                              className="h-9 w-20 rounded-md border border-input bg-background px-2 text-xs"
-                              value={line.quantity}
-                              disabled={!canEdit}
-                              onChange={(e) =>
-                                setDraftLines((rows) =>
-                                  rows.map((r) =>
-                                    r.key === line.key
-                                      ? { ...r, quantity: Number(e.target.value) }
-                                      : r
-                                  )
-                                )
-                              }
-                            />
-                          </td>
-                          <td className="px-2 py-2">
-                            <input
-                              type="number"
-                              min={0}
-                              step="any"
-                              className="h-9 w-24 rounded-md border border-input bg-background px-2 text-xs"
-                              value={line.unitPrice}
-                              disabled={!canEdit}
-                              onChange={(e) =>
-                                setDraftLines((rows) =>
-                                  rows.map((r) =>
-                                    r.key === line.key
-                                      ? { ...r, unitPrice: Number(e.target.value) }
-                                      : r
-                                  )
-                                )
-                              }
-                            />
-                          </td>
-                          <td className="px-2 py-2">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              step="any"
-                              className="h-9 w-16 rounded-md border border-input bg-background px-2 text-xs"
-                              value={line.discountPercent ?? 0}
-                              disabled={!canEdit}
-                              onChange={(e) =>
-                                setDraftLines((rows) =>
-                                  rows.map((r) =>
-                                    r.key === line.key
-                                      ? {
-                                          ...r,
-                                          discountPercent: clampPercent(e.target.value),
-                                        }
-                                      : r
-                                  )
-                                )
-                              }
-                            />
-                          </td>
-                          <td className="px-2 py-2">
-                            <select
-                              className="h-9 rounded-md border border-input bg-background px-2 text-xs"
-                              value={line.lineStatus}
-                              disabled={!canEdit}
-                              onChange={(e) =>
-                                setDraftLines((rows) =>
-                                  rows.map((r) =>
-                                    r.key === line.key
-                                      ? {
-                                          ...r,
-                                          lineStatus: e.target
-                                            .value as ServiceOrderLineInput["lineStatus"],
-                                        }
-                                      : r
-                                  )
-                                )
-                              }
-                            >
-                              {SERVICE_LINE_STATUSES.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {s.label}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2 text-xs">
-                            {money(lineAmount(line))}
-                            {clampPercent(line.discountPercent) > 0 ? (
-                              <span className="block text-[10px] text-muted-foreground line-through">
-                                {money(Number(line.quantity) * Number(line.unitPrice))}
-                              </span>
-                            ) : null}
-                          </td>
-                          <td className="px-2 py-2">
-                            {canEdit ? (
-                              <button
-                                type="button"
-                                className="text-destructive"
-                                onClick={() =>
-                                  setDraftLines((rows) =>
-                                    rows.filter((r) => r.key !== line.key)
-                                  )
-                                }
-                              >
-                                <Trash2 className="size-3.5" />
-                              </button>
-                            ) : null}
-                          </td>
-                        </tr>
-                      ))}
+                              </td>
+                              <td className="px-3 py-2 text-xs">
+                                {money(lineAmount(line))}
+                                {clampPercent(line.discountPercent) > 0 ? (
+                                  <span className="block text-[10px] text-muted-foreground line-through">
+                                    {money(Number(line.quantity) * Number(line.unitPrice))}
+                                  </span>
+                                ) : null}
+                              </td>
+                              <td className="px-2 py-2">
+                                {canEdit ? (
+                                  <button
+                                    type="button"
+                                    className="text-destructive"
+                                    onClick={() =>
+                                      setDraftLines((rows) =>
+                                        rows.filter((r) => r.key !== line.key)
+                                      )
+                                    }
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                ) : null}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
                 {canEdit ? (
                   <div className="flex flex-wrap gap-2">
-                    {SERVICE_LINE_KINDS.filter((k) => k.id !== "otro").map((k) => (
-                      <Button
-                        key={k.id}
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          setDraftLines((rows) => [...rows, newDraftLine(k.id)])
-                        }
-                      >
-                        <Plus className="size-3.5" /> {k.label}
-                      </Button>
-                    ))}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setDraftLines((rows) => [
+                          ...rows,
+                          {
+                            ...newDraftLine("mano_obra"),
+                            description: "Mano de obra",
+                          },
+                        ])
+                      }
+                    >
+                      <Plus className="size-3.5" /> Mano de obra
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setDraftLines((rows) => [...rows, newDraftLine("otro")])
+                      }
+                    >
+                      <Plus className="size-3.5" /> Línea libre
+                    </Button>
                     <Button
                       type="button"
                       size="sm"
