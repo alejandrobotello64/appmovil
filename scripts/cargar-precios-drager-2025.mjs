@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
  * Cruza LISTA DE PRECIOS CONSUMIBLE DRÄGER 2025 con el catálogo registrado.
- * Escribe cost_price (precio de lista). No inventa ni cambia unit_price (venta).
+ * - Actualiza cost_price (precio de lista) en coincidencias. No cambia unit_price (venta).
+ * - Da de alta los ITEMs que no están registrados, con ese código como SKU y n.º de parte.
+ *   Existencia 0, alerta de agotado apagada, venta pendiente.
  *
- *   node scripts/cargar-precios-drager-2025.mjs [--dry-run] [--cloud]
+ *   node scripts/cargar-precios-drager-2025.mjs [--dry-run] [--cloud] [--no-insert]
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -21,6 +23,8 @@ const DEFAULT_XLSX = join(
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const cloud = args.includes("--cloud");
+const noInsert = args.includes("--no-insert");
+const INSERT_BATCH = 40;
 
 function loadEnv() {
   const env = { ...process.env };
@@ -113,6 +117,22 @@ function parsePrice(value) {
   return Number.isFinite(n) ? Math.round(n * 10000) / 10000 : null;
 }
 
+function cellItem(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    if (Math.abs(value - Math.round(value)) < 1e-9) return String(Math.round(value));
+    return String(value);
+  }
+  return String(value ?? "").trim();
+}
+
+function parsePackPieces(value) {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.round(value);
+  }
+  const n = Number(String(value ?? "").replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : 1;
+}
+
 function headerKey(value) {
   return fold(value)
     .replace(/[^a-z0-9]+/g, " ")
@@ -138,6 +158,7 @@ function readPriceList(filePath) {
   let itemCol = -1;
   let nameCol = -1;
   let packCol = -1;
+  let piecesCol = -1;
   let priceCol = -1;
   for (let i = 0; i < Math.min(matrix.length, 40); i += 1) {
     const row = matrix[i].map((cell) => headerKey(cell));
@@ -150,6 +171,11 @@ function readPriceList(filePath) {
       itemCol = item;
       nameCol = row.findIndex((cell) => cell.includes("descrip"));
       packCol = row.findIndex((cell) => cell.includes("present"));
+      piecesCol = row.findIndex(
+        (cell) =>
+          (cell.includes("pzs") || cell.includes("pz") || cell.includes("piezas")) &&
+          cell.includes("pack")
+      );
       priceCol = price;
       break;
     }
@@ -161,7 +187,7 @@ function readPriceList(filePath) {
   const byPn = new Map();
   for (let i = headerRow + 1; i < matrix.length; i += 1) {
     const row = matrix[i];
-    const item = String(row[itemCol] ?? "").trim();
+    const item = cellItem(row[itemCol]);
     const pn = normalizePn(item);
     const price = parsePrice(row[priceCol]);
     if (!pn || price == null || price < 0) continue;
@@ -169,6 +195,7 @@ function readPriceList(filePath) {
       item,
       name: String(row[nameCol] ?? "").trim(),
       presentation: String(row[packCol] ?? "").trim(),
+      packPieces: piecesCol >= 0 ? parsePackPieces(row[piecesCol]) : 1,
       price,
       excelRow: i + 1,
     });
@@ -176,26 +203,43 @@ function readPriceList(filePath) {
   return { sheetName, headerRow: headerRow + 1, byPn };
 }
 
+function catalogCodeKeys(items) {
+  const keys = new Set();
+  for (const item of items) {
+    const sku = normalizePn(item.sku);
+    const pn = normalizePn(item.part_number);
+    if (sku) keys.add(sku);
+    if (pn) keys.add(pn);
+  }
+  return keys;
+}
+
 function matchCatalog(items, priceByPn) {
   const matched = [];
   const usedExcel = new Set();
+  const catalogKeys = catalogCodeKeys(items);
 
   for (const item of items) {
-    const pn = normalizePn(item.part_number);
+    const pn = normalizePn(item.part_number) || normalizePn(item.sku);
     const exact = pn ? priceByPn.get(pn) : null;
     if (exact) {
       usedExcel.add(pn);
-      matched.push({ item, list: exact, how: "part_number" });
+      matched.push({
+        item,
+        list: exact,
+        how: normalizePn(item.part_number) ? "part_number" : "sku",
+      });
     }
   }
 
   return {
     matched,
+    catalogKeys,
     catalogWithoutPrice: items.filter(
       (item) => !matched.some((row) => row.item.id === item.id)
     ),
     excelUnmatched: [...priceByPn.entries()]
-      .filter(([pn]) => !usedExcel.has(pn))
+      .filter(([pn]) => !usedExcel.has(pn) && !catalogKeys.has(pn))
       .map(([, row]) => row),
   };
 }
@@ -207,16 +251,179 @@ function noteWithCost(notes, cost) {
   return `${cleaned}\n<!--mas-cost:${cost}-->`.trim();
 }
 
-function isMissingCostColumn(error) {
+function noteWithoutStockAlert(notes) {
+  const cleaned = String(notes ?? "").replace(/\n?<!--mas-no-stock-alert-->\s*/g, "");
+  return `${cleaned}\n<!--mas-no-stock-alert-->`.trim();
+}
+
+function isMissingColumn(error, column) {
   const text = String(error?.message ?? error ?? "").toLowerCase();
   return (
-    text.includes("cost_price") &&
+    text.includes(column.toLowerCase()) &&
     (text.includes("does not exist") ||
       text.includes("could not find") ||
       text.includes("schema cache") ||
       text.includes("pgrst204") ||
       text.includes("42703"))
   );
+}
+
+function isMissingCostColumn(error) {
+  return isMissingColumn(error, "cost_price");
+}
+
+function unitFromList(row) {
+  const pres = fold(row.presentation);
+  if (pres.includes("caja")) return "caja";
+  if (pres.includes("paquete") || pres.includes("pack") || pres.includes("bolsa")) {
+    return "paquete";
+  }
+  if (pres.includes("rollo")) return "rollo";
+  if (pres.includes("par")) return "par";
+  if (pres.includes("frasco")) return "frasco";
+  if (Number(row.packPieces) > 1) return "paquete";
+  return "pieza";
+}
+
+function buildNewRow(list, options = {}) {
+  const sku = String(list.item).trim();
+  const name = (list.name || sku).slice(0, 500);
+  const details = [];
+  if (list.presentation) details.push(`Presentación: ${list.presentation}`);
+  if (Number(list.packPieces) > 1) details.push(`${list.packPieces} pzs por pack`);
+  details.push("Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.");
+  let notes = "Lista de precios consumible Dräger vigente 2025.";
+  if (options.useCostMarker && list.price > 0) {
+    notes = noteWithCost(notes, list.price);
+  }
+  if (options.useAlertMarker) {
+    notes = noteWithoutStockAlert(notes);
+  }
+  const row = {
+    sku,
+    name,
+    category: "accesorios",
+    item_kind: "producto",
+    description: details.join(". "),
+    quantity: 0,
+    min_stock: 0,
+    unit: unitFromList(list),
+    location: "",
+    brand: "Dräger",
+    color_tag: "turquesa",
+    model: "",
+    serial_number: "",
+    unit_price: 0,
+    supplier: "Dräger",
+    notes,
+    asset_status: "operativo",
+    is_active: true,
+    tracks_lot: false,
+    tracks_serial: false,
+    tracks_expiry: false,
+    max_stock: 0,
+    reorder_point: 0,
+    part_number: sku,
+    manufacturer: "Dräger",
+    subcategory: "consumible",
+  };
+  if (!options.omitCost) row.cost_price = list.price;
+  if (!options.omitAlerts) row.stock_alerts_enabled = false;
+  return row;
+}
+
+function omitUnknownColumns(row, missing) {
+  const next = { ...row };
+  for (const column of missing) delete next[column];
+  return next;
+}
+
+async function insertNewProducts(base, key, unmatched) {
+  const result = {
+    inserted: 0,
+    skipped: 0,
+    errors: 0,
+    sample: [],
+    missingColumns: [],
+  };
+  if (unmatched.length === 0) return result;
+
+  const missing = new Set();
+  let useCostMarker = false;
+  let useAlertMarker = false;
+
+  const postBatch = async (batch) => {
+    const payload = batch.map((list) =>
+      omitUnknownColumns(
+        buildNewRow(list, {
+          omitCost: missing.has("cost_price"),
+          omitAlerts: missing.has("stock_alerts_enabled"),
+          useCostMarker,
+          useAlertMarker,
+        }),
+        missing
+      )
+    );
+    try {
+      const created = await rest(base, key, "POST", "/rest/v1/inventory_items", payload);
+      const count = Array.isArray(created) ? created.length : payload.length;
+      result.inserted += count;
+      for (const row of payload.slice(0, 8)) {
+        if (result.sample.length < 12) {
+          result.sample.push({ sku: row.sku, name: row.name, cost: row.cost_price ?? null });
+        }
+      }
+      return;
+    } catch (error) {
+      if (isMissingColumn(error, "cost_price") && !missing.has("cost_price")) {
+        missing.add("cost_price");
+        useCostMarker = true;
+        result.missingColumns.push("cost_price");
+        await postBatch(batch);
+        return;
+      }
+      if (
+        isMissingColumn(error, "stock_alerts_enabled") &&
+        !missing.has("stock_alerts_enabled")
+      ) {
+        missing.add("stock_alerts_enabled");
+        useAlertMarker = true;
+        result.missingColumns.push("stock_alerts_enabled");
+        await postBatch(batch);
+        return;
+      }
+      if (isMissingColumn(error, "color_tag") && !missing.has("color_tag")) {
+        missing.add("color_tag");
+        result.missingColumns.push("color_tag");
+        await postBatch(batch);
+        return;
+      }
+      throw error;
+    }
+  };
+
+  for (let i = 0; i < unmatched.length; i += INSERT_BATCH) {
+    const batch = unmatched.slice(i, i + INSERT_BATCH);
+    try {
+      await postBatch(batch);
+    } catch (error) {
+      for (const list of batch) {
+        try {
+          await postBatch([list]);
+        } catch (inner) {
+          const msg = String(inner.message ?? inner);
+          if (msg.includes("23505") || /duplicate|unique/i.test(msg)) {
+            result.skipped += 1;
+            continue;
+          }
+          result.errors += 1;
+          console.warn(`${list.item}: ${msg}`);
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 async function main() {
@@ -260,6 +467,8 @@ async function main() {
     })
     .filter(Boolean);
 
+  const toInsert = noInsert ? [] : result.excelUnmatched;
+
   const summary = {
     target: cloud ? "cloud" : "local",
     sheet: list.sheetName,
@@ -267,11 +476,17 @@ async function main() {
     catalog: items.length,
     matched: result.matched.length,
     byPartNumber: result.matched.filter((row) => row.how === "part_number").length,
-    byName: result.matched.filter((row) => row.how === "nombre").length,
+    bySku: result.matched.filter((row) => row.how === "sku").length,
     toUpdate: updates.length,
     catalogWithoutPrice: result.catalogWithoutPrice.length,
     excelNotInCatalog: result.excelUnmatched.length,
-    sample: updates.slice(0, 12),
+    toInsert: toInsert.length,
+    sampleNew: toInsert.slice(0, 12).map((row) => ({
+      sku: row.item,
+      name: row.name,
+      cost: row.price,
+    })),
+    sampleUpdates: updates.slice(0, 8),
   };
 
   const reportPath = join(ROOT, "scripts/data/drager-2025-match-report.json");
@@ -288,6 +503,14 @@ async function main() {
           cost: row.list.price,
           excelItem: row.list.item,
           excelName: row.list.name,
+        })),
+        newProducts: toInsert.map((row) => ({
+          sku: row.item,
+          partNumber: row.item,
+          name: row.name,
+          presentation: row.presentation,
+          packPieces: row.packPieces,
+          cost: row.price,
         })),
       },
       null,
@@ -345,6 +568,8 @@ async function main() {
     }
   }
 
+  const inserted = await insertNewProducts(base, key, toInsert);
+
   console.log(
     JSON.stringify(
       {
@@ -353,6 +578,11 @@ async function main() {
         viaNotes,
         errors,
         notesFallback: usedNotesFallback,
+        inserted: inserted.inserted,
+        insertSkipped: inserted.skipped,
+        insertErrors: inserted.errors,
+        insertSample: inserted.sample,
+        insertMissingColumns: inserted.missingColumns,
         report: reportPath,
       },
       null,

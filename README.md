@@ -81,7 +81,7 @@ Los cinco hospitales IMSS Veracruz del inventario (HGZ 36 Coatzacoalcos, HGZMF 3
 
 Los nombres mal escritos del catálogo (tildes, Chlld, Bair Huger, Bowie-Dick, etc.) se corrigen con `npm run db:corregir-nombres` (añade `-- --cloud` contra Supabase). No cambia códigos ni existencias.
 
-La lista vigente Dräger 2025 (`scripts/data/lista-precios-consumible-drager-2025.xlsx`) se cruza con el catálogo por número de parte (`ITEM` ↔ `part_number`) y carga **solo el costo** (`cost_price`). El precio de venta (`unit_price`) queda en 0 / el que ya tuviera, para asignarlo después. Corre `npm run db:precios-drager` (añade `-- --cloud` contra Supabase). Esquema: `scripts/apply-inventory-prices-schema.sql` o `supabase/migrations/20261018080000_inventory_cost_and_stock_alerts.sql`.
+La lista vigente Dräger 2025 (`scripts/data/lista-precios-consumible-drager-2025.xlsx`) se cruza con el catálogo por número de parte (`ITEM` ↔ `part_number` o `sku`). En coincidencias carga **solo el costo** (`cost_price`); el precio de venta (`unit_price`) queda en 0 / el que ya tuviera. Los ITEMs que aún no están registrados se dan de alta con **ese código** como SKU y n.º de parte, marca Dräger, existencia 0 y alerta de agotado apagada (el código sigue buscable). Corre `npm run db:precios-drager` (añade `-- --cloud` contra Supabase; `-- --dry-run` solo reporta; `-- --no-insert` no crea códigos nuevos). Esquema: `scripts/apply-inventory-prices-schema.sql` o `supabase/migrations/20261018080000_inventory_cost_and_stock_alerts.sql`.
 
 Los precios de catálogo (costo y venta) los ven administrador, compras, ventas y dirección. El personal de **almacén** y **servicio** no. En Usuarios → permisos el módulo es **Precios de catálogo**. En cada ficha se puede **silenciar la alerta de agotado**; el código sigue activo y se busca igual, solo deja de salir en el dashboard y el panel principal.
 
@@ -107,7 +107,7 @@ La clave `anon` **no puede** crear columnas ni buckets. Si faltan `color_tag`, k
 | `npm run db:push-cloud-cedros` | Alta REST de códigos Cedros nuevos en la nube (no modifica códigos existentes) |
 | `npm run db:alta-imss-veracruz` | Alta de hospitales IMSS Veracruz, equipos instalados y una OS preventiva por serie |
 | `npm run db:corregir-nombres` | Corrige nombres mal escritos del catálogo (y marca Dräger); no toca existencias |
-| `npm run db:precios-drager` | Cruza la lista Dräger 2025 con el catálogo y carga costos (no cambia precio de venta) |
+| `npm run db:precios-drager` | Cruza la lista Dräger 2025: carga costos en coincidencias y da de alta ITEMs nuevos con su código |
 | `npm run db:export-catalog` | Vuelca `inventory_items` local a `supabase/seed_catalog.sql` |
 | `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
 | `npm run db:push` | Empuja migraciones al proyecto linkeado |
