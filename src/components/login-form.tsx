@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ZoomControls } from "@/components/zoom-controls";
 import { LoginCarousel } from "@/components/login-carousel";
 import {
   clearRememberedCredentials,
@@ -76,7 +77,8 @@ export function LoginForm() {
       />
 
       <div className="relative w-full max-w-[420px] px-4">
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex justify-end gap-2">
+          <ZoomControls showPercent="always" className="bg-card/80 backdrop-blur" />
           <ThemeToggle className="touch-target bg-card/80 shadow-sm backdrop-blur" />
         </div>
 

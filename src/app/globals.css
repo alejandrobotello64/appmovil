@@ -124,6 +124,13 @@
   html {
     @apply font-sans overflow-x-hidden;
     -webkit-tap-highlight-color: transparent;
+    zoom: var(--mas-zoom, 1);
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+  @supports not (zoom: 1) {
+    html {
+      font-size: calc(100% * var(--mas-zoom, 1));
+    }
   }
   body {
     @apply bg-background text-foreground overflow-x-hidden;

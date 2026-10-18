@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider, themeInitScript } from "@/components/theme-provider";
+import { ZoomProvider, zoomInitScript } from "@/components/zoom-provider";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -43,6 +44,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  minimumScale: 0.5,
+  maximumScale: 5,
+  userScalable: true,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#3B46A5" },
@@ -63,7 +67,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
         />
-        <ThemeProvider>{children}</ThemeProvider>
+        <Script
+          id="mas-zoom-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: zoomInitScript }}
+        />
+        <ThemeProvider>
+          <ZoomProvider>{children}</ZoomProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

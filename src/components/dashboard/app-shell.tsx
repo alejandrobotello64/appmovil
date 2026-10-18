@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AccountMenu } from "@/components/dashboard/account-menu";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ZoomControls } from "@/components/zoom-controls";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   clearSession,
@@ -105,6 +106,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             <GlobalSearch />
+            <ZoomControls />
             <ThemeToggle
               showLabel={false}
               className="touch-target size-11 justify-center px-0 py-0 sm:size-auto sm:px-3 sm:py-1.5"

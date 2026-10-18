@@ -2,7 +2,16 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Camera, KeyRound, Settings, UserRound, X } from "lucide-react";
+import {
+  Camera,
+  KeyRound,
+  Settings,
+  UserRound,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import { useZoom } from "@/components/zoom-provider";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -60,6 +69,8 @@ type AccountMenuProps = {
 };
 
 export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
+  const { percent, canZoomIn, canZoomOut, zoomIn, zoomOut, resetZoom } =
+    useZoom();
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<"menu" | "profile" | "password" | null>(
     null
@@ -329,6 +340,37 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 <KeyRound className="size-4 text-muted-foreground" />
                 Cambiar contraseña
               </button>
+              <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
+                <p className="text-sm">Zoom</p>
+                <div className="inline-flex items-center overflow-hidden rounded-lg border border-border">
+                  <button
+                    type="button"
+                    onClick={zoomOut}
+                    disabled={!canZoomOut}
+                    className="inline-flex size-8 items-center justify-center hover:bg-muted disabled:opacity-40"
+                    aria-label="Alejar"
+                  >
+                    <ZoomOut className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetZoom}
+                    className="min-w-[2.5rem] px-1 text-center text-[11px] font-medium tabular-nums hover:bg-muted"
+                    aria-label="Restablecer zoom al 100%"
+                  >
+                    {percent}%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={zoomIn}
+                    disabled={!canZoomIn}
+                    className="inline-flex size-8 items-center justify-center hover:bg-muted disabled:opacity-40"
+                    aria-label="Acercar"
+                  >
+                    <ZoomIn className="size-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>,
             document.body
           )
