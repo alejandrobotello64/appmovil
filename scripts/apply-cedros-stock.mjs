@@ -41,6 +41,7 @@ function loadEnv() {
 function findWorkbook() {
   if (pathArg) return resolve(pathArg);
   const dirs = [
+    join(ROOT, "data"),
     join(homedir(), ".cursor/projects/workspace/uploads"),
     join(ROOT, "uploads"),
     "/home/ubuntu/.cursor/projects/workspace/uploads",
@@ -98,17 +99,31 @@ function qtyOf(value) {
   return Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
 }
 
+function validIsoDate(text) {
+  const m = String(text).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return "";
+  let year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (year >= 2820 && year < 2920) year -= 800;
+  if (year < 1990 || year > 2045 || month < 1 || month > 12 || day < 1 || day > 31) {
+    return "";
+  }
+  return `${String(year).padStart(4, "0")}-${m[2]}-${m[3]}`;
+}
+
 function dateOf(value) {
   const text = cell(value);
   if (!text || NA.test(text)) return "";
-  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+  const iso = validIsoDate(text);
+  if (iso) return iso;
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
+    return validIsoDate(value.toISOString().slice(0, 10));
   }
   const m = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (m) {
     const year = m[3].length === 2 ? `20${m[3]}` : m[3];
-    return `${year}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+    return validIsoDate(`${year}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`);
   }
   return "";
 }
@@ -183,12 +198,13 @@ function envForTarget(env) {
   };
 }
 
-async function rest(base, key, method, path, body) {
+async function rest(base, key, method, path, body, extraHeaders = {}) {
   const headers = {
     apikey: key,
     Authorization: `Bearer ${key}`,
     "Content-Type": "application/json",
     Prefer: "return=representation",
+    ...extraHeaders,
   };
   const res = await fetch(`${base.replace(/\/$/, "")}${path}`, {
     method,
@@ -209,7 +225,26 @@ async function rest(base, key, method, path, body) {
   return data;
 }
 
-async function ensureLocation(base, key, warehouseId, label, category) {
+async function restAll(base, key, path) {
+  const rows = [];
+  const page = 1000;
+  for (let from = 0; ; from += page) {
+    const to = from + page - 1;
+    const chunk = await rest(base, key, "GET", path, null, {
+      Range: `${from}-${to}`,
+      Prefer: "count=exact",
+    });
+    if (Array.isArray(chunk)) rows.push(...chunk);
+    if (!Array.isArray(chunk) || chunk.length < page) break;
+  }
+  return rows;
+}
+
+function quoteFilter(value) {
+  return `"${String(value).replaceAll('"', '\\"')}"`;
+}
+
+async function ensureLocation(base, key, warehouseId, label, category, cache) {
   const fallback = {
     insumos: "INSUMOS",
     medicamentos: "MEDICAMENTOS",
@@ -219,19 +254,35 @@ async function ensureLocation(base, key, warehouseId, label, category) {
   }[category] || "GENERAL";
   const name = (label || fallback).trim() || fallback;
   const code = locCode(name);
+  const cached = cache.get(code) || cache.get(name.toUpperCase());
+  if (cached) return cached;
+  try {
+    const created = await rest(base, key, "POST", "/rest/v1/locations", {
+      warehouse_id: warehouseId,
+      code,
+      name,
+    });
+    const id = created?.[0]?.id || created?.id;
+    if (id) {
+      cache.set(code, id);
+      cache.set(name.toUpperCase(), id);
+      return id;
+    }
+  } catch (error) {
+    if (!String(error.message).includes("23505")) throw error;
+  }
   const existing = await rest(
     base,
     key,
     "GET",
-    `/rest/v1/locations?warehouse_id=eq.${warehouseId}&or=(code.eq.${encodeURIComponent(code)},name.eq.${encodeURIComponent(name)})&select=id,code,name&limit=1`
+    `/rest/v1/locations?warehouse_id=eq.${warehouseId}&or=(code.eq.${quoteFilter(code)},name.eq.${quoteFilter(name)})&select=id,code,name&limit=1`
   );
-  if (existing?.[0]?.id) return existing[0].id;
-  const created = await rest(base, key, "POST", "/rest/v1/locations", {
-    warehouse_id: warehouseId,
-    code,
-    name,
-  });
-  return created?.[0]?.id || created?.id;
+  const id = existing?.[0]?.id;
+  if (id) {
+    cache.set(code, id);
+    cache.set(name.toUpperCase(), id);
+  }
+  return id;
 }
 
 async function main() {
@@ -250,21 +301,19 @@ async function main() {
   const { url: base, key } = envForTarget(env);
   if (!base || !key) throw new Error("Faltan URL/anon de Supabase.");
 
-  const warehouses = await rest(
+  const warehouses = await restAll(
     base,
     key,
-    "GET",
     "/rest/v1/warehouses?is_active=eq.true&select=id,code,name,is_default&order=is_default.desc"
   );
   const defaultWh =
     warehouses.find((row) => row.is_default) || warehouses[0];
   if (!defaultWh) throw new Error("No hay almacén.");
 
-  const items = await rest(
+  const items = await restAll(
     base,
     key,
-    "GET",
-    "/rest/v1/inventory_items?select=id,sku,name,part_number,quantity,item_kind,category,tracks_lot,tracks_expiry,tracks_serial,color_tag,notes&limit=5000"
+    "/rest/v1/inventory_items?select=id,sku,name,part_number,quantity,item_kind,category,tracks_lot,tracks_expiry,tracks_serial,is_active&order=sku"
   );
   const byPart = new Map();
   for (const item of items ?? []) {
@@ -274,22 +323,94 @@ async function main() {
     list.push(item);
     byPart.set(keyPart, list);
   }
+  for (const list of byPart.values()) {
+    list.sort((a, b) => {
+      const active = Number(b.is_active !== false) - Number(a.is_active !== false);
+      if (active) return active;
+      return Number(b.quantity) - Number(a.quantity);
+    });
+  }
+
+  const locations = await restAll(
+    base,
+    key,
+    `/rest/v1/locations?warehouse_id=eq.${defaultWh.id}&select=id,code,name`
+  );
+  const locationCache = new Map();
+  for (const loc of locations ?? []) {
+    if (loc.code) locationCache.set(String(loc.code).toUpperCase(), loc.id);
+    if (loc.name) locationCache.set(String(loc.name).toUpperCase(), loc.id);
+  }
+
+  const lotById = new Map();
+  try {
+    const existingLots = await restAll(
+      base,
+      key,
+      "/rest/v1/lots?select=id,product_id,lot_number"
+    );
+    for (const lot of existingLots ?? []) {
+      lotById.set(lot.id, String(lot.lot_number || "").trim().toUpperCase());
+    }
+  } catch (error) {
+    console.warn(`lots lookup skipped: ${error.message}`);
+  }
+
+  const balanceQty = new Map();
+  try {
+    const balances = await restAll(
+      base,
+      key,
+      "/rest/v1/inventory_balances?select=product_id,lot_id,location_id,qty_on_hand"
+    );
+    for (const row of balances ?? []) {
+      const lot = row.lot_id ? lotById.get(row.lot_id) || "" : "";
+      const keyBal = `${row.product_id}::${lot}::${row.location_id || ""}`;
+      balanceQty.set(keyBal, (balanceQty.get(keyBal) || 0) + Number(row.qty_on_hand || 0));
+    }
+  } catch (error) {
+    console.warn(`balances lookup skipped: ${error.message}`);
+  }
+
+  const existingSerials = new Set();
+  try {
+    const serials = await restAll(
+      base,
+      key,
+      "/rest/v1/serial_numbers?select=product_id,serial_number"
+    );
+    for (const row of serials ?? []) {
+      existingSerials.add(
+        `${row.product_id}::${String(row.serial_number || "").replace(/^\/+/, "").trim().toUpperCase()}`
+      );
+    }
+  } catch (error) {
+    console.warn(`serials lookup skipped: ${error.message}`);
+  }
 
   const stats = {
     rows: lines.length,
+    catalog: items.length,
     applied: 0,
-    skippedHasStock: 0,
+    units: 0,
+    skippedCovered: 0,
     skippedMissing: 0,
+    skippedDuplicateLot: 0,
     errors: 0,
   };
 
   if (dryRun) {
     console.log(`Workbook ${xlsx}`);
     console.log(`Lines with qty>0: ${lines.length}`);
+    console.log(`Catalog items: ${items.length}`);
     console.log(`Target ${cloud ? "cloud" : "local"} ${base}`);
     console.log(lines.slice(0, 8));
     return;
   }
+
+  const patched = new Set();
+  const grouped = new Map();
+  const excelByProduct = new Map();
 
   for (const line of lines) {
     const matches = byPart.get(line.partKey) || [];
@@ -297,64 +418,139 @@ async function main() {
       stats.skippedMissing += 1;
       continue;
     }
-    const item =
-      matches.find((row) => Number(row.quantity) === 0) || matches[0];
-    if (Number(item.quantity) > 0) {
-      stats.skippedHasStock += 1;
+    const item = matches[0];
+    let locationId = "";
+    try {
+      locationId =
+        (await ensureLocation(
+          base,
+          key,
+          defaultWh.id,
+          line.location,
+          item.category,
+          locationCache
+        )) || "";
+    } catch (error) {
+      stats.errors += 1;
+      console.warn(`ubicacion ${line.part}: ${error.message}`);
       continue;
     }
 
-    const patch = {};
-    if (line.lot && !item.tracks_serial) patch.tracks_lot = true;
-    if (line.expiry) patch.tracks_expiry = true;
-    if (item.item_kind === "equipo" && line.lot) patch.tracks_serial = true;
-    if (Object.keys(patch).length) {
-      try {
-        await rest(
-          base,
-          key,
-          "PATCH",
-          `/rest/v1/inventory_items?id=eq.${item.id}`,
-          patch
-        );
-      } catch (error) {
-        console.warn(`flags ${item.sku}: ${error.message}`);
-      }
+    const lot = String(line.lot || "").replace(/^\/+/, "").trim().toUpperCase();
+    const serial = item.item_kind === "equipo" ? lot : "";
+    const lotNumber = item.item_kind === "equipo" ? "" : lot;
+    const groupKey = serial
+      ? `${item.id}::SN::${serial}`
+      : `${item.id}::${lotNumber}::${locationId}`;
+    excelByProduct.set(item.id, (excelByProduct.get(item.id) || 0) + line.qty);
+    const current = grouped.get(groupKey);
+    if (current) {
+      current.qty += line.qty;
+      if (!current.expiry && line.expiry) current.expiry = line.expiry;
+      continue;
+    }
+    grouped.set(groupKey, {
+      item,
+      line,
+      qty: line.qty,
+      locationId,
+      lotNumber,
+      serial,
+      expiry: line.expiry,
+    });
+  }
+
+  const remainingNeed = new Map();
+  for (const [productId, excelQty] of excelByProduct) {
+    const item = items.find((row) => row.id === productId);
+    remainingNeed.set(
+      productId,
+      Math.max(0, excelQty - Number(item?.quantity || 0))
+    );
+  }
+
+  for (const group of grouped.values()) {
+    const { item, line, locationId, lotNumber, serial, expiry } = group;
+    const need = remainingNeed.get(item.id) || 0;
+    if (need <= 0) {
+      stats.skippedCovered += 1;
+      continue;
     }
 
-    const locationId = await ensureLocation(
-      base,
-      key,
-      defaultWh.id,
-      line.location,
-      item.category
-    );
-    const serial =
-      item.item_kind === "equipo" && line.lot ? line.lot : null;
-    const lotNumber =
-      item.item_kind === "equipo" ? null : line.lot || null;
+    if (serial) {
+      const serialKey = `${item.id}::${serial}`;
+      if (existingSerials.has(serialKey)) {
+        stats.skippedDuplicateLot += 1;
+        continue;
+      }
+    } else {
+      const balKey = `${item.id}::${lotNumber}::${locationId}`;
+      const already = balanceQty.get(balKey) || 0;
+      const delta = group.qty - already;
+      if (delta <= 0) {
+        stats.skippedDuplicateLot += 1;
+        continue;
+      }
+      group.qty = Math.min(delta, need);
+    }
+    group.qty = Math.min(group.qty, remainingNeed.get(item.id) || 0);
+    if (group.qty <= 0) {
+      stats.skippedCovered += 1;
+      continue;
+    }
+
+    if (!patched.has(item.id)) {
+      const patch = {};
+      if (lotNumber) patch.tracks_lot = true;
+      if (expiry) patch.tracks_expiry = true;
+      if (serial) patch.tracks_serial = true;
+      if (Object.keys(patch).length) {
+        try {
+          await rest(
+            base,
+            key,
+            "PATCH",
+            `/rest/v1/inventory_items?id=eq.${item.id}`,
+            patch
+          );
+        } catch (error) {
+          console.warn(`flags ${item.sku}: ${error.message}`);
+        }
+      }
+      patched.add(item.id);
+    }
 
     try {
       await rest(base, key, "POST", "/rest/v1/rpc/apply_stock_movement", {
         p_product_id: item.id,
         p_movement_type: "entrada",
-        p_quantity: line.qty,
+        p_quantity: group.qty,
         p_note: `Cedros ${line.sheet} · ${line.part}`,
         p_created_by: "cedros-stock",
         p_reason: REASON,
         p_warehouse_id: defaultWh.id,
-        p_location_id: locationId,
-        p_lot_number: lotNumber,
-        p_expiry_date: line.expiry || null,
-        p_serial_number: serial,
+        p_location_id: locationId || null,
+        p_lot_number: lotNumber || null,
+        p_expiry_date: expiry || null,
+        p_serial_number: serial || null,
         p_supplier_name: "",
         p_purchase_order_id: null,
       });
-      item.quantity = Number(item.quantity) + line.qty;
+      if (serial) existingSerials.add(`${item.id}::${serial}`);
+      remainingNeed.set(item.id, (remainingNeed.get(item.id) || 0) - group.qty);
+      item.quantity = Number(item.quantity || 0) + group.qty;
       stats.applied += 1;
+      stats.units += group.qty;
+      if (stats.applied % 50 === 0) {
+        console.log(
+          `progress ${stats.applied} unidades=${stats.units} errores=${stats.errors}`
+        );
+      }
     } catch (error) {
       stats.errors += 1;
-      console.warn(`entrada ${item.sku} ${line.part} lote=${line.lot}: ${error.message}`);
+      console.warn(
+        `entrada ${item.sku} ${line.part} lote=${line.lot}: ${error.message}`
+      );
     }
   }
 
@@ -372,7 +568,11 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+export { parseWorkbook, partKey };
+
+if (resolve(fileURLToPath(import.meta.url)) === resolve(process.argv[1] || "")) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
