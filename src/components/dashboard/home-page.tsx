@@ -196,6 +196,8 @@ function HomeContent({
   chartMode: ChartMode | null;
   onChartMode: (mode: ChartMode) => void;
 }) {
+  const { can } = useSessionAccess();
+  const canViewPrices = can("precios.view");
   const { has, period, service, sales, tenders, inventory, quality, clients } = metrics;
   const compare = period.compareLabel;
   const modes = CHART_MODES.filter((mode) => mode.areas.some(has));
@@ -313,8 +315,12 @@ function HomeContent({
           <KpiCard
             icon={Boxes}
             area="Almacén"
-            label="Valor del inventario"
-            value={formatMoney(inventory.value)}
+            label={canViewPrices ? "Valor del inventario" : "Productos en catálogo"}
+            value={
+              canViewPrices
+                ? formatMoney(inventory.value)
+                : formatNumber(inventory.items)
+            }
             compareLabel={compare}
             footnote={
               inventory.stockAlerts

@@ -1285,6 +1285,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           ) : null}
           <InventoryForm
             itemKind="equipo"
+            canViewPrices={access.can("precios.view")}
+            canEditPrices={access.can("precios.edit")}
             onSubmit={handleCreateEquipment}
             onCancel={() => {
               if (!creatingEquipment) setEquipmentFormOpen(false);

@@ -177,6 +177,8 @@ export type InventoryItem = {
   model: string;
   serialNumber: string;
   unitPrice: number;
+  /** Costo de lista / compra. El precio de venta es unitPrice. */
+  costPrice: number;
   supplier: string;
   expiryDate: string;
   manufacturedAt: string;
@@ -185,6 +187,8 @@ export type InventoryItem = {
   lastMaintenanceDate: string;
   nextMaintenanceDate: string;
   isActive: boolean;
+  /** Si es false, el SKU sigue consultable pero no genera alerta de agotado. */
+  stockAlertsEnabled: boolean;
   tracksLot: boolean;
   tracksSerial: boolean;
   tracksExpiry: boolean;

@@ -113,6 +113,8 @@ export type Database = {
           model: string;
           serial_number: string;
           unit_price: number;
+          cost_price: number;
+          stock_alerts_enabled: boolean;
           supplier: string;
           expiry_date: string | null;
           manufactured_at: string | null;
@@ -151,6 +153,8 @@ export type Database = {
           model?: string;
           serial_number?: string;
           unit_price?: number;
+          cost_price?: number;
+          stock_alerts_enabled?: boolean;
           supplier?: string;
           expiry_date?: string | null;
           manufactured_at?: string | null;
@@ -189,6 +193,8 @@ export type Database = {
           model?: string;
           serial_number?: string;
           unit_price?: number;
+          cost_price?: number;
+          stock_alerts_enabled?: boolean;
           supplier?: string;
           expiry_date?: string | null;
           manufactured_at?: string | null;

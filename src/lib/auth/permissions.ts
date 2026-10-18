@@ -71,7 +71,8 @@ export type WarehouseModule =
   | "mantenimientos"
   | "calendario"
   | "reporte"
-  | "usuarios";
+  | "usuarios"
+  | "precios";
 
 export type PermissionAction =
   | "view"
@@ -442,6 +443,18 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
           { action: "approve", label: "Aprobar comprobaciones y ver todos los registros" },
         ],
       },
+      {
+        id: "precios",
+        label: "Precios de catálogo",
+        description:
+          "Costo de lista y precio de venta. Almacén y servicio no los ven; se asignan en administración, compras o ventas.",
+        actions: [
+          { action: "view", label: "Ver costos y precios" },
+          { action: "edit", label: "Asignar costo y precio de venta" },
+          { action: "import", label: "Importar lista de precios" },
+          { action: "export", label: "Exportar precios en Excel" },
+        ],
+      },
     ],
   },
   {
@@ -566,6 +579,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "herramientas",
     "licitaciones",
     "gastos",
+    "precios",
   ],
   ventas: [
     "dashboard",
@@ -581,6 +595,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "documentos_tecnicos",
     "calidad",
     "gastos",
+    "precios",
   ],
   servicio: [
     "dashboard",
@@ -632,6 +647,7 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "gastos",
     "educacion",
     "calidad",
+    "precios",
   ],
 };
 
@@ -666,8 +682,17 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "registros_sanitarios",
     "licitaciones",
     "gastos",
+    "precios",
   ],
-  ventas: ["clientes", "licitaciones", "cotizaciones", "catalogo_ventas", "calidad", "gastos"],
+  ventas: [
+    "clientes",
+    "licitaciones",
+    "cotizaciones",
+    "catalogo_ventas",
+    "calidad",
+    "gastos",
+    "precios",
+  ],
   servicio: [
     "dashboard",
     ...CATALOG_MODULES,
@@ -806,6 +831,14 @@ export function canWriteModule(subject: AccessSubject, module: WarehouseModule) 
   return (["create", "edit", "delete"] as const).some((action) =>
     hasPermission(subject, permissionKey(module, action))
   );
+}
+
+export function canViewPrices(subject: AccessSubject) {
+  return hasPermission(subject, "precios.view");
+}
+
+export function canEditPrices(subject: AccessSubject) {
+  return hasPermission(subject, "precios.edit");
 }
 
 export function roleFromSession(session: SessionData | null) {

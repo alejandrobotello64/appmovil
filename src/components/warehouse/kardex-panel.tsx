@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
 import { SortableTable } from "@/components/ui/sortable-table";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 
 const TYPE_LABELS: Record<string, string> = {
   entrada: "Entrada",
@@ -31,6 +32,8 @@ function formatCurrency(value: number) {
 }
 
 export function KardexPanel() {
+  const { can } = useSessionAccess();
+  const canViewPrices = can("precios.view");
   const [rows, setRows] = useState<KardexRow[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [productId, setProductId] = useState("all");
@@ -132,6 +135,16 @@ export function KardexPanel() {
             { label: "Entrada", value: String(row.qtyIn) },
             { label: "Salida", value: String(row.qtyOut) },
             { label: "Existencia", value: String(row.resultingQty) },
+            ...(canViewPrices
+              ? [
+                  {
+                    label: "Costo",
+                    value: formatCurrency(
+                      row.unitCost * Math.max(row.qtyIn, row.qtyOut)
+                    ),
+                  },
+                ]
+              : []),
             { label: "Usuario", value: row.createdBy || "—" },
           ],
         }))}
@@ -148,7 +161,9 @@ export function KardexPanel() {
               <th className="px-4 py-3 font-medium">Entrada</th>
               <th className="px-4 py-3 font-medium">Salida</th>
               <th className="px-4 py-3 font-medium">Existencia</th>
-              <th className="px-4 py-3 font-medium">Costo</th>
+              {canViewPrices ? (
+                <th className="px-4 py-3 font-medium">Costo</th>
+              ) : null}
               <th className="px-4 py-3 font-medium">Usuario</th>
             </tr>
           </thead>
@@ -156,7 +171,7 @@ export function KardexPanel() {
             {filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={canViewPrices ? 9 : 8}
                   className="px-4 py-10 text-center text-muted-foreground"
                 >
                   {emptyMessage}
@@ -192,9 +207,11 @@ export function KardexPanel() {
                   <td className="px-4 py-3">{row.qtyIn || "—"}</td>
                   <td className="px-4 py-3">{row.qtyOut || "—"}</td>
                   <td className="px-4 py-3 font-medium">{row.resultingQty}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatCurrency(row.unitCost * Math.max(row.qtyIn, row.qtyOut))}
-                  </td>
+                  {canViewPrices ? (
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {formatCurrency(row.unitCost * Math.max(row.qtyIn, row.qtyOut))}
+                    </td>
+                  ) : null}
                   <td className="px-4 py-3 text-muted-foreground">
                     {row.createdBy || "—"}
                   </td>

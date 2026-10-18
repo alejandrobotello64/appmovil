@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  Bell,
+  BellOff,
   Eye,
   ImagePlus,
   Loader2,
@@ -34,6 +36,7 @@ import {
   removeInventoryItemImage,
   setInventoryItemColor,
   setInventoryItemPrimaryImage,
+  setInventoryStockAlertsEnabled,
   updateInventoryItem,
   uploadInventoryItemImage,
 } from "@/lib/inventory/storage";
@@ -160,6 +163,15 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+function stockBadgeLabel(item: InventoryItem) {
+  const status = getStockStatus(item.quantity, item.minStock);
+  if (item.itemKind === "equipo") return STATUS_LABELS[status];
+  if (item.stockAlertsEnabled === false) {
+    return `${STATUS_LABELS[status]} · sin alerta`;
+  }
+  return STATUS_LABELS[status];
+}
+
 type InventoryPanelProps = {
   /** Catálogo unificado, una categoría, o solo equipos */
   panelMode?: SupplyCategoryId | "equipment" | "catalog";
@@ -209,6 +221,8 @@ export function InventoryPanel({
   const canImport = isCatalog ? catalogCan("import") : scoped.canImport;
   const canExport = isCatalog ? catalogCan("export") : scoped.canExport;
   const canWrite = canCreate || canEdit || canDelete;
+  const canViewPrices = !access.ready || access.can("precios.view");
+  const canEditPrices = !access.ready || access.can("precios.edit");
   const role = scoped.role;
   const visibleCategories = CATALOG_CATEGORIES.filter(
     (entry) =>
@@ -237,7 +251,9 @@ export function InventoryPanel({
   const selectedWarehouse = warehouses.find((w) => w.id === warehouseFilter);
   const trackingMode: TrackingDateMode = isEquipment ? "manufacture" : "both";
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    StockStatus | "all" | "sin_alerta"
+  >("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [viewingItem, setViewingItem] = useState<InventoryItem | null>(null);
@@ -279,6 +295,12 @@ export function InventoryPanel({
         colorTag: data.colorTag || "",
         expiryDate: itemKind === "equipo" ? "" : data.expiryDate,
         manufacturedAt: data.manufacturedAt,
+        unitPrice: canEditPrices
+          ? data.unitPrice
+          : editingItem?.unitPrice ?? 0,
+        costPrice: canEditPrices
+          ? data.costPrice
+          : editingItem?.costPrice ?? 0,
       };
       let savedId = editingItem?.id ?? "";
       if (editingItem) {
@@ -361,7 +383,9 @@ export function InventoryPanel({
         isEquipment ||
         item.itemKind === "equipo" ||
         statusFilter === "all" ||
-        status === statusFilter;
+        (statusFilter === "sin_alerta"
+          ? item.stockAlertsEnabled === false
+          : status === statusFilter);
       const matchesWarehouse =
         !warehouseFilter || hasStockIn(stockByProduct.get(item.id), warehouseFilter);
       const matchesBrand =
@@ -580,6 +604,31 @@ export function InventoryPanel({
     setFormOpen(true);
   }
 
+  async function handleToggleAlerts(item: InventoryItem) {
+    try {
+      setError("");
+      const saved = await setInventoryStockAlertsEnabled(
+        item.id,
+        item.stockAlertsEnabled === false
+      );
+      setItems((rows) =>
+        rows.map((row) => (row.id === saved.id ? saved : row))
+      );
+      if (viewingItem?.id === saved.id) setViewingItem(saved);
+      setNotice(
+        saved.stockAlertsEnabled
+          ? `Se reactivó la alerta de stock de ${saved.sku}.`
+          : `Se silenció la alerta de agotado de ${saved.sku}. El código sigue en el catálogo.`
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar la alerta de stock."
+      );
+    }
+  }
+
   async function runImageAction(
     action: () => Promise<InventoryItem>,
     fallbackMessage: string
@@ -710,6 +759,8 @@ export function InventoryPanel({
                 items={items}
                 canWrite={canImport}
                 canExport={canExport}
+                canViewPrices={canViewPrices}
+                canEditPrices={canEditPrices}
                 defaultKind={isEquipment ? "equipo" : "producto"}
                 onImported={refreshItems}
                 onError={setError}
@@ -948,6 +999,7 @@ export function InventoryPanel({
                 <option value="disponible">Disponible</option>
                 <option value="bajo_stock">Bajo stock</option>
                 <option value="agotado">Agotado</option>
+                <option value="sin_alerta">Alerta desactivada</option>
               </select>
             ) : null}
           </div>
@@ -981,10 +1033,12 @@ export function InventoryPanel({
                     <span
                       className={cn(
                         "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                        STATUS_STYLES[status]
+                        item.stockAlertsEnabled === false
+                          ? "bg-muted text-muted-foreground"
+                          : STATUS_STYLES[status]
                       )}
                     >
-                      {STATUS_LABELS[status]}
+                      {stockBadgeLabel(item)}
                     </span>
                   ),
                 fields: [
@@ -1033,7 +1087,21 @@ export function InventoryPanel({
                       ]
                     : []),
                   { label: "Almacén / ubicación", value: renderPlacements(item) },
-                  { label: "Precio", value: formatCurrency(item.unitPrice) },
+                  ...(canViewPrices
+                    ? [
+                        {
+                          label: "Costo",
+                          value: formatCurrency(item.costPrice),
+                        },
+                        {
+                          label: "Venta",
+                          value:
+                            item.unitPrice > 0
+                              ? formatCurrency(item.unitPrice)
+                              : "Pendiente",
+                        },
+                      ]
+                    : []),
                 ],
                 actions: (
                   <>
@@ -1045,6 +1113,22 @@ export function InventoryPanel({
                       <Eye className="size-3.5" />
                       Ficha
                     </button>
+                    {itemCan(item, "edit") && item.itemKind !== "equipo" ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleToggleAlerts(item)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                      >
+                        {item.stockAlertsEnabled === false ? (
+                          <Bell className="size-3.5" />
+                        ) : (
+                          <BellOff className="size-3.5" />
+                        )}
+                        {item.stockAlertsEnabled === false
+                          ? "Activar alerta"
+                          : "Silenciar alerta"}
+                      </button>
+                    ) : null}
                     {itemCan(item, "edit") ? (
                       <button
                         type="button"
@@ -1111,7 +1195,12 @@ export function InventoryPanel({
                     <th className="px-4 py-3 font-medium">Próx. mant.</th>
                   )}
                   <th className="px-4 py-3 font-medium">Almacén / ubicación</th>
-                  <th className="px-4 py-3 font-medium">Precio</th>
+                  {canViewPrices ? (
+                    <>
+                      <th className="px-4 py-3 font-medium">Costo</th>
+                      <th className="px-4 py-3 font-medium">Venta</th>
+                    </>
+                  ) : null}
                   <th className="px-4 py-3 font-medium">Acciones</th>
                 </tr>
               </thead>
@@ -1119,7 +1208,9 @@ export function InventoryPanel({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isEquipment ? 11 : 12}
+                      colSpan={
+                        (isEquipment ? 11 : 12) + (canViewPrices ? 1 : -1)
+                      }
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isCatalog
@@ -1232,17 +1323,32 @@ export function InventoryPanel({
                             <span
                               className={cn(
                                 "inline-flex rounded-full px-2.5 py-1 text-xs font-medium",
-                                STATUS_STYLES[status]
+                                item.stockAlertsEnabled === false
+                                  ? "bg-muted text-muted-foreground"
+                                  : STATUS_STYLES[status]
                               )}
                             >
-                              {STATUS_LABELS[status]}
+                              {stockBadgeLabel(item)}
                             </span>
                           )}
                         </td>
                         <td className="px-4 py-3 align-top">{renderPlacements(item)}</td>
-                        <td className="px-4 py-3">
-                          {formatCurrency(item.unitPrice)}
-                        </td>
+                        {canViewPrices ? (
+                          <>
+                            <td className="px-4 py-3">
+                              {formatCurrency(item.costPrice)}
+                            </td>
+                            <td className="px-4 py-3">
+                              {item.unitPrice > 0
+                                ? formatCurrency(item.unitPrice)
+                                : (
+                                    <span className="text-xs text-muted-foreground">
+                                      Pendiente
+                                    </span>
+                                  )}
+                            </td>
+                          </>
+                        ) : null}
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
                             <button
@@ -1262,6 +1368,29 @@ export function InventoryPanel({
                                 title="Ubicar en almacén"
                               >
                                 <MapPin className="size-4" />
+                              </button>
+                            ) : null}
+                            {itemCan(item, "edit") && item.itemKind !== "equipo" ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleToggleAlerts(item)}
+                                className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                                aria-label={
+                                  item.stockAlertsEnabled === false
+                                    ? `Activar alerta de ${item.name}`
+                                    : `Silenciar alerta de ${item.name}`
+                                }
+                                title={
+                                  item.stockAlertsEnabled === false
+                                    ? "Activar alerta de agotado"
+                                    : "Silenciar alerta de agotado"
+                                }
+                              >
+                                {item.stockAlertsEnabled === false ? (
+                                  <BellOff className="size-4" />
+                                ) : (
+                                  <Bell className="size-4" />
+                                )}
                               </button>
                             ) : null}
                             {itemCan(item, "edit") ? (
@@ -1351,6 +1480,8 @@ export function InventoryPanel({
               }
               allowedCategories={isCatalog ? creatableCategories : undefined}
               quickBrands={catalogBrands}
+              canViewPrices={canViewPrices}
+              canEditPrices={canEditPrices}
               onSubmit={handleSubmit}
               onCancel={() => {
                 setFormOpen(false);
@@ -1529,7 +1660,25 @@ export function InventoryPanel({
                       "—",
                   ],
                   ["Proveedor", viewingItem.supplier || "—"],
-                  ["Precio", formatCurrency(viewingItem.unitPrice)],
+                  ...(canViewPrices
+                    ? [
+                        ["Costo", formatCurrency(viewingItem.costPrice)],
+                        [
+                          "Venta",
+                          viewingItem.unitPrice > 0
+                            ? formatCurrency(viewingItem.unitPrice)
+                            : "Pendiente de asignar",
+                        ],
+                      ]
+                    : []),
+                  [
+                    "Alerta de stock",
+                    viewingItem.itemKind === "equipo"
+                      ? "—"
+                      : viewingItem.stockAlertsEnabled === false
+                        ? "Desactivada (el código sigue consultable)"
+                        : "Activa",
+                  ],
                   [
                     "Stock",
                     `${viewingItem.quantity} ${viewingItem.unit}`,

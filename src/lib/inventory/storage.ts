@@ -32,6 +32,18 @@ export function getStockStatus(
   return "disponible";
 }
 
+/** El SKU sigue consultable; solo deja de disparar alertas de agotado/bajo stock. */
+export function itemShowsStockAlert(
+  item: Pick<
+    InventoryItem,
+    "quantity" | "minStock" | "stockAlertsEnabled" | "itemKind"
+  >
+) {
+  if (item.itemKind === "equipo") return false;
+  if (item.stockAlertsEnabled === false) return false;
+  return getStockStatus(item.quantity, item.minStock) !== "disponible";
+}
+
 function parseGallery(value: unknown): InventoryGalleryImage[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -46,31 +58,84 @@ function parseGallery(value: unknown): InventoryGalleryImage[] {
     .filter((image) => image.path && image.url);
 }
 
-const COLOR_NOTE_RE = /\n?<!--mas-color:([a-z]*)-->\s*$/;
+const COLOR_NOTE_RE = /\n?<!--mas-color:([a-z]*)-->\s*/;
+const COST_NOTE_RE = /\n?<!--mas-cost:([0-9]+(?:\.[0-9]+)?)-->\s*/;
+const NO_ALERT_NOTE_RE = /\n?<!--mas-no-stock-alert-->\s*/;
 
-function splitColorNote(notes: string) {
-  const match = notes.match(COLOR_NOTE_RE);
+type ItemNoteMeta = {
+  notes: string;
+  color: string;
+  costPrice: number;
+  stockAlertsEnabled: boolean;
+};
+
+function parseItemNotes(notes: string): ItemNoteMeta {
+  const colorMatch = notes.match(/<!--mas-color:([a-z]*)-->/);
+  const costMatch = notes.match(/<!--mas-cost:([0-9]+(?:\.[0-9]+)?)-->/);
   return {
-    notes: notes.replace(COLOR_NOTE_RE, ""),
-    color: normalizeProductColor(match?.[1]),
+    notes: notes
+      .replace(COLOR_NOTE_RE, "")
+      .replace(COST_NOTE_RE, "")
+      .replace(NO_ALERT_NOTE_RE, ""),
+    color: normalizeProductColor(colorMatch?.[1]),
+    costPrice: costMatch ? Number(costMatch[1]) || 0 : 0,
+    stockAlertsEnabled: !NO_ALERT_NOTE_RE.test(notes),
   };
 }
 
+function splitColorNote(notes: string) {
+  const parsed = parseItemNotes(notes);
+  return { notes: parsed.notes, color: parsed.color };
+}
+
+function withItemNotes(
+  notes: string,
+  meta: {
+    color?: string;
+    costPrice?: number;
+    stockAlertsEnabled?: boolean;
+    useColorMarker?: boolean;
+    useCostMarker?: boolean;
+    useAlertMarker?: boolean;
+  }
+) {
+  const parsed = parseItemNotes(notes);
+  const color =
+    meta.color !== undefined ? normalizeProductColor(meta.color) : parsed.color;
+  const cost = meta.costPrice !== undefined ? meta.costPrice : parsed.costPrice;
+  const alerts =
+    meta.stockAlertsEnabled !== undefined
+      ? meta.stockAlertsEnabled
+      : parsed.stockAlertsEnabled;
+  let next = parsed.notes.trimEnd();
+  if (meta.useCostMarker && cost > 0) next += `\n<!--mas-cost:${cost}-->`;
+  if (meta.useAlertMarker && !alerts) next += `\n<!--mas-no-stock-alert-->`;
+  if (meta.useColorMarker && color) next += `\n<!--mas-color:${color}-->`;
+  return next;
+}
+
 function withColorNote(notes: string, color: string) {
-  const cleaned = splitColorNote(notes).notes;
-  const tag = normalizeProductColor(color);
-  if (!tag) return cleaned;
-  return `${cleaned}\n<!--mas-color:${tag}-->`;
+  return withItemNotes(notes, { color, useColorMarker: true });
 }
 
 function mapRowToItem(row: InventoryRow): InventoryItem {
   const category = row.category as InventoryCategoryId;
   const inferredKind: ItemKind =
     row.item_kind === "equipo" || category === "equipos" ? "equipo" : "producto";
-  const parsedNotes = splitColorNote(row.notes ?? "");
+  const parsedNotes = parseItemNotes(row.notes ?? "");
+  const extra = row as InventoryRow & {
+    color_tag?: string;
+    cost_price?: number | null;
+    stock_alerts_enabled?: boolean | null;
+  };
   const colorTag =
-    normalizeProductColor((row as { color_tag?: string }).color_tag) ||
-    parsedNotes.color;
+    normalizeProductColor(extra.color_tag) || parsedNotes.color;
+  const costPrice =
+    extra.cost_price != null ? Number(extra.cost_price) : parsedNotes.costPrice;
+  const stockAlertsEnabled =
+    extra.stock_alerts_enabled != null
+      ? extra.stock_alerts_enabled !== false
+      : parsedNotes.stockAlertsEnabled;
 
   return {
     id: row.id,
@@ -88,6 +153,7 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     model: row.model ?? "",
     serialNumber: row.serial_number ?? "",
     unitPrice: Number(row.unit_price ?? 0),
+    costPrice: Number.isFinite(costPrice) ? costPrice : 0,
     supplier: row.supplier ?? "",
     expiryDate: row.expiry_date ?? "",
     manufacturedAt: row.manufactured_at ?? "",
@@ -96,6 +162,7 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     lastMaintenanceDate: row.last_maintenance_date ?? "",
     nextMaintenanceDate: row.next_maintenance_date ?? "",
     isActive: row.is_active !== false,
+    stockAlertsEnabled,
     tracksLot: Boolean(row.tracks_lot),
     tracksSerial: Boolean(row.tracks_serial),
     tracksExpiry: Boolean(row.tracks_expiry),
@@ -133,6 +200,8 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     model: input.model ?? "",
     serial_number: input.serialNumber ?? "",
     unit_price: input.unitPrice,
+    cost_price: input.costPrice ?? 0,
+    stock_alerts_enabled: input.stockAlertsEnabled !== false,
     supplier: input.supplier ?? "",
     expiry_date: input.expiryDate ? input.expiryDate : null,
     manufactured_at: input.manufacturedAt ? input.manufacturedAt : null,
@@ -158,16 +227,19 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
   };
 }
 
-function isMissingColorTagError(error: {
-  message?: string;
-  details?: string;
-  hint?: string;
-  code?: string;
-} | null) {
+function isMissingColumnError(
+  error: {
+    message?: string;
+    details?: string;
+    hint?: string;
+    code?: string;
+  } | null,
+  column: string
+) {
   if (!error) return false;
   const text = `${error.code ?? ""} ${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
   return (
-    text.includes("color_tag") &&
+    text.includes(column.toLowerCase()) &&
     (text.includes("does not exist") ||
       text.includes("could not find") ||
       text.includes("schema cache") ||
@@ -176,35 +248,74 @@ function isMissingColorTagError(error: {
   );
 }
 
-let colorColumnReady: boolean | null = null;
+function isMissingColorTagError(
+  error: {
+    message?: string;
+    details?: string;
+    hint?: string;
+    code?: string;
+  } | null
+) {
+  return isMissingColumnError(error, "color_tag");
+}
 
-async function ensureColorColumn() {
-  if (colorColumnReady !== null) return colorColumnReady;
+let colorColumnReady: boolean | null = null;
+let costColumnReady: boolean | null = null;
+let alertsColumnReady: boolean | null = null;
+
+async function probeColumn(column: string) {
   const { error } = await supabase
     .from("inventory_items")
-    .select("id, color_tag")
+    .select(`id, ${column}`)
     .limit(1);
-  colorColumnReady = !isMissingColorTagError(error);
+  return !isMissingColumnError(error, column);
+}
+
+async function ensureInventoryExtraColumns() {
+  if (colorColumnReady === null) colorColumnReady = await probeColumn("color_tag");
+  if (costColumnReady === null) costColumnReady = await probeColumn("cost_price");
+  if (alertsColumnReady === null) {
+    alertsColumnReady = await probeColumn("stock_alerts_enabled");
+  }
+}
+
+async function ensureColorColumn() {
+  await ensureInventoryExtraColumns();
   return colorColumnReady;
 }
 
 function payloadForWrite(
   payload: InventoryInsert,
-  colorTag: string | null | undefined
+  input: Pick<InventoryItemInput, "colorTag" | "costPrice" | "stockAlertsEnabled" | "notes">
 ): InventoryInsert {
-  const useMarker = colorColumnReady === false;
+  const useColorMarker = colorColumnReady === false;
+  const useCostMarker = costColumnReady === false;
+  const useAlertMarker = alertsColumnReady === false;
   const next: InventoryInsert = {
     ...payload,
-    notes: useMarker
-      ? withColorNote(String(payload.notes ?? ""), colorTag ?? "")
-      : splitColorNote(String(payload.notes ?? "")).notes,
+    notes: withItemNotes(String(payload.notes ?? input.notes ?? ""), {
+      color: input.colorTag,
+      costPrice: input.costPrice,
+      stockAlertsEnabled: input.stockAlertsEnabled,
+      useColorMarker,
+      useCostMarker,
+      useAlertMarker,
+    }),
   };
-  if (useMarker) delete (next as { color_tag?: string }).color_tag;
+  if (useColorMarker) delete (next as { color_tag?: string }).color_tag;
+  if (useCostMarker) delete (next as { cost_price?: number }).cost_price;
+  if (useAlertMarker) {
+    delete (next as { stock_alerts_enabled?: boolean }).stock_alerts_enabled;
+  }
   return next;
 }
 
 function inventoryWriteMessage(error: { message?: string }) {
-  if (isMissingColorTagError(error)) {
+  if (
+    isMissingColorTagError(error) ||
+    isMissingColumnError(error, "cost_price") ||
+    isMissingColumnError(error, "stock_alerts_enabled")
+  ) {
     return "No se pudo guardar el producto en Supabase.";
   }
   return error.message || "No se pudo guardar el producto en Supabase.";
@@ -328,18 +439,25 @@ export async function createInventoryItem(
       : input.category;
   const sku = input.sku.trim() || (await nextInventorySku(category));
 
-  await ensureColorColumn();
+  await ensureInventoryExtraColumns();
   const mapped = mapInputToRow({ ...input, sku, category });
-  let payload = payloadForWrite(mapped, input.colorTag);
+  let payload = payloadForWrite(mapped, input);
   let { data, error } = await supabase
     .from("inventory_items")
     .insert(payload)
     .select("*")
     .single();
 
-  if (error && isMissingColorTagError(error)) {
-    colorColumnReady = false;
-    payload = payloadForWrite(mapped, input.colorTag);
+  if (
+    error &&
+    (isMissingColorTagError(error) ||
+      isMissingColumnError(error, "cost_price") ||
+      isMissingColumnError(error, "stock_alerts_enabled"))
+  ) {
+    if (isMissingColorTagError(error)) colorColumnReady = false;
+    if (isMissingColumnError(error, "cost_price")) costColumnReady = false;
+    if (isMissingColumnError(error, "stock_alerts_enabled")) alertsColumnReady = false;
+    payload = payloadForWrite(mapped, input);
     const retry = await supabase
       .from("inventory_items")
       .insert(payload)
@@ -349,6 +467,8 @@ export async function createInventoryItem(
     error = retry.error;
   } else if (!error) {
     colorColumnReady = colorColumnReady ?? true;
+    costColumnReady = costColumnReady ?? true;
+    alertsColumnReady = alertsColumnReady ?? true;
   }
 
   if (error || !data) {
@@ -389,9 +509,9 @@ export async function updateInventoryItem(
   id: string,
   input: InventoryItemInput
 ): Promise<InventoryItem> {
-  await ensureColorColumn();
+  await ensureInventoryExtraColumns();
   const mapped = mapInputToRow(input);
-  let payload = payloadForWrite(mapped, input.colorTag);
+  let payload = payloadForWrite(mapped, input);
   delete payload.quantity;
   if (input.imagePath === undefined) delete payload.image_path;
   if (input.imageUrl === undefined) delete payload.image_url;
@@ -403,9 +523,16 @@ export async function updateInventoryItem(
     .select("*")
     .single();
 
-  if (error && isMissingColorTagError(error)) {
-    colorColumnReady = false;
-    payload = payloadForWrite(mapped, input.colorTag);
+  if (
+    error &&
+    (isMissingColorTagError(error) ||
+      isMissingColumnError(error, "cost_price") ||
+      isMissingColumnError(error, "stock_alerts_enabled"))
+  ) {
+    if (isMissingColorTagError(error)) colorColumnReady = false;
+    if (isMissingColumnError(error, "cost_price")) costColumnReady = false;
+    if (isMissingColumnError(error, "stock_alerts_enabled")) alertsColumnReady = false;
+    payload = payloadForWrite(mapped, input);
     delete payload.quantity;
     if (input.imagePath === undefined) delete payload.image_path;
     if (input.imageUrl === undefined) delete payload.image_url;
@@ -419,6 +546,8 @@ export async function updateInventoryItem(
     error = retry.error;
   } else if (!error) {
     colorColumnReady = colorColumnReady ?? true;
+    costColumnReady = costColumnReady ?? true;
+    alertsColumnReady = alertsColumnReady ?? true;
   }
 
   if (error || !data) {
@@ -470,6 +599,53 @@ export async function setInventoryItemColor(
   return mapRowToItem(data);
 }
 
+export async function setInventoryStockAlertsEnabled(
+  id: string,
+  enabled: boolean
+): Promise<InventoryItem> {
+  await ensureInventoryExtraColumns();
+  const current = await fetchInventoryItem(id);
+
+  if (alertsColumnReady === false) {
+    const { data, error } = await supabase
+      .from("inventory_items")
+      .update({
+        notes: withItemNotes(current.notes, {
+          stockAlertsEnabled: enabled,
+          useAlertMarker: true,
+          useColorMarker: colorColumnReady === false,
+          useCostMarker: costColumnReady === false,
+          color: current.colorTag,
+          costPrice: current.costPrice,
+        }),
+      })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error || !data) {
+      throw new Error(error?.message || "No se pudo actualizar la alerta de stock.");
+    }
+    return mapRowToItem(data);
+  }
+
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .update({ stock_alerts_enabled: enabled })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error && isMissingColumnError(error, "stock_alerts_enabled")) {
+    alertsColumnReady = false;
+    return setInventoryStockAlertsEnabled(id, enabled);
+  }
+
+  if (error || !data) {
+    throw new Error(error?.message || "No se pudo actualizar la alerta de stock.");
+  }
+  return mapRowToItem(data);
+}
+
 export async function deleteInventoryItem(
   id: string,
   createdBy = "sistema"
@@ -497,7 +673,8 @@ function isUniqueSkuError(message: string) {
 export async function bulkImportInventoryItems(
   rows: InventoryItemInput[],
   createdBy: string,
-  onProgress?: (done: number, total: number) => void
+  onProgress?: (done: number, total: number) => void,
+  options?: { preservePrices?: boolean }
 ): Promise<{
   created: number;
   updated: number;
@@ -540,15 +717,24 @@ export async function bulkImportInventoryItems(
     const key = input.sku.toLowerCase();
     try {
       const current = bySku.get(key);
+      const priced: InventoryItemInput = options?.preservePrices
+        ? {
+            ...input,
+            unitPrice: current?.unitPrice ?? 0,
+            costPrice: current?.costPrice ?? 0,
+          }
+        : input;
       if (current) {
         await updateInventoryItem(current.id, {
-          ...input,
+          ...priced,
           quantity: current.quantity,
+          stockAlertsEnabled:
+            input.stockAlertsEnabled ?? current.stockAlertsEnabled,
         });
         updated += 1;
       } else {
         try {
-          const item = await createInventoryItem(input, actor);
+          const item = await createInventoryItem(priced, actor);
           bySku.set(key, item);
           created += 1;
         } catch (err) {
@@ -560,8 +746,10 @@ export async function bulkImportInventoryItems(
           );
           if (!found) throw err;
           await updateInventoryItem(found.id, {
-            ...input,
+            ...priced,
             quantity: found.quantity,
+            stockAlertsEnabled:
+              input.stockAlertsEnabled ?? found.stockAlertsEnabled,
           });
           bySku.set(key, found);
           updated += 1;

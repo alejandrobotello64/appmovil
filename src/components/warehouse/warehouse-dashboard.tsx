@@ -17,7 +17,9 @@ import {
   getEquipmentItems,
   getStockStatus,
   getSupplyItems,
+  itemShowsStockAlert,
 } from "@/lib/inventory/storage";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { SUPPLY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
@@ -48,6 +50,8 @@ function formatCurrency(value: number) {
 }
 
 export function WarehouseDashboard() {
+  const { can } = useSessionAccess();
+  const canViewPrices = can("precios.view");
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [equipment, setEquipment] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -97,10 +101,14 @@ export function WarehouseDashboard() {
       0
     );
     const lowStock = products.filter(
-      (item) => getStockStatus(item.quantity, item.minStock) === "bajo_stock"
+      (item) =>
+        itemShowsStockAlert(item) &&
+        getStockStatus(item.quantity, item.minStock) === "bajo_stock"
     ).length;
     const outOfStock = products.filter(
-      (item) => getStockStatus(item.quantity, item.minStock) === "agotado"
+      (item) =>
+        itemShowsStockAlert(item) &&
+        getStockStatus(item.quantity, item.minStock) === "agotado"
     ).length;
     const operativeEquipment = equipment.filter(
       (item) => item.assetStatus === "operativo"
@@ -128,9 +136,7 @@ export function WarehouseDashboard() {
 
   const alerts = useMemo(
     () =>
-      products.filter(
-        (item) => getStockStatus(item.quantity, item.minStock) !== "disponible"
-      ),
+      products.filter((item) => itemShowsStockAlert(item)),
     [products]
   );
 
@@ -175,13 +181,17 @@ export function WarehouseDashboard() {
       href: "/dashboard/almacen?tab=inventario",
       tone: "text-[#00BFFF]",
     },
-    {
-      label: "Valor de insumos",
-      value: formatCurrency(stats.inventoryValue),
-      icon: ClipboardList,
-      href: "/dashboard/almacen?tab=reporte",
-      tone: "text-emerald-600",
-    },
+    ...(canViewPrices
+      ? [
+          {
+            label: "Valor de insumos",
+            value: formatCurrency(stats.inventoryValue),
+            icon: ClipboardList,
+            href: "/dashboard/almacen?tab=reporte",
+            tone: "text-emerald-600",
+          },
+        ]
+      : []),
     {
       label: "Bajo stock",
       value: stats.lowStock,

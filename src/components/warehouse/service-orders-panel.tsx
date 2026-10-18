@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
 import { getClientEquipment, getClients } from "@/lib/clients/storage";
 import { getServiceContracts } from "@/lib/contracts/storage";
 import { contractLabel, type ServiceContract } from "@/lib/contracts/types";
@@ -247,6 +247,8 @@ export function ServiceOrdersPanel({
     canApprove,
   } = usePermissions("ordenes_servicio");
   const { canWrite: canWriteQuality } = usePermissions("calidad");
+  const { can } = useSessionAccess();
+  const canViewPrices = can("precios.view");
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -2365,12 +2367,18 @@ export function ServiceOrdersPanel({
                         <th className="px-3 py-2">Producto</th>
                         <th className="px-3 py-2">Existencia</th>
                         <th className="px-3 py-2">Cant</th>
-                        <th className="px-3 py-2">P. unit.</th>
-                        <th className="px-3 py-2" title="Descuento de la partida">
-                          Desc. %
-                        </th>
+                        {canViewPrices ? (
+                          <>
+                            <th className="px-3 py-2">P. unit.</th>
+                            <th className="px-3 py-2" title="Descuento de la partida">
+                              Desc. %
+                            </th>
+                          </>
+                        ) : null}
                         <th className="px-3 py-2">Estatus</th>
-                        <th className="px-3 py-2">Importe</th>
+                        {canViewPrices ? (
+                          <th className="px-3 py-2">Importe</th>
+                        ) : null}
                         <th className="px-3 py-2" />
                       </tr>
                     </thead>
@@ -2378,7 +2386,7 @@ export function ServiceOrdersPanel({
                       {draftLines.length === 0 ? (
                         <tr>
                           <td
-                            colSpan={8}
+                            colSpan={canViewPrices ? 8 : 5}
                             className="px-3 py-8 text-center text-sm text-muted-foreground"
                           >
                             Busca un código o descripción para agregar material a la orden.
@@ -2482,6 +2490,8 @@ export function ServiceOrdersPanel({
                                   }
                                 />
                               </td>
+                              {canViewPrices ? (
+                                <>
                               <td className="px-2 py-2">
                                 <input
                                   type="number"
@@ -2524,6 +2534,8 @@ export function ServiceOrdersPanel({
                                   }
                                 />
                               </td>
+                                </>
+                              ) : null}
                               <td className="px-2 py-2">
                                 <select
                                   className="h-9 rounded-md border border-input bg-background px-2 text-xs"
@@ -2550,6 +2562,7 @@ export function ServiceOrdersPanel({
                                   ))}
                                 </select>
                               </td>
+                              {canViewPrices ? (
                               <td className="px-3 py-2 text-xs">
                                 {money(lineAmount(line))}
                                 {clampPercent(line.discountPercent) > 0 ? (
@@ -2558,6 +2571,7 @@ export function ServiceOrdersPanel({
                                   </span>
                                 ) : null}
                               </td>
+                              ) : null}
                               <td className="px-2 py-2">
                                 {canEdit ? (
                                   <button
@@ -2672,6 +2686,7 @@ export function ServiceOrdersPanel({
                     </a>
                   </div>
                 ) : null}
+                {canViewPrices ? (
                 <ServicePricingSummary
                   key={selected.id}
                   lines={pricedLines}
@@ -2681,6 +2696,7 @@ export function ServiceOrdersPanel({
                   underWarranty={selected.underWarranty}
                   dirty={canEdit && servicesDirty}
                 />
+                ) : null}
                 {canEdit && servicesDirty ? (
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     <span className="text-xs text-muted-foreground">

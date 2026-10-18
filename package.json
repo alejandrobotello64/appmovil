@@ -13,6 +13,7 @@
     "db:cedros-stock": "node scripts/apply-cedros-stock.mjs",
     "db:alta-imss-veracruz": "node scripts/alta-hospitales-imss-veracruz.mjs",
     "db:corregir-nombres": "node scripts/corregir-nombres-catalogo.mjs",
+    "db:precios-drager": "node scripts/cargar-precios-drager-2025.mjs",
     "db:export-catalog": "bash scripts/export-catalog.sh",
     "dev:api": "bash scripts/start-local-api.sh",
     "db:push": "supabase db push",

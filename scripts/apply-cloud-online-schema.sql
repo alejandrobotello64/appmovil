@@ -3,7 +3,8 @@
 -- https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new
 -- luego Run.
 --
--- Cubre: color_tag, kits, marca/referencia en cotizaciones, bucket de fotos.
+-- Cubre: color_tag, cost_price, stock_alerts_enabled, kits,
+-- marca/referencia en cotizaciones, bucket de fotos.
 -- Las etiquetas rojas de Cedros ya están en notes (<!--mas-color:rojo-->);
 -- este script las copia a color_tag cuando la columna exista.
 
@@ -36,6 +37,24 @@ update public.inventory_items
 set color_tag = substring(notes from '<!--mas-color:([a-z]+)-->')
 where notes ~ '<!--mas-color:[a-z]+-->'
   and coalesce(color_tag, '') = '';
+
+-- Costo de lista y silencio de alertas de agotado.
+
+alter table public.inventory_items
+  add column if not exists cost_price numeric(14,4) not null default 0;
+
+alter table public.inventory_items
+  add column if not exists stock_alerts_enabled boolean not null default true;
+
+update public.inventory_items
+set cost_price = substring(notes from '<!--mas-cost:([0-9]+(?:\.[0-9]+)?)-->')::numeric
+where notes ~ '<!--mas-cost:[0-9]+(?:\.[0-9]+)?-->'
+  and coalesce(cost_price, 0) = 0;
+
+update public.inventory_items
+set stock_alerts_enabled = false
+where notes like '%<!--mas-no-stock-alert-->%'
+  and stock_alerts_enabled is distinct from false;
 
 -- Marca y n.º de parte (referencia) en partidas de cotización.
 

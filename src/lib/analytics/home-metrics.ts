@@ -1,7 +1,7 @@
 import { mostCommon, normalizeKey } from "@/lib/equipment-grouping";
 import { buildVehicleAlerts } from "@/lib/fleet/types";
 import { buildHoldDueAlerts, holdDueLabel } from "@/lib/holds/alerts";
-import { getStockStatus } from "@/lib/inventory/storage";
+import { getStockStatus, itemShowsStockAlert } from "@/lib/inventory/storage";
 import { surveyAverage } from "@/lib/quality/types";
 import type { QuoteStatus } from "@/lib/quotes/types";
 import {
@@ -317,9 +317,7 @@ export function computeHomeMetrics(data: HomeData, periodId: PeriodId) {
   // --- Almacén ---
   const activeItems = data.inventory.filter((item) => item.isActive);
   const inventoryValue = sum(activeItems, (item) => item.quantity * item.unitPrice);
-  const stockAlerts = activeItems.filter(
-    (item) => item.itemKind !== "equipo" && getStockStatus(item.quantity, item.minStock) !== "disponible"
-  );
+  const stockAlerts = activeItems.filter((item) => itemShowsStockAlert(item));
   const expiring = activeItems.filter((item) => {
     const days = daysFrom(item.expiryDate, now);
     return item.quantity > 0 && days !== null && days <= 90;

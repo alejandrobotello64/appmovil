@@ -34,6 +34,9 @@ type InventoryFormProps = {
   quickBrands?: string[];
   onSubmit: (data: InventoryItemInput, imageFile?: File | null) => void;
   onCancel: () => void;
+  /** Costos y precio de venta. Almacén no los ve. */
+  canViewPrices?: boolean;
+  canEditPrices?: boolean;
 };
 
 function emptyForm(
@@ -56,6 +59,7 @@ function emptyForm(
     model: "",
     serialNumber: "",
     unitPrice: 0,
+    costPrice: 0,
     supplier: "",
     expiryDate: "",
     manufacturedAt: "",
@@ -64,6 +68,7 @@ function emptyForm(
     lastMaintenanceDate: "",
     nextMaintenanceDate: "",
     isActive: true,
+    stockAlertsEnabled: true,
     tracksLot: false,
     tracksSerial: kind === "equipo",
     tracksExpiry: false,
@@ -84,6 +89,8 @@ export function InventoryForm({
   quickBrands,
   onSubmit,
   onCancel,
+  canViewPrices = false,
+  canEditPrices = false,
 }: InventoryFormProps) {
   const [form, setForm] = useState<InventoryItemInput>(
     emptyForm(itemKind, lockedCategory)
@@ -578,19 +585,46 @@ export function InventoryForm({
             />
           </label>
         ) : null}
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium">Precio unitario</span>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            value={form.unitPrice}
-            onChange={(event) =>
-              handleChange("unitPrice", Number(event.target.value))
-            }
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
-          />
-        </label>
+        {canViewPrices ? (
+          <>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">Precio de costo</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.costPrice}
+                disabled={!canEditPrices}
+                onChange={(event) =>
+                  handleChange("costPrice", Number(event.target.value))
+                }
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none disabled:opacity-60"
+              />
+              <span className="text-xs text-muted-foreground">
+                Costo de lista del proveedor. Almacén y servicio no lo ven.
+              </span>
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium">Precio de venta</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.unitPrice}
+                disabled={!canEditPrices}
+                onChange={(event) =>
+                  handleChange("unitPrice", Number(event.target.value))
+                }
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none disabled:opacity-60"
+              />
+              <span className="text-xs text-muted-foreground">
+                {form.unitPrice > 0
+                  ? "Precio al cliente."
+                  : "Pendiente de asignar. No se inventa a partir del costo."}
+              </span>
+            </label>
+          </>
+        ) : null}
         <label className="space-y-1.5">
           <span className="text-sm font-medium">Proveedor</span>
           <input
@@ -640,6 +674,25 @@ export function InventoryForm({
               }
             />
             Control de caducidad
+          </label>
+        ) : null}
+        {!isEquipment ? (
+          <label className="flex items-start gap-2 text-sm md:col-span-2">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={form.stockAlertsEnabled !== false}
+              onChange={(event) =>
+                handleChange("stockAlertsEnabled", event.target.checked)
+              }
+            />
+            <span>
+              Alertar cuando esté agotado o bajo stock
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Si se desactiva, el código sigue en el catálogo y se puede buscar;
+                solo deja de aparecer en las alertas.
+              </span>
+            </span>
           </label>
         ) : null}
 

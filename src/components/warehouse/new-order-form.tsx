@@ -5,6 +5,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Minus, PackagePlus, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth";
+import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { getStockStatus } from "@/lib/inventory/storage";
 import {
   SUPPLY_CATEGORIES,
@@ -101,6 +102,8 @@ export function NewOrderForm({
   heading,
   initialLines = [],
 }: NewOrderFormProps) {
+  const { can } = useSessionAccess();
+  const canViewPrices = can("precios.view");
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id ?? "");
   const [expectedDate, setExpectedDate] = useState("");
   const [notes, setNotes] = useState(initialNotes);
@@ -485,11 +488,11 @@ export function NewOrderForm({
                             <span className="text-[11px] font-medium text-[#3B46A5]">
                               En pedido: {already.quantity}
                             </span>
-                          ) : (
+                          ) : canViewPrices ? (
                             <span className="text-[11px] text-muted-foreground">
                               {formatCurrency(product.unitPrice)}
                             </span>
-                          )}
+                          ) : null}
                         </span>
                       </button>
                     </li>
@@ -581,10 +584,13 @@ export function NewOrderForm({
                           <Plus className="size-3.5" />
                         </button>
                       </div>
-                      <p className="text-right text-sm font-medium">
-                        {formatCurrency(line.quantity * line.unitPrice)}
-                      </p>
+                      {canViewPrices ? (
+                        <p className="text-right text-sm font-medium">
+                          {formatCurrency(line.quantity * line.unitPrice)}
+                        </p>
+                      ) : null}
                     </div>
+                    {canViewPrices ? (
                     <label className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                       Precio unitario
                       <input
@@ -600,6 +606,7 @@ export function NewOrderForm({
                         className="h-8 w-28 rounded-lg border border-input bg-background px-2 text-right text-sm text-foreground outline-none"
                       />
                     </label>
+                    ) : null}
                     {suppliers.length > 0 ? (
                       <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                         Proveedor
@@ -622,8 +629,12 @@ export function NewOrderForm({
                         <th className="px-3 py-2 font-medium">Proveedor</th>
                       ) : null}
                       <th className="px-3 py-2 font-medium">Cant.</th>
-                      <th className="px-3 py-2 font-medium">P. unit.</th>
-                      <th className="px-3 py-2 font-medium">Importe</th>
+                      {canViewPrices ? (
+                        <>
+                          <th className="px-3 py-2 font-medium">P. unit.</th>
+                          <th className="px-3 py-2 font-medium">Importe</th>
+                        </>
+                      ) : null}
                       <th className="px-3 py-2 font-medium">
                         <span className="sr-only">Quitar</span>
                       </th>
@@ -662,26 +673,30 @@ export function NewOrderForm({
                             className="h-9 w-20 rounded-lg border border-input bg-background px-2 text-sm outline-none"
                           />
                         </td>
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            value={line.unitPrice}
-                            onChange={(event) =>
-                              updateLine(line.itemId, {
-                                unitPrice: Math.max(
-                                  0,
-                                  Number(event.target.value) || 0
-                                ),
-                              })
-                            }
-                            className="h-9 w-24 rounded-lg border border-input bg-background px-2 text-sm outline-none"
-                          />
-                        </td>
-                        <td className="px-3 py-2 font-medium whitespace-nowrap">
-                          {formatCurrency(line.quantity * line.unitPrice)}
-                        </td>
+                        {canViewPrices ? (
+                          <>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={line.unitPrice}
+                                onChange={(event) =>
+                                  updateLine(line.itemId, {
+                                    unitPrice: Math.max(
+                                      0,
+                                      Number(event.target.value) || 0
+                                    ),
+                                  })
+                                }
+                                className="h-9 w-24 rounded-lg border border-input bg-background px-2 text-sm outline-none"
+                              />
+                            </td>
+                            <td className="px-3 py-2 font-medium whitespace-nowrap">
+                              {formatCurrency(line.quantity * line.unitPrice)}
+                            </td>
+                          </>
+                        ) : null}
                         <td className="px-3 py-2">
                           <button
                             type="button"
@@ -711,7 +726,9 @@ export function NewOrderForm({
                     <span className="truncate">
                       {group.supplier?.name ?? "Sin proveedor"} · {group.lines.length} SKU
                     </span>
-                    <span className="tabular-nums">{formatCurrency(group.total)}</span>
+                    <span className="tabular-nums">
+                      {canViewPrices ? formatCurrency(group.total) : `${group.lines.length} SKU`}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -720,9 +737,13 @@ export function NewOrderForm({
 
           <div className="sticky bottom-0 mt-4 flex shrink-0 flex-col gap-3 border-t border-border bg-card pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Total estimado</p>
+              <p className="text-xs text-muted-foreground">
+                {canViewPrices ? "Total estimado" : "Líneas del pedido"}
+              </p>
               <p className="text-xl font-semibold tabular-nums">
-                {formatCurrency(lineTotal)}
+                {canViewPrices
+                  ? formatCurrency(lineTotal)
+                  : `${lines.length} SKU · ${lineCount} pzas`}
               </p>
             </div>
             <div className="flex gap-2">

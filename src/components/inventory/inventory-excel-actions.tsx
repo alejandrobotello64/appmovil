@@ -19,6 +19,8 @@ type InventoryExcelActionsProps = {
   items: InventoryItem[];
   canWrite: boolean;
   canExport?: boolean;
+  canViewPrices?: boolean;
+  canEditPrices?: boolean;
   defaultKind: ItemKind;
   onImported: () => Promise<void>;
   onError: (message: string) => void;
@@ -28,6 +30,8 @@ export function InventoryExcelActions({
   items,
   canWrite,
   canExport = true,
+  canViewPrices = false,
+  canEditPrices = false,
   defaultKind,
   onImported,
   onError,
@@ -47,7 +51,9 @@ export function InventoryExcelActions({
 
   function handleExport() {
     try {
-      exportProductsToExcel(items);
+      exportProductsToExcel(items, undefined, {
+        includePrices: canViewPrices,
+      });
     } catch (err) {
       onError(
         err instanceof Error ? err.message : "No se pudo exportar el Excel."
@@ -91,7 +97,8 @@ export function InventoryExcelActions({
       const outcome = await bulkImportInventoryItems(
         preview,
         session?.username ?? "sistema",
-        (done, total) => setProgress(`${done} / ${total}`)
+        (done, total) => setProgress(`${done} / ${total}`),
+        { preservePrices: !canEditPrices }
       );
       const parts = [
         outcome.created ? `${outcome.created} nuevos` : "",
@@ -162,7 +169,11 @@ export function InventoryExcelActions({
       {open ? (
         <ModalShell
           title="Importar catálogo Excel"
-          description="Acepta la plantilla MAS o un inventario con columnas como Código, Descripción, Cantidad y Precio."
+          description={
+            canViewPrices
+              ? "Acepta la plantilla MAS o un inventario con columnas como Código, Descripción, Cantidad, Costo y Precio de venta."
+              : "Acepta la plantilla MAS o un inventario con columnas como Código, Descripción y Cantidad. Los precios no se importan ni se muestran con tu rol."
+          }
           className="max-w-3xl"
         >
           <div className="space-y-4">
@@ -187,7 +198,9 @@ export function InventoryExcelActions({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={downloadProductTemplate}
+                onClick={() =>
+                  downloadProductTemplate({ includePrices: canViewPrices })
+                }
               >
                 <FileSpreadsheet className="size-4" />
                 Descargar plantilla

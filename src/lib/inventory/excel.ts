@@ -31,6 +31,8 @@ export const PRODUCT_EXCEL_HEADERS = [
   "serie",
   "numero_parte",
   "precio",
+  "costo",
+  "alerta_stock",
   "proveedor",
   "fabricante",
   "caducidad",
@@ -125,11 +127,21 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_EXCEL_HEADERS)[number]> = {
   n_parte: "numero_parte",
   precio: "precio",
   precio_unitario: "precio",
+  precio_venta: "precio",
   p_unitario: "precio",
   precio_unit: "precio",
   unit_price: "precio",
-  costo: "precio",
   pu: "precio",
+  costo: "costo",
+  precio_costo: "costo",
+  cost_price: "costo",
+  costo_unitario: "costo",
+  precio_lista: "costo",
+  costo_lista: "costo",
+  alerta_stock: "alerta_stock",
+  alertas_stock: "alerta_stock",
+  stock_alerts: "alerta_stock",
+  alerta_agotado: "alerta_stock",
   proveedor: "proveedor",
   supplier: "proveedor",
   fabricante: "fabricante",
@@ -310,6 +322,8 @@ export function itemToExcelRecord(item: InventoryItem): Record<string, string | 
     serie: item.serialNumber,
     numero_parte: item.partNumber,
     precio: item.unitPrice,
+    costo: item.costPrice,
+    alerta_stock: yesNo(item.stockAlertsEnabled !== false),
     proveedor: item.supplier,
     fabricante: item.manufacturer,
     caducidad: item.category === "accesorios" ? "" : item.expiryDate,
@@ -326,6 +340,14 @@ export function itemToExcelRecord(item: InventoryItem): Record<string, string | 
     proximo_mantenimiento: item.nextMaintenanceDate,
     activo: yesNo(item.isActive),
   };
+}
+
+const PRICE_EXCEL_HEADERS = new Set(["precio", "costo"]);
+
+export function excelHeadersForAccess(includePrices: boolean) {
+  return includePrices
+    ? [...PRODUCT_EXCEL_HEADERS]
+    : PRODUCT_EXCEL_HEADERS.filter((header) => !PRICE_EXCEL_HEADERS.has(header));
 }
 
 function exampleRow(): Record<string, string | number> {
@@ -345,6 +367,8 @@ function exampleRow(): Record<string, string | number> {
     serie: "",
     numero_parte: "",
     precio: 185,
+    costo: 120,
+    alerta_stock: "si",
     proveedor: "",
     fabricante: "",
     caducidad: "2027-12-31",
@@ -378,7 +402,8 @@ function withInstructionSheet(workbook: XLSX.WorkBook) {
     ["6. controla_lote, controla_serie, controla_caducidad y activo: si / no."],
     ["7. Accesorios y equipos: usa fecha_fabricacion (AAAA-MM-DD). Los accesorios no llevan caducidad."],
     ["8. Fechas en formato AAAA-MM-DD. unidad: pieza, caja, paquete, litro, ml, kg, g, par, rollo, frasco."],
-    ["9. Puedes exportar el catálogo, editarlo en Excel y volver a importarlo. Los sku existentes se actualizan."],
+    ["9. precio es de venta; costo es de lista/compra. alerta_stock: si / no (si es no, el código sigue consultable pero no alerta agotado)."],
+    ["10. Puedes exportar el catálogo, editarlo en Excel y volver a importarlo. Los sku existentes se actualizan."],
   ];
   XLSX.utils.book_append_sheet(
     workbook,
@@ -387,20 +412,39 @@ function withInstructionSheet(workbook: XLSX.WorkBook) {
   );
 }
 
-export function downloadProductTemplate() {
+export function downloadProductTemplate(options?: { includePrices?: boolean }) {
+  const includePrices = options?.includePrices !== false;
   const workbook = XLSX.utils.book_new();
-  const sheet = XLSX.utils.json_to_sheet([exampleRow()], {
-    header: [...PRODUCT_EXCEL_HEADERS],
+  const row = exampleRow();
+  if (!includePrices) {
+    delete row.precio;
+    delete row.costo;
+  }
+  const sheet = XLSX.utils.json_to_sheet([row], {
+    header: excelHeadersForAccess(includePrices),
   });
   XLSX.utils.book_append_sheet(workbook, sheet, "Productos");
   withInstructionSheet(workbook);
   downloadWorkbook(workbook, "plantilla-catalogo-mas.xlsx");
 }
 
-export function exportProductsToExcel(items: InventoryItem[], filename?: string) {
+export function exportProductsToExcel(
+  items: InventoryItem[],
+  filename?: string,
+  options?: { includePrices?: boolean }
+) {
+  const includePrices = options?.includePrices !== false;
   const workbook = XLSX.utils.book_new();
-  const sheet = XLSX.utils.json_to_sheet(items.map(itemToExcelRecord), {
-    header: [...PRODUCT_EXCEL_HEADERS],
+  const records = items.map((item) => {
+    const record = itemToExcelRecord(item);
+    if (!includePrices) {
+      delete record.precio;
+      delete record.costo;
+    }
+    return record;
+  });
+  const sheet = XLSX.utils.json_to_sheet(records, {
+    header: excelHeadersForAccess(includePrices),
   });
   XLSX.utils.book_append_sheet(workbook, sheet, "Productos");
   withInstructionSheet(workbook);
@@ -601,6 +645,7 @@ export async function parseProductWorkbook(
       model: cellText(record.modelo),
       serialNumber: cellText(record.serie),
       unitPrice: Math.max(0, cellNumber(record.precio, 0)),
+      costPrice: Math.max(0, cellNumber(record.costo, 0)),
       supplier: cellText(record.proveedor),
       expiryDate: excelDate(record.caducidad),
       manufacturedAt: excelDate(record.fecha_fabricacion),
@@ -609,6 +654,7 @@ export async function parseProductWorkbook(
       lastMaintenanceDate: excelDate(record.ultimo_mantenimiento),
       nextMaintenanceDate: excelDate(record.proximo_mantenimiento),
       isActive: cellBoolean(record.activo, true),
+      stockAlertsEnabled: cellBoolean(record.alerta_stock, true),
       tracksLot: cellBoolean(
         record.controla_lote,
         itemKind !== "equipo" && tracksExpiry
