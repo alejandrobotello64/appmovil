@@ -1195,12 +1195,6 @@ export function InventoryPanel({
                     <th className="px-4 py-3 font-medium">Próx. mant.</th>
                   )}
                   <th className="px-4 py-3 font-medium">Almacén / ubicación</th>
-                  {canViewPrices ? (
-                    <>
-                      <th className="px-4 py-3 font-medium">Costo</th>
-                      <th className="px-4 py-3 font-medium">Venta</th>
-                    </>
-                  ) : null}
                   <th className="px-4 py-3 font-medium">Acciones</th>
                 </tr>
               </thead>
@@ -1208,9 +1202,7 @@ export function InventoryPanel({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={
-                        (isEquipment ? 11 : 12) + (canViewPrices ? 1 : -1)
-                      }
+                      colSpan={isEquipment ? 10 : 11}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {isCatalog
@@ -1253,6 +1245,16 @@ export function InventoryPanel({
                               ? `n.º ${item.partNumber}${item.model ? ` · ${item.model}` : ""}`
                               : item.model || "—"}
                           </p>
+                          {canViewPrices ? (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Costo {formatCurrency(item.costPrice)}
+                              {" · "}
+                              Venta{" "}
+                              {item.unitPrice > 0
+                                ? formatCurrency(item.unitPrice)
+                                : "pendiente"}
+                            </p>
+                          ) : null}
                         </td>
                         <td className="px-4 py-3">
                           {item.brand ? (
@@ -1333,24 +1335,8 @@ export function InventoryPanel({
                           )}
                         </td>
                         <td className="px-4 py-3 align-top">{renderPlacements(item)}</td>
-                        {canViewPrices ? (
-                          <>
-                            <td className="px-4 py-3">
-                              {formatCurrency(item.costPrice)}
-                            </td>
-                            <td className="px-4 py-3">
-                              {item.unitPrice > 0
-                                ? formatCurrency(item.unitPrice)
-                                : (
-                                    <span className="text-xs text-muted-foreground">
-                                      Pendiente
-                                    </span>
-                                  )}
-                            </td>
-                          </>
-                        ) : null}
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1">
+                          <div className="flex flex-wrap items-center gap-1">
                             <button
                               type="button"
                               onClick={() => handleView(item)}
