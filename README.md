@@ -87,6 +87,8 @@ Los precios de catálogo (costo y venta) los ven administrador, compras, ventas 
 
 En el celular se acerca o aleja la app con los botones **− / +** (abajo a la derecha; en escritorio van en el encabezado). También están en el menú de cuenta. Se puede pellizcar la pantalla. Tocar el porcentaje vuelve al 100%. El tamaño queda guardado en el aparato.
 
+Un listado capturado con No. ITEM, descripción, presentación y marca (`scripts/data/listado-catalogo-captura.json`) se cruza con el catálogo por código (`ITEM` ↔ `sku` / `part_number`). Los que ya existen no se tocan (ni existencias ni precios). Los códigos nuevos se dan de alta con ese ITEM, existencia 0 y **alerta de agotado apagada**. Corre `npm run db:listado-catalogo` (añade `-- --cloud` contra Supabase; `-- --dry-run` solo reporta).
+
 ## En línea (Vercel + Supabase)
 
 App de producción: [https://medicaladvancedsupplies.vercel.app](https://medicaladvancedsupplies.vercel.app)
@@ -110,6 +112,7 @@ La clave `anon` **no puede** crear columnas ni buckets. Si faltan `color_tag`, k
 | `npm run db:alta-imss-veracruz` | Alta de hospitales IMSS Veracruz, equipos instalados y una OS preventiva por serie |
 | `npm run db:corregir-nombres` | Corrige nombres mal escritos del catálogo (y marca Dräger); no toca existencias |
 | `npm run db:precios-drager` | Cruza la lista Dräger 2025: carga costos en coincidencias y da de alta ITEMs nuevos con su código |
+| `npm run db:listado-catalogo` | Cruza un listado capturado (ITEM/descripción/marca) con el catálogo y da de alta códigos nuevos sin alerta de agotado |
 | `npm run db:export-catalog` | Vuelca `inventory_items` local a `supabase/seed_catalog.sql` |
 | `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
 | `npm run db:push` | Empuja migraciones al proyecto linkeado |
