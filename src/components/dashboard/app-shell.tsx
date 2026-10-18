@@ -106,7 +106,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             <GlobalSearch />
-            <ZoomControls />
+            <ZoomControls className="hidden md:inline-flex" />
             <ThemeToggle
               showLabel={false}
               className="touch-target size-11 justify-center px-0 py-0 sm:size-auto sm:px-3 sm:py-1.5"
@@ -138,6 +138,13 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
         <main className="app-main flex-1 overflow-auto">
           {children}
         </main>
+      </div>
+
+      <div className="pointer-events-none fixed right-3 bottom-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] z-40 md:hidden">
+        <ZoomControls
+          showPercent="always"
+          className="pointer-events-auto shadow-lg"
+        />
       </div>
     </div>
   );

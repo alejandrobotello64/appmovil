@@ -85,7 +85,7 @@ La lista vigente Dräger 2025 (`scripts/data/lista-precios-consumible-drager-202
 
 Los precios de catálogo (costo y venta) los ven administrador, compras, ventas y dirección. El personal de **almacén** y **servicio** no. En Usuarios → permisos el módulo es **Precios de catálogo**. En cada ficha se puede **silenciar la alerta de agotado**; el código sigue activo y se busca igual, solo deja de salir en el dashboard y el panel principal.
 
-En el celular se acerca o aleja la app con los botones **− / +** del encabezado (también en el menú de cuenta). Se puede pellizcar la pantalla. El tamaño queda guardado en el aparato.
+En el celular se acerca o aleja la app con los botones **− / +** (abajo a la derecha; en escritorio van en el encabezado). También están en el menú de cuenta. Se puede pellizcar la pantalla. Tocar el porcentaje vuelve al 100%. El tamaño queda guardado en el aparato.
 
 ## En línea (Vercel + Supabase)
 
