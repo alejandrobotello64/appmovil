@@ -79,6 +79,8 @@ Para etiquetas de color, kits, marca/referencia en cotizaciones y el bucket de f
 
 Los cinco hospitales IMSS Veracruz del inventario (HGZ 36 Coatzacoalcos, HGZMF 32 Minatitlán, HGZMF 35 Cosamaloapan, HGZ 8 Córdoba y HGR Orizaba), sus equipos por número de serie y una orden de servicio preventiva por equipo se cargan con `npm run db:alta-imss-veracruz` (añade `-- --cloud` contra Supabase). El script no duplica cliente por nombre, equipo por serie ni OS si el serial ya tiene orden.
 
+Los nombres mal escritos del catálogo (tildes, Chlld, Bair Huger, Bowie-Dick, etc.) se corrigen con `npm run db:corregir-nombres` (añade `-- --cloud` contra Supabase). No cambia códigos ni existencias.
+
 ## En línea (Vercel + Supabase)
 
 App de producción: [https://medicaladvancedsupplies.vercel.app](https://medicaladvancedsupplies.vercel.app)
@@ -100,6 +102,7 @@ La clave `anon` **no puede** crear columnas ni buckets. Si faltan `color_tag`, k
 | `npm run db:sync-cloud` | Copia el snapshot vivo de Supabase (nube) sobre Postgres local |
 | `npm run db:push-cloud-cedros` | Alta REST de códigos Cedros nuevos en la nube (no modifica códigos existentes) |
 | `npm run db:alta-imss-veracruz` | Alta de hospitales IMSS Veracruz, equipos instalados y una OS preventiva por serie |
+| `npm run db:corregir-nombres` | Corrige nombres mal escritos del catálogo (y marca Dräger); no toca existencias |
 | `npm run db:export-catalog` | Vuelca `inventory_items` local a `supabase/seed_catalog.sql` |
 | `npm run dev:api` | Gateway compatible con el cliente Supabase (`/rest/v1`) |
 | `npm run db:push` | Empuja migraciones al proyecto linkeado |
