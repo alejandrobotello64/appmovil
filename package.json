@@ -11,6 +11,7 @@
     "db:sync-cloud": "python3 scripts/sync-from-cloud.py",
     "db:push-cloud-cedros": "python3 scripts/push-cedros-to-cloud.py",
     "db:cedros-stock": "node scripts/apply-cedros-stock.mjs",
+    "db:alta-imss-veracruz": "node scripts/alta-hospitales-imss-veracruz.mjs",
     "db:export-catalog": "bash scripts/export-catalog.sh",
     "dev:api": "bash scripts/start-local-api.sh",
     "db:push": "supabase db push",
