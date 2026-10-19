@@ -1,0 +1,738 @@
+[
+  {
+    "item": "M1668A",
+    "name": "Cable tronco ECG 5 derivaciones AAMI/IEC 2.7 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1663A",
+    "name": "Cable tronco ECG 10 derivaciones (5+5) AAMI/IEC 2 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1949A",
+    "name": "Cable tronco ECG 10 derivaciones (5+5) AAMI/IEC 2.7 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1671A",
+    "name": "Juego de cables ECG 3 derivaciones, grabber ICU, AAMI 1 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1672A",
+    "name": "Juego de cables ECG 3 derivaciones, grabber ICU, IEC 1 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1674A",
+    "name": "Juego de cables ECG 3 derivaciones, snap ICU, IEC 1 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1675A",
+    "name": "Juego de cables ECG 3 derivaciones, grabber quirófano, AAMI",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1602A",
+    "name": "Juego de cables ECG 3 derivaciones, snap ICU, AAMI",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1968A",
+    "name": "Juego de cables ECG 5 derivaciones, grabber ICU, AAMI 1.6 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1971A",
+    "name": "Juego de cables ECG 5 derivaciones, grabber ICU, IEC 1.6 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1645A",
+    "name": "Juego de cables ECG 5 derivaciones, snap ICU, IEC 1.6 m",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803170171",
+    "name": "Cable tronco ECG 3 derivaciones quirófano, AAMI/IEC",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803170181",
+    "name": "Cable tronco ECG 5 derivaciones quirófano, AAMI/IEC",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803143181",
+    "name": "Juego de cables ECG 3 derivaciones AAMI",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2202A",
+    "name": "Electrodos ECG de espuma radiolúcidos, caja con 300",
+    "category": "insumos",
+    "group": "ECG",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "989803160641",
+    "name": "Cable tronco ECG Efficia 3/5 derivaciones AAMI/IEC",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803160651",
+    "name": "Juego ECG Efficia 3 derivaciones grabber AAMI",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803160661",
+    "name": "Juego ECG Efficia 3 derivaciones grabber IEC",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803160691",
+    "name": "Juego ECG Efficia 5 derivaciones grabber miembros AAMI",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803160701",
+    "name": "Juego ECG Efficia 5 derivaciones grabber miembros IEC",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803176161",
+    "name": "Juego ECG 5 derivaciones snap miembros, apantallado AAMI",
+    "category": "accesorios",
+    "group": "ECG",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1191B",
+    "name": "Sensor SpO2 adulto reutilizable 2 m",
+    "category": "accesorios",
+    "group": "SpO2",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1941A",
+    "name": "Cable extensión SpO2 2 m",
+    "category": "accesorios",
+    "group": "SpO2",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1131A",
+    "name": "Sensor SpO2 desechable adulto/pediátrico, clip de dedo",
+    "category": "insumos",
+    "group": "SpO2",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M1132A",
+    "name": "Sensor SpO2 desechable pediátrico",
+    "category": "insumos",
+    "group": "SpO2",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M1133A",
+    "name": "Sensor SpO2 desechable neonatal",
+    "category": "insumos",
+    "group": "SpO2",
+    "equipment": ["intellivue"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M1134A",
+    "name": "Sensor SpO2 desechable infantil",
+    "category": "insumos",
+    "group": "SpO2",
+    "equipment": ["intellivue"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M1571A",
+    "name": "Manguito NBP Comfort Care infantil (10–15 cm)",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1573A",
+    "name": "Manguito NBP Comfort Care adulto pequeño (20.5–28 cm)",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1574A",
+    "name": "Manguito NBP Comfort Care adulto (27–35 cm)",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1575A",
+    "name": "Manguito NBP Comfort Care adulto grande",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803182601",
+    "name": "Manguito NBP Comfort Care infantil",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803182681",
+    "name": "Manguito NBP Comfort Care adulto grande",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803182701",
+    "name": "Manguito NBP Comfort Care muslo",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1599B",
+    "name": "Manguera NBP adulto 3.0 m",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803209761",
+    "name": "Manguera NBP adulto 1.5 m (entrada 5 mm)",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803177471",
+    "name": "Manguera de interconexión NBP reutilizable 3 m",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803177511",
+    "name": "Manguito NBP reutilizable pediátrico (GCF1202)",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803177521",
+    "name": "Manguito NBP reutilizable adulto (GCF1203)",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803177531",
+    "name": "Manguito NBP reutilizable adulto grande (GCF1204)",
+    "category": "accesorios",
+    "group": "NBP",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803217001",
+    "name": "Entrada NBP 5 mm para DFM100, juego de 5 con llaves Allen",
+    "category": "refacciones",
+    "group": "NBP",
+    "equipment": ["dfm100"],
+    "presentation": "PAQUETE"
+  },
+  {
+    "item": "21075A",
+    "name": "Sonda de temperatura esofágica/rectal reutilizable",
+    "category": "accesorios",
+    "group": "Temperatura",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "21078A",
+    "name": "Sonda de temperatura cutánea reutilizable 3 m",
+    "category": "accesorios",
+    "group": "Temperatura",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803162081",
+    "name": "Sonda de temperatura esofágica/rectal 10 Fr reutilizable",
+    "category": "accesorios",
+    "group": "Temperatura",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803162091",
+    "name": "Sonda de temperatura cutánea reutilizable",
+    "category": "accesorios",
+    "group": "Temperatura",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2513A",
+    "name": "Adaptador de vía aérea CO2 reutilizable adulto/pediátrico (ET > 4.0 mm)",
+    "category": "accesorios",
+    "group": "CO2",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2533A",
+    "name": "Adaptador de vía aérea CO2 desechable adulto (ET > 4.0 mm)",
+    "category": "insumos",
+    "group": "CO2",
+    "equipment": ["intellivue", "dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2522A",
+    "name": "Adaptador de vía aérea CO2 desechable infantil (ET ≤ 4.0 mm)",
+    "category": "insumos",
+    "group": "CO2",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2741A",
+    "name": "Sensor de CO2 sidestream",
+    "category": "accesorios",
+    "group": "CO2",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2744A",
+    "name": "Cánula nasal de CO2 adulto",
+    "category": "insumos",
+    "group": "CO2",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2745A",
+    "name": "Cánula nasal de CO2 pediátrica",
+    "category": "insumos",
+    "group": "CO2",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2750A",
+    "name": "Cánula nasal CO2/O2 adulto",
+    "category": "insumos",
+    "group": "CO2",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2768A",
+    "name": "Juego de adaptador de vía aérea CO2 adulto/pediátrico",
+    "category": "insumos",
+    "group": "CO2",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M2776A",
+    "name": "Línea de muestreo CO2 recta",
+    "category": "insumos",
+    "group": "CO2",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "867040",
+    "name": "Extensión de capnografía IntelliVue",
+    "category": "accesorios",
+    "group": "Módulos",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "867041",
+    "name": "Extensión Microstream CO2 IntelliVue",
+    "category": "accesorios",
+    "group": "Módulos",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803174601",
+    "name": "Sensor NMT reutilizable IntelliVue",
+    "category": "accesorios",
+    "group": "NMT",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M4605A",
+    "name": "Batería de ion de litio recargable 10.8 V para IntelliVue MX400–MX550",
+    "category": "accesorios",
+    "group": "Energía",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803210521",
+    "name": "Batería de ion de litio recargable para IntelliVue MX400–MX550",
+    "category": "accesorios",
+    "group": "Energía",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M1567A",
+    "name": "Transductor de presión invasiva desechable",
+    "category": "insumos",
+    "group": "IBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803105071",
+    "name": "Cable adaptador de presión invasiva reutilizable",
+    "category": "accesorios",
+    "group": "IBP",
+    "equipment": ["intellivue"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803197111",
+    "name": "Cable adaptador de parches de terapia 2.1 m",
+    "category": "accesorios",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M3713A",
+    "name": "Parches multifunción Plus adulto/niño, 10 juegos/caja",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M3716A",
+    "name": "Parches multifunción radiolúcidos adulto/niño, 10 juegos/caja",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M3717A",
+    "name": "Parches multifunción Plus infantil, 5 juegos/caja",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M3718A",
+    "name": "Parches multifunción radiotransparentes adulto/niño, 10 juegos/caja",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M3719A",
+    "name": "Parches multifunción radiotransparentes infantil, 5 juegos/caja",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "989803139261",
+    "name": "SMART Pads II, 1 juego",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803149981",
+    "name": "SMART Pads III, 1 juego",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803149991",
+    "name": "SMART Pads III, 5 juegos",
+    "category": "insumos",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PAQUETE"
+  },
+  {
+    "item": "989803196431",
+    "name": "Paletas externas Efficia con PCI, resistentes al agua 4.8 m",
+    "category": "accesorios",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803197591",
+    "name": "Electrodos de recambio para paletas Efficia 989803196431",
+    "category": "refacciones",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M4759A",
+    "name": "Electrodos de recambio para paletas M3543A",
+    "category": "refacciones",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M4741A",
+    "name": "Paletas internas conmutadas 7.5 cm, 3.9 m",
+    "category": "accesorios",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M4742A",
+    "name": "Paletas internas conmutadas 6.0 cm, 3.9 m",
+    "category": "accesorios",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "M4743A",
+    "name": "Paletas internas conmutadas 4.5 cm, 3.9 m",
+    "category": "accesorios",
+    "group": "Terapia",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803190371",
+    "name": "Batería de ion de litio recargable con indicador para DFM100",
+    "category": "accesorios",
+    "group": "Energía",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "867207",
+    "name": "Cargador de batería para DFM100",
+    "category": "accesorios",
+    "group": "Energía",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803190331",
+    "name": "Sistema de almacenamiento de accesorios hospitalario DFM100",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803190341",
+    "name": "Sistema de almacenamiento de accesorios prehospitalario DFM100",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803190351",
+    "name": "Cintas de sujeción de cables DFM100 (2 piezas)",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PAR"
+  },
+  {
+    "item": "989803194281",
+    "name": "Collarín para cable de terapia DFM100",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803190361",
+    "name": "Soporte de barandal de cama para DFM100",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803199241",
+    "name": "Estación de acoplamiento DFM100",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803199601",
+    "name": "Paquete estación de acoplamiento DFM100 (estación, cable y soporte de barandal)",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PAQUETE"
+  },
+  {
+    "item": "989803199251",
+    "name": "Cable de alimentación de 3 terminales para estación DFM100",
+    "category": "accesorios",
+    "group": "Energía",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803197571",
+    "name": "Correa de hombro para estuche DFM100",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803197581",
+    "name": "Funda de bandeja DFM100",
+    "category": "accesorios",
+    "group": "Montaje",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803202611",
+    "name": "Memoria USB para descarga de datos DFM100",
+    "category": "accesorios",
+    "group": "Datos",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803190381",
+    "name": "Papel térmico químico 50 mm sin cuadrícula, 12 rollos",
+    "category": "insumos",
+    "group": "Papel",
+    "equipment": ["dfm100"],
+    "presentation": "CAJA"
+  },
+  {
+    "item": "M3725A",
+    "name": "Carga de prueba 50 ohm, conector tipo plug",
+    "category": "accesorios",
+    "group": "Prueba",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  },
+  {
+    "item": "989803171271",
+    "name": "Plug de prueba en cortocircuito para DFM100",
+    "category": "accesorios",
+    "group": "Prueba",
+    "equipment": ["dfm100"],
+    "presentation": "PIEZA"
+  }
+]

@@ -199,6 +199,9 @@ export function InventoryPanel({
     CatalogCategoryId | "all"
   >(initialCategory ?? "all");
   const [brandFilter, setBrandFilter] = useState("todas");
+  const [lineFilter, setLineFilter] = useState<"todas" | "intellivue" | "dfm100">(
+    "todas"
+  );
   const [colorFilter, setColorFilter] = useState("todos");
 
   function catalogCan(action: PermissionAction) {
@@ -370,6 +373,9 @@ export function InventoryPanel({
           item.serialNumber,
           item.location,
           item.category,
+          item.subcategory,
+          item.description,
+          item.notes,
           getCategoryLabel(item.category),
           trackingSearchText(trackingFor(stockByProduct.get(item.id))),
           placementsFor(stockByProduct.get(item.id))
@@ -397,13 +403,29 @@ export function InventoryPanel({
       const matchesColor =
         colorFilter === "todos" ||
         (colorFilter === "sin_color" ? !itemColor : itemColor === colorFilter);
+      const lineHaystack = [
+        item.subcategory,
+        item.model,
+        item.name,
+        item.description,
+        item.notes,
+        item.partNumber,
+      ]
+        .join(" ")
+        .toLowerCase();
+      const matchesLine =
+        lineFilter === "todas" ||
+        (lineFilter === "intellivue"
+          ? /intellivue|mx550|mx400|mx450|mx500/.test(lineHaystack)
+          : /dfm100|efficia/.test(lineHaystack));
       return (
         matchesCategory &&
         matchesSearch &&
         matchesStatus &&
         matchesWarehouse &&
         matchesBrand &&
-        matchesColor
+        matchesColor &&
+        matchesLine
       );
     });
   }, [
@@ -417,6 +439,7 @@ export function InventoryPanel({
     warehouseFilter,
     brandFilter,
     colorFilter,
+    lineFilter,
   ]);
 
   const catalogBrands = useMemo(
@@ -887,6 +910,50 @@ export function InventoryPanel({
                     Sin marca
                   </button>
                 ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {items.some((item) =>
+            /intellivue|mx550|dfm100|efficia/.test(
+              `${item.subcategory} ${item.model} ${item.name} ${item.description}`.toLowerCase()
+            )
+          ) ? (
+            <div className="space-y-2 border-b border-border bg-muted/10 px-3 py-3">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Línea Philips
+              </p>
+              <div
+                className="flex flex-wrap gap-1"
+                role="tablist"
+                aria-label="Filtrar accesorios Philips por línea"
+              >
+                {(
+                  [
+                    { id: "todas", label: "Todas" },
+                    { id: "intellivue", label: "IntelliVue" },
+                    { id: "dfm100", label: "DFM100" },
+                  ] as const
+                ).map((entry) => {
+                  const active = lineFilter === entry.id;
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setLineFilter(entry.id)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-medium",
+                        active
+                          ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
+                          : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {entry.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : null}
