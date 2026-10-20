@@ -45,7 +45,7 @@ export const WAREHOUSE_TABS = [
   {
     id: "solicitudes",
     label: "Surtimientos",
-    description: "Material pedido por órdenes de servicio y cotizaciones de venta",
+    description: "Surte una o varias solicitudes de la misma persona, aunque sean de distintas órdenes",
     href: "/dashboard/almacen?tab=solicitudes",
   },
   {

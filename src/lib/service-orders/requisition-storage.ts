@@ -1,18 +1,19 @@
 import { supabase } from "@/lib/supabase/client";
 import { getProductAvailableQty } from "@/lib/holds/storage";
 import { applyStockMovement } from "@/lib/warehouse/stock";
-import type {
-  CreateQuoteRequisitionInput,
-  CreateRequisitionInput,
-  FulfillLineInput,
-  RequisitionFulfillment,
-  RequisitionLineInput,
-  RequisitionLineStatus,
-  RequisitionPriority,
-  RequisitionSource,
-  RequisitionStatus,
-  ServiceOrderRequisition,
-  ServiceOrderRequisitionLine,
+import {
+  requesterKey,
+  type CreateQuoteRequisitionInput,
+  type CreateRequisitionInput,
+  type FulfillLineInput,
+  type RequisitionFulfillment,
+  type RequisitionLineInput,
+  type RequisitionLineStatus,
+  type RequisitionPriority,
+  type RequisitionSource,
+  type RequisitionStatus,
+  type ServiceOrderRequisition,
+  type ServiceOrderRequisitionLine,
 } from "./requisitions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -499,6 +500,100 @@ export async function fulfillServiceOrderRequisition(
   const found = all.find((r) => r.id === requisitionId);
   if (!found) throw new Error("No se pudo recargar la solicitud.");
   return found;
+}
+
+export type RequisitionFulfillJob = {
+  requisitionId: string;
+  fulfillments: FulfillLineInput[];
+};
+
+/**
+ * Surte varias solicitudes de la misma persona en un solo paso
+ * (aunque vengan de órdenes o cotizaciones distintas).
+ */
+export async function fulfillServiceOrderRequisitions(
+  jobs: RequisitionFulfillJob[],
+  fulfilledBy: string,
+  warehouseNotes = ""
+): Promise<ServiceOrderRequisition[]> {
+  const nonempty = jobs
+    .map((job) => ({
+      ...job,
+      fulfillments: job.fulfillments.filter((item) => Number(item.quantity) > 0),
+    }))
+    .filter((job) => job.fulfillments.length > 0);
+  if (!nonempty.length) {
+    throw new Error("Indica al menos una cantidad a surtir.");
+  }
+  if (nonempty.length === 1) {
+    return [
+      await fulfillServiceOrderRequisition(
+        nonempty[0].requisitionId,
+        nonempty[0].fulfillments,
+        fulfilledBy,
+        warehouseNotes
+      ),
+    ];
+  }
+
+  const list = await getServiceOrderRequisitions();
+  const needed = new Map<string, { quantity: number; label: string }>();
+  let requester = "";
+  for (const job of nonempty) {
+    const req = list.find((item) => item.id === job.requisitionId);
+    if (!req) throw new Error("Solicitud no encontrada.");
+    if (req.status === "cancelada" || req.status === "surtida") {
+      throw new Error(`${req.folio} ya no se puede surtir.`);
+    }
+    const key = requesterKey(req.requestedBy);
+    if (!requester) requester = key;
+    else if (key !== requester) {
+      throw new Error(
+        "Solo puedes surtir juntas solicitudes de la misma persona."
+      );
+    }
+    for (const item of job.fulfillments) {
+      const line = req.lines.find((entry) => entry.id === item.lineId);
+      if (!line) throw new Error(`Línea no encontrada en ${req.folio}.`);
+      const remaining = Math.max(0, line.quantityRequested - line.quantityFulfilled);
+      if (item.quantity > remaining + 0.0001) {
+        throw new Error(
+          `No puedes surtir más de lo pendiente en ${line.description} (${req.folio}).`
+        );
+      }
+      if (!line.productId) continue;
+      const prev = needed.get(line.productId) ?? {
+        quantity: 0,
+        label: line.productSku || line.description,
+      };
+      needed.set(line.productId, {
+        quantity: prev.quantity + Number(item.quantity),
+        label: prev.label,
+      });
+    }
+  }
+
+  for (const [productId, info] of needed) {
+    const available = await getProductAvailableQty(productId);
+    if (info.quantity > available) {
+      throw new Error(
+        `Stock insuficiente para ${info.label}. Se necesitan ${info.quantity} entre las solicitudes juntas. Disponible: ${available}.`
+      );
+    }
+  }
+
+  const results: ServiceOrderRequisition[] = [];
+  for (const job of nonempty) {
+    results.push(
+      await fulfillServiceOrderRequisition(
+        job.requisitionId,
+        job.fulfillments,
+        fulfilledBy,
+        warehouseNotes
+      )
+    );
+  }
+  return results;
 }
 
 export async function getRequisitionFulfillments(

@@ -9,23 +9,25 @@ import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
 import { getPurchaseRequests, getRequisitionShortages } from "@/lib/purchasing/storage";
 import { isPurchaseOpen, type PurchaseRequest, type RequisitionShortage } from "@/lib/purchasing/types";
-import { downloadRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   cancelServiceOrderRequisition,
-  fulfillServiceOrderRequisition,
+  fulfillServiceOrderRequisitions,
   getServiceOrderRequisitions,
 } from "@/lib/service-orders/requisition-storage";
+import { downloadRequisitionsPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   REQUISITION_SOURCES,
   REQUISITION_STATUSES,
   isOffCatalogLine,
   isRequisitionOpen,
+  requesterKey,
   requisitionLinePending,
   requisitionLineStatusLabel,
   requisitionOriginFolio,
   requisitionProgress,
   requisitionSourceLabel,
   requisitionStatusLabel,
+  sameRequester,
   type RequisitionSource,
   type RequisitionStatus,
   type ServiceOrderRequisition,
@@ -62,7 +64,7 @@ export function ServiceRequisitionsPanel({
   permissionModule = "solicitudes",
   allowFulfill,
   title = "Solicitudes de surtimiento",
-  subtitle = "Surte material pedido por servicio técnico y ventas, descuéntalo del inventario y pide a compras lo que falte.",
+  subtitle = "Surte una o varias solicitudes de la misma persona aunque sean de distintas órdenes. El material se descuenta del inventario y lo que falte se pide a compras.",
 }: {
   /** Limita la bandeja a un origen; sin valor se muestran todos con filtro. */
   source?: RequisitionSource;
@@ -86,7 +88,8 @@ export function ServiceRequisitionsPanel({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState<RequisitionStatus | "abiertas" | "todas">("abiertas");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [personFilter, setPersonFilter] = useState("todas");
   const [query, setQuery] = useState("");
   const [qtyDraft, setQtyDraft] = useState<Record<string, string>>({});
   const [warehouseNotes, setWarehouseNotes] = useState("");
@@ -124,7 +127,13 @@ export function ServiceRequisitionsPanel({
   }
 
   const items = useMemo(() => data?.requisitions ?? [], [data]);
-  const selected = items.find((item) => item.id === selectedId) ?? null;
+  const selectedItems = useMemo(
+    () => selectedIds.map((id) => items.find((item) => item.id === id)).filter(Boolean) as ServiceOrderRequisition[],
+    [items, selectedIds]
+  );
+  const selected = selectedItems[0] ?? null;
+  const selectedOpen = selectedItems.filter((item) => isRequisitionOpen(item.status));
+  const selectedRequester = selected?.requestedBy ?? "";
 
   const purchasesByRequisition = useMemo(() => {
     const map = new Map<string, PurchaseRequest[]>();
@@ -134,7 +143,9 @@ export function ServiceRequisitionsPanel({
     }
     return map;
   }, [data]);
-  const selectedPurchases = selected ? purchasesByRequisition.get(selected.id) ?? [] : [];
+  const selectedPurchases = selectedOpen.flatMap(
+    (item) => purchasesByRequisition.get(item.id) ?? []
+  );
 
   const filtered = useMemo(
     () =>
@@ -164,17 +175,87 @@ export function ServiceRequisitionsPanel({
               line.productName,
               line.description,
             ]),
-          ])
+          ]) &&
+          (personFilter === "todas" || sameRequester(item.requestedBy, personFilter))
         );
       }),
-    [items, statusFilter, query, activeSource]
+    [items, statusFilter, query, activeSource, personFilter]
   );
 
-  function selectRequisition(requisition: ServiceOrderRequisition) {
-    const draft = initialDraft(requisition);
-    setSelectedId(requisition.id);
-    setQtyDraft(draft.qty);
-    setWarehouseNotes(draft.notes);
+  const people = useMemo(() => {
+    const seen = new Set<string>();
+    const list: string[] = [];
+    for (const item of items) {
+      const name = item.requestedBy.trim();
+      const key = requesterKey(name);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      list.push(name);
+    }
+    return list.sort((a, b) => a.localeCompare(b, "es"));
+  }, [items]);
+
+  const samePersonOpen = useMemo(() => {
+    if (!selectedRequester) return [];
+    return filtered.filter(
+      (item) => isRequisitionOpen(item.status) && sameRequester(item.requestedBy, selectedRequester)
+    );
+  }, [filtered, selectedRequester]);
+
+  function mergeDrafts(requisitions: ServiceOrderRequisition[], reset: boolean) {
+    setQtyDraft((current) => {
+      const next = reset ? {} : { ...current };
+      for (const requisition of requisitions) {
+        const draft = initialDraft(requisition);
+        for (const [lineId, value] of Object.entries(draft.qty)) {
+          if (reset || next[lineId] == null) next[lineId] = value;
+        }
+      }
+      return next;
+    });
+    if (reset) {
+      setWarehouseNotes(requisitions.map((item) => item.warehouseNotes).find(Boolean) ?? "");
+    }
+  }
+
+  function selectRequisition(requisition: ServiceOrderRequisition, add = false) {
+    const already = selectedIds.includes(requisition.id);
+    if (add && selectedItems.length) {
+      if (already) {
+        const next = selectedItems.filter((item) => item.id !== requisition.id);
+        setSelectedIds(next.map((item) => item.id));
+        return;
+      }
+      if (!isRequisitionOpen(requisition.status)) {
+        setSelectedIds([requisition.id]);
+        mergeDrafts([requisition], true);
+        return;
+      }
+      if (!sameRequester(requisition.requestedBy, selectedRequester)) {
+        setError(
+          "Solo se pueden juntar solicitudes de la misma persona. Se cambió a las de " +
+            (requisition.requestedBy || "ese solicitante") +
+            "."
+        );
+        setSelectedIds([requisition.id]);
+        mergeDrafts([requisition], true);
+        return;
+      }
+      setError("");
+      setSelectedIds([...selectedIds, requisition.id]);
+      mergeDrafts([requisition], false);
+      return;
+    }
+    setError("");
+    setSelectedIds([requisition.id]);
+    mergeDrafts([requisition], true);
+  }
+
+  function selectAllFromPerson() {
+    if (!samePersonOpen.length) return;
+    setError("");
+    setSelectedIds(samePersonOpen.map((item) => item.id));
+    mergeDrafts(samePersonOpen, true);
   }
 
   async function reloadKeepingSelection(text: string) {
@@ -184,23 +265,31 @@ export function ServiceRequisitionsPanel({
       getPurchaseRequests().catch(() => data?.purchases ?? []),
     ]);
     setData({ requisitions, purchases });
-    const updated = requisitions.find((item) => item.id === selectedId);
-    if (updated) selectRequisition(updated);
-    else setSelectedId(null);
+    const kept = selectedIds
+      .map((id) => requisitions.find((item) => item.id === id))
+      .filter(Boolean) as ServiceOrderRequisition[];
+    setSelectedIds(kept.map((item) => item.id));
+    if (kept.length) mergeDrafts(kept, true);
   }
 
   async function onFulfill() {
-    if (!selected || !canFulfill) return;
-    const fulfillments = selected.lines
-      .map((line) => ({ lineId: line.id, quantity: Number(qtyDraft[line.id] || 0) }))
-      .filter((f) => f.quantity > 0);
+    if (!selectedOpen.length || !canFulfill) return;
+    const jobs = selectedOpen.map((requisition) => ({
+      requisitionId: requisition.id,
+      fulfillments: requisition.lines
+        .map((line) => ({ lineId: line.id, quantity: Number(qtyDraft[line.id] || 0) }))
+        .filter((item) => item.quantity > 0),
+    }));
     setBusy(true);
     setError("");
     setMessage("");
     try {
-      await fulfillServiceOrderRequisition(selected.id, fulfillments, actor, warehouseNotes);
+      const fulfilled = await fulfillServiceOrderRequisitions(jobs, actor, warehouseNotes);
+      const folios = fulfilled.map((item) => item.folio).join(", ");
       await reloadKeepingSelection(
-        `Solicitud ${selected.folio} surtida y descontada del inventario. Puedes imprimir la orden de surtimiento.`
+        fulfilled.length === 1
+          ? `Solicitud ${folios} surtida y descontada del inventario. Puedes imprimir la orden de surtimiento.`
+          : `Se surtieron ${fulfilled.length} solicitudes (${folios}) y se descontó el inventario. Puedes imprimir la orden conjunta.`
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo surtir.");
@@ -225,10 +314,10 @@ export function ServiceRequisitionsPanel({
   }
 
   async function onPrint() {
-    if (!selected) return;
+    if (!selectedItems.length) return;
     setError("");
     try {
-      await downloadRequisitionPdf(selected, {
+      await downloadRequisitionsPdf(selectedItems, {
         printedBy: session ? { username: session.username, fullName: session.fullName } : undefined,
         printedByWarehouse: canFulfill,
       });
@@ -238,16 +327,24 @@ export function ServiceRequisitionsPanel({
   }
 
   async function onRequestPurchase() {
-    if (!selected) return;
+    const target = selectedOpen[0];
+    if (!target) return;
+    if (selectedOpen.length > 1) {
+      setError("Para pedir faltantes a compras deja una sola solicitud seleccionada.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
-      const shortages = await getRequisitionShortages(selected, selectedPurchases);
+      const shortages = await getRequisitionShortages(
+        target,
+        purchasesByRequisition.get(target.id) ?? []
+      );
       if (!shortages.length) {
         setError("Esta solicitud ya no tiene material pendiente de surtir.");
         return;
       }
-      setPurchaseForm({ requisition: selected, shortages });
+      setPurchaseForm({ requisition: target, shortages });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo calcular el faltante.");
     } finally {
@@ -255,7 +352,7 @@ export function ServiceRequisitionsPanel({
     }
   }
 
-  const selectedOpen = selected ? isRequisitionOpen(selected.status) : false;
+  const canFulfillSelection = selectedOpen.length > 0;
   const loading = data === null && !error;
 
   return (
@@ -273,6 +370,21 @@ export function ServiceRequisitionsPanel({
             placeholder="Buscar folio, OS, cotización, cliente o material..."
             className="sm:w-80"
           />
+          {people.length > 1 ? (
+            <select
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+              value={personFilter}
+              onChange={(e) => setPersonFilter(e.target.value)}
+              aria-label="Solicitante"
+            >
+              <option value="todas">Todas las personas</option>
+              {people.map((person) => (
+                <option key={requesterKey(person)} value={person}>
+                  {person}
+                </option>
+              ))}
+            </select>
+          ) : null}
           {!source ? (
             <select
               className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
@@ -323,6 +435,7 @@ export function ServiceRequisitionsPanel({
           <SortableTable className="min-w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
+                <th className="w-10 px-3 py-3"> </th>
                 <th className="px-3 py-3">Folio</th>
                 <th className="px-3 py-3">Origen</th>
                 <th className="px-3 py-3">Cliente / detalle</th>
@@ -334,13 +447,13 @@ export function ServiceRequisitionsPanel({
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-3 py-6 text-muted-foreground" colSpan={6}>
+                  <td className="px-3 py-6 text-muted-foreground" colSpan={7}>
                     Cargando…
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-6 text-muted-foreground" colSpan={6}>
+                  <td className="px-3 py-6 text-muted-foreground" colSpan={7}>
                     {query.trim()
                       ? "Ninguna solicitud coincide con la búsqueda."
                       : "No hay solicitudes en este filtro."}
@@ -354,15 +467,29 @@ export function ServiceRequisitionsPanel({
                     item.sourceType === "cotizacion"
                       ? item.deliveryAddress || "Venta"
                       : item.equipmentName || "Sin equipo";
+                  const checked = selectedIds.includes(item.id);
                   return (
                     <tr
                       key={item.id}
                       className={cn(
                         "cursor-pointer border-t border-border align-top hover:bg-muted/30",
-                        selectedId === item.id && "bg-muted/40"
+                        checked && "bg-muted/40"
                       )}
-                      onClick={() => selectRequisition(item)}
+                      onClick={() => {
+                        if (selectedIds.length === 1 && selectedIds[0] === item.id) return;
+                        selectRequisition(item, selectedItems.length > 0);
+                      }}
                     >
+                      <td className="px-3 py-3">
+                        <input
+                          type="checkbox"
+                          className="size-4 accent-[#3B46A5]"
+                          checked={checked}
+                          aria-label={`Seleccionar ${item.folio}`}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={() => selectRequisition(item, true)}
+                        />
+                      </td>
                       <td className="px-3 py-3">
                         <p className="font-medium">{item.folio}</p>
                         {item.priority === "urgente" ? (
@@ -416,75 +543,122 @@ export function ServiceRequisitionsPanel({
           {!selected ? (
             <p className="text-sm text-muted-foreground">
               {canFulfill
-                ? "Selecciona una solicitud para surtirla, imprimirla o pedir a compras lo que falte."
+                ? "Selecciona una o varias solicitudes de la misma persona para surtirlas juntas, aunque sean de distintas órdenes."
                 : "Selecciona una solicitud para ver su avance o imprimirla."}
             </p>
           ) : (
             <>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Solicitud</p>
-                  <h3 className="text-base font-semibold">{selected.folio}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {originPrefix(selected.sourceType)} {requisitionOriginFolio(selected) || "—"} · {selected.clientName || "Sin cliente"}
+                  <p className="text-xs text-muted-foreground">
+                    {selectedItems.length > 1
+                      ? `${selectedItems.length} solicitudes de ${selectedRequester || "la misma persona"}`
+                      : "Solicitud"}
                   </p>
-                  {selected.priority === "urgente" || selected.neededBy ? (
+                  <h3 className="text-base font-semibold">
+                    {selectedItems.map((item) => item.folio).join(" · ")}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedItems
+                      .map(
+                        (item) =>
+                          `${originPrefix(item.sourceType)} ${requisitionOriginFolio(item) || "—"}`
+                      )
+                      .join(" · ")}
+                  </p>
+                  {selectedItems.length === 1 ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        {selected.clientName || "Sin cliente"}
+                      </p>
+                      {selected.priority === "urgente" || selected.neededBy ? (
+                        <p className="text-xs text-muted-foreground">
+                          {selected.priority === "urgente" ? (
+                            <span className="font-medium text-destructive">Urgente</span>
+                          ) : null}
+                          {selected.priority === "urgente" && selected.neededBy ? " · " : ""}
+                          {selected.neededBy ? `Requerido para ${formatDay(selected.neededBy)}` : ""}
+                        </p>
+                      ) : null}
+                      {selected.deliveryAddress ? (
+                        <p className="text-xs text-muted-foreground">
+                          Entrega en: {selected.deliveryAddress}
+                        </p>
+                      ) : null}
+                      {selected.notes ? (
+                        <p className="text-xs text-muted-foreground">Notas: {selected.notes}</p>
+                      ) : null}
+                    </>
+                  ) : (
                     <p className="text-xs text-muted-foreground">
-                      {selected.priority === "urgente" ? <span className="font-medium text-destructive">Urgente</span> : null}
-                      {selected.priority === "urgente" && selected.neededBy ? " · " : ""}
-                      {selected.neededBy ? `Requerido para ${formatDay(selected.neededBy)}` : ""}
+                      Se surten juntas y se descuenta el inventario de todas.
                     </p>
-                  ) : null}
-                  {selected.deliveryAddress ? (
-                    <p className="text-xs text-muted-foreground">Entrega en: {selected.deliveryAddress}</p>
-                  ) : null}
-                  {selected.notes ? (
-                    <p className="text-xs text-muted-foreground">Notas: {selected.notes}</p>
-                  ) : null}
+                  )}
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={() => void onPrint()}>
                   <Printer className="size-3.5" /> Imprimir
                 </Button>
               </div>
 
-              <div className="space-y-2">
-                {selected.lines.map((line) => {
-                  const pending = requisitionLinePending(line);
-                  const offCatalog = isOffCatalogLine(line);
-                  return (
-                    <div key={line.id} className="rounded-xl border border-border bg-background p-3">
-                      <p className="text-sm font-medium">
-                        {line.productSku ? `${line.productSku} · ` : ""}
-                        {line.description}
-                      </p>
-                      {offCatalog ? (
-                        <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                          Fuera de catálogo · se compra y se entrega directo, sin descontar inventario
+              {samePersonOpen.length > selectedOpen.length && canFulfill ? (
+                <Button type="button" variant="outline" size="sm" onClick={selectAllFromPerson}>
+                  Incluir las demás abiertas de {selectedRequester || "esta persona"} (
+                  {samePersonOpen.length})
+                </Button>
+              ) : null}
+
+              {selectedItems.map((requisition) => (
+                <div key={requisition.id} className="space-y-2">
+                  {selectedItems.length > 1 ? (
+                    <p className="text-xs font-semibold text-[#3B46A5]">
+                      {requisition.folio} · {originPrefix(requisition.sourceType)}{" "}
+                      {requisitionOriginFolio(requisition) || "—"}
+                      {requisition.clientName ? ` · ${requisition.clientName}` : ""}
+                    </p>
+                  ) : null}
+                  {requisition.lines.map((line) => {
+                    const pending = requisitionLinePending(line);
+                    const offCatalog = isOffCatalogLine(line);
+                    const open = isRequisitionOpen(requisition.status);
+                    return (
+                      <div key={line.id} className="rounded-xl border border-border bg-background p-3">
+                        <p className="text-sm font-medium">
+                          {line.productSku ? `${line.productSku} · ` : ""}
+                          {line.description}
                         </p>
-                      ) : null}
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Pedido: {formatQty(line.quantityRequested)} {line.unit} · Surtido: {formatQty(line.quantityFulfilled)} ·
-                        Pendiente: {formatQty(pending)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{requisitionLineStatusLabel(line.lineStatus)}</p>
-                      {pending > 0 && selectedOpen && canFulfill ? (
-                        <label className="mt-2 block text-xs">
-                          {offCatalog ? "Entregando ahora" : "Surtiendo ahora"}
-                          <input
-                            type="number"
-                            min={0}
-                            max={pending}
-                            step="0.01"
-                            className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-                            value={qtyDraft[line.id] ?? "0"}
-                            onChange={(e) => setQtyDraft((current) => ({ ...current, [line.id]: e.target.value }))}
-                          />
-                        </label>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
+                        {offCatalog ? (
+                          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                            Fuera de catálogo · se compra y se entrega directo, sin descontar inventario
+                          </p>
+                        ) : null}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Pedido: {formatQty(line.quantityRequested)} {line.unit} · Surtido:{" "}
+                          {formatQty(line.quantityFulfilled)} · Pendiente: {formatQty(pending)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {requisitionLineStatusLabel(line.lineStatus)}
+                        </p>
+                        {pending > 0 && open && canFulfill ? (
+                          <label className="mt-2 block text-xs">
+                            {offCatalog ? "Entregando ahora" : "Surtiendo ahora"}
+                            <input
+                              type="number"
+                              min={0}
+                              max={pending}
+                              step="0.01"
+                              className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                              value={qtyDraft[line.id] ?? "0"}
+                              onChange={(e) =>
+                                setQtyDraft((current) => ({ ...current, [line.id]: e.target.value }))
+                              }
+                            />
+                          </label>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
 
               {selectedPurchases.length ? (
                 <div className="space-y-2 rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
@@ -524,7 +698,7 @@ export function ServiceRequisitionsPanel({
               ) : null}
 
               <div className="flex flex-wrap gap-2">
-                {selectedOpen && canFulfill ? (
+                {canFulfillSelection && canFulfill ? (
                   <>
                     <Button
                       type="button"
@@ -532,19 +706,22 @@ export function ServiceRequisitionsPanel({
                       onClick={() => void onFulfill()}
                       className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
                     >
-                      <PackageCheck className="size-4" /> Surtir y descontar
+                      <PackageCheck className="size-4" />{" "}
+                      {selectedOpen.length > 1
+                        ? `Surtir ${selectedOpen.length} solicitudes`
+                        : "Surtir y descontar"}
                     </Button>
                     <Button type="button" variant="outline" disabled={busy} onClick={() => void onRequestPurchase()}>
                       <ShoppingCart className="size-4" /> Solicitar compra de faltantes
                     </Button>
                   </>
                 ) : null}
-                {selected.status === "solicitada" && canCancel ? (
+                {selectedItems.length === 1 && selected.status === "solicitada" && canCancel ? (
                   <Button type="button" variant="outline" disabled={busy} onClick={() => void onCancel()}>
                     <XCircle className="size-4" /> Cancelar
                   </Button>
                 ) : null}
-                {selected.status === "surtida" ? (
+                {selectedItems.length === 1 && selected.status === "surtida" ? (
                   <span className="inline-flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-300">
                     <CheckCircle2 className="size-4" /> Completada
                   </span>

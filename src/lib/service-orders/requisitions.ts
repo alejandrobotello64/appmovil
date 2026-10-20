@@ -154,3 +154,19 @@ export function requisitionLineStatusLabel(status: string) {
     REQUISITION_LINE_STATUSES.find((s) => s.id === status)?.label ?? status
   );
 }
+
+/** Agrupa solicitudes de surtimiento de la misma persona (técnico / vendedor). */
+export function requesterKey(value: string | null | undefined) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+export function sameRequester(
+  left: string | null | undefined,
+  right: string | null | undefined
+) {
+  const a = requesterKey(left);
+  const b = requesterKey(right);
+  return Boolean(a) && a === b;
+}
