@@ -18,7 +18,9 @@ import { downloadRequisitionsPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   REQUISITION_SOURCES,
   REQUISITION_STATUSES,
+  allocateFulfillmentQty,
   canonicalRequester,
+  groupRequisitionLines,
   isOffCatalogLine,
   isRequisitionOpen,
   requesterKey,
@@ -29,6 +31,7 @@ import {
   requisitionSourceLabel,
   requisitionStatusLabel,
   sameRequester,
+  type GroupedRequisitionLine,
   type RequisitionSource,
   type RequisitionStatus,
   type ServiceOrderRequisition,
@@ -50,6 +53,32 @@ function originPrefix(source: RequisitionSource) {
   return source === "cotizacion" ? "COT" : "OS";
 }
 
+function groupDraftQty(group: GroupedRequisitionLine, qtyDraft: Record<string, string>) {
+  return group.sources.reduce((sum, source) => sum + Number(qtyDraft[source.line.id] || 0), 0);
+}
+
+function groupSourceHint(group: GroupedRequisitionLine) {
+  if (group.sources.length < 2) return "";
+  const byFolio = new Map<string, { folio: string; origin: string; qty: number }>();
+  for (const source of group.sources) {
+    const folio = source.requisition.folio;
+    const qty = requisitionLinePending(source.line) || source.line.quantityRequested;
+    const existing = byFolio.get(folio);
+    if (existing) {
+      existing.qty += qty;
+      continue;
+    }
+    byFolio.set(folio, {
+      folio,
+      origin: `${originPrefix(source.requisition.sourceType)} ${requisitionOriginFolio(source.requisition) || "—"}`,
+      qty,
+    });
+  }
+  return [...byFolio.values()]
+    .map((item) => `${formatQty(item.qty)} en ${item.folio} (${item.origin})`)
+    .join(" · ");
+}
+
 function initialDraft(requisition: ServiceOrderRequisition | null) {
   const qty: Record<string, string> = {};
   for (const line of requisition?.lines ?? []) {
@@ -66,7 +95,7 @@ export function ServiceRequisitionsPanel({
   permissionModule = "solicitudes",
   allowFulfill,
   title = "Solicitudes de surtimiento",
-  subtitle = "Al elegir a una persona se juntan todas sus solicitudes abiertas, aunque vengan de distintas órdenes. El material se descuenta del inventario y lo que falte se pide a compras.",
+  subtitle = "Al elegir a una persona se juntan todas sus solicitudes abiertas. Quien surte ve cada código una sola vez, con la cantidad total. Al imprimir sale una hoja por solicitud.",
 }: {
   /** Limita la bandeja a un origen; sin valor se muestran todos con filtro. */
   source?: RequisitionSource;
@@ -95,6 +124,7 @@ export function ServiceRequisitionsPanel({
   const [personFilter, setPersonFilter] = useState("todas");
   const [query, setQuery] = useState("");
   const [qtyDraft, setQtyDraft] = useState<Record<string, string>>({});
+  const [groupQtyDraft, setGroupQtyDraft] = useState<Record<string, string>>({});
   const [warehouseNotes, setWarehouseNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [purchaseForm, setPurchaseForm] = useState<{
@@ -151,6 +181,8 @@ export function ServiceRequisitionsPanel({
   const selectedPurchases = selectedOpen.flatMap(
     (item) => purchasesByRequisition.get(item.id) ?? []
   );
+  const pickGroups = useMemo(() => groupRequisitionLines(selectedItems), [selectedItems]);
+  const pickPending = pickGroups.reduce((sum, group) => sum + group.pending, 0);
 
   const filtered = useMemo(
     () =>
@@ -244,6 +276,7 @@ export function ServiceRequisitionsPanel({
       return next;
     });
     if (reset) {
+      setGroupQtyDraft({});
       setWarehouseNotes(requisitions.map((item) => item.warehouseNotes).find(Boolean) ?? "");
     }
   }
@@ -325,8 +358,8 @@ export function ServiceRequisitionsPanel({
       const folios = fulfilled.map((item) => item.folio).join(", ");
       await reloadKeepingSelection(
         fulfilled.length === 1
-          ? `Solicitud ${folios} surtida y descontada del inventario. Puedes imprimir la orden de surtimiento.`
-          : `Se surtieron ${fulfilled.length} solicitudes (${folios}) y se descontó el inventario. Puedes imprimir la orden conjunta.`
+          ? `Solicitud ${folios} surtida y descontada del inventario. Puedes imprimir la hoja de surtimiento.`
+          : `Se surtieron ${fulfilled.length} solicitudes (${folios}) y se descontó el inventario. Al imprimir sale una hoja por solicitud.`
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo surtir.");
@@ -622,7 +655,7 @@ export function ServiceRequisitionsPanel({
           {!selected ? (
             <p className="text-sm text-muted-foreground">
               {canFulfill
-                ? "Toca a una persona o una solicitud abierta: se juntan todas las de esa persona, aunque sean de distintas órdenes. Quita el visto si alguna no va en este surtido."
+                ? "Toca a una persona o una solicitud abierta: se juntan todas las de esa persona. El mismo código aparece una sola vez, con la cantidad total. Quita el visto si alguna no va en este surtido."
                 : "Selecciona una solicitud para ver su avance o imprimirla."}
             </p>
           ) : (
@@ -670,7 +703,7 @@ export function ServiceRequisitionsPanel({
                     </>
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Se surten juntas aunque vengan de distintas órdenes, y se descuenta el inventario de todas.
+                      Se recogen juntas: el mismo código suma en una sola cantidad. Al imprimir sale una hoja por solicitud.
                     </p>
                   )}
                 </div>
@@ -686,58 +719,74 @@ export function ServiceRequisitionsPanel({
                 </Button>
               ) : null}
 
-              {selectedItems.map((requisition) => (
-                <div key={requisition.id} className="space-y-2">
-                  {selectedItems.length > 1 ? (
-                    <p className="text-xs font-semibold text-[#3B46A5]">
-                      {requisition.folio} · {originPrefix(requisition.sourceType)}{" "}
-                      {requisitionOriginFolio(requisition) || "—"}
-                      {requisition.clientName ? ` · ${requisition.clientName}` : ""}
-                    </p>
-                  ) : null}
-                  {requisition.lines.map((line) => {
-                    const pending = requisitionLinePending(line);
-                    const offCatalog = isOffCatalogLine(line);
-                    const open = isRequisitionOpen(requisition.status);
-                    return (
-                      <div key={line.id} className="rounded-xl border border-border bg-background p-3">
-                        <p className="text-sm font-medium">
-                          {line.productSku ? `${line.productSku} · ` : ""}
-                          {line.description}
+              {pickGroups.length ? (
+                <p className="text-xs text-muted-foreground">
+                  {pickGroups.length} código{pickGroups.length === 1 ? "" : "s"} ·{" "}
+                  {formatQty(pickPending)} {pickPending === 1 ? "unidad pendiente" : "unidades pendientes"}
+                </p>
+              ) : null}
+
+              <div className="space-y-2">
+                {pickGroups.map((group) => {
+                  const openLines = group.sources.filter(
+                    (source) =>
+                      isRequisitionOpen(source.requisition.status) &&
+                      requisitionLinePending(source.line) > 0
+                  );
+                  const hint = groupSourceHint(group);
+                  const inputValue =
+                    groupQtyDraft[group.key] ?? formatQty(groupDraftQty(group, qtyDraft));
+                  return (
+                    <div key={group.key} className="rounded-xl border border-border bg-background p-3">
+                      <p className="text-sm font-medium">
+                        {group.productSku ? `${group.productSku} · ` : ""}
+                        {group.description}
+                      </p>
+                      {group.offCatalog ? (
+                        <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                          Fuera de catálogo · se compra y se entrega directo, sin descontar inventario
                         </p>
-                        {offCatalog ? (
-                          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                            Fuera de catálogo · se compra y se entrega directo, sin descontar inventario
-                          </p>
-                        ) : null}
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Pedido: {formatQty(line.quantityRequested)} {line.unit} · Surtido:{" "}
-                          {formatQty(line.quantityFulfilled)} · Pendiente: {formatQty(pending)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {requisitionLineStatusLabel(line.lineStatus)}
-                        </p>
-                        {pending > 0 && open && canFulfill ? (
-                          <label className="mt-2 block text-xs">
-                            {offCatalog ? "Entregando ahora" : "Surtiendo ahora"}
-                            <input
-                              type="number"
-                              min={0}
-                              max={pending}
-                              step="0.01"
-                              className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-                              value={qtyDraft[line.id] ?? "0"}
-                              onChange={(e) =>
-                                setQtyDraft((current) => ({ ...current, [line.id]: e.target.value }))
-                              }
-                            />
-                          </label>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
+                      ) : null}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Pedido: {formatQty(group.quantityRequested)} {group.unit} · Surtido:{" "}
+                        {formatQty(group.quantityFulfilled)} · Pendiente: {formatQty(group.pending)}
+                      </p>
+                      {hint ? <p className="text-xs text-[#3B46A5]">{hint}</p> : null}
+                      <p className="text-xs text-muted-foreground">
+                        {requisitionLineStatusLabel(group.lineStatus)}
+                      </p>
+                      {group.pending > 0 && openLines.length > 0 && canFulfill ? (
+                        <label className="mt-2 block text-xs">
+                          {group.offCatalog ? "Entregando ahora" : "Surtiendo ahora"}
+                          <input
+                            type="number"
+                            min={0}
+                            max={group.pending}
+                            step="0.01"
+                            className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                            value={inputValue}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              setGroupQtyDraft((current) => ({ ...current, [group.key]: raw }));
+                              const allocated = allocateFulfillmentQty(
+                                group.sources.map((source) => source.line),
+                                Number(raw)
+                              );
+                              setQtyDraft((current) => {
+                                const next = { ...current };
+                                for (const [lineId, qty] of Object.entries(allocated)) {
+                                  next[lineId] = formatQty(qty);
+                                }
+                                return next;
+                              });
+                            }}
+                          />
+                        </label>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
 
               {selectedPurchases.length ? (
                 <div className="space-y-2 rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">

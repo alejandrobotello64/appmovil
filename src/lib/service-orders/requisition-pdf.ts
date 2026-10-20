@@ -22,9 +22,9 @@ import { supabase } from "@/lib/supabase/client";
 import { loadStaffProfileLookup, type StaffProfile } from "@/lib/users/staff";
 import { getRequisitionFulfillments } from "./requisition-storage";
 import {
+  groupRequisitionLines,
   requisitionLinePending,
   requisitionLineStatusLabel,
-  requisitionOriginFolio,
   requisitionStatusLabel,
   type ServiceOrderRequisition,
 } from "./requisitions";
@@ -96,7 +96,7 @@ export async function downloadRequisitionPdf(
   await downloadRequisitionsPdf([requisition], options);
 }
 
-/** Una o varias solicitudes de la misma persona, aunque vengan de órdenes distintas. */
+/** Una hoja por cada solicitud, aunque se impriman juntas. */
 export async function downloadRequisitionsPdf(
   requisitions: ServiceOrderRequisition[],
   options: RequisitionPrintOptions = {}
@@ -113,88 +113,68 @@ export async function downloadRequisitionsPdf(
       return { requisition, order, fulfillments, purchases };
     })
   );
-  const first = packed[0];
-  const combined = packed.length > 1;
-  const allQuote = packed.every((item) => item.requisition.sourceType === "cotizacion");
-  const fulfillers = [
-    ...new Set(
-      packed.flatMap((item) => [
-        ...item.fulfillments.map((row) => row.fulfilledBy),
-        item.requisition.fulfilledBy,
-      ])
-    ),
-  ].filter(Boolean);
-  let fulfillerKey = fulfillers.at(-1) || "";
-  let fulfillerLabel = packed.some((item) => item.requisition.fulfilledAt)
-    ? formatPdfDate(
-        packed.map((item) => item.requisition.fulfilledAt).filter(Boolean).at(-1) || "",
-        true
-      )
-    : "";
-  if (!fulfillerKey && options.printedByWarehouse && options.printedBy) {
-    fulfillerKey = options.printedBy.fullName || options.printedBy.username;
-    fulfillerLabel = "Por surtir";
-  }
-
-  const requester = lookup(first.requisition.requestedBy);
-  const advisor = lookup(str(allQuote ? first.order.salesperson : first.order.advisor));
-  const technician = lookup(str(first.order.technician));
-  const fulfiller = fulfillerKey ? lookup(fulfillerKey) : null;
   const nameOf = (profile: StaffProfile | null, raw: string) => profile?.fullName || raw;
-  const folioLabel = combined
-    ? packed.map((item) => item.requisition.folio).join(" + ")
-    : first.requisition.folio;
-  const urgent = packed.some((item) => item.requisition.priority === "urgente");
-
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const start = await drawBrandedHeader(doc, {
-    title: "Orden de surtimiento de material",
-    folio: folioLabel.length > 42 ? `${packed.length} solicitudes` : folioLabel,
-    rightLines: [
-      combined
-        ? `${packed.length} solicitudes de ${nameOf(requester, first.requisition.requestedBy) || "la misma persona"}`
-        : `Estatus: ${requisitionStatusLabel(first.requisition.status)}`,
-      ...(urgent ? ["Prioridad: URGENTE"] : []),
-    ],
-  });
-  const cursor = new PdfCursor(doc, start);
 
-  if (!combined) {
-    if (allQuote) drawQuoteOrigin(cursor, first.requisition, first.order);
-    else drawServiceOrderOrigin(cursor, first.requisition, first.order);
-  } else {
-    cursor.sectionTitle("Solicitudes incluidas");
-    drawFieldRow(cursor, [
-      ["Solicita", nameOf(requester, first.requisition.requestedBy)],
-      ["Folios", packed.map((item) => item.requisition.folio).join(", ")],
-      [
-        "Órdenes / cotizaciones",
-        packed.map((item) => requisitionOriginFolio(item.requisition) || "—").join(", "),
+  for (let index = 0; index < packed.length; index++) {
+    if (index > 0) doc.addPage();
+    const item = packed[index];
+    const isQuote = item.requisition.sourceType === "cotizacion";
+    const fulfillers = [
+      ...item.fulfillments.map((row) => row.fulfilledBy),
+      item.requisition.fulfilledBy,
+    ].filter(Boolean);
+    let fulfillerKey = fulfillers.at(-1) || "";
+    let fulfillerLabel = item.requisition.fulfilledAt
+      ? formatPdfDate(item.requisition.fulfilledAt, true)
+      : "";
+    if (!fulfillerKey && options.printedByWarehouse && options.printedBy) {
+      fulfillerKey = options.printedBy.fullName || options.printedBy.username;
+      fulfillerLabel = "Por surtir";
+    }
+
+    const requester = lookup(item.requisition.requestedBy);
+    const advisor = lookup(str(isQuote ? item.order.salesperson : item.order.advisor));
+    const technician = lookup(str(item.order.technician));
+    const fulfiller = fulfillerKey ? lookup(fulfillerKey) : null;
+
+    const start = await drawBrandedHeader(doc, {
+      title: "Orden de surtimiento de material",
+      folio: item.requisition.folio,
+      rightLines: [
+        packed.length > 1
+          ? `Hoja ${index + 1} de ${packed.length}`
+          : `Estatus: ${requisitionStatusLabel(item.requisition.status)}`,
+        ...(item.requisition.priority === "urgente"
+          ? ["Prioridad: URGENTE"]
+          : packed.length > 1
+            ? [`Estatus: ${requisitionStatusLabel(item.requisition.status)}`]
+            : []),
       ],
-    ]);
-  }
+    });
+    const cursor = new PdfCursor(doc, start);
 
-  cursor.sectionTitle("Personas involucradas");
-  const fulfillerCard: PdfPersonCard = {
-    title: "Surte (almacén)",
-    name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
-    emptyName: "Pendiente de surtir",
-    rows: personRows(fulfiller, [["Surtido", fulfillerLabel]]),
-  };
-  const requesterCard: PdfPersonCard = {
-    title: "Solicita",
-    name: nameOf(requester, first.requisition.requestedBy),
-    rows: personRows(requester, [
-      ["Fecha", formatPdfDate(first.requisition.requestedAt, true)],
-    ]),
-  };
-  const cards: PdfPersonCard[] =
-    allQuote
+    if (isQuote) drawQuoteOrigin(cursor, item.requisition, item.order);
+    else drawServiceOrderOrigin(cursor, item.requisition, item.order);
+
+    cursor.sectionTitle("Personas involucradas");
+    const fulfillerCard: PdfPersonCard = {
+      title: "Surte (almacén)",
+      name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
+      emptyName: "Pendiente de surtir",
+      rows: personRows(fulfiller, [["Surtido", fulfillerLabel]]),
+    };
+    const requesterCard: PdfPersonCard = {
+      title: "Solicita",
+      name: nameOf(requester, item.requisition.requestedBy),
+      rows: personRows(requester, [["Fecha", formatPdfDate(item.requisition.requestedAt, true)]]),
+    };
+    const cards: PdfPersonCard[] = isQuote
       ? [
           requesterCard,
           {
             title: "Vendedor",
-            name: nameOf(advisor, str(first.order.salesperson)),
+            name: nameOf(advisor, str(item.order.salesperson)),
             emptyName: "Sin vendedor asignado",
             rows: personRows(advisor),
           },
@@ -204,28 +184,20 @@ export async function downloadRequisitionsPdf(
           requesterCard,
           {
             title: "Asesor de servicio",
-            name: nameOf(advisor, str(first.order.advisor)),
+            name: nameOf(advisor, str(item.order.advisor)),
             emptyName: "Sin asesor asignado",
             rows: personRows(advisor),
           },
           {
             title: "Técnico asignado",
-            name: nameOf(technician, str(first.order.technician)),
+            name: nameOf(technician, str(item.order.technician)),
             emptyName: "Sin técnico asignado",
             rows: personRows(technician),
           },
           fulfillerCard,
         ];
-  drawPersonCards(cursor, cards, 2);
+    drawPersonCards(cursor, cards, 2);
 
-  for (const item of packed) {
-    if (combined) {
-      if (item.requisition.sourceType === "cotizacion") {
-        drawQuoteOrigin(cursor, item.requisition, item.order);
-      } else {
-        drawServiceOrderOrigin(cursor, item.requisition, item.order);
-      }
-    }
     drawRequisitionBody(
       cursor,
       item.requisition,
@@ -235,48 +207,50 @@ export async function downloadRequisitionsPdf(
     );
     drawParagraph(
       cursor,
-      item.requisition.sourceType === "cotizacion" ? "Notas de ventas" : "Notas de servicio",
+      isQuote ? "Notas de ventas" : "Notas de servicio",
       item.requisition.notes
     );
     drawParagraph(cursor, "Notas de almacén", item.requisition.warehouseNotes);
+
+    drawSignatures(
+      cursor,
+      isQuote
+        ? [
+            {
+              title: "Entrega material (almacén)",
+              name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
+            },
+            { title: "Recibe material (cliente / ventas)", name: "" },
+            {
+              title: "Vo. Bo. ventas",
+              name:
+                nameOf(advisor, str(item.order.salesperson)) ||
+                nameOf(requester, item.requisition.requestedBy),
+            },
+          ]
+        : [
+            {
+              title: "Entrega material (almacén)",
+              name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
+            },
+            {
+              title: "Recibe material (técnico)",
+              name: nameOf(technician, str(item.order.technician)),
+            },
+            {
+              title: "Vo. Bo. asesor de servicio",
+              name: nameOf(advisor, str(item.order.advisor)),
+            },
+          ]
+    );
   }
 
-  drawSignatures(
-    cursor,
-    allQuote
-      ? [
-          {
-            title: "Entrega material (almacén)",
-            name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
-          },
-          { title: "Recibe material (cliente / ventas)", name: "" },
-          {
-            title: "Vo. Bo. ventas",
-            name:
-              nameOf(advisor, str(first.order.salesperson)) ||
-              nameOf(requester, first.requisition.requestedBy),
-          },
-        ]
-      : [
-          {
-            title: "Entrega material (almacén)",
-            name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
-          },
-          {
-            title: "Recibe material (técnico)",
-            name: nameOf(technician, str(first.order.technician)),
-          },
-          {
-            title: "Vo. Bo. asesor de servicio",
-            name: nameOf(advisor, str(first.order.advisor)),
-          },
-        ]
-  );
-
   drawBrandedFooter(doc);
-  const filename = combined
-    ? `surtimiento-${packed.length}-solicitudes.pdf`
-    : `${first.requisition.folio}-orden-surtimiento.pdf`;
+  const first = packed[0];
+  const filename =
+    packed.length > 1
+      ? `surtimiento-${packed.length}-solicitudes.pdf`
+      : `${first.requisition.folio}-orden-surtimiento.pdf`;
   doc.save(filename);
 }
 
@@ -327,35 +301,39 @@ function drawRequisitionBody(
 ) {
   const doc = cursor.doc;
   cursor.sectionTitle("Material solicitado");
-  const rows: PdfRow[] = requisition.lines.map((line, index) => {
-    const pending = requisitionLinePending(line);
-    const linked = purchaseForLine(line.id, purchases);
-    const buy = linked.map((purchase) => `${purchase.folio} · ${purchaseStatusLabel(purchase.status)}`);
+  const groups = groupRequisitionLines([requisition]);
+  const rows: PdfRow[] = groups.map((group, index) => {
+    const linked = group.sources.flatMap((source) => purchaseForLine(source.line.id, purchases));
+    const buy = [...new Set(linked.map((purchase) => `${purchase.folio} · ${purchaseStatusLabel(purchase.status)}`))];
+    const notes = group.sources
+      .map((source) => source.line.notes)
+      .filter(Boolean)
+      .filter((note, noteIndex, list) => list.indexOf(note) === noteIndex);
     return {
       cells: {
         n: String(index + 1),
-        sku: line.productSku || "—",
-        desc: [line.description || line.productName, line.notes ? `Nota: ${line.notes}` : ""],
-        unit: line.unit,
-        req: formatPdfQty(line.quantityRequested),
-        ful: formatPdfQty(line.quantityFulfilled),
-        pend: formatPdfQty(pending),
-        buy: [requisitionLineStatusLabel(line.lineStatus), ...buy],
+        sku: group.productSku || "—",
+        desc: [group.description || group.productName, ...notes.map((note) => `Nota: ${note}`)],
+        unit: group.unit,
+        req: formatPdfQty(group.quantityRequested),
+        ful: formatPdfQty(group.quantityFulfilled),
+        pend: formatPdfQty(group.pending),
+        buy: [requisitionLineStatusLabel(group.lineStatus), ...buy],
       },
       styles: {
         req: "bold",
-        ful: line.quantityFulfilled > 0 ? "success" : "muted",
-        pend: pending > 0 ? "danger" : "bold",
+        ful: group.quantityFulfilled > 0 ? "success" : "muted",
+        pend: group.pending > 0 ? "danger" : "bold",
       },
     };
   });
   drawTable(cursor, COLUMNS, rows);
 
-  const totals = requisition.lines.reduce(
-    (acc, line) => ({
-      req: acc.req + line.quantityRequested,
-      ful: acc.ful + line.quantityFulfilled,
-      pend: acc.pend + requisitionLinePending(line),
+  const totals = groups.reduce(
+    (acc, group) => ({
+      req: acc.req + group.quantityRequested,
+      ful: acc.ful + group.quantityFulfilled,
+      pend: acc.pend + group.pending,
     }),
     { req: 0, ful: 0, pend: 0 }
   );

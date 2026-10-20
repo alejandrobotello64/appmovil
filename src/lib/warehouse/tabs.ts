@@ -45,7 +45,7 @@ export const WAREHOUSE_TABS = [
   {
     id: "solicitudes",
     label: "Surtimientos",
-    description: "Al elegir a una persona se surten juntas todas sus solicitudes abiertas, aunque sean de distintas órdenes",
+    description: "Quien surte ve cada código una sola vez; al imprimir sale una hoja por solicitud",
     href: "/dashboard/almacen?tab=solicitudes",
   },
   {

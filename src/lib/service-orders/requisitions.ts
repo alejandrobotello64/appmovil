@@ -155,6 +155,106 @@ export function requisitionLineStatusLabel(status: string) {
   );
 }
 
+/** Misma clave de producto aunque el código venga con guiones o espacios. */
+export function requisitionLineProductKey(
+  line: Pick<ServiceOrderRequisitionLine, "productId" | "productSku" | "description" | "unit">
+) {
+  if (line.productId) return `id:${line.productId}|${requesterKey(line.unit)}`;
+  const sku = String(line.productSku ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s\-_/]/g, "")
+    .toUpperCase();
+  if (sku) return `sku:${sku}|${requesterKey(line.unit)}`;
+  return `off:${requesterKey(line.description)}|${requesterKey(line.unit)}`;
+}
+
+export type GroupedRequisitionSource = {
+  requisition: ServiceOrderRequisition;
+  line: ServiceOrderRequisitionLine;
+};
+
+export type GroupedRequisitionLine = {
+  key: string;
+  productId: string | null;
+  productSku: string;
+  productName: string;
+  description: string;
+  unit: string;
+  quantityRequested: number;
+  quantityFulfilled: number;
+  pending: number;
+  lineStatus: RequisitionLineStatus;
+  offCatalog: boolean;
+  sources: GroupedRequisitionSource[];
+};
+
+function groupedLineStatus(lines: ServiceOrderRequisitionLine[]): RequisitionLineStatus {
+  const active = lines.filter((line) => line.lineStatus !== "cancelado");
+  if (!active.length) return "cancelado";
+  if (active.every((line) => line.lineStatus === "surtido")) return "surtido";
+  if (active.every((line) => line.lineStatus === "pendiente")) return "pendiente";
+  return "parcial";
+}
+
+/** Junta el mismo código (SKU / producto) para que almacén recoja una sola cantidad. */
+export function groupRequisitionLines(
+  requisitions: ServiceOrderRequisition[]
+): GroupedRequisitionLine[] {
+  const order: string[] = [];
+  const map = new Map<string, GroupedRequisitionLine>();
+  for (const requisition of requisitions) {
+    for (const line of requisition.lines) {
+      const key = requisitionLineProductKey(line);
+      const existing = map.get(key);
+      if (existing) {
+        existing.quantityRequested += line.quantityRequested;
+        existing.quantityFulfilled += line.quantityFulfilled;
+        existing.pending += requisitionLinePending(line);
+        existing.sources.push({ requisition, line });
+        existing.lineStatus = groupedLineStatus(existing.sources.map((source) => source.line));
+        if (!existing.productSku && line.productSku) existing.productSku = line.productSku;
+        if (!existing.description && line.description) existing.description = line.description;
+        continue;
+      }
+      order.push(key);
+      map.set(key, {
+        key,
+        productId: line.productId,
+        productSku: line.productSku,
+        productName: line.productName,
+        description: line.description,
+        unit: line.unit,
+        quantityRequested: line.quantityRequested,
+        quantityFulfilled: line.quantityFulfilled,
+        pending: requisitionLinePending(line),
+        lineStatus: line.lineStatus,
+        offCatalog: isOffCatalogLine(line),
+        sources: [{ requisition, line }],
+      });
+    }
+  }
+  return order.map((key) => map.get(key)!);
+}
+
+/** Reparte una cantidad total entre las partidas del mismo código, en el orden de las solicitudes. */
+export function allocateFulfillmentQty(
+  lines: Pick<
+    ServiceOrderRequisitionLine,
+    "id" | "quantityRequested" | "quantityFulfilled" | "lineStatus"
+  >[],
+  quantity: number
+) {
+  let remaining = Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+  const allocated: Record<string, number> = {};
+  for (const line of lines) {
+    const take = Math.min(requisitionLinePending(line), remaining);
+    allocated[line.id] = take;
+    remaining -= take;
+  }
+  return allocated;
+}
+
 /** Agrupa solicitudes de surtimiento de la misma persona (técnico / vendedor). */
 export function requesterKey(value: string | null | undefined) {
   return String(value ?? "")
