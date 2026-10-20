@@ -29,8 +29,8 @@ import {
   createInventoryItem,
   deleteInventoryItem,
   getEquipmentItems,
-  getInventoryItems,
   getStockStatus,
+  getSupplyItems,
   getSupplyItemsByCategory,
   removeInventoryItemImage,
   setInventoryItemColor,
@@ -42,10 +42,10 @@ import {
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import {
   ASSET_STATUS_OPTIONS,
-  CATALOG_CATEGORIES,
   getSupplyCategoryMeta,
   INVENTORY_CATEGORIES,
-  type CatalogCategoryId,
+  isSupplyCategory,
+  SUPPLY_CATEGORIES,
   type InventoryCategoryId,
   type InventoryItem,
   type InventoryItemInput,
@@ -58,7 +58,7 @@ import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
 import { InventoryExcelActions } from "@/components/inventory/inventory-excel-actions";
 import {
-  INVENTORY_TAB_MODULES,
+  CATALOG_MODULES,
   inventoryModuleForCategory,
   permissionKey,
   type PermissionAction,
@@ -176,7 +176,7 @@ function stockBadgeLabel(item: InventoryItem) {
 type InventoryPanelProps = {
   /** Catálogo unificado, una categoría, o solo equipos */
   panelMode?: SupplyCategoryId | "equipment" | "catalog";
-  initialCategory?: CatalogCategoryId | null;
+  initialCategory?: SupplyCategoryId | null;
 };
 
 export function InventoryPanel({
@@ -197,13 +197,13 @@ export function InventoryPanel({
     ? getSupplyCategoryMeta(supplyCategory)
     : null;
   const [categoryFilter, setCategoryFilter] = useState<
-    CatalogCategoryId | "all"
+    SupplyCategoryId | "all"
   >(initialCategory ?? "all");
   const [brandFilter, setBrandFilter] = useState("todas");
   const [colorFilter, setColorFilter] = useState("todos");
 
   function catalogCan(action: PermissionAction) {
-    return INVENTORY_TAB_MODULES.some(
+    return CATALOG_MODULES.some(
       (module) => !access.ready || access.can(permissionKey(module, action))
     );
   }
@@ -225,12 +225,12 @@ export function InventoryPanel({
   const canViewPrices = !access.ready || access.can("precios.view");
   const canEditPrices = !access.ready || access.can("precios.edit");
   const role = scoped.role;
-  const visibleCategories = CATALOG_CATEGORIES.filter(
+  const visibleCategories = SUPPLY_CATEGORIES.filter(
     (entry) =>
       !access.ready ||
       access.canView(inventoryModuleForCategory(entry.id))
   );
-  const creatableCategories = CATALOG_CATEGORIES.filter(
+  const creatableCategories = SUPPLY_CATEGORIES.filter(
     (entry) =>
       !access.ready ||
       access.can(
@@ -283,12 +283,11 @@ export function InventoryPanel({
       const category = isEquipment
         ? "equipos"
         : isCatalog
-          ? data.category
+          ? isSupplyCategory(data.category)
+            ? data.category
+            : "insumos"
           : (supplyCategory ?? data.category);
-      const itemKind =
-        category === "equipos" || data.itemKind === "equipo"
-          ? "equipo"
-          : "producto";
+      const itemKind = isEquipment ? "equipo" : "producto";
       const payload: InventoryItemInput = {
         ...data,
         itemKind,
@@ -560,7 +559,7 @@ export function InventoryPanel({
       let trackingError = "";
       const [data, reservedMap, stockMap, warehouseRows] = await Promise.all([
         isCatalog
-          ? getInventoryItems()
+          ? getSupplyItems()
           : isEquipment
             ? getEquipmentItems()
             : getSupplyItemsByCategory(supplyCategory ?? "insumos"),
@@ -582,8 +581,10 @@ export function InventoryPanel({
       const visible = isCatalog
         ? data.filter(
             (item) =>
-              !access.ready ||
-              access.canView(inventoryModuleForCategory(item.category))
+              item.itemKind !== "equipo" &&
+              isSupplyCategory(item.category) &&
+              (!access.ready ||
+                access.canView(inventoryModuleForCategory(item.category)))
           )
         : data;
       setItems(visible);
@@ -761,9 +762,9 @@ export function InventoryPanel({
               </h2>
               <p className="text-sm text-muted-foreground">
                 {isCatalog
-                  ? "Una sola lista para insumos, medicamentos, refacciones, accesorios, reactivos y equipos. Filtra por categoría si lo necesitas."
+                  ? "Inventario de insumos, medicamentos, refacciones, accesorios y reactivos. Los equipos médicos están en la pestaña Equipos."
                   : isEquipment
-                    ? "Catálogo por modelo. Las series de cada pieza se registran al dar entrada."
+                    ? "Inventario independiente por modelo. Las series de cada pieza se registran al dar entrada."
                     : `${supplyMeta?.description ?? "Catálogo"}. El número de parte se muestra junto a la marca.`}
               </p>
             </div>
@@ -1499,7 +1500,7 @@ export function InventoryPanel({
               </h3>
               <p className="text-sm text-muted-foreground">
                 {isCatalog
-                  ? "Elige la categoría. En equipos el catálogo es por modelo; las series se capturan al dar entrada."
+                  ? "Elige la categoría de producto. Los equipos médicos se dan de alta en Almacén → Equipos."
                   : isEquipment
                     ? "Los equipos se gestionan como activos. La fecha de fabricación es opcional."
                     : "La caducidad y la fecha de fabricación son opcionales. El número de parte queda junto a la marca."}
@@ -1509,15 +1510,13 @@ export function InventoryPanel({
               item={editingItem}
               itemKind={
                 isCatalog
-                  ? editingItem?.itemKind === "equipo"
-                    ? "equipo"
-                    : "producto"
+                  ? "producto"
                   : formItemKind
               }
               lockedCategory={
                 isCatalog
-                  ? editingItem && editingItem.itemKind !== "equipo"
-                    ? (editingItem.category as SupplyCategoryId)
+                  ? editingItem && isSupplyCategory(editingItem.category)
+                    ? editingItem.category
                     : undefined
                   : (supplyCategory ?? undefined)
               }

@@ -396,8 +396,8 @@ function withInstructionSheet(workbook: XLSX.WorkBook) {
     ["Plantilla de catálogo MAS"],
     ["1. Completa la hoja Productos. La primera fila son encabezados y no se importa."],
     ["2. sku y nombre son obligatorios. El sku no se debe repetir."],
-    ["3. categoria: insumos, medicamentos, refacciones, accesorios, equipos, reactivos, otros."],
-    ["4. tipo: producto o equipo. Si la categoria es equipos, se guarda como equipo."],
+    ["3. categoria: insumos, medicamentos, refacciones, accesorios, reactivos, otros. Los equipos van en su propio inventario."],
+    ["4. tipo: producto o equipo. Importa productos en Inventario y equipos en Almacén → Equipos."],
     ["5. existencia: solo se usa como stock inicial al crear un sku nuevo. No cambia existencias de productos que ya existen."],
     ["6. controla_lote, controla_serie, controla_caducidad y activo: si / no."],
     ["7. Accesorios y equipos: usa fecha_fabricacion (AAAA-MM-DD). Los accesorios no llevan caducidad."],
@@ -620,6 +620,24 @@ export async function parseProductWorkbook(
 
     const category = parseCategory(record.categoria);
     const itemKind = parseKind(record.tipo, category, defaultKind);
+    if (defaultKind === "producto" && itemKind === "equipo") {
+      errors.push({
+        row: rowNumber,
+        sku,
+        message:
+          "Este archivo es del inventario de productos. Los equipos se importan en Almacén → Equipos.",
+      });
+      continue;
+    }
+    if (defaultKind === "equipo" && itemKind === "producto") {
+      errors.push({
+        row: rowNumber,
+        sku,
+        message:
+          "Este archivo es del inventario de equipos. Los productos se importan en Almacén → Inventario.",
+      });
+      continue;
+    }
     const resolvedCategory = itemKind === "equipo" ? "equipos" : category;
     const tracksExpiry = cellBoolean(
       record.controla_caducidad,

@@ -32,12 +32,14 @@ export async function searchCatalog(query: string): Promise<GlobalSearchHit[]> {
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((row) => {
-    const tab =
+    const href =
       row.item_kind === "equipo"
-        ? "equipo"
-        : isSupplyCategory(row.category as never)
-          ? row.category
-          : "insumos";
+        ? "/dashboard/almacen?tab=equipo"
+        : `/dashboard/almacen?tab=inventario${
+            isSupplyCategory(row.category as never)
+              ? `&categoria=${row.category}`
+              : ""
+          }`;
     return {
       id: row.id,
       kind: row.item_kind === "equipo" ? "equipo" : "producto",
@@ -45,7 +47,7 @@ export async function searchCatalog(query: string): Promise<GlobalSearchHit[]> {
       subtitle: [row.brand, row.model, row.serial_number, row.location]
         .filter(Boolean)
         .join(" · "),
-      href: `/dashboard/almacen?tab=${tab}`,
+      href,
     };
   });
 }

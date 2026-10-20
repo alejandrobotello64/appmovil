@@ -92,7 +92,7 @@ const TAB_ICONS = {
   kardex: BookOpen,
   pedidos: ShoppingCart,
   proveedores: Truck,
-  equipo: Wrench,
+  equipo: AnesthesiaMachineIcon,
   mantenimientos: ClipboardList,
   registros_sanitarios: ShieldCheck,
   herramientas: Hammer,

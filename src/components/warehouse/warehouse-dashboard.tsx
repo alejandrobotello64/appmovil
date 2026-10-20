@@ -210,7 +210,7 @@ export function WarehouseDashboard() {
       label: "Equipos médicos",
       value: `${stats.operativeEquipment}/${stats.equipment}`,
       icon: Wrench,
-      href: "/dashboard/almacen?tab=inventario&categoria=equipos",
+      href: "/dashboard/almacen?tab=equipo",
       tone: "text-[#3B46A5]",
     },
     {
@@ -273,9 +273,9 @@ export function WarehouseDashboard() {
           Dashboard operativo
         </h2>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Separa el control por tablas: <strong>insumos/medicamentos/reactivos</strong>{" "}
-          (con caducidad), <strong>accesorios</strong> (fecha de fabricación),{" "}
-          <strong>refacciones</strong> y <strong>equipos médicos</strong>.
+          El <strong>Inventario</strong> cubre insumos, medicamentos, refacciones,
+          accesorios y reactivos. Los <strong>equipos médicos</strong> viven en su
+          propio inventario, con series y estado aparte.
         </p>
       </section>
 

@@ -168,11 +168,17 @@ export function InventoryExcelActions({
 
       {open ? (
         <ModalShell
-          title="Importar catálogo Excel"
+          title={
+            defaultKind === "equipo"
+              ? "Importar inventario de equipos"
+              : "Importar catálogo Excel"
+          }
           description={
-            canViewPrices
-              ? "Acepta la plantilla MAS o un inventario con columnas como Código, Descripción, Cantidad, Costo y Precio de venta."
-              : "Acepta la plantilla MAS o un inventario con columnas como Código, Descripción y Cantidad. Los precios no se importan ni se muestran con tu rol."
+            defaultKind === "equipo"
+              ? "Solo se importan filas de equipos. Los productos del catálogo van en Almacén → Inventario."
+              : canViewPrices
+                ? "Acepta la plantilla MAS o un inventario con columnas como Código, Descripción, Cantidad, Costo y Precio de venta. Los equipos se importan en Almacén → Equipos."
+                : "Acepta la plantilla MAS o un inventario con columnas como Código, Descripción y Cantidad. Los precios no se importan ni se muestran con tu rol. Los equipos se importan en Almacén → Equipos."
           }
           className="max-w-3xl"
         >

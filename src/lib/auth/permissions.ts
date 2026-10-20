@@ -199,7 +199,8 @@ export const PERMISSION_GROUPS: PermissionGroupDef[] = [
       {
         id: "equipo",
         label: "Equipos",
-        description: "Equipos médicos del almacén.",
+        description:
+          "Inventario independiente de equipos médicos del almacén.",
         actions: CATALOG_ACTIONS,
       },
     ],
@@ -506,7 +507,8 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = PERMISSION_MODULES.flatMap(
   (module) => module.actions.map((item) => permissionKey(module.id, item.action))
 );
 
-const CATALOG_MODULES: WarehouseModule[] = [
+/** Consumibles del catálogo unificado (sin equipos). */
+export const CATALOG_MODULES: WarehouseModule[] = [
   "insumos",
   "medicamentos",
   "refacciones",
@@ -515,10 +517,7 @@ const CATALOG_MODULES: WarehouseModule[] = [
 ];
 
 /** Módulos que alimentan la pestaña unificada de inventario. */
-export const INVENTORY_TAB_MODULES: WarehouseModule[] = [
-  ...CATALOG_MODULES,
-  "equipo",
-];
+export const INVENTORY_TAB_MODULES: WarehouseModule[] = [...CATALOG_MODULES];
 
 export function inventoryModuleForCategory(category: string): WarehouseModule {
   if (category === "equipos" || category === "equipo") return "equipo";

@@ -14,8 +14,15 @@ export const WAREHOUSE_TABS = [
     id: "inventario",
     label: "Inventario",
     description:
-      "Catálogo unificado: insumos, medicamentos, refacciones, accesorios, reactivos y equipos",
+      "Catálogo de insumos, medicamentos, refacciones, accesorios y reactivos",
     href: "/dashboard/almacen?tab=inventario",
+  },
+  {
+    id: "equipo",
+    label: "Equipos",
+    description:
+      "Inventario independiente de equipos médicos por modelo, series y estado",
+    href: "/dashboard/almacen?tab=equipo",
   },
   {
     id: "kits",
@@ -101,7 +108,7 @@ const LEGACY_TAB_ALIASES: Record<string, WarehouseTabId> = {
   refacciones: "inventario",
   accesorios: "inventario",
   reactivos: "inventario",
-  equipo: "inventario",
+  equipos: "equipo",
   registros: "registros_sanitarios",
 };
 
@@ -125,6 +132,9 @@ export function warehouseTabIsVisible(
 ) {
   if (tabId === "inventario") {
     return INVENTORY_TAB_MODULES.some((module) => canView(module));
+  }
+  if (tabId === "equipo") {
+    return canView("equipo");
   }
   if (tabId === "kits") {
     return (

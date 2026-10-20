@@ -5,11 +5,10 @@ import { Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ASSET_STATUS_OPTIONS,
-  CATALOG_CATEGORIES,
   categoryToItemKind,
   getSupplyCategoryMeta,
   INVENTORY_UNITS,
-  type CatalogCategoryId,
+  SUPPLY_CATEGORIES,
   type InventoryItem,
   type InventoryItemInput,
   type ItemKind,
@@ -28,8 +27,8 @@ type InventoryFormProps = {
   itemKind?: ItemKind;
   /** Bloquea la categoría a una tabla propia */
   lockedCategory?: SupplyCategoryId;
-  /** Categorías que el usuario puede elegir en el catálogo unificado */
-  allowedCategories?: CatalogCategoryId[];
+  /** Categorías que el usuario puede elegir en el catálogo de productos */
+  allowedCategories?: SupplyCategoryId[];
   /** Marcas del catálogo para elegir en un toque. */
   quickBrands?: string[];
   onSubmit: (data: InventoryItemInput, imageFile?: File | null) => void;
@@ -107,7 +106,7 @@ export function InventoryForm({
         !lockedCategory &&
         itemKind !== "equipo" &&
         allowedCategories?.length &&
-        !allowedCategories.includes(next.category as CatalogCategoryId)
+        !allowedCategories.includes(next.category as SupplyCategoryId)
       ) {
         const first = allowedCategories[0];
         next.category = first;
@@ -204,10 +203,10 @@ export function InventoryForm({
   }
 
   const categoryOptions = (allowedCategories?.length
-    ? CATALOG_CATEGORIES.filter((entry) =>
+    ? SUPPLY_CATEGORIES.filter((entry) =>
         allowedCategories.includes(entry.id)
       )
-    : CATALOG_CATEGORIES);
+    : SUPPLY_CATEGORIES);
   const isEquipment =
     itemKind === "equipo" ||
     form.itemKind === "equipo" ||
@@ -321,7 +320,7 @@ export function InventoryForm({
             <select
               value={form.category}
               onChange={(event) => {
-                const next = event.target.value as CatalogCategoryId;
+                const next = event.target.value as SupplyCategoryId;
                 const kind = categoryToItemKind(next);
                 setForm((current) => ({
                   ...current,

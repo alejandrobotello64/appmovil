@@ -556,7 +556,10 @@ export function computeHomeMetrics(data: HomeData, periodId: PeriodId) {
       title: out ? `${item.name} agotado` : `${item.name} con stock bajo`,
       detail: `${item.quantity} ${item.unit} · mínimo ${item.minStock}`,
       due: out ? "Sin existencias" : "Reabastecer",
-      href: `/dashboard/almacen?tab=${item.category === "equipos" ? "equipo" : item.category}`,
+      href:
+        item.category === "equipos"
+          ? "/dashboard/almacen?tab=equipo"
+          : `/dashboard/almacen?tab=inventario&categoria=${item.category}`,
       days: out ? -1 : 0,
     });
   }
@@ -570,7 +573,10 @@ export function computeHomeMetrics(data: HomeData, periodId: PeriodId) {
       title: days < 0 ? `${item.name} caducado` : `${item.name} por caducar`,
       detail: `${item.quantity} ${item.unit}${item.sku ? ` · ${item.sku}` : ""}`,
       due: dueText(days),
-      href: `/dashboard/almacen?tab=${item.category === "equipos" ? "equipo" : item.category}`,
+      href:
+        item.category === "equipos"
+          ? "/dashboard/almacen?tab=equipo"
+          : `/dashboard/almacen?tab=inventario&categoria=${item.category}`,
       days,
     });
   }

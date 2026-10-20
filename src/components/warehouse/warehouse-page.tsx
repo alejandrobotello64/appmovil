@@ -23,16 +23,28 @@ import {
   warehouseTabIsVisible,
   type WarehouseTabId,
 } from "@/lib/warehouse/tabs";
-import { normalizeCatalogCategory } from "@/lib/inventory/types";
+import {
+  isSupplyCategory,
+  normalizeCatalogCategory,
+} from "@/lib/inventory/types";
 
 export function WarehousePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
+  const categoryParam = searchParams.get("categoria");
   const activeTab: WarehouseTabId = normalizeWarehouseTab(tabParam) ?? "dashboard";
+  const requestedCategory =
+    normalizeCatalogCategory(categoryParam) ??
+    normalizeCatalogCategory(
+      tabParam && tabParam !== "inventario" && tabParam !== "equipo"
+        ? tabParam
+        : null
+    );
   const catalogCategory =
-    normalizeCatalogCategory(searchParams.get("categoria")) ??
-    normalizeCatalogCategory(tabParam === "equipo" ? "equipos" : tabParam);
+    requestedCategory && isSupplyCategory(requestedCategory)
+      ? requestedCategory
+      : null;
   const access = useSessionAccess();
 
   useEffect(() => {
@@ -51,7 +63,13 @@ export function WarehousePage() {
     if (tabParam === "proveedores") {
       router.replace("/dashboard/compras?tab=proveedores");
     }
-  }, [tabParam, router]);
+    if (
+      activeTab === "inventario" &&
+      (categoryParam === "equipos" || categoryParam === "equipo")
+    ) {
+      router.replace("/dashboard/almacen?tab=equipo");
+    }
+  }, [tabParam, categoryParam, activeTab, router]);
 
   const activeTabMeta = WAREHOUSE_TABS.find((tab) => tab.id === activeTab);
   const allowed =
@@ -80,6 +98,10 @@ export function WarehousePage() {
                 panelMode="catalog"
                 initialCategory={catalogCategory}
               />
+            ) : null}
+
+            {activeTab === "equipo" ? (
+              <InventoryPanel panelMode="equipment" />
             ) : null}
 
             {activeTab === "kits" ? <SupplyKitsPanel /> : null}
