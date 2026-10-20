@@ -1,19 +1,18 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import {
+  PDF_BLUE,
+  PDF_CYAN,
   PDF_INK,
   PDF_MARGIN,
   PDF_MUTED,
   PdfCursor,
-  drawFieldRow,
   drawParagraph,
-  drawPersonCards,
   drawSignatures,
   drawTable,
   formatPdfDate,
   formatPdfQty,
   type PdfColumn,
-  type PdfPersonCard,
   type PdfRow,
 } from "@/lib/brand/pdf-layout";
 import { getPurchaseRequests } from "@/lib/purchasing/storage";
@@ -28,7 +27,7 @@ import {
   requisitionStatusLabel,
   type ServiceOrderRequisition,
 } from "./requisitions";
-import { serviceOrderStatusLabel, serviceTypeLabel } from "./types";
+import { serviceTypeLabel } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -53,14 +52,68 @@ export type RequisitionPrintOptions = {
   printedByWarehouse?: boolean;
 };
 
-function personRows(profile: StaffProfile | null, extra: [string, string][] = []): [string, string][] {
-  return [
-    ["Puesto", profile?.jobTitle ?? ""],
-    ["Departamento", profile?.department ?? ""],
-    ["No. empleado", profile?.employeeNumber ?? ""],
-    ["Teléfono", profile?.phone ?? ""],
-    ...extra,
-  ];
+function compactSection(cursor: PdfCursor, title: string) {
+  cursor.ensure(7);
+  const { doc } = cursor;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...PDF_BLUE);
+  doc.text(title.toUpperCase(), PDF_MARGIN, cursor.y);
+  doc.setDrawColor(210, 216, 236);
+  doc.line(PDF_MARGIN, cursor.y + 1.1, cursor.pageW - PDF_MARGIN, cursor.y + 1.1);
+  cursor.y += 4.4;
+}
+
+function compactFields(cursor: PdfCursor, fields: [string, string][], columns = 4) {
+  const filled = fields.filter(([, value]) => String(value ?? "").trim());
+  if (!filled.length) return;
+  const { doc } = cursor;
+  const colW = cursor.contentW / columns;
+  for (let start = 0; start < filled.length; start += columns) {
+    const row = filled.slice(start, start + columns);
+    cursor.ensure(6.4);
+    row.forEach(([label, value], index) => {
+      const x = PDF_MARGIN + colW * index;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(5.8);
+      doc.setTextColor(...PDF_MUTED);
+      doc.text(label, x, cursor.y);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.2);
+      doc.setTextColor(...PDF_INK);
+      const lines = doc.splitTextToSize(value, colW - 2.5) as string[];
+      doc.text(lines[0] ?? "—", x, cursor.y + 3.1);
+    });
+    cursor.y += 6.2;
+  }
+  cursor.y += 0.8;
+}
+
+function compactPeople(
+  cursor: PdfCursor,
+  people: { title: string; name: string; empty?: string }[]
+) {
+  compactSection(cursor, "Responsables");
+  const { doc } = cursor;
+  const gap = 2.4;
+  const w = (cursor.contentW - gap * (people.length - 1)) / people.length;
+  const h = 11;
+  cursor.ensure(h + 2);
+  people.forEach((person, index) => {
+    const x = PDF_MARGIN + index * (w + gap);
+    doc.setFillColor(246, 248, 253);
+    doc.setDrawColor(210, 216, 236);
+    doc.roundedRect(x, cursor.y, w, h, 1, 1, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(5.8);
+    doc.setTextColor(...PDF_CYAN);
+    doc.text(person.title.toUpperCase(), x + 2, cursor.y + 3.3);
+    const name = person.name || person.empty || "—";
+    doc.setFontSize(7.2);
+    doc.setTextColor(...(person.name ? PDF_INK : PDF_MUTED));
+    doc.text((doc.splitTextToSize(name, w - 4) as string[])[0], x + 2, cursor.y + 7.8);
+  });
+  cursor.y += h + 2.4;
 }
 
 function purchaseForLine(lineId: string, purchases: PurchaseRequest[]) {
@@ -157,46 +210,41 @@ export async function downloadRequisitionsPdf(
     if (isQuote) drawQuoteOrigin(cursor, item.requisition, item.order);
     else drawServiceOrderOrigin(cursor, item.requisition, item.order);
 
-    cursor.sectionTitle("Personas involucradas");
-    const fulfillerCard: PdfPersonCard = {
-      title: "Surte (almacén)",
-      name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
-      emptyName: "Pendiente de surtir",
-      rows: personRows(fulfiller, [["Surtido", fulfillerLabel]]),
-    };
-    const requesterCard: PdfPersonCard = {
-      title: "Solicita",
-      name: nameOf(requester, item.requisition.requestedBy),
-      rows: personRows(requester, [["Fecha", formatPdfDate(item.requisition.requestedAt, true)]]),
-    };
-    const cards: PdfPersonCard[] = isQuote
-      ? [
-          requesterCard,
-          {
-            title: "Vendedor",
-            name: nameOf(advisor, str(item.order.salesperson)),
-            emptyName: "Sin vendedor asignado",
-            rows: personRows(advisor),
-          },
-          fulfillerCard,
-        ]
-      : [
-          requesterCard,
-          {
-            title: "Asesor de servicio",
-            name: nameOf(advisor, str(item.order.advisor)),
-            emptyName: "Sin asesor asignado",
-            rows: personRows(advisor),
-          },
-          {
-            title: "Técnico asignado",
-            name: nameOf(technician, str(item.order.technician)),
-            emptyName: "Sin técnico asignado",
-            rows: personRows(technician),
-          },
-          fulfillerCard,
-        ];
-    drawPersonCards(cursor, cards, 2);
+    compactPeople(
+      cursor,
+      isQuote
+        ? [
+            { title: "Solicita", name: nameOf(requester, item.requisition.requestedBy) },
+            {
+              title: "Vendedor",
+              name: nameOf(advisor, str(item.order.salesperson)),
+              empty: "Sin asignar",
+            },
+            {
+              title: "Almacén",
+              name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
+              empty: fulfillerLabel || "Por surtir",
+            },
+          ]
+        : [
+            { title: "Solicita", name: nameOf(requester, item.requisition.requestedBy) },
+            {
+              title: "Asesor",
+              name: nameOf(advisor, str(item.order.advisor)),
+              empty: "Sin asignar",
+            },
+            {
+              title: "Técnico",
+              name: nameOf(technician, str(item.order.technician)),
+              empty: "Sin asignar",
+            },
+            {
+              title: "Almacén",
+              name: fulfillerKey ? nameOf(fulfiller, fulfillerKey) : "",
+              empty: fulfillerLabel || "Por surtir",
+            },
+          ]
+    );
 
     drawRequisitionBody(
       cursor,
@@ -255,41 +303,48 @@ export async function downloadRequisitionsPdf(
 }
 
 function drawQuoteOrigin(cursor: PdfCursor, requisition: ServiceOrderRequisition, quote: Row) {
-  cursor.sectionTitle("Venta / cotización");
-  drawFieldRow(cursor, [
+  compactSection(cursor, "Venta / cotización");
+  compactFields(cursor, [
     ["Cotización", requisition.quoteFolio || str(quote.folio)],
     ["Proyecto", str(quote.title)],
-    ["Fecha de solicitud", formatPdfDate(requisition.requestedAt, true)],
-    ["Requerido para", formatPdfDate(requisition.neededBy)],
-  ]);
-  drawFieldRow(cursor, [
     ["Cliente", requisition.clientName || str(quote.client_name)],
     ["Contacto", [str(quote.contact_name), str(quote.contact_phone)].filter(Boolean).join(" · ")],
     ["Ciudad", [str(quote.city), str(quote.state)].filter(Boolean).join(", ")],
+    ["Solicitado", formatPdfDate(requisition.requestedAt, true)],
+    ["Requerido", formatPdfDate(requisition.neededBy)],
+    ["Entrega", requisition.deliveryAddress],
   ]);
-  if (requisition.deliveryAddress) drawParagraph(cursor, "Entrega en", requisition.deliveryAddress);
 }
 
 function drawServiceOrderOrigin(cursor: PdfCursor, requisition: ServiceOrderRequisition, order: Row) {
-  cursor.sectionTitle("Orden de servicio");
-  drawFieldRow(cursor, [
+  compactSection(cursor, "Orden de servicio");
+  compactFields(cursor, [
     ["Orden de servicio", requisition.serviceOrderFolio || str(order.folio)],
-    ["Tipo de servicio", order.service_type ? serviceTypeLabel(str(order.service_type)) : ""],
-    ["Estatus de la OS", order.status ? serviceOrderStatusLabel(str(order.status)) : ""],
-    ["Prioridad", str(order.priority) === "urgente" ? "Urgente" : "Normal"],
-  ]);
-  drawFieldRow(cursor, [
+    ["Tipo", order.service_type ? serviceTypeLabel(str(order.service_type)) : ""],
     ["Cliente", requisition.clientName || str(order.client_name)],
-    ["Contacto", [str(order.contact_name), str(order.contact_phone)].filter(Boolean).join(" · ")],
-    ["Ubicación del equipo", str(order.equipment_location)],
-  ]);
-  drawFieldRow(cursor, [
     ["Equipo", requisition.equipmentName || str(order.equipment_name)],
     ["Marca / modelo", [str(order.equipment_brand), str(order.equipment_model)].filter(Boolean).join(" ")],
     ["No. de serie", str(order.equipment_serial)],
-    ["Fecha de solicitud", formatPdfDate(requisition.requestedAt, true)],
+    ["Ubicación", str(order.equipment_location)],
+    ["Solicitado", formatPdfDate(requisition.requestedAt, true)],
+    ...(str(order.priority) === "urgente" ? ([["Prioridad", "Urgente"]] as [string, string][]) : []),
+    ["Contacto", [str(order.contact_name), str(order.contact_phone)].filter(Boolean).join(" · ")],
   ]);
-  if (order.fault_reported) drawParagraph(cursor, "Falla reportada", str(order.fault_reported));
+  const fault = str(order.fault_reported).trim();
+  if (fault) {
+    const { doc } = cursor;
+    const lines = (doc.splitTextToSize(fault, cursor.contentW) as string[]).slice(0, 2);
+    cursor.ensure(4 + lines.length * 3.2);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(5.8);
+    doc.setTextColor(...PDF_MUTED);
+    doc.text("Falla", PDF_MARGIN, cursor.y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...PDF_INK);
+    doc.text(lines, PDF_MARGIN, cursor.y + 3);
+    cursor.y += 3.4 + lines.length * 3.2;
+  }
 }
 
 function drawRequisitionBody(
@@ -300,7 +355,7 @@ function drawRequisitionBody(
   displayName: (key: string) => string
 ) {
   const doc = cursor.doc;
-  cursor.sectionTitle("Material solicitado");
+  compactSection(cursor, "Material solicitado");
   const groups = groupRequisitionLines([requisition]);
   const rows: PdfRow[] = groups.map((group, index) => {
     const linked = group.sources.flatMap((source) => purchaseForLine(source.line.id, purchases));
@@ -350,7 +405,7 @@ function drawRequisitionBody(
   cursor.y += 8;
 
   if (fulfillments.length) {
-    cursor.sectionTitle("Surtidos registrados");
+    compactSection(cursor, "Surtidos registrados");
     const lineById = new Map(requisition.lines.map((line) => [line.id, line]));
     for (const item of fulfillments) {
       const line = item.lineId ? lineById.get(item.lineId) : undefined;
@@ -376,7 +431,7 @@ function drawRequisitionBody(
   }
 
   if (purchases.length) {
-    cursor.sectionTitle("Compras por faltantes");
+    compactSection(cursor, "Compras por faltantes");
     for (const purchase of purchases) {
       const detail = [
         purchaseStatusLabel(purchase.status),
