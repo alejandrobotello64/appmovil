@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase/client";
 import { getProductAvailableQty } from "@/lib/holds/storage";
 import { applyStockMovement } from "@/lib/warehouse/stock";
 import {
-  requesterKey,
+  sameRequester,
   type CreateQuoteRequisitionInput,
   type CreateRequisitionInput,
   type FulfillLineInput,
@@ -545,11 +545,10 @@ export async function fulfillServiceOrderRequisitions(
     if (req.status === "cancelada" || req.status === "surtida") {
       throw new Error(`${req.folio} ya no se puede surtir.`);
     }
-    const key = requesterKey(req.requestedBy);
-    if (!requester) requester = key;
-    else if (key !== requester) {
+    if (!requester) requester = req.requestedBy;
+    else if (!sameRequester(req.requestedBy, requester)) {
       throw new Error(
-        "Solo puedes surtir juntas solicitudes de la misma persona."
+        "Solo puedes surtir juntas solicitudes de la misma persona, aunque sean de distintas órdenes."
       );
     }
     for (const item of job.fulfillments) {

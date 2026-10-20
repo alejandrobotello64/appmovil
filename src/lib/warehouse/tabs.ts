@@ -45,7 +45,7 @@ export const WAREHOUSE_TABS = [
   {
     id: "solicitudes",
     label: "Surtimientos",
-    description: "Surte una o varias solicitudes de la misma persona, aunque sean de distintas órdenes",
+    description: "Al elegir a una persona se surten juntas todas sus solicitudes abiertas, aunque sean de distintas órdenes",
     href: "/dashboard/almacen?tab=solicitudes",
   },
   {

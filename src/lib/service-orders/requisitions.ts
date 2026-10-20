@@ -158,15 +158,54 @@ export function requisitionLineStatusLabel(status: string) {
 /** Agrupa solicitudes de surtimiento de la misma persona (técnico / vendedor). */
 export function requesterKey(value: string | null | undefined) {
   return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+/** Usuario, correo o parte local del correo; sirve para reconocer a la misma persona. */
+export function requesterTokens(value: string | null | undefined) {
+  const raw = requesterKey(value);
+  if (!raw) return [];
+  const tokens = new Set<string>([raw]);
+  if (raw.includes("@")) {
+    const local = raw.slice(0, raw.indexOf("@"));
+    if (local.length >= 4) tokens.add(local);
+  }
+  return [...tokens];
+}
+
+export type RequesterDirectoryEntry = {
+  username: string;
+  fullName: string;
+};
+
+export function canonicalRequester(
+  value: string | null | undefined,
+  directory: RequesterDirectoryEntry[] = []
+) {
+  const tokens = new Set(requesterTokens(value));
+  if (!tokens.size) return "";
+  const member = directory.find(
+    (entry) =>
+      requesterTokens(entry.username).some((token) => tokens.has(token)) ||
+      requesterTokens(entry.fullName).some((token) => tokens.has(token))
+  );
+  return member ? requesterKey(member.username) : requesterKey(value);
 }
 
 export function sameRequester(
   left: string | null | undefined,
-  right: string | null | undefined
+  right: string | null | undefined,
+  directory: RequesterDirectoryEntry[] = []
 ) {
-  const a = requesterKey(left);
-  const b = requesterKey(right);
-  return Boolean(a) && a === b;
+  if (directory.length) {
+    const a = canonicalRequester(left, directory);
+    const b = canonicalRequester(right, directory);
+    return Boolean(a) && a === b;
+  }
+  const other = new Set(requesterTokens(right));
+  return requesterTokens(left).some((token) => other.has(token));
 }

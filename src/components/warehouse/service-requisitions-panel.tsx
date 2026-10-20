@@ -18,6 +18,7 @@ import { downloadRequisitionsPdf } from "@/lib/service-orders/requisition-pdf";
 import {
   REQUISITION_SOURCES,
   REQUISITION_STATUSES,
+  canonicalRequester,
   isOffCatalogLine,
   isRequisitionOpen,
   requesterKey,
@@ -32,6 +33,7 @@ import {
   type RequisitionStatus,
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
+import { listStaffMembers, type StaffMember } from "@/lib/users/staff";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
@@ -64,7 +66,7 @@ export function ServiceRequisitionsPanel({
   permissionModule = "solicitudes",
   allowFulfill,
   title = "Solicitudes de surtimiento",
-  subtitle = "Surte una o varias solicitudes de la misma persona aunque sean de distintas órdenes. El material se descuenta del inventario y lo que falte se pide a compras.",
+  subtitle = "Al elegir a una persona se juntan todas sus solicitudes abiertas, aunque vengan de distintas órdenes. El material se descuenta del inventario y lo que falte se pide a compras.",
 }: {
   /** Limita la bandeja a un origen; sin valor se muestran todos con filtro. */
   source?: RequisitionSource;
@@ -83,6 +85,7 @@ export function ServiceRequisitionsPanel({
   const activeSource = source ?? (sourceFilter === "todas" ? undefined : sourceFilter);
 
   const [data, setData] = useState<LoadedData | null>(null);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -104,10 +107,12 @@ export function ServiceRequisitionsPanel({
     Promise.all([
       getServiceOrderRequisitions({ sourceType: source }),
       getPurchaseRequests().catch(() => [] as PurchaseRequest[]),
+      listStaffMembers().catch(() => [] as StaffMember[]),
     ])
-      .then(([requisitions, purchases]) => {
+      .then(([requisitions, purchases, members]) => {
         if (!active) return;
         setData({ requisitions, purchases });
+        setStaff(members);
         setError("");
       })
       .catch((err) => {
@@ -176,10 +181,10 @@ export function ServiceRequisitionsPanel({
               line.description,
             ]),
           ]) &&
-          (personFilter === "todas" || sameRequester(item.requestedBy, personFilter))
+          (personFilter === "todas" || sameRequester(item.requestedBy, personFilter, staff))
         );
       }),
-    [items, statusFilter, query, activeSource, personFilter]
+    [items, statusFilter, query, activeSource, personFilter, staff]
   );
 
   const people = useMemo(() => {
@@ -187,20 +192,45 @@ export function ServiceRequisitionsPanel({
     const list: string[] = [];
     for (const item of items) {
       const name = item.requestedBy.trim();
-      const key = requesterKey(name);
+      const key = canonicalRequester(name, staff) || requesterKey(name);
       if (!key || seen.has(key)) continue;
       seen.add(key);
       list.push(name);
     }
     return list.sort((a, b) => a.localeCompare(b, "es"));
-  }, [items]);
+  }, [items, staff]);
+
+  function openFromPerson(person: string) {
+    return items.filter(
+      (item) => isRequisitionOpen(item.status) && sameRequester(item.requestedBy, person, staff)
+    );
+  }
 
   const samePersonOpen = useMemo(() => {
     if (!selectedRequester) return [];
-    return filtered.filter(
-      (item) => isRequisitionOpen(item.status) && sameRequester(item.requestedBy, selectedRequester)
-    );
-  }, [filtered, selectedRequester]);
+    return openFromPerson(selectedRequester);
+  }, [items, selectedRequester, staff]);
+
+  const personGroups = useMemo(() => {
+    const map = new Map<string, { key: string; name: string; items: ServiceOrderRequisition[] }>();
+    for (const item of filtered) {
+      const key = canonicalRequester(item.requestedBy, staff) || `solo:${item.id}`;
+      const existing = map.get(key);
+      if (existing) {
+        existing.items.push(item);
+        continue;
+      }
+      const member = staff.find(
+        (entry) => canonicalRequester(entry.username, staff) === key
+      );
+      map.set(key, {
+        key,
+        name: member?.fullName || item.requestedBy.trim() || "Sin solicitante",
+        items: [item],
+      });
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "es"));
+  }, [filtered, staff]);
 
   function mergeDrafts(requisitions: ServiceOrderRequisition[], reset: boolean) {
     setQtyDraft((current) => {
@@ -218,6 +248,15 @@ export function ServiceRequisitionsPanel({
     }
   }
 
+  function selectPersonGroup(person: string, extra?: ServiceOrderRequisition) {
+    const group = openFromPerson(person);
+    const chosen = group.length ? group : extra ? [extra] : [];
+    if (!chosen.length) return;
+    setError("");
+    setSelectedIds(chosen.map((item) => item.id));
+    mergeDrafts(chosen, true);
+  }
+
   function selectRequisition(requisition: ServiceOrderRequisition, add = false) {
     const already = selectedIds.includes(requisition.id);
     if (add && selectedItems.length) {
@@ -231,19 +270,17 @@ export function ServiceRequisitionsPanel({
         mergeDrafts([requisition], true);
         return;
       }
-      if (!sameRequester(requisition.requestedBy, selectedRequester)) {
-        setError(
-          "Solo se pueden juntar solicitudes de la misma persona. Se cambió a las de " +
-            (requisition.requestedBy || "ese solicitante") +
-            "."
-        );
-        setSelectedIds([requisition.id]);
-        mergeDrafts([requisition], true);
+      if (!sameRequester(requisition.requestedBy, selectedRequester, staff)) {
+        selectPersonGroup(requisition.requestedBy, requisition);
         return;
       }
       setError("");
       setSelectedIds([...selectedIds, requisition.id]);
       mergeDrafts([requisition], false);
+      return;
+    }
+    if (isRequisitionOpen(requisition.status)) {
+      selectPersonGroup(requisition.requestedBy, requisition);
       return;
     }
     setError("");
@@ -460,7 +497,50 @@ export function ServiceRequisitionsPanel({
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => {
+                personGroups.flatMap((group) => {
+                  const openInGroup = group.items.filter((item) => isRequisitionOpen(item.status));
+                  const selectedInGroup = group.items.filter((item) => selectedIds.includes(item.id)).length;
+                  const groupChecked =
+                    openInGroup.length > 0 &&
+                    openInGroup.every((item) => selectedIds.includes(item.id));
+                  const header = (
+                    <tr
+                      key={`group-${group.key}`}
+                      className="border-t border-border bg-muted/50"
+                      data-sort="off"
+                    >
+                      <td className="px-3 py-2">
+                        {canFulfill && openInGroup.length > 0 ? (
+                          <input
+                            type="checkbox"
+                            className="size-4 accent-[#3B46A5]"
+                            checked={groupChecked}
+                            aria-label={`Seleccionar las ${openInGroup.length} solicitudes abiertas de ${group.name}`}
+                            onChange={() => {
+                              if (groupChecked) {
+                                const drop = new Set(openInGroup.map((item) => item.id));
+                                setSelectedIds(selectedIds.filter((id) => !drop.has(id)));
+                                return;
+                              }
+                              selectPersonGroup(group.items[0].requestedBy, group.items[0]);
+                            }}
+                          />
+                        ) : null}
+                      </td>
+                      <td className="px-3 py-2" colSpan={6}>
+                        <p className="text-xs font-semibold text-[#3B46A5]">
+                          {group.name}
+                          <span className="ml-2 font-normal text-muted-foreground">
+                            {openInGroup.length > 1
+                              ? `${openInGroup.length} solicitudes abiertas de distintas órdenes`
+                              : `${group.items.length} solicitud(es)`}
+                            {selectedInGroup ? ` · ${selectedInGroup} elegidas` : ""}
+                          </span>
+                        </p>
+                      </td>
+                    </tr>
+                  );
+                  const rows = group.items.map((item) => {
                   const openPurchases = (purchasesByRequisition.get(item.id) ?? []).filter((p) => isPurchaseOpen(p.status));
                   const progress = requisitionProgress(item);
                   const detail =
@@ -475,10 +555,7 @@ export function ServiceRequisitionsPanel({
                         "cursor-pointer border-t border-border align-top hover:bg-muted/30",
                         checked && "bg-muted/40"
                       )}
-                      onClick={() => {
-                        if (selectedIds.length === 1 && selectedIds[0] === item.id) return;
-                        selectRequisition(item, selectedItems.length > 0);
-                      }}
+                      onClick={() => selectRequisition(item, false)}
                     >
                       <td className="px-3 py-3">
                         <input
@@ -533,6 +610,8 @@ export function ServiceRequisitionsPanel({
                       </td>
                     </tr>
                   );
+                  });
+                  return [header, ...rows];
                 })
               )}
             </tbody>
@@ -543,7 +622,7 @@ export function ServiceRequisitionsPanel({
           {!selected ? (
             <p className="text-sm text-muted-foreground">
               {canFulfill
-                ? "Selecciona una o varias solicitudes de la misma persona para surtirlas juntas, aunque sean de distintas órdenes."
+                ? "Toca a una persona o una solicitud abierta: se juntan todas las de esa persona, aunque sean de distintas órdenes. Quita el visto si alguna no va en este surtido."
                 : "Selecciona una solicitud para ver su avance o imprimirla."}
             </p>
           ) : (
@@ -591,7 +670,7 @@ export function ServiceRequisitionsPanel({
                     </>
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Se surten juntas y se descuenta el inventario de todas.
+                      Se surten juntas aunque vengan de distintas órdenes, y se descuenta el inventario de todas.
                     </p>
                   )}
                 </div>
