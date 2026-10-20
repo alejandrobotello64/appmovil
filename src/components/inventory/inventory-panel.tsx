@@ -10,7 +10,6 @@ import {
   MapPin,
   Pencil,
   Plus,
-  Search,
   Star,
   Trash2,
   Warehouse as WarehouseIcon,
@@ -90,7 +89,9 @@ import {
   type TrackingDateMode,
 } from "@/components/inventory/inventory-tracking";
 import { SortableTable } from "@/components/ui/sortable-table";
-import { uniqueBrands } from "@/lib/inventory/brands";
+import { SearchInput } from "@/components/ui/search-input";
+import { normalizeBrand, uniqueBrands } from "@/lib/inventory/brands";
+import { matchesSearch } from "@/lib/search";
 import {
   PRODUCT_COLORS,
   productColorLabel,
@@ -199,9 +200,6 @@ export function InventoryPanel({
     CatalogCategoryId | "all"
   >(initialCategory ?? "all");
   const [brandFilter, setBrandFilter] = useState("todas");
-  const [lineFilter, setLineFilter] = useState<"todas" | "intellivue" | "dfm100">(
-    "todas"
-  );
   const [colorFilter, setColorFilter] = useState("todos");
 
   function catalogCan(action: PermissionAction) {
@@ -360,31 +358,26 @@ export function InventoryPanel({
         !isCatalog ||
         categoryFilter === "all" ||
         item.category === categoryFilter;
-      const matchesSearch =
-        search.trim().length === 0 ||
-        [
-          item.sku,
-          item.name,
-          item.brand,
-          productColorLabel(resolveProductColor(item.colorTag, item.brand)),
-          item.partNumber,
-          item.model,
-          item.supplier,
-          item.serialNumber,
-          item.location,
-          item.category,
-          item.subcategory,
-          item.description,
-          item.notes,
-          getCategoryLabel(item.category),
-          trackingSearchText(trackingFor(stockByProduct.get(item.id))),
-          placementsFor(stockByProduct.get(item.id))
-            .map((placement) => placement.locationName)
-            .join(" "),
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(search.toLowerCase());
+      const matchesQuery = matchesSearch(search, [
+        item.sku,
+        item.name,
+        item.brand,
+        productColorLabel(resolveProductColor(item.colorTag, item.brand)),
+        item.partNumber,
+        item.model,
+        item.supplier,
+        item.serialNumber,
+        item.location,
+        item.category,
+        item.subcategory,
+        item.description,
+        item.notes,
+        getCategoryLabel(item.category),
+        trackingSearchText(trackingFor(stockByProduct.get(item.id))),
+        placementsFor(stockByProduct.get(item.id))
+          .map((placement) => placement.locationName)
+          .join(" "),
+      ]);
       const matchesStatus =
         isEquipment ||
         item.itemKind === "equipo" ||
@@ -397,35 +390,20 @@ export function InventoryPanel({
       const matchesBrand =
         brandFilter === "todas" ||
         (brandFilter === "sin_marca"
-          ? !item.brand.trim()
-          : item.brand.trim().toLowerCase() === brandFilter.toLowerCase());
+          ? !normalizeBrand(item.brand)
+          : normalizeBrand(item.brand).toLowerCase() ===
+            brandFilter.toLowerCase());
       const itemColor = resolveProductColor(item.colorTag, item.brand);
       const matchesColor =
         colorFilter === "todos" ||
         (colorFilter === "sin_color" ? !itemColor : itemColor === colorFilter);
-      const lineHaystack = [
-        item.subcategory,
-        item.model,
-        item.name,
-        item.description,
-        item.notes,
-        item.partNumber,
-      ]
-        .join(" ")
-        .toLowerCase();
-      const matchesLine =
-        lineFilter === "todas" ||
-        (lineFilter === "intellivue"
-          ? /intellivue|mx550|mx400|mx450|mx500/.test(lineHaystack)
-          : /dfm100|efficia/.test(lineHaystack));
       return (
         matchesCategory &&
-        matchesSearch &&
+        matchesQuery &&
         matchesStatus &&
         matchesWarehouse &&
         matchesBrand &&
-        matchesColor &&
-        matchesLine
+        matchesColor
       );
     });
   }, [
@@ -439,8 +417,24 @@ export function InventoryPanel({
     warehouseFilter,
     brandFilter,
     colorFilter,
-    lineFilter,
   ]);
+
+  const hasActiveFilters =
+    search.trim().length > 0 ||
+    (isCatalog && categoryFilter !== "all") ||
+    brandFilter !== "todas" ||
+    colorFilter !== "todos" ||
+    statusFilter !== "all" ||
+    Boolean(warehouseFilter);
+
+  function clearInventoryFilters() {
+    setSearch("");
+    setCategoryFilter("all");
+    setBrandFilter("todas");
+    setColorFilter("todos");
+    setStatusFilter("all");
+    setWarehouseFilter("");
+  }
 
   const catalogBrands = useMemo(
     () => uniqueBrands(items.map((item) => item.brand)),
@@ -835,7 +829,9 @@ export function InventoryPanel({
                     type="button"
                     role="tab"
                     aria-selected={active}
-                    onClick={() => setCategoryFilter(entry.id)}
+                    onClick={() =>
+                      setCategoryFilter(active ? "all" : entry.id)
+                    }
                     className={cn(
                       "rounded-lg px-3 py-1.5 text-sm font-medium",
                       active
@@ -882,7 +878,9 @@ export function InventoryPanel({
                       type="button"
                       role="tab"
                       aria-selected={active}
-                      onClick={() => setBrandFilter(brand)}
+                      onClick={() =>
+                        setBrandFilter(active ? "todas" : brand)
+                      }
                       className={cn(
                         "rounded-full px-3 py-1 text-xs font-medium",
                         active
@@ -899,7 +897,11 @@ export function InventoryPanel({
                     type="button"
                     role="tab"
                     aria-selected={brandFilter === "sin_marca"}
-                    onClick={() => setBrandFilter("sin_marca")}
+                    onClick={() =>
+                      setBrandFilter(
+                        brandFilter === "sin_marca" ? "todas" : "sin_marca"
+                      )
+                    }
                     className={cn(
                       "rounded-full px-3 py-1 text-xs font-medium",
                       brandFilter === "sin_marca"
@@ -910,50 +912,6 @@ export function InventoryPanel({
                     Sin marca
                   </button>
                 ) : null}
-              </div>
-            </div>
-          ) : null}
-
-          {items.some((item) =>
-            /intellivue|mx550|dfm100|efficia/.test(
-              `${item.subcategory} ${item.model} ${item.name} ${item.description}`.toLowerCase()
-            )
-          ) ? (
-            <div className="space-y-2 border-b border-border bg-muted/10 px-3 py-3">
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Línea Philips
-              </p>
-              <div
-                className="flex flex-wrap gap-1"
-                role="tablist"
-                aria-label="Filtrar accesorios Philips por línea"
-              >
-                {(
-                  [
-                    { id: "todas", label: "Todas" },
-                    { id: "intellivue", label: "IntelliVue" },
-                    { id: "dfm100", label: "DFM100" },
-                  ] as const
-                ).map((entry) => {
-                  const active = lineFilter === entry.id;
-                  return (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setLineFilter(entry.id)}
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs font-medium",
-                        active
-                          ? "bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-sm"
-                          : "border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      {entry.label}
-                    </button>
-                  );
-                })}
               </div>
             </div>
           ) : null}
@@ -985,7 +943,11 @@ export function InventoryPanel({
                 type="button"
                 role="tab"
                 aria-selected={colorFilter === "sin_color"}
-                onClick={() => setColorFilter("sin_color")}
+                onClick={() =>
+                  setColorFilter(
+                    colorFilter === "sin_color" ? "todos" : "sin_color"
+                  )
+                }
                 className={cn(
                   "rounded-full px-3 py-1 text-xs font-medium",
                   colorFilter === "sin_color"
@@ -1003,7 +965,9 @@ export function InventoryPanel({
                     type="button"
                     role="tab"
                     aria-selected={active}
-                    onClick={() => setColorFilter(color.id)}
+                    onClick={() =>
+                      setColorFilter(active ? "todos" : color.id)
+                    }
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium",
                       active
@@ -1019,65 +983,89 @@ export function InventoryPanel({
             </div>
           </div>
 
-          <div
-            className={cn(
-              "grid gap-3 border-b border-border p-4",
-              isEquipment ? "md:grid-cols-[1fr_auto]" : "md:grid-cols-[1fr_auto_auto]"
-            )}
-          >
-            <label className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
+          <div className="space-y-3 border-b border-border p-4">
+            <div
+              className={cn(
+                "grid gap-3",
+                isEquipment
+                  ? "md:grid-cols-[1fr_auto]"
+                  : "md:grid-cols-[1fr_auto_auto]"
+              )}
+            >
+              <SearchInput
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={setSearch}
                 placeholder={
                   isCatalog
-                    ? "Buscar por código, nombre, n.º de parte, marca, serie o categoría..."
+                    ? "Buscar por código, nombre, n.º de parte, marca o modelo..."
                     : isEquipment
                       ? "Buscar por SKU, nombre, marca, proveedor o serie..."
                       : "Buscar por SKU, nombre, marca, proveedor, lote o serie..."
                 }
-                className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-10 text-sm outline-none focus:border-[#3B46A5] focus:ring-3 focus:ring-[#00BFFF]/20"
+                ariaLabel="Buscar en el inventario"
               />
-            </label>
-            <select
-              value={warehouseFilter}
-              onChange={(event) => setWarehouseFilter(event.target.value)}
-              aria-label="Almacén"
-              className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none"
-            >
-              <option value="">Todos los almacenes</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
-                  {warehouse.city ? ` · ${warehouse.city}` : ""}
-                </option>
-              ))}
-            </select>
-            {!isEquipment ? (
               <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value as StockStatus | "all")
-                }
+                value={warehouseFilter}
+                onChange={(event) => setWarehouseFilter(event.target.value)}
+                aria-label="Almacén"
                 className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none"
               >
-                <option value="all">Todos los estados</option>
-                <option value="disponible">Disponible</option>
-                <option value="bajo_stock">Bajo stock</option>
-                <option value="agotado">Agotado</option>
-                <option value="sin_alerta">Alerta desactivada</option>
+                <option value="">Todos los almacenes</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name}
+                    {warehouse.city ? ` · ${warehouse.city}` : ""}
+                  </option>
+                ))}
               </select>
-            ) : null}
+              {!isEquipment ? (
+                <select
+                  value={statusFilter}
+                  onChange={(event) =>
+                    setStatusFilter(
+                      event.target.value as StockStatus | "all" | "sin_alerta"
+                    )
+                  }
+                  className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none"
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="disponible">Disponible</option>
+                  <option value="bajo_stock">Bajo stock</option>
+                  <option value="agotado">Agotado</option>
+                  <option value="sin_alerta">Alerta desactivada</option>
+                </select>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                {loading
+                  ? "Cargando catálogo…"
+                  : filteredItems.length === items.length
+                    ? `${items.length} artículo${items.length === 1 ? "" : "s"}`
+                    : `${filteredItems.length} de ${items.length} artículos`}
+              </p>
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={clearInventoryFilters}
+                  className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-3" />
+                  Quitar filtros
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <ResponsiveDataList
             emptyMessage={
-              isCatalog
-                ? "No hay artículos que coincidan con los filtros."
-                : isEquipment
-                  ? "No hay equipos que coincidan con los filtros."
-                  : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`
+              hasActiveFilters
+                ? "Ningún artículo coincide con la búsqueda o los filtros. Prueba quitar filtros o buscar por SKU o n.º de parte."
+                : isCatalog
+                  ? "No hay artículos en el catálogo."
+                  : isEquipment
+                    ? "No hay equipos registrados."
+                    : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} registrados.`
             }
             items={filteredItems.map((item) => {
               const status = getStockStatus(item.quantity, item.minStock);
@@ -1272,11 +1260,13 @@ export function InventoryPanel({
                       colSpan={isEquipment ? 10 : 11}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
-                      {isCatalog
-                        ? "No hay artículos que coincidan con los filtros."
-                        : isEquipment
-                          ? "No hay equipos que coincidan con los filtros."
-                          : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} que coincidan con los filtros.`}
+                      {hasActiveFilters
+                        ? "Ningún artículo coincide con la búsqueda o los filtros. Prueba quitar filtros o buscar por SKU o n.º de parte."
+                        : isCatalog
+                          ? "No hay artículos en el catálogo."
+                          : isEquipment
+                            ? "No hay equipos registrados."
+                            : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} registrados.`}
                     </td>
                   </tr>
                 ) : (

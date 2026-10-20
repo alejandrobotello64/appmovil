@@ -55,7 +55,7 @@ El catálogo de **kits** guarda listas típicas de insumos (SKU + cantidad) para
 
 Los ejemplos locales viven en `supabase/seed_kits.sql` (preventivo STERRAD, circuito Dräger e instalación de sondas). Migración: `supabase/migrations/20261011080000_supply_kits.sql`.
 
-Los accesorios Philips de la línea **IntelliVue MX550** y del **Efficia DFM100** se cargan con `npm run db:accesorios-philips` (añade `-- --cloud` contra Supabase). Usa los códigos oficiales como SKU, no duplica lo ya registrado, deja existencia 0 sin alerta de agotado y arma los kits de instalación `KIT-000004` / `KIT-000005`. En Inventario, el filtro **Línea Philips** (IntelliVue / DFM100) y la búsqueda por ITEM (`M1668A`, `989803190371`) los localizan.
+Los accesorios Philips de la línea **IntelliVue MX550** y del **Efficia DFM100** se cargan con `npm run db:accesorios-philips` (añade `-- --cloud` contra Supabase). Usa los códigos oficiales como SKU, no duplica lo ya registrado, deja existencia 0 sin alerta de agotado y arma los kits de instalación `KIT-000004` / `KIT-000005`. En Inventario se buscan por código, n.º de parte o modelo (`M1668A`, `989803190371`, `MX550`), sin importar guiones o acentos.
 
 El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nuevo producto. Acepta la plantilla MAS o un inventario con columnas habituales (`Código`, `Descripción`, `Cantidad`, `Precio`). Los SKU nuevos se dan de alta; los que ya existen se actualizan. La columna de existencia solo carga stock inicial en altas nuevas.
 
