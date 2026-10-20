@@ -59,7 +59,7 @@ Los accesorios Philips de la línea **IntelliVue MX550** y del **Efficia DFM100*
 
 El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nuevo producto. Acepta la plantilla MAS o un inventario con columnas habituales (`Código`, `Descripción`, `Cantidad`, `Precio`). Los SKU nuevos se dan de alta; los que ya existen se actualizan. La columna de existencia solo carga stock inicial en altas nuevas.
 
-En **Almacén → Surtimientos** se pueden marcar varias solicitudes de la **misma persona** (aunque vengan de distintas OS o cotizaciones) y recogerlas juntas: el mismo código suma en una sola cantidad. El inventario se descuenta de todas y al imprimir sale **una hoja por solicitud**.
+En **Almacén → Surtimientos** se elige una solicitud y luego otra de la **misma persona** (aunque vengan de distintas OS o cotizaciones). El mismo código suma en una sola cantidad. El inventario se descuenta de las elegidas y al imprimir sale **una hoja por solicitud**. El visto del grupo marca todas las de esa persona.
 
 La recepción de pedidos puede ser **parcial**. Entradas y salidas piden almacén, ubicación, lote/caducidad/serie cuando el producto lo exige. Los roles (`administrador`, `almacén`, `compras`, `ventas`, `servicio`, `dirección`) filtran el menú y bloquean escritura.
 

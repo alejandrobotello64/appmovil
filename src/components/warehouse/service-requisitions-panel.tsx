@@ -95,7 +95,7 @@ export function ServiceRequisitionsPanel({
   permissionModule = "solicitudes",
   allowFulfill,
   title = "Solicitudes de surtimiento",
-  subtitle = "Al elegir a una persona se juntan todas sus solicitudes abiertas. Quien surte ve cada código una sola vez, con la cantidad total. Al imprimir sale una hoja por solicitud.",
+  subtitle = "Elige una solicitud y luego otra para surtirlas juntas. El mismo código suma en una sola cantidad. Al imprimir sale una hoja por solicitud.",
 }: {
   /** Limita la bandeja a un origen; sin valor se muestran todos con filtro. */
   source?: RequisitionSource;
@@ -281,51 +281,44 @@ export function ServiceRequisitionsPanel({
     }
   }
 
+  function applySelection(next: ServiceOrderRequisition[], added?: ServiceOrderRequisition) {
+    setError("");
+    setSelectedIds(next.map((item) => item.id));
+    if (added && next.length > 1) mergeDrafts([added], false);
+    else mergeDrafts(next, true);
+  }
+
   function selectPersonGroup(person: string, extra?: ServiceOrderRequisition) {
     const group = openFromPerson(person);
     const chosen = group.length ? group : extra ? [extra] : [];
     if (!chosen.length) return;
-    setError("");
-    setSelectedIds(chosen.map((item) => item.id));
-    mergeDrafts(chosen, true);
+    applySelection(chosen);
   }
 
-  function selectRequisition(requisition: ServiceOrderRequisition, add = false) {
+  function selectRequisition(requisition: ServiceOrderRequisition) {
     const already = selectedIds.includes(requisition.id);
-    if (add && selectedItems.length) {
-      if (already) {
-        const next = selectedItems.filter((item) => item.id !== requisition.id);
-        setSelectedIds(next.map((item) => item.id));
-        return;
-      }
-      if (!isRequisitionOpen(requisition.status)) {
-        setSelectedIds([requisition.id]);
-        mergeDrafts([requisition], true);
-        return;
-      }
-      if (!sameRequester(requisition.requestedBy, selectedRequester, staff)) {
-        selectPersonGroup(requisition.requestedBy, requisition);
-        return;
-      }
-      setError("");
-      setSelectedIds([...selectedIds, requisition.id]);
-      mergeDrafts([requisition], false);
+    if (already) {
+      applySelection(selectedItems.filter((item) => item.id !== requisition.id));
       return;
     }
-    if (isRequisitionOpen(requisition.status)) {
-      selectPersonGroup(requisition.requestedBy, requisition);
+    if (!isRequisitionOpen(requisition.status)) {
+      applySelection([requisition]);
       return;
     }
-    setError("");
-    setSelectedIds([requisition.id]);
-    mergeDrafts([requisition], true);
+    const openSelection = selectedItems.filter((item) => isRequisitionOpen(item.status));
+    if (
+      openSelection.length > 0 &&
+      sameRequester(requisition.requestedBy, openSelection[0].requestedBy, staff)
+    ) {
+      applySelection([...openSelection, requisition], requisition);
+      return;
+    }
+    applySelection([requisition]);
   }
 
   function selectAllFromPerson() {
     if (!samePersonOpen.length) return;
-    setError("");
-    setSelectedIds(samePersonOpen.map((item) => item.id));
-    mergeDrafts(samePersonOpen, true);
+    applySelection(samePersonOpen);
   }
 
   async function reloadKeepingSelection(text: string) {
@@ -552,7 +545,7 @@ export function ServiceRequisitionsPanel({
                             onChange={() => {
                               if (groupChecked) {
                                 const drop = new Set(openInGroup.map((item) => item.id));
-                                setSelectedIds(selectedIds.filter((id) => !drop.has(id)));
+                                applySelection(selectedItems.filter((item) => !drop.has(item.id)));
                                 return;
                               }
                               selectPersonGroup(group.items[0].requestedBy, group.items[0]);
@@ -588,7 +581,7 @@ export function ServiceRequisitionsPanel({
                         "cursor-pointer border-t border-border align-top hover:bg-muted/30",
                         checked && "bg-muted/40"
                       )}
-                      onClick={() => selectRequisition(item, false)}
+                      onClick={() => selectRequisition(item)}
                     >
                       <td className="px-3 py-3">
                         <input
@@ -597,7 +590,7 @@ export function ServiceRequisitionsPanel({
                           checked={checked}
                           aria-label={`Seleccionar ${item.folio}`}
                           onClick={(event) => event.stopPropagation()}
-                          onChange={() => selectRequisition(item, true)}
+                          onChange={() => selectRequisition(item)}
                         />
                       </td>
                       <td className="px-3 py-3">
@@ -655,7 +648,7 @@ export function ServiceRequisitionsPanel({
           {!selected ? (
             <p className="text-sm text-muted-foreground">
               {canFulfill
-                ? "Toca a una persona o una solicitud abierta: se juntan todas las de esa persona. El mismo código aparece una sola vez, con la cantidad total. Quita el visto si alguna no va en este surtido."
+                ? "Elige una solicitud y luego otra de la misma persona. El mismo código aparece una sola vez. El visto del grupo marca todas las de esa persona."
                 : "Selecciona una solicitud para ver su avance o imprimirla."}
             </p>
           ) : (
