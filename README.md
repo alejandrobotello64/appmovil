@@ -57,6 +57,8 @@ Los ejemplos locales viven en `supabase/seed_kits.sql` (preventivo STERRAD, circ
 
 Los accesorios Philips de la línea **IntelliVue MX550** y del **Efficia DFM100** se cargan con `npm run db:accesorios-philips` (añade `-- --cloud` contra Supabase). Usa los códigos oficiales como SKU, no duplica lo ya registrado, deja existencia 0 sin alerta de agotado y arma los kits de instalación `KIT-000004` / `KIT-000005`. En Inventario se buscan por código, n.º de parte o modelo (`M1668A`, `989803190371`, `MX550`), sin importar guiones o acentos.
 
+El SKU del catálogo es el **n.º de parte / referencia** del fabricante. `npm run db:sku-parte` (añade `-- --cloud` contra Supabase) copia esa referencia a `sku` en los productos que aún tenían código interno (`ACCESORIOS-000001`, etc.). Si el mismo n.º se repite, el primero queda tal cual y los demás llevan `-2`, `-3`.
+
 El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nuevo producto. Acepta la plantilla MAS o un inventario con columnas habituales (`Código`, `Descripción`, `Cantidad`, `Precio`). Los SKU nuevos se dan de alta; los que ya existen se actualizan. La columna de existencia solo carga stock inicial en altas nuevas.
 
 En **Almacén → Surtimientos** se elige una solicitud y luego otra de la **misma persona** (aunque vengan de distintas OS o cotizaciones). El mismo código suma en una sola cantidad. El inventario se descuenta de las elegidas y al imprimir sale **una hoja por solicitud**. El visto del grupo marca todas las de esa persona.

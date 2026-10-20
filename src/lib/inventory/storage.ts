@@ -437,10 +437,16 @@ export async function createInventoryItem(
     input.itemKind === "equipo" || input.category === "equipos"
       ? ("equipos" as InventoryCategoryId)
       : input.category;
-  const sku = input.sku.trim() || (await nextInventorySku(category));
+  const part = (input.partNumber ?? "").trim();
+  const sku = input.sku.trim() || part || (await nextInventorySku(category));
 
   await ensureInventoryExtraColumns();
-  const mapped = mapInputToRow({ ...input, sku, category });
+  const mapped = mapInputToRow({
+    ...input,
+    sku,
+    category,
+    partNumber: part || sku,
+  });
   let payload = payloadForWrite(mapped, input);
   let { data, error } = await supabase
     .from("inventory_items")

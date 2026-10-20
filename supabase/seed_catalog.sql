@@ -1,4 +1,4 @@
--- Catálogo real de MAS. Generado desde la base local (589 productos).
+-- Catálogo real de MAS. Generado desde la base local (2018 productos).
 -- Idempotente: inserta o actualiza por sku. No borra filas extra.
 -- La existencia (quantity) solo se carga en SKU nuevos; no pisa stock ya existente.
 -- Regenerar: bash scripts/export-catalog.sh
@@ -37,1389 +37,107 @@ insert into public.inventory_items (
   manufacturer,
   subcategory
 ) values
-  ('ACCESORIOS-000001', 'Válvula de espiración, PatientSys', 'accesorios', 'producto', 'Válvula respiratoria ', 22, 0, 'pieza', 'A/1', 'Dräger', '', 'N/A', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8410580', 'Drager', ''),
-  ('ACCESORIOS-000002', 'Adaptador de calentador de tubo', 'accesorios', 'producto', '', 126, 0, 'pieza', 'A/1', 'Dräger', 'Drager ', '', 46.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8414968', 'Drager', ''),
-  ('ACCESORIOS-000003', 'Probe 3, skin temp, reusable', 'accesorios', 'producto', '', 51, 0, 'pieza', 'A/2', 'Dräger', 'Drager', '2152-01', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU11225', 'Drager', ''),
-  ('ACCESORIOS-000004', 'Probe skin 3, skin temp, reusable', 'accesorios', 'producto', '', 2, 0, 'pieza', 'A/2', 'Dräger', 'Drager', '2145-02', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU11225', 'Drager', ''),
-  ('ACCESORIOS-000005', 'Probe 3, skin temp, reusable', 'accesorios', 'producto', '', 3, 0, 'pieza', 'A/2', 'Dräger', '', '2217-01', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2217-01', 'Drager', ''),
-  ('ACCESORIOS-000006', 'Temperature probe skin 3m', 'accesorios', 'producto', '', 1, 0, 'pieza', 'A/2', 'Dräger', '', '', 0.0, 'Drager ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '', 'Drager', ''),
-  ('ACCESORIOS-000007', 'Red PC-12 – Cable paciente LNOP 20 pines, 12 ft', 'accesorios', 'producto', '', 4, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2016-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2060', 'Masimo', ''),
-  ('ACCESORIOS-000008', 'LNCS DCIP – Sensor reutilizable pediátrico/dedo delgado, 3 ft', 'accesorios', 'producto', '', 119, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2018-12-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1864', 'Masimo', ''),
-  ('ACCESORIOS-000009', 'RD rainbow SET R25-12 – Cable paciente 25 pines, 12 ft', 'accesorios', 'producto', '', 7, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4078', 'Masimo', ''),
-  ('ACCESORIOS-000010', 'Rainbow RC-4 – Cable paciente 20 pines, 4 ft', 'accesorios', 'producto', '', 25, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2017-10-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2406', 'Masimo', ''),
-  ('ACCESORIOS-000011', 'Rainbow RC-1 – Cable paciente 20 pines, 1 ft', 'accesorios', 'producto', '', 60, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2017-05-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2405', 'Masimo', ''),
-  ('ACCESORIOS-000012', 'Clamp (sujetador) para módulo SedLine', 'accesorios', 'producto', '', 47, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2026-01-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4574', 'Masimo', ''),
-  ('ACCESORIOS-000013', 'Clamp para módulo O3 de oximetría regional', 'accesorios', 'producto', '', 10, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2026-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4575', 'Masimo', ''),
-  ('ACCESORIOS-000014', 'Cable de transferencia de datos Red 20 pines (Rad-57/Rad-5/Pronto a PC)', 'accesorios', 'producto', '', 25, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2019-06-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2063', 'Masimo', ''),
-  ('ACCESORIOS-000015', 'Spacelabs Replacement Cable', 'accesorios', 'producto', '', 7, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2016-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2335', 'Masimo', ''),
-  ('ACCESORIOS-000016', 'rainbow DCI SC-1000 – Sensor adulto SpO2/SpHb/SpMet, 1000 mediciones', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3647', 'Masimo', ''),
-  ('ACCESORIOS-000017', 'LNCS DCI – Sensor reutilizable adulto de clip para dedo, 3 ft', 'accesorios', 'producto', '', 215, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2020-05-04', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1863', 'Masimo', ''),
-  ('ACCESORIOS-000018', 'RD SET MP-12 – Cable paciente para Philips IntelliVue, 12 ft', 'accesorios', 'producto', '', 48, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4083', 'Masimo', ''),
-  ('ACCESORIOS-000019', 'LNC-4 – Cable paciente LNCS, 4 ft (14 pines)', 'accesorios', 'producto', '', 15, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-10-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2017', 'Masimo', ''),
-  ('ACCESORIOS-000020', 'RD SET DCI-P – Sensor reutilizable pediátrico de clip', 'accesorios', 'producto', '', 10, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2023-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4051', 'Masimo', ''),
-  ('ACCESORIOS-000021', 'LNC MP-10 – Cable paciente LNCS para Philips IntelliVue (IVM/MMS), 10 ft', 'accesorios', 'producto', '', 37, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-11-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2281', 'Masimo', ''),
-  ('ACCESORIOS-000022', 'Herramienta de prueba para RD SedLine Tester', 'accesorios', 'producto', '', 4, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-08-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4554', 'Masimo', ''),
-  ('ACCESORIOS-000023', 'LNCS DCI – Sensor reutilizable adulto de clip para dedo, 3 ft', 'accesorios', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, false, true, false, false, 0, 0, '1863', 'Masimo', ''),
-  ('ACCESORIOS-000024', 'Radical Docking Station RDS-3 signal extraction pulse oximeter', 'accesorios', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2017-10-01', '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9023', 'Masimo', ''),
-  ('ACCESORIOS-000025', 'RED LNC-10 Patient Cable 10ft.', 'accesorios', 'producto', '', 31, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', NULL, '2020-12-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2056', 'Masimo', ''),
-  ('ACCESORIOS-000026', 'RD RAINBOW SET MD20-12 RD Rainbow SET Series Patient Cable', 'accesorios', 'producto', '', 12, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', NULL, '2023-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4073', '', ''),
-  ('ACCESORIOS-000027', 'Rainbow RC-12 Rainbow Patient Cable 12ft.', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2404', 'Masimo', ''),
-  ('ACCESORIOS-000028', 'Red LNC M20-04 LNCS Patient Cable 4ft.', 'accesorios', 'producto', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2020-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4252', 'Masimo', ''),
-  ('ACCESORIOS-000029', 'Accessory handheld lock for use with Radical 7 Color Screen signal extraction pulse oximeter', 'accesorios', 'producto', '', 37, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2350', 'Masimo', ''),
-  ('ACCESORIOS-000030', 'Rainbow M20-01 Rainbow Patient Cable', 'accesorios', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4236', 'Masimo', ''),
-  ('ACCESORIOS-000031', 'RD Rainbow Set M20-12 RD Rainbow SET Series Patient Cable', 'accesorios', 'producto', '', 11, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2024-07-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4257', 'Masimo', ''),
-  ('ACCESORIOS-000032', 'RD SedLine Patient Cable', 'accesorios', 'producto', '', 15, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2023-03-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4298', 'Masimo', ''),
-  ('ACCESORIOS-000033', 'LNOP DCIP Pediatric/slender digital SpO2 Reusable Sensor', 'accesorios', 'producto', '', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1276', 'Masimo', ''),
-  ('ACCESORIOS-000034', 'LNCS TC-I SpO2 Reusable Ear Sensor', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1895', 'Masimo', ''),
-  ('ACCESORIOS-000035', 'LNCS TF-I SpO2 Adult Reusable Forehead Sensor', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1896', 'Masimo', ''),
-  ('ACCESORIOS-000036', 'ProCal+ SpO2 extension Cable, 2m', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2014', 'Masimo', ''),
-  ('ACCESORIOS-000037', 'Demonstration Tool, 30 min', 'accesorios', 'producto', '', 9, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2389', 'Masimo', ''),
-  ('ACCESORIOS-000038', 'Accessory handheld lock key for use with Radical 7 Color Screen signal extraction pulse oximeter', 'accesorios', 'producto', '', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2351', 'Masimo', ''),
-  ('ACCESORIOS-000039', 'Cubrebocas', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'CUBREBOCAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1860', '3M', ''),
-  ('ACCESORIOS-000040', 'Auto-Reader', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'AUTO-READER
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '390G', '3M', ''),
-  ('ACCESORIOS-000041', 'Sábana térmica adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, '(SABANA TERMICA ADULT)
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '54500', '3M', ''),
-  ('ACCESORIOS-000042', 'Manta térmica pediátrica', 'accesorios', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'MANTA TERMICA PEDIATRICA
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '55000', '3M', ''),
-  ('ACCESORIOS-000043', 'Cubrebocas', 'accesorios', 'producto', 'Presentación: BOLSA/75', 7, 0, 'paquete', '', '3M', '', '', 0.0, '', NULL, NULL, 'CUBREBOCAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9010', '3M', ''),
-  ('ACCESORIOS-000044', 'Broche De Pared Bomba De Pie', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'BROCHE DE PARED BOMBA DE PIE
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9201', '3M', ''),
-  ('ACCESORIOS-000045', 'Foaming White Bracket', 'accesorios', 'producto', 'Presentación: CAJA/ 16 PIEZAS', 2, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'FOAMING WHITE BRACKET
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9246', '3M', ''),
-  ('ACCESORIOS-000046', 'Clean, Trace', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'CLEAN, TRACE
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'LX25', '3M', ''),
-  ('ACCESORIOS-000047', 'NIBP cuff, child', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+  ('01.57.40018-11', 'NIBP cuff, child', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '01.57.40018-11', 'Dräger', ''),
-  ('ACCESORIOS-000048', 'Cardiac Output Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+  ('01.57.471012-12', 'Cardiac Output Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '01.57.471012-12', 'Dräger', ''),
-  ('ACCESORIOS-000049', 'Manguito Nbp, Niño 16cm-21.6cm, Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+  ('01.57.471442', 'Manguito Nbp, Niño 16cm-21.6cm, Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '01.57.471442', 'Dräger', ''),
-  ('ACCESORIOS-000050', 'Power cord USA/J 10 A 3m GR RoHS', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1841793-04', 'Dräger', ''),
-  ('ACCESORIOS-000051', 'Sim-Card Usb Stick Rohs', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1868039', 'Dräger', ''),
-  ('ACCESORIOS-000052', 'Temperature Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2021700', 'Dräger', ''),
-  ('ACCESORIOS-000053', 'Breathing Bag 1.5 L With Hole', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2165775-10', 'Dräger', ''),
-  ('ACCESORIOS-000054', 'Atembeutel 0.5l Iso-Silicone', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166054', 'Dräger', ''),
-  ('ACCESORIOS-000055', 'Bolsa de respiración 2.3 L, silicona', 'accesorios', 'producto', 'Presentación: PIEZA', 40, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166062', 'Dräger', ''),
-  ('ACCESORIOS-000056', 'Breathing Bag 3.0 L, Silicone', 'accesorios', 'producto', 'Presentación: PIEZA', 19, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166070', 'Dräger', ''),
-  ('ACCESORIOS-000057', 'Bolsa de respiración 1.5 L, silicona', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166127', 'Dräger', ''),
-  ('ACCESORIOS-000058', 'Mounting plate roll stand', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601146', 'Dräger', ''),
-  ('ACCESORIOS-000059', 'Cardiac Output Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601189', 'Dräger', ''),
-  ('ACCESORIOS-000060', 'Tubo Nibp 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 13, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601195', 'Dräger', ''),
-  ('ACCESORIOS-000061', 'Sonda de temperatura cutánea (skin temp probe)', 'accesorios', 'producto', 'Presentación: PIEZA', 34, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601197', 'Dräger', ''),
-  ('ACCESORIOS-000062', 'Temperature Probe Rectal/Oral', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601198', 'Dräger', ''),
-  ('ACCESORIOS-000063', 'Temp. Probe Neonatal, Skin 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2601200', 'Dräger', ''),
-  ('ACCESORIOS-000064', 'IBP transducer adapter cable, Baxter/Edwards, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2601221', 'Dräger', ''),
-  ('ACCESORIOS-000065', 'Ibp Transducer Adapter Cable, Argon/Bd/Ohmeda, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2601223', 'Dräger', ''),
-  ('ACCESORIOS-000066', 'Cable Para V300- V500- V500', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2603245', 'Dräger', ''),
-  ('ACCESORIOS-000067', 'Nibp Cuff Infant', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606151', 'Dräger', ''),
-  ('ACCESORIOS-000068', 'NIBP cuff, child', 'accesorios', 'producto', 'Presentación: PIEZA', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606153', 'Dräger', ''),
-  ('ACCESORIOS-000069', 'Manguito Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606155', 'Dräger', ''),
-  ('ACCESORIOS-000070', 'Nibp Cuff Larger Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606156', 'Dräger', ''),
-  ('ACCESORIOS-000071', 'Rechargeable Li.ion Battery', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606229', 'Dräger', ''),
-  ('ACCESORIOS-000072', 'Power Cord North America', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606235', 'Dräger', ''),
-  ('ACCESORIOS-000073', 'Spo2 De Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606434', 'Dräger', ''),
-  ('ACCESORIOS-000074', 'Sensor De Dedo Spo2', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606483', 'Dräger', ''),
-  ('ACCESORIOS-000075', 'Sensor Spo2 De Dedo Adulto 1m Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 42, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606484', 'Dräger', ''),
-  ('ACCESORIOS-000076', 'Spo2 Silicone Soft-Tip Sensor, 1m, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606485', 'Dräger', ''),
-  ('ACCESORIOS-000077', 'Spo2 Silicone Soft-Tip Sensor, Pediatric, 1m, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606486', 'Dräger', ''),
-  ('ACCESORIOS-000078', 'SpO2 extension cable, 2m, reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606487', 'Dräger', ''),
-  ('ACCESORIOS-000079', 'Ibp Cable Becton Dickinson', 'accesorios', 'producto', 'Presentación: PIEZA', 34, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606488', 'Dräger', ''),
-  ('ACCESORIOS-000080', 'Ibp Cable Edwards', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606489', 'Dräger', '')
-on conflict (sku) do update set
-  name = excluded.name,
-  category = excluded.category,
-  item_kind = excluded.item_kind,
-  description = excluded.description,
-  min_stock = excluded.min_stock,
-  unit = excluded.unit,
-  location = excluded.location,
-  brand = excluded.brand,
-  model = excluded.model,
-  serial_number = excluded.serial_number,
-  unit_price = excluded.unit_price,
-  supplier = excluded.supplier,
-  expiry_date = excluded.expiry_date,
-  manufactured_at = excluded.manufactured_at,
-  notes = excluded.notes,
-  asset_status = excluded.asset_status,
-  last_maintenance_date = excluded.last_maintenance_date,
-  next_maintenance_date = excluded.next_maintenance_date,
-  is_active = excluded.is_active,
-  tracks_lot = excluded.tracks_lot,
-  tracks_serial = excluded.tracks_serial,
-  tracks_expiry = excluded.tracks_expiry,
-  max_stock = excluded.max_stock,
-  reorder_point = excluded.reorder_point,
-  part_number = excluded.part_number,
-  manufacturer = excluded.manufacturer,
-  subcategory = excluded.subcategory;
-
-insert into public.inventory_items (
-  sku,
-  name,
-  category,
-  item_kind,
-  description,
-  quantity,
-  min_stock,
-  unit,
-  location,
-  brand,
-  model,
-  serial_number,
-  unit_price,
-  supplier,
-  expiry_date,
-  manufactured_at,
-  notes,
-  asset_status,
-  last_maintenance_date,
-  next_maintenance_date,
-  is_active,
-  tracks_lot,
-  tracks_serial,
-  tracks_expiry,
-  max_stock,
-  reorder_point,
-  part_number,
-  manufacturer,
-  subcategory
-) values
-  ('ACCESORIOS-000081', 'Ecg Trunk Cable, 3-Lead, For Neonates, Iec & Aha', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606492', 'Dräger', ''),
-  ('ACCESORIOS-000082', 'Ecg Limb Wires, 5 Lead, Grabber, Aha', 'accesorios', 'producto', 'Presentación: PIEZA', 26, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606494', 'Dräger', ''),
-  ('ACCESORIOS-000083', 'Cables Ecg Extremidades 5 Derivaciones Grabber Aha', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606498', 'Dräger', ''),
-  ('ACCESORIOS-000084', 'Temperature Probe Skin, Neonatal/Infant, 3m, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2607006', 'Dräger', ''),
-  ('ACCESORIOS-000085', 'Nibp Cuff Neo', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PZS', 6, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607035', 'Dräger', ''),
-  ('ACCESORIOS-000086', 'Brazalete pediátrico', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PZS', 2, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607037', 'Dräger', ''),
-  ('ACCESORIOS-000087', 'ECG 3-lead single pin AHA 1 m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612001', 'Dräger', ''),
-  ('ACCESORIOS-000088', 'Ecg 5-Leads Pin Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612003', 'Dräger', ''),
-  ('ACCESORIOS-000089', 'Cable Troncal Ecg 3/5 Derivaciones 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612020', 'Dräger', ''),
-  ('ACCESORIOS-000090', 'Ecg Defib Trunk 3/5 Leads Single Pin 2.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612021', 'Dräger', ''),
-  ('ACCESORIOS-000091', 'Ecg Esu Trunk 3/5 Leads Single Pin 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612024', 'Dräger', ''),
-  ('ACCESORIOS-000092', 'Ecg Neo Defib Trunk 3-Leads 2.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612027', 'Dräger', ''),
-  ('ACCESORIOS-000093', 'Brazalete Nibp Neonatal #3 5.8-15cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 75, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870173', 'Dräger', ''),
-  ('ACCESORIOS-000094', 'Manguito Nibp Neonatal', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 20, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870181', 'Dräger', ''),
-  ('ACCESORIOS-000095', 'Brazalete Nibp Neonatal #2 4.3-8cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 19, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870199', 'Dräger', ''),
-  ('ACCESORIOS-000096', 'Nibp Neo #3 Cuff 5.8-10.9cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 49, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870207', 'Dräger', ''),
-  ('ACCESORIOS-000097', 'Brazalete Nibp Neonatal #4 7.1-13.1cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 21, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870215', 'Dräger', ''),
-  ('ACCESORIOS-000098', 'Nibp Hose Neonatal Cuff,2.4m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870298', 'Dräger', ''),
-  ('ACCESORIOS-000099', 'SOPORTE', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M12754-00', 'Dräger', ''),
-  ('ACCESORIOS-000100', 'Pasatubos para incubadora 8000, reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M20434', 'Dräger', ''),
-  ('ACCESORIOS-000101', 'Fluorescent lamp, blue (Leuchtstofflampe, blau)', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21010', 'Dräger', ''),
-  ('ACCESORIOS-000102', 'Corner With Surface Finish Ecke M.of', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21390', 'Dräger', ''),
-  ('ACCESORIOS-000103', 'Hose grommet large', 'accesorios', 'producto', 'Presentación: PIEZA', 24, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M50385', 'Dräger', ''),
-  ('ACCESORIOS-000104', 'Latiguillos de 5 SG electrocardiograma genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3.12.03.001', 'Dräger', ''),
-  ('ACCESORIOS-000105', 'Conductive Adhesive Hydrogel', 'accesorios', 'producto', 'Presentación: PAQUETE/ 100 PZS', 2, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '31118733', 'Dräger', ''),
-  ('ACCESORIOS-000106', 'Pod Communication Cable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 19, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3368425', 'Dräger', ''),
-  ('ACCESORIOS-000107', 'Spo2 Nellcor Interm Cable, 1m', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3368433', 'Dräger', ''),
-  ('ACCESORIOS-000108', 'Spo2 Nellcor Interm Cable, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3375834', 'Dräger', ''),
-  ('ACCESORIOS-000109', 'Ibp Interm Cable Argon, 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 55, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3375933', 'Dräger', ''),
-  ('ACCESORIOS-000110', 'Dedal SpO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '36.13.001.004', 'Dräger', ''),
-  ('ACCESORIOS-000111', 'Manguera Nibps Ge Medical Systems', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '414873-001', 'Dräger', ''),
-  ('ACCESORIOS-000112', 'Multi-Link Ecg Ldwr Sed', 'accesorios', 'producto', 'Presentación: PIEZA', 35, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '416467', 'Dräger', ''),
-  ('ACCESORIOS-000113', 'SHP UNT EtCO2 module white', 'accesorios', 'producto', 'Presentación: KIT', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4319310', 'Dräger', ''),
-  ('ACCESORIOS-000114', 'Ibp Interm Cable Sensor 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 13, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4321563', 'Dräger', ''),
-  ('ACCESORIOS-000115', 'Sonda De Temperatura Adulto 1.5 M Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4329889', 'Dräger', ''),
-  ('ACCESORIOS-000116', 'EtCO2 airway adapter adult', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4721796', 'Dräger', ''),
-  ('ACCESORIOS-000117', 'Ethernet Patch Cable 1.2m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4726373', 'Dräger', ''),
-  ('ACCESORIOS-000118', 'Ethernet Patch Cable 1.2m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4726373-08', 'Dräger', ''),
-  ('ACCESORIOS-000119', 'MIB cable Nivus/Julian CO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '493690', 'Dräger', ''),
-  ('ACCESORIOS-000120', 'Ecg Neo Adapter Pins', 'accesorios', 'producto', 'Presentación: PAQUETE 10', 10, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5194779', 'Dräger', ''),
-  ('ACCESORIOS-000121', 'Temp Probe Adapter Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5198333', 'Dräger', ''),
-  ('ACCESORIOS-000122', 'Temp. Probe, Reus, Adult, 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5204644', 'Dräger', ''),
-  ('ACCESORIOS-000123', 'Temp Probe, Reus., Child. 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5204651', 'Dräger', ''),
-  ('ACCESORIOS-000124', 'Skin Temp Probe Reusable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5204669', 'Dräger', ''),
-  ('ACCESORIOS-000125', 'Ibp Y- Cable Baxter, 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '5206607', 'Dräger', ''),
-  ('ACCESORIOS-000126', 'Hemomed Cable To Monitor 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5591925', 'Dräger', ''),
-  ('ACCESORIOS-000127', 'Ibp Cable Y-Cable 16 To 7 Pin', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5592147', 'Dräger', ''),
-  ('ACCESORIOS-000128', 'Temperature Y-Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5592154', 'Dräger', ''),
-  ('ACCESORIOS-000129', 'Ecg Neomed Adapter Cable, 1.5 M', 'accesorios', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5592162', 'Dräger', ''),
-  ('ACCESORIOS-000130', 'Eeg Leads 0.6m, Reusable, 9pc.', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5947804', 'Dräger', ''),
-  ('ACCESORIOS-000131', 'Multimed 5 Pod, 1.5 M', 'accesorios', 'producto', 'Presentación: PIEZA', 36, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5950196', 'Dräger', ''),
-  ('ACCESORIOS-000132', 'Block F.eeg Ref Id Conversion', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5954859', 'Dräger', ''),
-  ('ACCESORIOS-000133', 'Adaptador En T Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '60-032', 'Dräger', ''),
-  ('ACCESORIOS-000134', 'Reusable bipolar cord, 12 ft (3.6m) genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '60-8046-001', 'Dräger', ''),
-  ('ACCESORIOS-000135', 'Microfilter', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6737545', 'Dräger', ''),
-  ('ACCESORIOS-000136', 'In-line injection temp. probe', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '684056', 'Dräger', ''),
-  ('ACCESORIOS-000137', 'Co2-Cuvette Erw', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6870279', 'Dräger', ''),
-  ('ACCESORIOS-000138', 'Co2-Cuvette (Cubeta Co2)', 'accesorios', 'producto', 'Presentación: PIEZA', 31, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6870280', 'Dräger', ''),
-  ('ACCESORIOS-000139', 'Mainstream Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6871500', 'Dräger', ''),
-  ('ACCESORIOS-000140', 'Mcable-Mainstream Co2 (Sensor Co2 Mainstream)', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6871950', 'Dräger', ''),
-  ('ACCESORIOS-000141', 'Infinity Id Flow Sensor', 'accesorios', 'producto', 'Presentación: PAQUETE/5', 20, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6871980', 'Dräger', ''),
-  ('ACCESORIOS-000142', 'Infinity ID WaterLock 2', 'accesorios', 'producto', 'Presentación: PAQUETE/12 PIEZAS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6872020', 'Dräger', ''),
-  ('ACCESORIOS-000143', '01-Sensor Oxycell A', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6872666', 'Dräger', ''),
-  ('ACCESORIOS-000144', 'Trulink Ecg Lead Wire Set Shielded, 5 Lead', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '700-0006-08', 'Dräger', ''),
-  ('ACCESORIOS-000145', 'Trulink Ecg Lead Wire Set Shielded, 5 Lead', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '700-0006-16', 'Dräger', ''),
-  ('ACCESORIOS-000146', 'Protective Covers Temp', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '7014616', 'Dräger', ''),
-  ('ACCESORIOS-000147', 'Pod Communication Cable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7257988', 'Dräger', ''),
-  ('ACCESORIOS-000148', 'Cardiac Output Kit Argon', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7265163', 'Dräger', ''),
-  ('ACCESORIOS-000149', 'Shp Acc Masimo Lnop Dcip Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270304', 'Dräger', ''),
-  ('ACCESORIOS-000150', 'Shp Acc Masimo Lnop Dcip Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270304-02', 'Dräger', ''),
-  ('ACCESORIOS-000151', 'Shp Acc Masimo Lnop Dcip Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270304-1', 'Dräger', ''),
-  ('ACCESORIOS-000152', 'Sensor Spo2 Masimo Lnop Dcip Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270312', 'Dräger', ''),
-  ('ACCESORIOS-000153', 'Mibii Proto Conv-Ls', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '7356931', 'Dräger', ''),
-  ('ACCESORIOS-000154', 'Sensor Spo2 Masimo Adhesivo Cuadrado 12 Pzs', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496875', 'Dräger', ''),
-  ('ACCESORIOS-000155', 'Ecg 3-Lead Trust Ahu/Us, Telem Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 42, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7499812', 'Dräger', ''),
-  ('ACCESORIOS-000156', 'Etco2 Airw Adaptr Microstr N/P', 'accesorios', 'producto', 'Presentación: KIT', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869550', 'Dräger', ''),
-  ('ACCESORIOS-000157', 'Interm Cbl Trident (Nmt), 1.9m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '7872174', 'Dräger', ''),
-  ('ACCESORIOS-000158', 'Thumb adapter for acceleration transduction', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '79950152', 'Dräger', ''),
-  ('ACCESORIOS-000159', 'Acceleration transducer', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '79950163', 'Dräger', ''),
-  ('ACCESORIOS-000160', 'Oxiband Sensor A/N', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8201013', 'Dräger', '')
-on conflict (sku) do update set
-  name = excluded.name,
-  category = excluded.category,
-  item_kind = excluded.item_kind,
-  description = excluded.description,
-  min_stock = excluded.min_stock,
-  unit = excluded.unit,
-  location = excluded.location,
-  brand = excluded.brand,
-  model = excluded.model,
-  serial_number = excluded.serial_number,
-  unit_price = excluded.unit_price,
-  supplier = excluded.supplier,
-  expiry_date = excluded.expiry_date,
-  manufactured_at = excluded.manufactured_at,
-  notes = excluded.notes,
-  asset_status = excluded.asset_status,
-  last_maintenance_date = excluded.last_maintenance_date,
-  next_maintenance_date = excluded.next_maintenance_date,
-  is_active = excluded.is_active,
-  tracks_lot = excluded.tracks_lot,
-  tracks_serial = excluded.tracks_serial,
-  tracks_expiry = excluded.tracks_expiry,
-  max_stock = excluded.max_stock,
-  reorder_point = excluded.reorder_point,
-  part_number = excluded.part_number,
-  manufacturer = excluded.manufacturer,
-  subcategory = excluded.subcategory;
-
-insert into public.inventory_items (
-  sku,
-  name,
-  category,
-  item_kind,
-  description,
-  quantity,
-  min_stock,
-  unit,
-  location,
-  brand,
-  model,
-  serial_number,
-  unit_price,
-  supplier,
-  expiry_date,
-  manufactured_at,
-  notes,
-  asset_status,
-  last_maintenance_date,
-  next_maintenance_date,
-  is_active,
-  tracks_lot,
-  tracks_serial,
-  tracks_expiry,
-  max_stock,
-  reorder_point,
-  part_number,
-  manufacturer,
-  subcategory
-) values
-  ('ACCESORIOS-000161', 'Spirolog flow sensor', 'accesorios', 'producto', 'Presentación: PAQUETE/5', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '84010179', 'Dräger', ''),
-  ('ACCESORIOS-000162', 'Juego De Tapas (Set Of Caps)', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8402953-02', 'Dräger', ''),
-  ('ACCESORIOS-000163', 'Pieza en Y con abertura de aspiración', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403075', 'Dräger', ''),
-  ('ACCESORIOS-000164', 'Test lung (Testlunge)', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403208', 'Dräger', ''),
-  ('ACCESORIOS-000165', 'Set Stand Cone P Plastic', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PZS', 4, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403684', 'Dräger', ''),
-  ('ACCESORIOS-000166', 'Sensor De Flujo Spirolog', 'accesorios', 'producto', 'Presentación: PAQUETE/5', 24, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8403735', 'Dräger', ''),
-  ('ACCESORIOS-000167', 'Temperature Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8405371-21', 'Dräger', ''),
-  ('ACCESORIOS-000168', 'Test Lung, Kompl', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8409742-07', 'Dräger', ''),
-  ('ACCESORIOS-000169', 'Test Lung, Cpl', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8409742-10', 'Dräger', ''),
-  ('ACCESORIOS-000170', 'Pulmón de prueba silicona N con tubo flexible', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8410079', 'Dräger', ''),
-  ('ACCESORIOS-000171', 'Neonatal Flow Sensor Insert', 'accesorios', 'producto', 'Presentación: CAJA/5 PZA', 22, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8410179', 'Dräger', ''),
-  ('ACCESORIOS-000172', 'Tapón sellante (sealing plug)', 'accesorios', 'producto', 'Presentación: PAQUETE/5 PZS', 3, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411024', 'Dräger', ''),
-  ('ACCESORIOS-000173', 'Accessories nebuliser BO 8000', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411031', 'Dräger', ''),
-  ('ACCESORIOS-000174', 'Draw Wire', 'accesorios', 'producto', 'Presentación: PIEZA', 53, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411050', 'Dräger', ''),
-  ('ACCESORIOS-000175', 'Juego de fijación para humidificador', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411074', 'Dräger', ''),
-  ('ACCESORIOS-000176', 'Calentador De Tubos Para F&p Mr 700/730, 70cm', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8411154', 'Dräger', ''),
-  ('ACCESORIOS-000177', 'Flow Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8412034', 'Dräger', ''),
-  ('ACCESORIOS-000178', '90° Winkeltuelle', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412235', 'Dräger', ''),
-  ('ACCESORIOS-000179', 'Nebulizador Hose', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412985', 'Dräger', ''),
-  ('ACCESORIOS-000180', 'Kit Neoflow', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8413563-25', 'Dräger', ''),
-  ('ACCESORIOS-000181', 'ID expiration valve complete', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8413660', 'Dräger', ''),
-  ('ACCESORIOS-000182', 'Blueset Heated (N)', 'accesorios', 'producto', 'Presentación: KIT', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8414987', 'Dräger', ''),
-  ('ACCESORIOS-000183', 'Safety Valve', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8415195', 'Dräger', ''),
-  ('ACCESORIOS-000184', 'Válvula espiratoria Infinity ID reutilizable (Babylog VN500)', 'accesorios', 'producto', 'Presentación: PIEZA', 46, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8415270', 'Dräger', ''),
-  ('ACCESORIOS-000185', 'Expiration Valve Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8415296', 'Dräger', ''),
-  ('ACCESORIOS-000186', 'Standby Holder W/O Calibration', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8416352', 'Dräger', ''),
-  ('ACCESORIOS-000187', 'Válvula espiratoria ID reutilizable (Evita Infinity V500)', 'accesorios', 'producto', 'Presentación: PIEZA', 38, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8416750', 'Dräger', ''),
-  ('ACCESORIOS-000188', 'Válvula espiratoria ID completa', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8417050', 'Dräger', ''),
-  ('ACCESORIOS-000189', 'Medikamente Vernebler P', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418054-02', 'Dräger', ''),
-  ('ACCESORIOS-000190', 'Headband Xs', 'accesorios', 'producto', 'Presentación: BOLSA/5', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418418', 'Dräger', ''),
-  ('ACCESORIOS-000191', 'Headband Xxl', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418423', 'Dräger', ''),
-  ('ACCESORIOS-000192', 'Adapter-Schlauchheizung', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418433-03', 'Dräger', ''),
-  ('ACCESORIOS-000193', 'Adaptador de calentador de tubo', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418462-01', 'Dräger', ''),
-  ('ACCESORIOS-000194', 'Humidifier MR850JSU 115V', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418523', 'Dräger', ''),
-  ('ACCESORIOS-000195', 'CAP XS', 'accesorios', 'producto', 'Presentación: BOLSA/5', 3, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418533-04', 'Dräger', ''),
-  ('ACCESORIOS-000196', 'Cap S (Small 5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418534', 'Dräger', ''),
-  ('ACCESORIOS-000197', 'Cap M (Medium, 5 Pcs.)', 'accesorios', 'producto', 'Presentación: BOLSA/5 PZAS', 12, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418535', 'Dräger', ''),
-  ('ACCESORIOS-000198', 'Cap L (Large 5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418536', 'Dräger', ''),
-  ('ACCESORIOS-000199', 'Cap Xl (Extra Large 5 Pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418537', 'Dräger', ''),
-  ('ACCESORIOS-000200', 'Cap Xxl(Ex.ex.large (5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418538', 'Dräger', ''),
-  ('ACCESORIOS-000201', 'Cap Xxl Plus 5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418539', 'Dräger', ''),
-  ('ACCESORIOS-000202', 'Neomask L', 'accesorios', 'producto', 'Presentación: CAJA/ 10 PZS', 2, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418619', 'Dräger', ''),
-  ('ACCESORIOS-000203', 'Kit mandatory minute ventilation', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8420432', 'Dräger', ''),
-  ('ACCESORIOS-000204', 'Monitoring Line Set', 'accesorios', 'producto', 'Presentación: KIT', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '844-26', 'Dräger', ''),
-  ('ACCESORIOS-000205', 'Data Cable 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8601473', 'Dräger', ''),
-  ('ACCESORIOS-000206', 'Holder For Suction Drive Unit', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8609643', 'Dräger', ''),
-  ('ACCESORIOS-000207', 'Kit cylinder wrench', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8621198', 'Dräger', ''),
-  ('ACCESORIOS-000208', 'Cable de interfaz', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '896140021', 'Dräger', ''),
-  ('ACCESORIOS-000209', 'Adaptador De Calentador De Manguera', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '900MR558', 'Dräger', ''),
-  ('ACCESORIOS-000210', 'Sonda De Temperatura Para Conductos', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900MR569', 'Dräger', ''),
-  ('ACCESORIOS-000211', 'Hose Heater Adapter 900 Mr 754', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900MR754', 'Dräger', ''),
-  ('ACCESORIOS-000212', 'Sensor de temperatura para MR850', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900MR869', 'Dräger', ''),
-  ('ACCESORIOS-000213', 'Airvo 2 Oxygen Inlet Kit', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900PT422', 'Dräger', ''),
-  ('ACCESORIOS-000214', 'Filter Holder Airvo 2', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900PT912', 'Dräger', ''),
-  ('ACCESORIOS-000215', 'Nibp Cuff Neo', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PZS', 1, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '98-0400-98', 'Dräger', ''),
-  ('ACCESORIOS-000216', 'Solo Pediatric T-Piece 10mm', 'accesorios', 'producto', 'Presentación: PIEZA', 19, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'AG-AS3036', 'Dräger', ''),
-  ('ACCESORIOS-000217', 'Manguera para brazalete genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'BRAZGEN1', 'Dräger', ''),
-  ('ACCESORIOS-000218', 'Cable de corriente para bomba genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CABLEBOM10', 'Dräger', ''),
-  ('ACCESORIOS-000219', 'Troncal de SpO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CABTRNGEN1.10', 'Dräger', ''),
-  ('ACCESORIOS-000220', 'AAMI compatible direct-connect ECG cable, 3 leads snap, adult/pediatric, AHA', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CS2340SO', 'Dräger', ''),
-  ('ACCESORIOS-000221', 'Reusable Peep 10 Valve', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'D137001000', 'Dräger', ''),
-  ('ACCESORIOS-000222', 'Dedal SpO2 de pulsioximetría genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'DED2POG', 'Dräger', ''),
-  ('ACCESORIOS-000223', 'Sensor Spo2 Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'DS100A', 'Dräger', ''),
-  ('ACCESORIOS-000224', 'Cable ECG 3m/10 ft, AAMI genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'ECGGEN1', 'Dräger', ''),
-  ('ACCESORIOS-000225', 'Heavy Duty Anchor', 'accesorios', 'producto', 'Presentación: PAQUETE', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G13568', 'Dräger', ''),
-  ('ACCESORIOS-000226', 'Halogen Lamp 700', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G18339', 'Dräger', ''),
-  ('ACCESORIOS-000227', 'Lamp Base', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G18362', 'Dräger', ''),
-  ('ACCESORIOS-000228', 'Soporte De Humidificador M25.2', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G93111', 'Dräger', ''),
-  ('ACCESORIOS-000229', 'Latiguillos de 3 SG electrocardiograma genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'LATELECGEN1', 'Dräger', ''),
-  ('ACCESORIOS-000230', 'Latiguillos SG electrocardiograma genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'LATELECGEN1.10', 'Dräger', ''),
-  ('ACCESORIOS-000231', 'Packing Ring', 'accesorios', 'producto', 'Presentación: PAQUETE/6 PZA', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M05128-11', 'Dräger', ''),
-  ('ACCESORIOS-000232', 'Double Adapter', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M25647', 'Dräger', ''),
-  ('ACCESORIOS-000233', '90-Luerlock For Neonates', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M34568-01', 'Dräger', ''),
-  ('ACCESORIOS-000234', 'Manguera NIBP genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MANGNBPS1', 'Dräger', ''),
-  ('ACCESORIOS-000235', 'Medibus.X 3m accessory kit', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MK09270', 'Dräger', ''),
-  ('ACCESORIOS-000236', 'Tubo De Conexión Ntp Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 31, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00053', 'Dräger', ''),
-  ('ACCESORIOS-000237', 'Manguito Nbp Xs, 12-19cm', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00912', 'Dräger', ''),
-  ('ACCESORIOS-000238', 'Nbp Cuff S, 17-25/29cm, Box', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00913', 'Dräger', ''),
-  ('ACCESORIOS-000239', 'Nbp Cuff M 23-33cm', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00917', 'Dräger', ''),
-  ('ACCESORIOS-000240', 'Brazalete Nbp L+ 31-40/55cm', 'accesorios', 'producto', 'Presentación: PIEZA', 53, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00919', 'Dräger', '')
-on conflict (sku) do update set
-  name = excluded.name,
-  category = excluded.category,
-  item_kind = excluded.item_kind,
-  description = excluded.description,
-  min_stock = excluded.min_stock,
-  unit = excluded.unit,
-  location = excluded.location,
-  brand = excluded.brand,
-  model = excluded.model,
-  serial_number = excluded.serial_number,
-  unit_price = excluded.unit_price,
-  supplier = excluded.supplier,
-  expiry_date = excluded.expiry_date,
-  manufactured_at = excluded.manufactured_at,
-  notes = excluded.notes,
-  asset_status = excluded.asset_status,
-  last_maintenance_date = excluded.last_maintenance_date,
-  next_maintenance_date = excluded.next_maintenance_date,
-  is_active = excluded.is_active,
-  tracks_lot = excluded.tracks_lot,
-  tracks_serial = excluded.tracks_serial,
-  tracks_expiry = excluded.tracks_expiry,
-  max_stock = excluded.max_stock,
-  reorder_point = excluded.reorder_point,
-  part_number = excluded.part_number,
-  manufacturer = excluded.manufacturer,
-  subcategory = excluded.subcategory;
-
-insert into public.inventory_items (
-  sku,
-  name,
-  category,
-  item_kind,
-  description,
-  quantity,
-  min_stock,
-  unit,
-  location,
-  brand,
-  model,
-  serial_number,
-  unit_price,
-  supplier,
-  expiry_date,
-  manufactured_at,
-  notes,
-  asset_status,
-  last_maintenance_date,
-  next_maintenance_date,
-  is_active,
-  tracks_lot,
-  tracks_serial,
-  tracks_expiry,
-  max_stock,
-  reorder_point,
-  part_number,
-  manufacturer,
-  subcategory
-) values
-  ('ACCESORIOS-000241', 'Nbp Cuff Xl, 38-50 Cm', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00921', 'Dräger', ''),
-  ('ACCESORIOS-000242', 'Nbp Cuff Xs, 12-19cm, Box10', 'accesorios', 'producto', 'Presentación: PAQUETE/ 10 PZS', 3, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00925', 'Dräger', ''),
-  ('ACCESORIOS-000243', 'Brazalete Nbp S 17-25/29cm', 'accesorios', 'producto', 'Presentación: PIEZA', 93, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00926', 'Dräger', ''),
-  ('ACCESORIOS-000244', 'Brazalete Adulto Desechable', 'accesorios', 'producto', 'Presentación: PIEZA', 68, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00929', 'Dräger', ''),
-  ('ACCESORIOS-000245', 'Nbp Adapter, Box10', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PZA', 11, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00945', 'Dräger', ''),
-  ('ACCESORIOS-000246', 'Manguera de extensión adulto 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 41, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00953', 'Dräger', ''),
-  ('ACCESORIOS-000247', 'Adaptador de calentador de tubo', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01001', 'Dräger', ''),
-  ('ACCESORIOS-000248', 'Adaptador De Cable Calentador', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01006', 'Dräger', ''),
-  ('ACCESORIOS-000249', 'Temp.probe Housing 900mr532', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01007-03', 'Dräger', ''),
-  ('ACCESORIOS-000250', 'Adaptador en T adulto con tapón, caja 5', 'accesorios', 'producto', 'Presentación: PIEZA', 100, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01031', 'Dräger', ''),
-  ('ACCESORIOS-000251', 'Adaptador en T neonatal con tapón, caja 5', 'accesorios', 'producto', 'Presentación: PIEZA', 69, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01032', 'Dräger', ''),
-  ('ACCESORIOS-000252', 'Disposable Co2 Cuvette, Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01062', 'Dräger', ''),
-  ('ACCESORIOS-000253', 'Neonate T-Adapter W,Plug,Box5 T-Adapter M.ver (Neon.),Box5', 'accesorios', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01232', 'Dräger', ''),
-  ('ACCESORIOS-000254', 'Set Chico', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01415', 'Dräger', ''),
-  ('ACCESORIOS-000255', 'Set, Klein', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01418', 'Dräger', ''),
-  ('ACCESORIOS-000256', 'Softconnector N', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01456', 'Dräger', ''),
-  ('ACCESORIOS-000257', 'NEO MASK 4', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01480', 'Dräger', ''),
-  ('ACCESORIOS-000258', 'Headgear Reusable Silicone Small', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01557', 'Dräger', ''),
-  ('ACCESORIOS-000259', 'Kopfband Einweg, Weiches Gummi, Klein', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01561', 'Dräger', ''),
-  ('ACCESORIOS-000260', 'Kopfband Einweg, Weiches Gummi, Gross', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01562', 'Dräger', ''),
-  ('ACCESORIOS-000261', '2 Side Pump Ball For Air Management', 'accesorios', 'producto', 'Presentación: PIEZA', 29, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01590-02', 'Dräger', ''),
-  ('ACCESORIOS-000262', '2 Side Pump Ball For Air Management', 'accesorios', 'producto', 'Presentación: PIEZA', 29, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01590-1', 'Dräger', ''),
-  ('ACCESORIOS-000263', 'Mask LiteStar 2 w/o hook', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01702', 'Dräger', ''),
-  ('ACCESORIOS-000264', 'Mask LiteStar 5 w/o hook', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01705', 'Dräger', ''),
-  ('ACCESORIOS-000265', 'Pulmón de prueba para comprobación de equipo', 'accesorios', 'producto', 'Presentación: PIEZA', 27, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP02400RI09', 'Dräger', ''),
-  ('ACCESORIOS-000266', 'Cubierta De Incubadora Babyleo', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03402', 'Dräger', ''),
-  ('ACCESORIOS-000267', 'Ecg 5-Lead Dual-Pin Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03404', 'Dräger', ''),
-  ('ACCESORIOS-000268', 'Cubierta De Incubadora Babyleo', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03405', 'Dräger', ''),
-  ('ACCESORIOS-000269', 'Ecg 6-Lead Single-P Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03406', 'Dräger', ''),
-  ('ACCESORIOS-000270', 'Ecg-Lead Dual-Pin Aha, 1m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03412', 'Dräger', ''),
-  ('ACCESORIOS-000271', 'Ecg 5-Lead Dual-Pin Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03414', 'Dräger', ''),
-  ('ACCESORIOS-000272', 'Cable ECG 5 derivaciones telemetría AHA 70cm', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, '2020-09-01', '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03424', 'Dräger', ''),
-  ('ACCESORIOS-000273', 'Babyleo Incubator Cover', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03730', 'Dräger', ''),
-  ('ACCESORIOS-000274', 'Eyemax 2 Micro', 'accesorios', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03770', 'Dräger', ''),
-  ('ACCESORIOS-000275', 'Eyemax 2 Regular', 'accesorios', 'producto', 'Presentación: PAQUETE/20 PZS', 10, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03772', 'Dräger', ''),
-  ('ACCESORIOS-000276', 'Ecg 6-Lead Single-P Aha 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 60, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP05115', 'Dräger', ''),
-  ('ACCESORIOS-000277', 'Hi- Flow Star Adult M', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP05512', 'Dräger', ''),
-  ('ACCESORIOS-000278', 'Sujetador De Cables', 'accesorios', 'producto', 'Presentación: PAQUETE DE 2', 4, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP0692', 'Dräger', ''),
-  ('ACCESORIOS-000279', 'Silikon Mask Infant Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP1911', 'Dräger', ''),
-  ('ACCESORIOS-000280', 'Neonatal Test Lung, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP200050', 'Dräger', ''),
-  ('ACCESORIOS-000281', 'Adaptador Ecg Para Cable Ecg De Pin Sencillo', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MR35371', 'Dräger', ''),
-  ('ACCESORIOS-000282', 'Nmt Cbl Trident, 2-Lead, 0.3 M', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS13218', 'Dräger', ''),
-  ('ACCESORIOS-000283', 'Sensor SpO2 Dräger reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS13235', 'Dräger', ''),
-  ('ACCESORIOS-000284', 'Cable Scio/Ids 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS13865', 'Dräger', ''),
-  ('ACCESORIOS-000285', 'Spo2 Cable Masimo Procal , 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 35, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS13926', 'Dräger', ''),
-  ('ACCESORIOS-000286', 'Cuff 12-19 Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS14428', 'Dräger', ''),
-  ('ACCESORIOS-000287', 'Cuff 12-19 Child', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS14430', 'Dräger', ''),
-  ('ACCESORIOS-000288', 'Monolead 3, Aha/Us, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14556', 'Dräger', ''),
-  ('ACCESORIOS-000289', 'Ecg Cbl Monolead 6 Aha/Us 5.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14560', 'Dräger', ''),
-  ('ACCESORIOS-000290', 'Multimed 5 Singlepin Adapter', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14679', 'Dräger', ''),
-  ('ACCESORIOS-000291', 'Monolead-Multimed Adapter 6/5', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14679E530U', 'Dräger', ''),
-  ('ACCESORIOS-000292', 'Monolead 6 AHA/US, 3 m', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14682', 'Dräger', ''),
-  ('ACCESORIOS-000293', 'Nmt-Thermistor Trident', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS15053', 'Dräger', ''),
-  ('ACCESORIOS-000294', 'Nmt Thumb Adpt Trident 5opcs', 'accesorios', 'producto', 'Presentación: CAJA/50 PZS', 5, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15084', 'Dräger', ''),
-  ('ACCESORIOS-000295', 'Nmt Accelerometer Trident', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15085', 'Dräger', ''),
-  ('ACCESORIOS-000296', 'Bed Clip For Cables', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15087', 'Dräger', ''),
-  ('ACCESORIOS-000297', 'Nmt Hand Adapter Trident', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15088', 'Dräger', ''),
-  ('ACCESORIOS-000298', 'Cable Control Cnap Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15893', 'Dräger', ''),
-  ('ACCESORIOS-000299', 'Cnap Sensor Cuff, Medium', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS15895', 'Dräger', ''),
-  ('ACCESORIOS-000300', 'Cuff Cnap Pod Large', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS15896', 'Dräger', ''),
-  ('ACCESORIOS-000301', 'Monolead 5 chest AHA, 1.5 m', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16230', 'Dräger', ''),
-  ('ACCESORIOS-000302', 'Ecg Extension Single Pin. 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16256', 'Dräger', ''),
-  ('ACCESORIOS-000303', 'Monolead 5 Dual-Pin Aha, 2.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16299', 'Dräger', ''),
-  ('ACCESORIOS-000304', 'SpO2 interm cbl Masimo LNOP, 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS17041', 'Dräger', ''),
-  ('ACCESORIOS-000305', 'Spo2 Intermediate Cable, 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS17330', 'Dräger', ''),
-  ('ACCESORIOS-000306', 'Spo2 Masimo Cable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS17522', 'Dräger', ''),
-  ('ACCESORIOS-000307', 'Spo2 Cable Masimo Lnop, 1.2m Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 47, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS18680', 'Dräger', ''),
-  ('ACCESORIOS-000308', 'Spo2 Intermediate Cable, 1.2 M', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS18683', 'Dräger', ''),
-  ('ACCESORIOS-000309', 'Multimed Plus', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS20093', 'Dräger', ''),
-  ('ACCESORIOS-000310', 'Spo2 Masimo Cable Lncs 1.2m', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS24303', 'Dräger', ''),
-  ('ACCESORIOS-000311', 'Ecg Neo Adapter Cable Mm, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS25951', 'Dräger', ''),
-  ('ACCESORIOS-000312', 'Cnap Arm Strap Generation 2, Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS26122', 'Dräger', ''),
-  ('ACCESORIOS-000313', 'Cnap Cuff Control Cradle Gen2', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS26123', 'Dräger', ''),
-  ('ACCESORIOS-000314', 'Ecg Cbl Monolead 6 Aha/Us 5.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS28560', 'Dräger', ''),
-  ('ACCESORIOS-000315', 'TOF hand sensor, ped. SW1,7', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS32289', 'Dräger', ''),
-  ('ACCESORIOS-000316', 'Adapter Db9f-Rj45', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS32958', 'Dräger', ''),
-  ('ACCESORIOS-000317', 'Rommet_spcl_hood_access', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU04366', 'Dräger', ''),
-  ('ACCESORIOS-000318', 'O2 sensor, Bio-Med 10006', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU04804', 'Dräger', ''),
-  ('ACCESORIOS-000319', 'Filter,Repl,Isolette', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU04991', 'Dräger', ''),
-  ('ACCESORIOS-000320', 'Critter Covers, Box/100', 'accesorios', 'producto', 'Presentación: PAQUETE/100', 8, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06942', 'Dräger', '')
-on conflict (sku) do update set
-  name = excluded.name,
-  category = excluded.category,
-  item_kind = excluded.item_kind,
-  description = excluded.description,
-  min_stock = excluded.min_stock,
-  unit = excluded.unit,
-  location = excluded.location,
-  brand = excluded.brand,
-  model = excluded.model,
-  serial_number = excluded.serial_number,
-  unit_price = excluded.unit_price,
-  supplier = excluded.supplier,
-  expiry_date = excluded.expiry_date,
-  manufactured_at = excluded.manufactured_at,
-  notes = excluded.notes,
-  asset_status = excluded.asset_status,
-  last_maintenance_date = excluded.last_maintenance_date,
-  next_maintenance_date = excluded.next_maintenance_date,
-  is_active = excluded.is_active,
-  tracks_lot = excluded.tracks_lot,
-  tracks_serial = excluded.tracks_serial,
-  tracks_expiry = excluded.tracks_expiry,
-  max_stock = excluded.max_stock,
-  reorder_point = excluded.reorder_point,
-  part_number = excluded.part_number,
-  manufacturer = excluded.manufacturer,
-  subcategory = excluded.subcategory;
-
-insert into public.inventory_items (
-  sku,
-  name,
-  category,
-  item_kind,
-  description,
-  quantity,
-  min_stock,
-  unit,
-  location,
-  brand,
-  model,
-  serial_number,
-  unit_price,
-  supplier,
-  expiry_date,
-  manufactured_at,
-  notes,
-  asset_status,
-  last_maintenance_date,
-  next_maintenance_date,
-  is_active,
-  tracks_lot,
-  tracks_serial,
-  tracks_expiry,
-  max_stock,
-  reorder_point,
-  part_number,
-  manufacturer,
-  subcategory
-) values
-  ('ACCESORIOS-000321', 'Sonda de temperatura cutánea reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU06951', 'Dräger', ''),
-  ('ACCESORIOS-000322', 'Sonda De Temperatura De Aire Sobre Infante', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06955-01', 'Dräger', ''),
-  ('ACCESORIOS-000323', 'Sonda de temperatura cutánea', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU06971', 'Dräger', ''),
-  ('ACCESORIOS-000324', 'Probe3, Skintemp, Dual, Disp, Bx10', 'accesorios', 'producto', 'Presentación: CAJA/1O PZS', 4, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU11228', 'Dräger', ''),
-  ('ACCESORIOS-000325', 'Probe 5, Ig Skin Tmp,Ysi, Box/10', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PIEZAS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU12551', 'Dräger', ''),
-  ('ACCESORIOS-000326', 'Grommet, Access', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU12609', 'Dräger', ''),
-  ('ACCESORIOS-000327', 'Cell-Oxygen', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU13223-06', 'Dräger', ''),
-  ('ACCESORIOS-000328', 'Kit, Head Shield Hinge Isolette', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU13400', 'Dräger', ''),
-  ('ACCESORIOS-000329', 'Kit Esquineros', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU22416', 'Dräger', ''),
-  ('ACCESORIOS-000330', 'Probe 1, Skin Temp, Disp, Box/10', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PZS', 2, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU8933', 'Dräger', ''),
-  ('ACCESORIOS-000331', 'Canister Key', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX10209', 'Dräger', ''),
-  ('ACCESORIOS-000332', 'Sonda de temperatura cutánea', 'accesorios', 'producto', 'Presentación: PIEZA', 44, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MX11000', 'Dräger', ''),
-  ('ACCESORIOS-000333', 'Thermopad', 'accesorios', 'producto', 'Presentación: KIT', 150, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX11002', 'Dräger', ''),
-  ('ACCESORIOS-000334', 'Filtro De Aire', 'accesorios', 'producto', 'Presentación: PAQUETE/ 20 PZS', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX17015', 'Dräger', ''),
-  ('ACCESORIOS-000335', 'Soda Lime Dust Filter', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MX50115', 'Dräger', ''),
-  ('ACCESORIOS-000336', 'Disposable Neonatal Test Lung', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'NTL 10', 'Dräger', ''),
-  ('ACCESORIOS-000337', 'Sensor de temperatura genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SENSTEMP1', 'Dräger', ''),
-  ('ACCESORIOS-000338', 'Sensor de SpO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SPOGEN-1', 'Dräger', ''),
-  ('ACCESORIOS-000339', 'Cable troncal genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'TRONCGEN1', 'Dräger', ''),
-  ('ACCESORIOS-000340', 'Breathing Bag 2.3 L, Silicone', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'TS-G3', 'Dräger', ''),
-  ('ACCESORIOS-000341', 'Reusable Adult Finger Clip Spo2 Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'U403-01P', 'Dräger', ''),
-  ('ACCESORIOS-000342', 'Reusable Adult Soft Tip Spo2 Sensor Unimedic', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'U403S-01', 'Dräger', ''),
-  ('ACCESORIOS-000343', 'Reusable Adult Finger Clip Spo2 Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'U710-70', 'Dräger', ''),
-  ('ACCESORIOS-000344', 'Cable Paciente Red Lnc-10', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'ACCESORIO
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2026', 'Masimo', ''),
-  ('ACCESORIOS-000345', 'Dci Mini Sc 400', 'accesorios', 'producto', 'Presentación: PIEZA', 101, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'ACCESORIO
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3798', 'Masimo', ''),
-  ('ACCESORIOS-000346', 'Demo Tool', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'EQUIPO
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4206', 'Masimo', ''),
-  ('ACCESORIOS-000347', 'Patient Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'ACCESORIO
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4253', 'Masimo', ''),
-  ('ACCESORIOS-000348', 'Cable De Temperatura Rectal', 'accesorios', 'producto', 'Presentación: PIEZA', 41, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '21076A', 'Philips', ''),
-  ('ACCESORIOS-000349', 'Kit Table Mount', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453564255161', 'Philips', ''),
-  ('ACCESORIOS-000350', 'Lpqgmx400-800 Rel. P.0 Spa', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665000791', 'Philips', ''),
-  ('ACCESORIOS-000351', 'Lp Ifu Mx400-500 Rel. Spa', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665055001', 'Philips', ''),
-  ('ACCESORIOS-000352', 'Lp Add Sg Mx400-850 Tympanic', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665087661', 'Philips', ''),
-  ('ACCESORIOS-000353', 'Lp Add Mx450-850 Visual Ip', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665105801', 'Philips', ''),
-  ('ACCESORIOS-000354', 'Add Cg Visual Pat', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665105861', 'Philips', ''),
-  ('ACCESORIOS-000355', 'Lp Add Cg Visual', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665106311', 'Philips', ''),
-  ('ACCESORIOS-000356', 'Lp Qg Mx450-850 Tympanic Temp', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '45366510931', 'Philips', ''),
-  ('ACCESORIOS-000357', 'Lp Add Mx400-850 Tymp', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665114081', 'Philips', ''),
-  ('ACCESORIOS-000358', 'Lp Add X3 Mx100-850 Stand Comp', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665125721', 'Philips', ''),
-  ('ACCESORIOS-000359', 'Lp Is Service Doc. Incenter', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665133281', 'Philips', ''),
-  ('ACCESORIOS-000360', 'Lp Is X3 Mxs Nbp Letter', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665145501', 'Philips', ''),
-  ('ACCESORIOS-000361', 'Lp Add X3 Mxs Evol R0002 Spa', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665155461', 'Philips', ''),
-  ('ACCESORIOS-000362', 'Intellivue Hemodynamic Extension', 'accesorios', 'producto', 'Presentación: PIEZA', 134, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, 'APROX
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '867039', 'Philips', ''),
-  ('ACCESORIOS-000363', 'Cable Assembly', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '867043/002', 'Philips', ''),
-  ('ACCESORIOS-000364', 'Comfort Care Cuff, Pediatric', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803104151', 'Philips', ''),
-  ('ACCESORIOS-000365', '5 Lead Aami Leadset', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803143201', 'Philips', ''),
-  ('ACCESORIOS-000366', 'IntelliVue NMT patient cable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803174581', 'Philips', ''),
-  ('ACCESORIOS-000367', 'Manguito NBP pediátrico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803182621', 'Philips', ''),
-  ('ACCESORIOS-000368', 'Manguito Nbp Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803182641', 'Philips', ''),
-  ('ACCESORIOS-000369', 'Manguito Nbp Adulto Largo', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803182661', 'Philips', ''),
-  ('ACCESORIOS-000370', 'Manguera interconexión de presión neonatal', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803183231', 'Philips', ''),
-  ('ACCESORIOS-000371', 'Neonatal Nibp Air Hose 3.0m', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803209751', 'Philips', ''),
-  ('ACCESORIOS-000372', 'Manguera Nibp Adulto 3.0m', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803209771', 'Philips', ''),
-  ('ACCESORIOS-000373', 'Sensor Spo2 Adulto Reusable (3mts)', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1191BL', 'Philips', ''),
-  ('ACCESORIOS-000374', 'Sensor SpO2 de dedo adulto, pediátrico reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1192A', 'Philips', ''),
-  ('ACCESORIOS-000375', 'Sensor Spo2 Pie, Mano Neonatal Reusable (1.5m)', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1193A', 'Philips', ''),
-  ('ACCESORIOS-000376', 'Sensor SpO2 adulto pediátrico reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1194A', 'Philips', ''),
-  ('ACCESORIOS-000377', 'Sensor Reusable Cpo2 Adulto (3mts)', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1196A', 'Philips', ''),
-  ('ACCESORIOS-000378', 'Manguito pediátrico Comfort Care', 'accesorios', 'producto', 'Presentación: PIEZA', 77, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1572A', 'Philips', ''),
-  ('ACCESORIOS-000379', 'Brazalete Comfort Care Muslo', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1576A', 'Philips', ''),
-  ('ACCESORIOS-000380', 'Cable interconexión de presión neonatal', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1597B', 'Philips', ''),
-  ('ACCESORIOS-000381', 'Neonatal Nibp Air Hose 3.0m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1597C', 'Philips', ''),
-  ('ACCESORIOS-000382', 'Manguera Nibp Adulta 1.5', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1598B', 'Philips', ''),
-  ('ACCESORIOS-000383', '5 Leadset, Snap, Aami, Icu', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1644A', 'Philips', ''),
-  ('ACCESORIOS-000384', 'Sensor De Co2 Principal', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M2501A', 'Philips', ''),
-  ('ACCESORIOS-000385', 'Tocógrafo', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M2736A', 'Philips', ''),
-  ('ACCESORIOS-000386', 'Rollo de cable sólido CMR azul', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WIRC5ECMR', 'Philips', ''),
-  ('ACCESORIOS-000387', 'Rigid Case F/3 V Sets Boxed', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+  ('05259-MBX', 'Rigid Case F/3 V Sets Boxed', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '05259-MBX', 'Welch Allyn', ''),
-  ('ACCESORIOS-000388', '2.5v Hal Hpx Lamp Larin Hol', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+  ('06000-LED', '2.5v Hal Hpx Lamp Larin Hol', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '06000-LED', 'Welch Allyn', ''),
-  ('ACCESORIOS-000389', '2.5v Hal Hpx Lamp Larin', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+  ('06000-U', '2.5v Hal Hpx Lamp Larin', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '06000-U', 'Welch Allyn', ''),
-  ('ACCESORIOS-000390', 'ESTUCHE', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '412924', 'Welch Allyn', ''),
-  ('ACCESORIOS-000391', 'Esfigmomanómetro', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '5098-30', 'Welch Allyn', ''),
-  ('ACCESORIOS-000392', 'Cuff, WA, soft, small adult', 'accesorios', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '50H-10', 'Welch Allyn', ''),
-  ('ACCESORIOS-000393', 'Espéculo pediátrico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '52432-U', 'Welch Allyn', ''),
-  ('ACCESORIOS-000394', 'Kleen Spec Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '52434', 'Welch Allyn', ''),
-  ('ACCESORIOS-000395', 'Kleen Spec Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '52434-U', 'Welch Allyn', ''),
-  ('ACCESORIOS-000396', 'Espejo Vaginal Grande', 'accesorios', 'producto', 'Presentación: CAJA/ 4 PZS', 10, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '59004', 'Welch Allyn', ''),
-  ('ACCESORIOS-000397', 'Mango Laringoscopio Ligero F/O', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '60813', 'Welch Allyn', ''),
-  ('ACCESORIOS-000398', 'Hoja de laringoscopio #0 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68060', 'Welch Allyn', ''),
-  ('ACCESORIOS-000399', 'Hoja de laringoscopio #2 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68061', 'Welch Allyn', ''),
-  ('ACCESORIOS-000400', 'Hoja de laringoscopio #2 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68062', 'Welch Allyn', '')
-on conflict (sku) do update set
-  name = excluded.name,
-  category = excluded.category,
-  item_kind = excluded.item_kind,
-  description = excluded.description,
-  min_stock = excluded.min_stock,
-  unit = excluded.unit,
-  location = excluded.location,
-  brand = excluded.brand,
-  model = excluded.model,
-  serial_number = excluded.serial_number,
-  unit_price = excluded.unit_price,
-  supplier = excluded.supplier,
-  expiry_date = excluded.expiry_date,
-  manufactured_at = excluded.manufactured_at,
-  notes = excluded.notes,
-  asset_status = excluded.asset_status,
-  last_maintenance_date = excluded.last_maintenance_date,
-  next_maintenance_date = excluded.next_maintenance_date,
-  is_active = excluded.is_active,
-  tracks_lot = excluded.tracks_lot,
-  tracks_serial = excluded.tracks_serial,
-  tracks_expiry = excluded.tracks_expiry,
-  max_stock = excluded.max_stock,
-  reorder_point = excluded.reorder_point,
-  part_number = excluded.part_number,
-  manufacturer = excluded.manufacturer,
-  subcategory = excluded.subcategory;
-
-insert into public.inventory_items (
-  sku,
-  name,
-  category,
-  item_kind,
-  description,
-  quantity,
-  min_stock,
-  unit,
-  location,
-  brand,
-  model,
-  serial_number,
-  unit_price,
-  supplier,
-  expiry_date,
-  manufactured_at,
-  notes,
-  asset_status,
-  last_maintenance_date,
-  next_maintenance_date,
-  is_active,
-  tracks_lot,
-  tracks_serial,
-  tracks_expiry,
-  max_stock,
-  reorder_point,
-  part_number,
-  manufacturer,
-  subcategory
-) values
-  ('ACCESORIOS-000401', 'Hoja de laringoscopio #3', 'accesorios', 'producto', 'Presentación: PIEZA', 24, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68063', 'Welch Allyn', ''),
-  ('ACCESORIOS-000402', 'Hoja de laringoscopio #4', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68064', 'Welch Allyn', ''),
-  ('ACCESORIOS-000403', 'Hoja de laringoscopio #00 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68065', 'Welch Allyn', ''),
-  ('ACCESORIOS-000404', '#1 Mac F/O laryngoscope', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69061', 'Welch Allyn', ''),
-  ('ACCESORIOS-000405', 'Hoja de laringoscopio #2 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69062', 'Welch Allyn', ''),
-  ('ACCESORIOS-000406', 'Hoja de laringoscopio #3 curvo', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69063', 'Welch Allyn', ''),
-  ('ACCESORIOS-000407', 'Hoja De Laringoscopio Mac #4 Curva F/O', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69064', 'Welch Allyn', ''),
-  ('ACCESORIOS-000408', 'BP fitting, M locking', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '90100', 'Welch Allyn', ''),
-  ('ACCESORIOS-000409', 'Accessory/component', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '901000', 'Welch Allyn', ''),
-  ('ACCESORIOS-000410', 'Estuche de diagnóstico Pocket LED (3.5V HAL coaxial ophth/oto)', 'accesorios', 'producto', 'Presentación: KIT', 128, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901026', 'Welch Allyn', ''),
-  ('ACCESORIOS-000411', 'Brazalete Reutilizable Niño Chico 2 Tubos', 'accesorios', 'producto', 'Presentación: PIEZA', 13, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901043', 'Welch Allyn', ''),
-  ('ACCESORIOS-000412', 'Mango Laringoscopio Ligero Recargable', 'accesorios', 'producto', 'Presentación: PIEZA', 78, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901087', 'Welch Allyn', ''),
-  ('ACCESORIOS-000413', 'Wall Transformer', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '901093', 'Welch Allyn', ''),
-  ('ACCESORIOS-000414', 'Batería recargable 3 celdas', 'accesorios', 'producto', 'Presentación: PIEZA', 26, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901122', 'Welch Allyn', ''),
-  ('ACCESORIOS-000415', 'Estuche de diagnóstico', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '97-200', 'Welch Allyn', ''),
-  ('ACCESORIOS-000416', 'Otoscope-Ophthal Set', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '97150-C', 'Welch Allyn', ''),
-  ('ACCESORIOS-000417', 'Durashock Ds44 Multi', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'DS44-MC', 'Welch Allyn', ''),
-  ('ACCESORIOS-000418', 'Cuff, Reus Sm Child 1', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE', 'Welch Allyn', ''),
-  ('ACCESORIOS-000419', 'Cuff, Reuse Infant', 'accesorios', 'producto', 'Presentación: PIEZA', 51, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-07-1 HP', 'Welch Allyn', ''),
-  ('ACCESORIOS-000420', 'Cuff, Reus Sm Child 1', 'accesorios', 'producto', 'Presentación: PIEZA', 72, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-08-1 HP', 'Welch Allyn', ''),
-  ('ACCESORIOS-000421', 'Cuff, Wa, Reusable Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-11 L', 'Welch Allyn', ''),
-  ('ACCESORIOS-000422', 'Cuff, Reus Sm Child 1', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-13-1 HP', 'Welch Allyn', ''),
-  ('EQUIPO-000001', 'IntelliVue Patient Monitor MX550', 'equipos', 'equipo', '', 33, 0, 'pieza', 'Sala de cámaras', 'Philips', 'MX550', '', 0.0, 'Philips', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '866066', 'Philips', ''),
-  ('EQUIPO-000002', 'Monitor fetal Avalon FM20/FM30', 'equipos', 'equipo', '', 20, 0, 'pieza', 'Sala de cámaras', 'Philips', 'FM20/FM30', '', 0.0, 'Philips', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'M2702A', 'Philips', ''),
-  ('EQUIPO-000003', 'D-Vapor', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de cámaras', 'Dräger', 'D-Vapor', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'M35500', 'Drager', ''),
-  ('EQUIPO-000004', 'Monitor de signos vitales Vista 120 C', 'equipos', 'equipo', '', 4, 0, 'pieza', 'Sala de cámaras', 'Dräger', 'Vista 120 C', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'MS34009', 'Drager', ''),
-  ('EQUIPO-000005', 'Mounting arm with basket', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de cámaras', 'Dräger', '', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '2601148', 'Drager', ''),
-  ('EQUIPO-000006', 'Desfibrilador EFFICIA DFM100', 'equipos', 'equipo', '', 28, 0, 'pieza', 'Sala de cámaras', 'Philips', 'EFFICIA DFM100', '', 0.0, 'Philips', '2022-10-21', NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '866199', 'Philips', ''),
-  ('EQUIPO-000007', 'Vista 120', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de Cámaras ', 'Dräger', '', 'VGSRF0051', 0.0, 'Drager', NULL, '2022-06-06', '', 'operativo', '2026-10-06', NULL, true, false, true, false, 0, 0, 'MS34009', 'Drager', ''),
-  ('EQUIPO-000008', 'Rad-G Pulse Oximeter', 'equipos', 'equipo', '', 1, 0, 'pieza', '', 'Masimo', 'Rad-G Pulse Oximeter', '6000106190', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9849', 'Masimo', ''),
-  ('EQUIPO-000009', 'Rad Handheld signal extraction pulse oximeter', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9196', 'Masimo', ''),
-  ('EQUIPO-000010', 'Root', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9515', 'Masimo', ''),
-  ('EQUIPO-000011', 'SedLine Sedation Monitor', 'equipos', 'equipo', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9513', 'Masimo', ''),
-  ('EQUIPO-000012', 'Radical-7', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9500', 'Masimo', ''),
-  ('EQUIPO-000013', 'O3 Regional Oximeter', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-12-01', '', 'operativo', NULL, NULL, true, true, true, false, 0, 0, '9637', 'Masimo', ''),
-  ('EQUIPO-000014', 'EMMA Kit Capnograph mmHg', 'equipos', 'equipo', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '3639', 'Masimo', ''),
-  ('EQUIPO-000015', 'Bair Hugger Warming Unit (usado)', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'BAIR HUGER WARMING UNIT (USADO)
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '77500', '3M', ''),
-  ('EQUIPO-000016', 'Bair Hugger Rolling Cart (usado)', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'BAIR HUGER ROLLING CAR (USADO)
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '90090', '3M', ''),
-  ('EQUIPO-000017', 'Cable Adaptador Etco2 Vista 120', 'equipos', 'equipo', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '2607032', 'Dräger', ''),
-  ('EQUIPO-000018', 'Infinity Dock Station Can/Mib', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2021-01-06', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, true, 0, 0, '7489375', 'Dräger', ''),
-  ('EQUIPO-000019', 'Monitor Invivo', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '453564146991', 'Philips', ''),
-  ('EQUIPO-000020', 'Instrucciones de uso para monitor de paciente IntelliVue MX100/X3', 'equipos', 'equipo', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '867030-002', 'Philips', ''),
-  ('EQUIPO-000021', 'Paletas water resistant', 'equipos', 'equipo', 'Presentación: EQUIPO', 19, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2016-06-01', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, true, 0, 0, 'M3543A', 'Philips', ''),
-  ('EQUIPO-000022', 'Pads Para Uso Para Desfibrilador', 'equipos', 'equipo', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2021-04-30', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, true, 0, 0, 'M5072A', 'Philips', ''),
-  ('EQUIPO-000023', 'Vital Signs Device', 'equipos', 'equipo', 'Presentación: EQUIPO', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '901056', 'Welch Allyn', ''),
-  ('EQUIPO-000024', 'Monitor De Signos Vitales', 'equipos', 'equipo', 'Presentación: EQUIPO', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '901058', 'Welch Allyn', ''),
-  ('EQUIPO-000025', 'Affinity 4 Birthing Bed', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Hill-Rom', 'P3700', '', 400000.0, 'BAXTER/Hill-Rom', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'P3700E100473', 'BAXTER/Hill-Rom', ''),
-  ('EQUIPO-000026', 'Lámpara de quirófano dual Polaris 100/200', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Dräger', 'Polaris 100/200', '', 430000.0, 'Dräger', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'G16981 / G16982', 'Dräger', ''),
-  ('INSUMOS-000001', 'Mask silicone inf small 0 reusable', 'insumos', 'producto', '', 14, 0, 'pieza', 'A/2', 'Dräger', '', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01910', 'Drager', ''),
-  ('INSUMOS-000002', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 12, 0, 'caja', 'Insumos', 'ASP', '', '', 0.0, 'ASP', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12435', 'ASP', ''),
-  ('INSUMOS-000003', 'Biological Indicators/Process Challenge Devices', 'insumos', 'producto', '', 25, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', '2025-01-29', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '43210-30', '', ''),
-  ('INSUMOS-000004', 'Tyvek Heat Seal Pouch with STERRAD Chemical Indicator', 'insumos', 'producto', '', 5, 0, 'caja', 'Insumos', 'ASP', '', '', 0.0, 'ASP', '2026-09-17', '2024-09-17', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12532', 'ASP', ''),
-  ('INSUMOS-000005', 'STERRAD 100NX Cassette', 'insumos', 'producto', '', 71, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-12-03', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '10144', '', ''),
-  ('INSUMOS-000006', 'STERRAD Chemical Indicator Strip', 'insumos', 'producto', '', 4, 0, 'pieza', 'Insumos', 'ASP', '', '', 0.0, 'ASP', '2026-05-18', '2024-11-18', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '14100', 'ASP', ''),
-  ('INSUMOS-000007', 'STERRAD SEALSURE Chemical Indicator Tape', 'insumos', 'producto', '', 2, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2027-03-02', '2025-05-02', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '14202NL', 'ASP', ''),
-  ('INSUMOS-000008', 'Tyvek Heat Seal Pouch with STERRAD Chemical Indicator', 'insumos', 'producto', '', 8, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2025-03-01', '2026-12-19', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12541', 'Asp', ''),
-  ('INSUMOS-000009', 'STERRAD 100NX Cassette Collector Box', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2057-10-05', '2023-03-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '20227', 'ASP', ''),
-  ('INSUMOS-000010', 'Sterilization Wrap', 'insumos', 'producto', '', 28, 0, 'pieza', '', 'Halyard', '', '', 0.0, 'ASP', '2051-10-05', '2025-05-02', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '68040', 'Halyard', ''),
-  ('INSUMOS-000011', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-02-20', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12415', 'ASP', ''),
-  ('INSUMOS-000012', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 4, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-11-04', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12425', 'ASP', ''),
-  ('INSUMOS-000013', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2027-09-04', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12420', 'ASP', ''),
-  ('INSUMOS-000014', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 4, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-07-24', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12410', 'ASP', ''),
-  ('INSUMOS-000015', 'VERISURE Bowie-Dick Test Pack', 'insumos', 'producto', '', 2, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', '2028-09-01', '2023-09-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '73180', 'ASP', ''),
-  ('INSUMOS-000016', 'Process Challenge Device (PCD)', 'insumos', 'producto', '', 2, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', '2028-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '73160', 'ASP', ''),
-  ('INSUMOS-000017', 'RD rainbow SET-2 Adt – Sensor adhesivo adulto SpO2/SpHb/SpMet, 10/caja', 'insumos', 'producto', '', 5, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4026', 'Masimo', ''),
-  ('INSUMOS-000018', 'RD SET YI – Sensor reutilizable multisitio', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2021-07-01', '2018-12-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4054', 'Masimo', ''),
-  ('INSUMOS-000019', 'RD rainbow SET-2 Neo – Sensor adhesivo neonatal/adulto SpO2/SpHb/SpMet, 10/caja', 'insumos', 'producto', '', 327, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2028-10-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4029', 'Masimo', ''),
-  ('INSUMOS-000020', 'RD SedLine – Sensor EEG ADULTO, 25/caja', 'insumos', 'producto', '', 96, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-04-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4248', 'Masimo', ''),
-  ('INSUMOS-000021', 'RD SedLine – Sensor EEG pediátrico 25/caja', 'insumos', 'producto', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-04-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4329', 'Masimo', ''),
-  ('INSUMOS-000022', 'O3 – Sensor adhesivo adulto rSO2 (oximetría regional), uso en un paciente 20/caja', 'insumos', 'producto', '', 27, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-07-01', '2028-09-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3756', 'Masimo', ''),
-  ('INSUMOS-000023', 'Paper, Printer, Thermal', 'insumos', 'producto', '', 4, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2065-01-06', '2025-01-10', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '10305', 'ASP', ''),
-  ('INSUMOS-000024', 'RD SET Neo, SpO2, PR, Pi, PVi /Adulto 20/caja', 'insumos', 'producto', '', 23, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2022-05-01', '2022-05-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4003', 'Masimo', ''),
-  ('INSUMOS-000025', 'O3 Sensor rSO2 infantil/neonatal 25/caja', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', '2028-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4384', 'Masimo', ''),
-  ('INSUMOS-000026', 'O3 Sensor rSO2 pediatric adhesive 25/caja', 'insumos', 'producto', '', 16, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', '2028-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4235', 'Masimo ', ''),
-  ('INSUMOS-000027', 'RD SedLine – Sensor EEG pediátrico Piezas', 'insumos', 'producto', '', 56, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-05-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4329', 'Masimo', ''),
-  ('INSUMOS-000028', 'O3 – Sensor adhesivo adulto rSO2 (oximetría regional), uso en un paciente PIEZAS', 'insumos', 'producto', '', 10, 0, 'pieza', 'Insumos', 'Masimo', '', '', 0.0, 'Masimo', '2027-07-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3756', 'Masimo', ''),
-  ('INSUMOS-000029', 'RD rainbow SET-2 Adt – Sensor adhesivo adulto SpO2/SpHb/SpMet, PIEZAS', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'Masimo', ' ', '', 0.0, 'Masimo', '2027-01-09', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4026', 'Masimo', ''),
-  ('INSUMOS-000030', 'Mask LiteStar 1 w/o Hook 50/caja', 'insumos', 'producto', '', 52, 0, 'caja', '', 'Dräger', 'Talla 1', '', 0.0, 'Drager', '2028-01-15', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11001', 'Drager', ''),
-  ('INSUMOS-000031', 'Mask LiteStar 1 w/o Hook 50/caja', 'insumos', 'producto', '', 0, 0, 'caja', '', 'Dräger', 'Talla 1', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, false, true, false, true, 0, 0, 'MP11001', 'Drager', ''),
-  ('INSUMOS-000032', 'Mask LiteStar 3 w/o hook 50/caja', 'insumos', 'producto', '', 103, 0, 'pieza', '', 'Dräger', 'Talla 3', '', 0.0, 'Drager', '2027-01-07', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11003', 'Drager', '')
-on conflict (sku) do update set
-  name = excluded.name,
-  category = excluded.category,
-  item_kind = excluded.item_kind,
-  description = excluded.description,
-  min_stock = excluded.min_stock,
-  unit = excluded.unit,
-  location = excluded.location,
-  brand = excluded.brand,
-  model = excluded.model,
-  serial_number = excluded.serial_number,
-  unit_price = excluded.unit_price,
-  supplier = excluded.supplier,
-  expiry_date = excluded.expiry_date,
-  manufactured_at = excluded.manufactured_at,
-  notes = excluded.notes,
-  asset_status = excluded.asset_status,
-  last_maintenance_date = excluded.last_maintenance_date,
-  next_maintenance_date = excluded.next_maintenance_date,
-  is_active = excluded.is_active,
-  tracks_lot = excluded.tracks_lot,
-  tracks_serial = excluded.tracks_serial,
-  tracks_expiry = excluded.tracks_expiry,
-  max_stock = excluded.max_stock,
-  reorder_point = excluded.reorder_point,
-  part_number = excluded.part_number,
-  manufacturer = excluded.manufacturer,
-  subcategory = excluded.subcategory;
-
-insert into public.inventory_items (
-  sku,
-  name,
-  category,
-  item_kind,
-  description,
-  quantity,
-  min_stock,
-  unit,
-  location,
-  brand,
-  model,
-  serial_number,
-  unit_price,
-  supplier,
-  expiry_date,
-  manufactured_at,
-  notes,
-  asset_status,
-  last_maintenance_date,
-  next_maintenance_date,
-  is_active,
-  tracks_lot,
-  tracks_serial,
-  tracks_expiry,
-  max_stock,
-  reorder_point,
-  part_number,
-  manufacturer,
-  subcategory
-) values
-  ('INSUMOS-000033', 'Mask LiteStar 3 w/o hook 30/caja', 'insumos', 'producto', '', 0, 0, 'caja', '', 'Dräger', 'Talla 3', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11003', 'Drager', ''),
-  ('INSUMOS-000034', 'TruWave 3 cc/60 in (150cm) 10/caja', 'insumos', 'producto', '', 709, 0, 'caja', '', 'Edwards Lifesciences', '', '', 0.0, 'Edwards Lifesciences', '2027-02-05', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'PX260', 'Edwards Lifesciences', ''),
-  ('INSUMOS-000035', 'Sample Line Set 10/bolsa', 'insumos', 'producto', '', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8290266/', 'Dragër ', ''),
-  ('INSUMOS-000036', 'WaterLock2 12/caja', 'insumos', 'producto', '', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6872', 'Dragër ', ''),
-  ('INSUMOS-000037', 'Red Dot Monitoring Electrode with foam Tape', 'insumos', 'producto', '', 0, 0, 'paquete', '', '', '', '', 0.0, '', NULL, NULL, '', 'operativo', NULL, NULL, false, true, false, true, 0, 0, '', '', ''),
-  ('INSUMOS-000038', 'Red Dot Monitoring Electrode with foam Tape pieza', 'insumos', 'producto', '', 37, 0, 'pieza', '', '3M', '', '', 0.0, '3M', '2027-03-07', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2228', '3M', ''),
-  ('INSUMOS-000039', 'Red Dot Monitoring electrode with foam Tape 50pz/bolsa', 'insumos', 'producto', '', 0, 0, 'paquete', '', '3M', '', '', 0.0, '3M', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2228', '', ''),
-  ('INSUMOS-000040', 'Red Dot Monitoring electrode with foam Tape 20bolsa/Caja', 'insumos', 'producto', '', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2228', '', ''),
-  ('INSUMOS-000041', 'VentStar Anesthesia (N) 180. 25/caja', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00333', 'Dragër ', ''),
-  ('INSUMOS-000042', 'Ventstar Anesthesia (N) 180. Pieza', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00333', 'Dragër ', ''),
-  ('INSUMOS-000043', 'Electrodos desechables ECG', 'insumos', 'producto', '', 0, 0, 'paquete', '', '', '', '', 0.0, 'Neo Tecnia ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '', 'Médico electrodes international LTD', ''),
-  ('INSUMOS-000044', 'Maxi hisopo con 5.2 ml', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', '2024-05-01', NULL, 'MAXI HISOPOTO CON 5.2 ML
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '102.09', '3M', ''),
-  ('INSUMOS-000045', 'Esterilización con gas', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', '2025-06-21', NULL, 'ESTERILIZACION CON GAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1231', '3M', ''),
-  ('INSUMOS-000046', 'Paquete para la prueba tipo Bowie-Dick', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 43, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'PAQUETE PARA LA PRUEBA TIPO BROWIE-DICK
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1233LF', '3M', ''),
-  ('INSUMOS-000047', 'Integrador químico por vapor', 'insumos', 'producto', 'Presentación: 2 BOLSAS/ CAJA', 3, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-06-12', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1243A', '3M', ''),
-  ('INSUMOS-000048', 'COMPLY', 'insumos', 'producto', 'Presentación: CAJA/ 240 PIEZAS', 6, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-09-21', NULL, 'COMPLY
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1250', '3M', ''),
-  ('INSUMOS-000049', '3M ATTEST', 'insumos', 'producto', 'Presentación: CAJA/ 50 PIEZAS', 12, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-09-01', NULL, '3M ATTEST
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1292', '3M', ''),
-  ('INSUMOS-000050', '3M ATTEST', 'insumos', 'producto', 'Presentación: CAJA/ 50 PIEZAS', 12, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-06-03', NULL, '3M ATTEST
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1294', '3M', ''),
-  ('INSUMOS-000051', 'Lead Free Steam Indicador', 'insumos', 'producto', 'Presentación: CAJA/ 28 PIEZAS', 24, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-11-27', NULL, 'LEAD FREE STEAM INDICADOR
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1322-18MM', '3M', ''),
-  ('INSUMOS-000052', 'Transpore', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'TRANSPORE
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1527-1', '3M', ''),
-  ('INSUMOS-000053', 'Durapore', 'insumos', 'producto', 'Presentación: PZA', 2, 0, 'pieza', '', '3M', '', '', 0.0, '', '2025-01-13', NULL, 'DURAPORE
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1538-1', '3M', ''),
-  ('INSUMOS-000054', 'Durapore', 'insumos', 'producto', 'Presentación: PZA', 10, 0, 'pieza', '', '3M', '', '', 0.0, '', '2028-09-19', NULL, 'DURAPORE
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1538-2', '3M', ''),
-  ('INSUMOS-000055', 'Venda elástica Coban', 'insumos', 'producto', 'Presentación: 30PIEZAS', 119, 0, 'pieza', '', '3M', '', '', 0.0, '', '2030-12-01', NULL, 'VENDA ELASTICA COBAN
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1581', '3M', ''),
-  ('INSUMOS-000056', 'COBAN', 'insumos', 'producto', 'Presentación: CAJA/ 36 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-08-15', NULL, 'COBAN
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1582', '3M', ''),
-  ('INSUMOS-000057', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 13, 0, 'caja', '', '3M', '', '', 0.0, '', '2025-03-18', NULL, 'TEGADERM
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1624W', '3M', ''),
-  ('INSUMOS-000058', 'Tegaderm Film', 'insumos', 'producto', 'Presentación: CAJA/ 25 PIEZAS', 3, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-04-01', NULL, 'TEGARDEM FILM
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1627', '3M', ''),
-  ('INSUMOS-000059', 'Tegaderm apósito de fijación', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 8, 0, 'caja', '', '3M', '', '', 0.0, '', '2025-12-06', NULL, 'TEGADERM APOSITO DE FIJACION
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1680', '3M', ''),
-  ('INSUMOS-000060', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 48, 0, 'caja', '', '3M', '', '', 0.0, '', '2024-12-05', NULL, 'TEGADERM
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1682', '3M', ''),
-  ('INSUMOS-000061', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 11, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-08-05', NULL, 'TEGADERM
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1683', '3M', ''),
-  ('INSUMOS-000062', 'Película protectora sin ardor 3M', 'insumos', 'producto', 'Presentación: CAJA DE 4 PIEZAS', 3, 0, 'caja', '', '3M', '', '', 0.0, '', '2025-02-15', NULL, 'PELICULA PROTECTORA SIN ARDOR 3M
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3343E', '3M', ''),
-  ('INSUMOS-000063', 'Tegaderm+pad', 'insumos', 'producto', 'Presentación: CAJA/ 68 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-12-19', NULL, 'TEGADERM+PAD
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3582', '3M', ''),
-  ('INSUMOS-000064', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 50 PIEZAS', 6, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-01-02', NULL, 'TEGADERM
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3584', '3M', ''),
-  ('INSUMOS-000065', 'Apósito transparente estéril con cojín absorbente', 'insumos', 'producto', 'Presentación: CAJA DE 4 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-11-25', NULL, 'APOSITO TRANSPARENTE ESTERIL CON COJIN ABSORBENTE
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3586', '3M', ''),
-  ('INSUMOS-000066', 'Tegaderm+pad', 'insumos', 'producto', 'Presentación: CAJA/ 25 PIEZAS', 2, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-01-15', NULL, 'TEGADERM+PAD
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3590', '3M', ''),
-  ('INSUMOS-000067', 'Steri-Gas', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 52, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-08-15', NULL, 'ESTERIGAS (CINTA INDICADORA GAS)
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4-100', '3M', ''),
-  ('INSUMOS-000068', 'Manta térmica pediátrica', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 73, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-05-16', NULL, 'MANTA TERMICA PEDIATRICA
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '55001', '3M', ''),
-  ('INSUMOS-000069', 'Manta térmica', 'insumos', 'producto', 'Presentación: CAJA/ 5 PIEZAS', 199, 0, 'caja', '', '3M', '', '', 0.0, '', '2029-01-01', NULL, 'MANTA TERMICA
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '63500', '3M', ''),
-  ('INSUMOS-000070', 'Loban 2 Antimicrobial', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-01-21', NULL, 'LOBAN 2 ANTIMICROBIAL
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6650', '3M', ''),
-  ('INSUMOS-000071', 'Steri-Gas', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 17, 0, 'caja', '', '3M', '', '', 0.0, '', '2030-07-30', NULL, 'ESTERI GAS
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8-170', '3M', ''),
-  ('INSUMOS-000072', 'Cast Padding', 'insumos', 'producto', 'Presentación: 4 BOLSAS CON20 ROLLOS C/U', 5, 0, 'paquete', '', '3M', '', '', 0.0, '', '2025-04-02', NULL, 'CAST PADDING
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'EMW04', '3M', ''),
-  ('INSUMOS-000073', 'Venda 82004 Color Blanco', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 27, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-10-12', NULL, 'VENDA 82004 COLOR BLANCO
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'YP206000272', '3M', ''),
-  ('INSUMOS-000074', 'Guedel Airway, Size 000, Iso 3.5', 'insumos', 'producto', 'Presentación: PIEZA', 96, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2028-03-01', NULL, '
+  ('1000035', 'Guedel Airway, Size 000, Iso 3.5', 'insumos', 'producto', 'Presentación: PIEZA', 96, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2028-03-01', NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1000035', 'Dräger', ''),
-  ('INSUMOS-000075', 'Printing Paper 4 Pcs', 'insumos', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2024-05-08', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2606231', 'Dräger', ''),
-  ('INSUMOS-000076', 'O2 SENSOR', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2026-12-21', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6850645', 'Dräger', ''),
-  ('INSUMOS-000077', 'Water Trap (Trampa De Agua)', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 179, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2030-01-14', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6872130', 'Dräger', ''),
-  ('INSUMOS-000078', 'Sample Line Set', 'insumos', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2030-03-01', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8290286', 'Dräger', ''),
-  ('INSUMOS-000079', 'Papel De Recarga', 'insumos', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8411073', 'Dräger', ''),
-  ('INSUMOS-000080', 'Neo Mask M', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2026-11-10', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8418490', 'Dräger', ''),
-  ('INSUMOS-000081', 'Set 4x Pneumatic Nozzle For Atlan', 'insumos', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2028-11-25', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8621751', 'Dräger', ''),
-  ('INSUMOS-000082', 'Adaptador Del Alambre Calentador Para Circuitos Respiratorios Calentados', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '900MR805', 'Dräger', ''),
-  ('INSUMOS-000083', 'Ventstar Watertrap 180', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00337', 'Dräger', ''),
-  ('INSUMOS-000084', 'Ventstar Watertrap 180', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP003374', 'Dräger', ''),
-  ('INSUMOS-000085', 'Ventstar Basic 180', 'insumos', 'producto', 'Presentación: CAJA/25 PIEZAS', 132, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2027-10-17', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00349', 'Dräger', ''),
-  ('INSUMOS-000086', 'Ventstar Basic (P) 180', 'insumos', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2027-09-18', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00351', 'Dräger', ''),
-  ('INSUMOS-000087', 'General Purpose Temperature Adult 3 M', 'insumos', 'producto', 'Presentación: PAQUETE/20 PZS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', '2026-06-12', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00992', 'Dräger', ''),
-  ('INSUMOS-000088', 'Mask Litestar 1 W/O Hook', 'insumos', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01101', 'Dräger', ''),
-  ('INSUMOS-000089', 'SoftBed Isolette', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2029-02-14', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01401', 'Dräger', ''),
-  ('INSUMOS-000090', 'Anillo Gancho Para Mascarilla Litestar Conector 22mm', 'insumos', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01552-00', 'Dräger', ''),
-  ('INSUMOS-000091', 'Mascarilla Facial Niv', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2029-08-04', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01575', 'Dräger', ''),
-  ('INSUMOS-000092', 'Ergo Star 40cm', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2019-09-21', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01840', 'Dräger', ''),
-  ('INSUMOS-000093', 'Ergo Star 50cm', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2019-10-17', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01850', 'Dräger', ''),
-  ('INSUMOS-000094', 'Mascarilla De Silicona Neonatal T1 Reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01911', 'Dräger', ''),
-  ('INSUMOS-000095', 'Mascarilla De Silicona Niño Chico T2 Reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01912', 'Dräger', ''),
-  ('INSUMOS-000096', 'Mascarilla De Silicona Niño Grande T3 Reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01913', 'Dräger', ''),
-  ('INSUMOS-000097', 'Mascarilla de silicona tamaño 4, adulto pequeño reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01914', 'Dräger', ''),
-  ('INSUMOS-000098', 'Ventstar Breathing Bag 3l', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP02713', 'Dräger', ''),
-  ('INSUMOS-000099', 'Filtro Filtercare Star 20 Plus', 'insumos', 'producto', 'Presentación: CAJA/100 PIEZAS', 133, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2028-06-12', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP05770', 'Dräger', ''),
-  ('INSUMOS-000100', 'Filter/Hme Twinstar 55 Plus', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2027-05-29', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP05805', 'Dräger', ''),
-  ('INSUMOS-000101', 'Mascarilla Litestar T2 Sin Gancho', 'insumos', 'producto', 'Presentación: CAJA/50 PZS', 46, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2028-02-20', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11002', 'Dräger', ''),
-  ('INSUMOS-000102', 'Mask Line 4 W/O Hook', 'insumos', 'producto', 'Presentación: CAJA/50 PZS', 84, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2027-01-07', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11004', 'Dräger', ''),
-  ('INSUMOS-000103', 'Mascarilla Litestar T5 Sin Gancho', 'insumos', 'producto', 'Presentación: PIEZA', 66, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2028-07-15', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11005', 'Dräger', ''),
-  ('INSUMOS-000104', 'Neonatal Test Lung, Reusable', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP20050', 'Dräger', ''),
-  ('INSUMOS-000105', 'Shp Asy Cnap Gen2', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MS26125', 'Dräger', ''),
-  ('INSUMOS-000106', 'Cover, Probe, Cfm,Std, Box/100', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2026-01-31', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MU06944', 'Dräger', ''),
-  ('INSUMOS-000107', 'Cell-Oxygen', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MU13223-08', 'Dräger', ''),
-  ('INSUMOS-000108', 'Oxygen sensor kit', 'insumos', 'producto', 'Presentación: KIT', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2027-03-20', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MU24903', 'Dräger', ''),
-  ('INSUMOS-000109', 'O2-Sensor Oxytrace Ve', 'insumos', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2029-01-20', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MX01049', 'Dräger', ''),
-  ('INSUMOS-000110', 'Sonda de temperatura cutánea', 'insumos', 'producto', 'Presentación: BOLSAS/5', 37, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', '2028-09-15', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MX11001', 'Dräger', ''),
-  ('INSUMOS-000111', 'Juego De Transferencia', 'insumos', 'producto', 'Presentación: PAQUETE/ 20 PZS', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', '2025-08-03', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MX17018', 'Dräger', ''),
-  ('INSUMOS-000112', 'Ibp Adapter Cable Edward Transducer', 'insumos', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'SB0301', 'Dräger', '')
+  ('10024', 'Soluprep Aplicador 35 mi', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '10024', '3M', 'listado'),
+  ('10027', 'Soluprep Esponja 50 mi (2 piezas)', 'accesorios', 'producto', 'Presentación: CAJA CON 120 SOBRES. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '10027', '3M', 'listado'),
+  ('100660', 'Emma Airway Adapter', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', '2020-06-28', NULL, 'insumo
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '100660', 'Masimo', ''),
+  ('10106', 'Soluprep Toalita 0.65 mi (sin color)', 'accesorios', 'producto', 'Presentación: CARTON C/4000 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '10106', '3M', 'listado'),
+  ('10107', 'Soluprep Toaiita 1.5 mi (sin color}', 'accesorios', 'producto', 'Presentación: CARTON C/1000 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '10107', '3M', 'listado'),
+  ('10114', 'Soluprep Toalla Eserilizable 1.6 mi (sin color)', 'accesorios', 'producto', 'Presentación: CAJA C/M1000 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '10114', '3M', 'listado'),
+  ('10144', 'STERRAD 100NX Cassette', 'insumos', 'producto', '', 71, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-12-03', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '10144', '', ''),
+  ('102.09', 'Maxi hisopo con 5.2 ml', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', '2024-05-01', NULL, 'MAXI HISOPOTO CON 5.2 ML
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '102.09', '3M', ''),
+  ('10203', 'Soluprep Hisopo 1.6 mi (sin color]', 'accesorios', 'producto', 'Presentación: CARTON C/500 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '10203', '3M', 'listado'),
+  ('10208', 'Soluprep Hisopo 5.2 mi (sin color}', 'accesorios', 'producto', 'Presentación: CARTON C/300 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '10208', '3M', 'listado'),
+  ('10305', 'Paper, Printer, Thermal', 'insumos', 'producto', '', 4, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2065-01-06', '2025-01-10', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '10305', 'ASP', ''),
+  ('1054', 'REPLACEMENT TAPES', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1054', 'Masimo', 'listado'),
+  ('11470', 'Pieza Welch Allyn 11470', 'insumos', 'producto', 'Cedros WA · ubicación A/3', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Cedros WA · ubicación A/3', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '11470', 'Welch Allyn', ''),
+  ('1149', 'Placa Aduko sin cable', 'accesorios', 'producto', 'Presentación: CAJA C/100 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1149', 'Masimo', 'listado'),
+  ('116', 'Incubadora para Indicadores Biológicos de Vapor Attest', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '116', '3M', 'listado'),
+  ('1179', 'Placa Aduko (Bilobulada / Con cable) Para equipos c/sixema REM', 'accesorios', 'producto', 'Presentación: CAJA C/40 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1179', 'Masimo', 'listado'),
+  ('1204', 'Rapid Azesi™ para Gas O.E.', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1204', 'Masimo', 'listado'),
+  ('1217', 'Rolo de Impresión para 8XL y 5XLE', 'accesorios', 'producto', 'Presentación: CAJA C/2 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1217', 'Masimo', 'listado'),
+  ('1228', 'Comply™ cinta tesago para H202', 'accesorios', 'producto', 'Presentación: ROLLO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'rollo', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1228', '3M', 'listado'),
+  ('1231', 'Esterilización con gas', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', '2025-06-21', NULL, 'ESTERILIZACION CON GAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1231', '3M', ''),
+  ('1233', 'Bowie-Dick Paquete Prueba', 'accesorios', 'producto', 'Presentación: CAJA C/30 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1233', '3M', 'listado'),
+  ('1233LF', 'Paquete para la prueba tipo Bowie-Dick', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 43, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'PAQUETE PARA LA PRUEBA TIPO BROWIE-DICK
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1233LF', '3M', ''),
+  ('12410', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 4, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-07-24', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12410', 'ASP', ''),
+  ('12415', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-02-20', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12415', 'ASP', ''),
+  ('12420', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2027-09-04', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12420', 'ASP', ''),
+  ('12425', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 4, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2026-11-04', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12425', 'ASP', ''),
+  ('12435', 'Tyvek Roll with STERRAD Chemical Indicator', 'insumos', 'producto', '', 12, 0, 'caja', 'Insumos', 'ASP', '', '', 0.0, 'ASP', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12435', 'ASP', ''),
+  ('1243A', 'Integrador químico por vapor', 'insumos', 'producto', 'Presentación: 2 BOLSAS/ CAJA', 3, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-06-12', NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1243A', '3M', ''),
+  ('1248', 'Tiras Comply™ para H202', 'accesorios', 'producto', 'Presentación: BOLSA C/250 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1248', '3M', 'listado'),
+  ('1250', 'COMPLY', 'insumos', 'producto', 'Presentación: CAJA/ 240 PIEZAS', 6, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-09-21', NULL, 'COMPLY
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1250', '3M', ''),
+  ('1251', 'Tiras Comply™ para Gas O.E.', 'accesorios', 'producto', 'Presentación: CAJA C/240 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1251', '3M', 'listado'),
+  ('12532', 'Tyvek Heat Seal Pouch with STERRAD Chemical Indicator', 'insumos', 'producto', '', 5, 0, 'caja', 'Insumos', 'ASP', '', '', 0.0, 'ASP', '2026-09-17', '2024-09-17', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12532', 'ASP', ''),
+  ('12541', 'Tyvek Heat Seal Pouch with STERRAD Chemical Indicator', 'insumos', 'producto', '', 8, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2025-03-01', '2026-12-19', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '12541', 'Asp', ''),
+  ('1262', 'Axest™ para Vapor', 'accesorios', 'producto', 'Presentación: CAJA C/100 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1262', 'Masimo', 'listado'),
+  ('1264', 'AttestW para Gas O.E', 'accesorios', 'producto', 'Presentación: CAJA CHM00 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1264', '3M', 'listado'),
+  ('1269', 'LNOP-DC-I SENSOR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1269', 'Masimo', 'listado'),
+  ('127', 'Incubadora para Indicadores Biológicos de Oxido de Edleno Attest', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '127', '3M', 'listado'),
+  ('1276', 'LNOP DCIP Pediatric/slender digital SpO2 Reusable Sensor', 'accesorios', 'producto', '', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1276', 'Masimo', ''),
+  ('1292', '3M ATTEST', 'insumos', 'producto', 'Presentación: CAJA/ 50 PIEZAS', 12, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-09-01', NULL, '3M ATTEST
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1292', '3M', ''),
+  ('1294', '3M ATTEST', 'insumos', 'producto', 'Presentación: CAJA/ 50 PIEZAS', 12, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-06-03', NULL, '3M ATTEST
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1294', '3M', ''),
+  ('1295', 'Rapid Attest™ para H202', 'accesorios', 'producto', 'Presentación: CAJA C/30 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1295', '3M', 'listado'),
+  ('1322', 'Comply™ para Vapor', 'accesorios', 'producto', 'Presentación: CAJA C/28 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1322', '3M', 'listado'),
+  ('1322-18MM', 'Lead Free Steam Indicador', 'insumos', 'producto', 'Presentación: CAJA/ 28 PIEZAS', 24, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-11-27', NULL, 'LEAD FREE STEAM INDICADOR
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1322-18MM', '3M', ''),
+  ('1355', 'Comply™ blue tape para vapor', 'accesorios', 'producto', 'Presentación: CAJA C/20 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1355', '3M', 'listado'),
+  ('14100', 'STERRAD Chemical Indicator Strip', 'insumos', 'producto', '', 4, 0, 'pieza', 'Insumos', 'ASP', '', '', 0.0, 'ASP', '2026-05-18', '2024-11-18', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '14100', 'ASP', ''),
+  ('14202NL', 'STERRAD SEALSURE Chemical Indicator Tape', 'insumos', 'producto', '', 2, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2027-03-02', '2025-05-02', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '14202NL', 'ASP', ''),
+  ('1492V', 'Ares" Super Rapid', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1492V', 'Masimo', 'listado'),
+  ('1527-1', 'Transpore', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'TRANSPORE
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1527-1', '3M', ''),
+  ('15270', 'Cinta plástica microperforada de 1/2" Transpore™. Medida: 1.25cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/24 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15270', '3M', 'listado'),
+  ('15272', 'Cinta plástica microperforada de 2° Transpore™. Medida: 5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/6 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15272', '3M', 'listado'),
+  ('15273', 'Cinta plásica micropertorada de 3° Transpore™. Medida: 7.5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/4 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15273', '3M', 'listado'),
+  ('15282', 'Cinta elástica adhesiva de 2° Microfoam™. Medida: 5cm x 5 m', 'accesorios', 'producto', 'Presentación: CAJA C/6 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15282', 'Masimo', 'listado'),
+  ('15283', 'Cinta elásica adhesiva de 3° Microfam™. Medida: 7.5cm x 5m', 'accesorios', 'producto', 'Presentación: CAJA C/4 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15283', 'Masimo', 'listado'),
+  ('15284', 'Cinta elástica adhesiva de 4" Microfoam™. Medida: 10.1cm x 5m', 'accesorios', 'producto', 'Presentación: CAJA C/3 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15284', 'Masimo', 'listado'),
+  ('15300', 'Cinta microporosa de 1/2" Micropore™ color blanco. Medida: 1.25cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/24 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15300', 'Masimo', 'listado'),
+  ('15301', 'Cinta microporosa de 1° Micropore™ color blanco. Medida: 2.5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/12 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15301', 'Masimo', 'listado'),
+  ('15302', 'Cinta microporosa de 2° Micropore™ color blanco. Medida: 5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/6 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15302', 'Masimo', 'listado'),
+  ('15303', 'Cinta microporosa de 3" Micropore™ color blanco. Medida: 7.5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/4 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15303', 'Masimo', 'listado'),
+  ('15330', 'Cinta microporosa de 1/2" Micropore™ color piel. Medida: 1.25cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/24 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15330', 'Masimo', 'listado'),
+  ('15331', 'Cinta microporosa de 1° Micropore™ color piel. Medida: 2.5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/12 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15331', 'Masimo', 'listado'),
+  ('15332', 'Cinta microporosa de 2° Micropore™ color piel. Medida: 5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/6 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15332', 'Masimo', 'listado'),
+  ('15340', 'Transpore White 24 RLLS', 'accesorios', 'producto', 'Presentación: CAJA C/24 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15340', '3M', 'listado'),
+  ('153414', 'Transpore Whfe 12 RLLS', 'accesorios', 'producto', 'Presentación: CAJA C/M12 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '153414', '3M', 'listado'),
+  ('15342', 'Transpore White 6 RLLS', 'accesorios', 'producto', 'Presentación: CAJA C/6 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15342', '3M', 'listado'),
+  ('15343', 'Transpore White 4 RLLS', 'accesorios', 'producto', 'Presentación: CAJA C/4 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15343', '3M', 'listado'),
+  ('1538-1', 'Durapore', 'insumos', 'producto', 'Presentación: PZA', 2, 0, 'pieza', '', '3M', '', '', 0.0, '', '2025-01-13', NULL, 'DURAPORE
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1538-1', '3M', ''),
+  ('1538-2', 'Durapore', 'insumos', 'producto', 'Presentación: PZA', 10, 0, 'pieza', '', '3M', '', '', 0.0, '', '2028-09-19', NULL, 'DURAPORE
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1538-2', '3M', ''),
+  ('15380', 'Cinta de tela de 1/2" Durapore™. Medida: 1.25cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/24 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15380', 'Masimo', 'listado'),
+  ('15383', 'Cinta de tela de 3° Durapore™. Medida: 7.5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/4 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '15383', 'Masimo', 'listado'),
+  ('1544', 'LNOP YI', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1544', 'Masimo', 'listado'),
+  ('1570', 'Compresa reusable de gel con bolsa para trio/calor', 'accesorios', 'producto', 'Presentación: CAJA C/2 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1570', 'Masimo', 'listado'),
+  ('1581', 'Venda elástica Coban', 'insumos', 'producto', 'Presentación: 30PIEZAS', 119, 0, 'pieza', '', '3M', '', '', 0.0, '', '2030-12-01', NULL, 'VENDA ELASTICA COBAN
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1581', '3M', ''),
+  ('1582', 'COBAN', 'insumos', 'producto', 'Presentación: CAJA/ 36 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-08-15', NULL, 'COBAN
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1582', '3M', '')
 on conflict (sku) do update set
   name = excluded.name,
   category = excluded.category,
@@ -1480,50 +198,3843 @@ insert into public.inventory_items (
   manufacturer,
   subcategory
 ) values
-  ('INSUMOS-000113', 'Emma Airway Adapter', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', '2020-06-28', NULL, 'insumo
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '100660', 'Masimo', ''),
-  ('INSUMOS-000114', 'Multisite Reusable Sensor', 'insumos', 'producto', 'Presentación: CAJA/20 PIEZAS', 43, 0, 'caja', '', 'Masimo', '', '', 0.0, '', '2021-06-01', '2021-06-01', 'insumo
+  ('1583', 'Venda cohesiva de 3" Coban™ color piel. Medida: 7.5cm x 4.5m', 'accesorios', 'producto', 'Presentación: CAJA C/24 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1583', '3M', 'listado'),
+  ('1583A', '1583A COBAN ARCOIRIS C/12ROLLO 7.5CMX4.6M', 'accesorios', 'producto', 'Presentación: CAJA C/12 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1583A', '3M', 'listado'),
+  ('1583S', 'Venda cohesiva de 3° Coban™. Medida: 7.5cm x 4.5m. Presentación estéril', 'accesorios', 'producto', 'Presentación: CAJA C/24 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1583S', '3M', 'listado'),
+  ('1584', 'Venda cohesiva de 4'' Coban™ color piel. Medida: 10cm x 4.5m', 'accesorios', 'producto', 'Presentación: CAJA C/M8 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1584', '3M', 'listado'),
+  ('1597', 'envokura mukisio caja/100 pzas', 'accesorios', 'producto', 'Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1597', 'Masimo', 'listado'),
+  ('1610', 'Apósko con borde reforzado Tegaderm''* I.V. Medida: 5 x 5.7cm', 'accesorios', 'producto', 'Presentación: CAJA C/100 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1610', 'Masimo', 'listado'),
+  ('1614', 'Apósko con borde reforzado Tegaderm™. Medida: 6 x 7cm', 'accesorios', 'producto', 'Presentación: CAJA CHM00 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1614', 'Masimo', 'listado'),
+  ('1616', 'Apósko con borde reforzado Tegaderm™. Medida: 10 x 12cm', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1616', 'Masimo', 'listado'),
+  ('1622', 'Apósko transparente Tegaderm™ Fim. Medida: 4.4 x 4.4cm', 'accesorios', 'producto', 'Presentación: CAJA CHM00 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1622', 'Masimo', 'listado'),
+  ('1624', 'Apósko transparente Tegaderm™ Fim. Medida: 6 x 7cm', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1624', 'Masimo', 'listado'),
+  ('1624W', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 13, 0, 'caja', '', '3M', '', '', 0.0, '', '2025-03-18', NULL, 'TEGADERM
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1624W', '3M', ''),
+  ('1626', 'Apósko transparente Tegaderm™ Fim. Medida: 10 x 12cm', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1626', 'Masimo', 'listado'),
+  ('1627', 'Tegaderm Film', 'insumos', 'producto', 'Presentación: CAJA/ 25 PIEZAS', 3, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-04-01', NULL, 'TEGARDEM FILM
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1627', '3M', ''),
+  ('1633', 'Apósko con borde reforzado Tegaderm''* I.V. Medida: 7 x 8.5cm', 'accesorios', 'producto', 'Presentación: CAJA C/100 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1633', 'Masimo', 'listado'),
+  ('1635', 'Apósko con borde reforzado Tegaderm™ I.V. Medida: 8.5 x 10.5cm', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1635', 'Masimo', 'listado'),
+  ('1655', 'Apósko con borde reforzado Tegaderm™ I.V. Medida: 8.5 cm x 11.5cm', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1655', 'Masimo', 'listado'),
+  ('1657R', 'Apdséo transparente con almohadila de clorhexidina Tegaderm™ CHG. Medida: 8.5 x 11.5cm', 'accesorios', 'producto', 'Presentación: CAJA C/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1657R', 'Masimo', 'listado'),
+  ('1658R', 'Apósko transparente con almohadilla de clorhexidina Tegaderm™ CHG. Medida: 10 x 12cm', 'accesorios', 'producto', 'Presentación: CAJA 0/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1658R', 'Masimo', 'listado'),
+  ('1659R', 'Apdséo transparente con almohadila de clorhexidina Tegaderm™ CHG. Medida: 10 x 15.5cm', 'accesorios', 'producto', 'Presentación: CAJA C/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1659R', 'Masimo', 'listado'),
+  ('1660R', 'Apósko transparente con almohadila de clorhexidina Tegaderm™ CHG. Medida: 7 x 8.5cm', 'accesorios', 'producto', 'Presentación: CAJA 0/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1660R', 'Masimo', 'listado'),
+  ('1680', 'Tegaderm apósito de fijación', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 8, 0, 'caja', '', '3M', '', '', 0.0, '', '2025-12-06', NULL, 'TEGADERM APOSITO DE FIJACION
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1680', '3M', ''),
+  ('1682', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 48, 0, 'caja', '', '3M', '', '', 0.0, '', '2024-12-05', NULL, 'TEGADERM
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1682', '3M', ''),
+  ('1683', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 100 PIEZAS', 11, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-08-05', NULL, 'TEGADERM
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '1683', '3M', ''),
+  ('1685', 'Apósko con aseguramienzo avanzando Tegaderm™ |.V. Advanced. Medida: 8.5 x 11.5cm', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1685', 'Masimo', 'listado'),
+  ('17448', 'EMMA AIRWAY ADAPTER/PEDIATRICO CAJA 25/PZAS.', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '17448', 'Masimo', 'listado'),
+  ('17449', 'AIRWAY ADAPTER INFANT, CAJA/10PZAS.', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '17449', 'Masimo', 'listado'),
+  ('1774', 'LNCS SENSOR ADULTO CAJA CON 24/PZAS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1774', 'Masimo', 'listado'),
+  ('1775', 'SPO2 SENSOR ADULTO CAJA/24 PZAS.', 'accesorios', 'producto', 'Presentación: CAJA/25 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1775', 'Masimo', 'listado'),
+  ('1776', 'SPO2 SENSOR NEONATAL CAJA CON 24/PZAS.', 'accesorios', 'producto', 'Presentación: CAJA/M0 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1776', 'Masimo', 'listado'),
+  ('1778', 'SPO2 SENSOR RSI PIEZA', 'accesorios', 'producto', 'Presentación: CAJA/100 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1778', 'Masimo', 'listado'),
+  ('1810', 'CABLE PACIENTE SPO2', 'accesorios', 'producto', 'Presentación: CAJA/24 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1810', 'Masimo', 'listado'),
+  ('1811', 'CABLE PACIENTE SPO2', 'accesorios', 'producto', 'Presentación: CAJA/24 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1811', 'Masimo', 'listado'),
+  ('1818FS', 'Mascarila Quirúrgica con careta e', 'accesorios', 'producto', 'Presentación: WA C/50 PZS, 4 CAJAS POR. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1818FS', 'Masimo', 'listado'),
+  ('1841793-04', 'Power cord USA/J 10 A 3m GR RoHS', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1841793-04', 'Dräger', ''),
+  ('1851', 'SPO2 SENSORSAMPLE PACK', 'accesorios', 'producto', 'Presentación: CAJA/24 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1851', 'Masimo', 'listado'),
+  ('1853', 'SPO2 CABLE NRC-P12 PIEZA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1853', 'Masimo', 'listado'),
+  ('1854', 'CABLE SPO2 COM REMPLAZABLE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1854', 'Masimo', 'listado'),
+  ('1859', 'SENSOR LNCS ADTX 20 PZAS./CAJA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1859', 'Masimo', 'listado'),
+  ('1860', 'Cubrebocas', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'CUBREBOCAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1860', '3M', ''),
+  ('1863', 'LNCS DCI – Sensor reutilizable adulto de clip para dedo, 3 ft', 'accesorios', 'producto', '', 215, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2020-05-04', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1863', 'Masimo', ''),
+  ('1863-2', 'LNCS DCI – Sensor reutilizable adulto de clip para dedo, 3 ft', 'accesorios', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, false, true, false, false, 0, 0, '1863', 'Masimo', ''),
+  ('1864', 'LNCS DCIP – Sensor reutilizable pediátrico/dedo delgado, 3 ft', 'accesorios', 'producto', '', 119, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2018-12-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1864', 'Masimo', ''),
+  ('1868039', 'Sim-Card Usb Stick Rohs', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1868039', 'Dräger', ''),
+  ('1895', 'LNCS TC-I SpO2 Reusable Ear Sensor', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1895', 'Masimo', ''),
+  ('1896', 'LNCS TF-I SpO2 Adult Reusable Forehead Sensor', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '1896', 'Masimo', ''),
+  ('1900', 'SPO2 CABLE REMPLAZABLE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1900', 'Masimo', 'listado'),
+  ('1908', 'TRENDcOM tREND dOWNLOAD SOFWARE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '1908', 'Masimo', 'listado'),
+  ('2014', 'ProCal+ SpO2 extension Cable, 2m', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2014', 'Masimo', ''),
+  ('2017', 'LNC-4 – Cable paciente LNCS, 4 ft (14 pines)', 'accesorios', 'producto', '', 15, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-10-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2017', 'Masimo', ''),
+  ('2021700', 'Temperature Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2021700', 'Dräger', ''),
+  ('20227', 'STERRAD 100NX Cassette Collector Box', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'ASP', '', '', 0.0, 'ASP', '2057-10-05', '2023-03-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '20227', 'ASP', ''),
+  ('2026', 'Cable Paciente Red Lnc-10', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'ACCESORIO
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2026', 'Masimo', ''),
+  ('2055', 'CABLE ADAPTADOR ORIGINAL MASIMO ROJO LNCS 20 pines LNC-01', 'accesorios', 'producto', 'Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2055', 'Masimo', 'listado'),
+  ('2056', 'RED LNC-10 Patient Cable 10ft.', 'accesorios', 'producto', '', 31, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', NULL, '2020-12-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2056', 'Masimo', ''),
+  ('2060', 'Red PC-12 – Cable paciente LNOP 20 pines, 12 ft', 'accesorios', 'producto', '', 4, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2016-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2060', 'Masimo', ''),
+  ('2063', 'Cable de transferencia de datos Red 20 pines (Rad-57/Rad-5/Pronto a PC)', 'accesorios', 'producto', '', 25, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2019-06-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2063', 'Masimo', ''),
+  ('21075A', 'Sonda de temperatura esofágica/rectal reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Temperatura Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '21075A', 'Philips', 'intellivue'),
+  ('21076A', 'Cable De Temperatura Rectal', 'accesorios', 'producto', 'Presentación: PIEZA', 41, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '21076A', 'Philips', 'intellivue'),
+  ('21078A', 'Sonda de temperatura cutánea reutilizable 3 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Temperatura Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '21078A', 'Philips', 'intellivue'),
+  ('2112760', 'Manguera Oxytog 1000, 3.0m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2112760', 'Dräger', 'listado'),
+  ('2165600', 'silicone, P, 1.1m, connecior 10 mmv/10 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2165600', 'Dräger', 'listado'),
+  ('2165775-10', 'Breathing Bag 1.5 L With Hole', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2165775-10', 'Dräger', ''),
+  ('2166054', 'Atembeutel 0.5l Iso-Silicone', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:946.335-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166054', 'Dräger', ''),
+  ('2166062', 'Bolsa de respiración 2.3 L, silicona', 'accesorios', 'producto', 'Presentación: PIEZA', 40, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1091.925-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166062', 'Dräger', ''),
+  ('2166070', 'Breathing Bag 3.0 L, Silicone', 'accesorios', 'producto', 'Presentación: PIEZA', 19, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1188.985-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166070', 'Dräger', ''),
+  ('2166127', 'Bolsa de respiración 1.5 L, silicona', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:946.335-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2166127', 'Dräger', ''),
+  ('2170221', 'Banda adhesiva para Nellcor® Oxiband™ P/I, 100 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2170221', 'Dräger', 'consumible'),
+  ('2217-01', 'Probe 3, skin temp, reusable', 'accesorios', 'producto', '', 3, 0, 'pieza', 'A/2', 'Dräger', '', '2217-01', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2217-01', 'Drager', ''),
+  ('2228', 'Red Dot Monitoring Electrode with foam Tape pieza', 'insumos', 'producto', '', 37, 0, 'pieza', '', '3M', '', '', 0.0, '3M', '2027-03-07', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2228', '3M', ''),
+  ('2228-2', 'Red Dot Monitoring electrode with foam Tape 50pz/bolsa', 'insumos', 'producto', '', 0, 0, 'paquete', '', '3M', '', '', 0.0, '3M', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2228', '', ''),
+  ('2228-3', 'Red Dot Monitoring electrode with foam Tape 20bolsa/Caja', 'insumos', 'producto', '', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2228', '', ''),
+  ('2239', 'Electrodo de broche con gel sólido y soporte de Micropore', 'accesorios', 'producto', 'Presentación: BOLSA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2239', 'Masimo', 'listado'),
+  ('2248', 'Electrodo Pediátrico de Cinta Micropore', 'accesorios', 'producto', 'Presentación: BOLSA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2248', 'Masimo', 'listado'),
+  ('2258', 'Multisite Reusable Sensor', 'insumos', 'producto', 'Presentación: CAJA/20 PIEZAS', 43, 0, 'caja', '', 'Masimo', '', '', 0.0, '', '2021-06-01', '2021-06-01', 'insumo
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2258', 'Masimo', ''),
-  ('INSUMOS-000115', 'Pulse Oximeter Adhesive Sensor', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', '2026-07-01', NULL, 'INSUMO
+  ('2268-3', 'Electrodo de Monitoreo Pediátrico', 'accesorios', 'producto', 'Presentación: CARTÓN. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2268-3', 'Masimo', 'listado'),
+  ('2281', 'LNC MP-10 – Cable paciente LNCS para Philips IntelliVue (IVM/MMS), 10 ft', 'accesorios', 'producto', '', 37, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-11-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2281', 'Masimo', 'intellivue'),
+  ('2297', 'OXIMETRIA METHEMOGLOBIN (SPMET)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2297', 'Masimo', 'listado'),
+  ('2328', 'LNCS SENSOR INFANTIL CAJA CON 20 PZAS.', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2328', 'Masimo', 'listado'),
+  ('2329', 'LNCS SENSOR NEO ADH CAJA CON 20 PZAS.', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2329', 'Masimo', 'listado'),
+  ('2335', 'Spacelabs Replacement Cable', 'accesorios', 'producto', '', 7, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2016-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2335', 'Masimo', '')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('2350', 'Accessory handheld lock for use with Radical 7 Color Screen signal extraction pulse oximeter', 'accesorios', 'producto', '', 37, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2350', 'Masimo', ''),
+  ('2350-2', 'Accessory handheld lock for use with Radical 7 Color Screen signal extraction pulse oximeter', 'refacciones', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, false, true, false, false, 0, 0, '2350', 'Masimo', ''),
+  ('2351', 'Accessory handheld lock key for use with Radical 7 Color Screen signal extraction pulse oximeter', 'accesorios', 'producto', '', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2351', 'Masimo', ''),
+  ('2360', 'Electrodo para Elecrocardiograma', 'accesorios', 'producto', 'Presentación: CAJA C/4000 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2360', 'Masimo', 'listado'),
+  ('2389', 'Demonstration Tool, 30 min', 'accesorios', 'producto', '', 9, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2389', 'Masimo', ''),
+  ('2404', 'Rainbow RC-12 Rainbow Patient Cable 12ft.', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2404', 'Masimo', ''),
+  ('2405', 'Rainbow RC-1 – Cable paciente 20 pines, 1 ft', 'accesorios', 'producto', '', 60, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2017-05-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2405', 'Masimo', ''),
+  ('2406', 'Rainbow RC-4 – Cable paciente 20 pines, 4 ft', 'accesorios', 'producto', '', 25, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2017-10-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2406', 'Masimo', ''),
+  ('2414', 'A ADULTOS / NEONATALES. (SPHB, SPO2, SPMET). USO EN UN SOLO PACIENTE 10 / CAJA, NO E!', 'accesorios', 'producto', 'Presentación: CAJA/20 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2414', 'Masimo', 'listado'),
+  ('2415', 'CART, ROOT, MASIMO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2415', 'Masimo', 'listado'),
+  ('24205', 'CART, ROOT, MASIMO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '24205', 'Masimo', 'listado'),
+  ('24206', 'CART, ROOT, MASIMO', 'accesorios', 'producto', 'Presentación: BASE RECARGABLE. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '24206', 'Masimo', 'listado'),
+  ('2479', 'SEDLINE EEG ELECTRODE SET CJA/25 PZAS', 'accesorios', 'producto', 'Presentación: CAJA/M0 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2479', 'Masimo', 'listado'),
+  ('2508', 'LNCS SENSOR ADUL CAJA CON 20 PZAS.', 'accesorios', 'producto', 'Presentación: BASE. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2508', 'Masimo', 'listado'),
+  ('2510', 'LNCS™ PDTX PEDIATRIC SPO2 ADHESIVE SENSOR, 18 IN. SINGLE PATIENT USE 20/BOX,', 'accesorios', 'producto', 'Presentación: BASE. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2510', 'Masimo', 'listado'),
+  ('2512', 'LNCS SENSOR INF. ADH CAJA CON 20 PZAS.', 'accesorios', 'producto', 'Presentación: CAJA/25 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2512', 'Masimo', 'listado'),
+  ('2514', 'LNCS SENSOR NEO ADH CAJA 20/', 'accesorios', 'producto', 'Presentación: CAJA/20 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2514', 'Masimo', 'listado'),
+  ('2570', 'Electrodo con respaldo de espuma y broche radiolúcido', 'accesorios', 'producto', 'Presentación: BOLSA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2570', 'Masimo', 'listado'),
+  ('2601146', 'Mounting plate roll stand', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601146', 'Dräger', ''),
+  ('2601148', 'Mounting arm with basket', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de cámaras', 'Dräger', '', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '2601148', 'Drager', ''),
+  ('2601189', 'Cardiac Output Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601189', 'Dräger', ''),
+  ('2601190', 'Sonda de temperatura de inyección en línea* de CO Becton Dickinson', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601190', 'Dräger', 'consumible'),
+  ('2601191', 'Carcasa de la sonda de temperatura de inyección en línea de CO', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601191', 'Dräger', 'consumible'),
+  ('2601192', 'Jeringa de control de CO*', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601192', 'Dräger', 'consumible'),
+  ('2601195', 'Tubo Nibp 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 13, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1847.6738-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601195', 'Dräger', ''),
+  ('2601197', 'Sonda de temperatura cutánea (skin temp probe)', 'accesorios', 'producto', 'Presentación: PIEZA', 34, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2570.0154-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601197', 'Dräger', ''),
+  ('2601198', 'Temperature Probe Rectal/Oral', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2570.0154-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601198', 'Dräger', ''),
+  ('2601199', 'Sonda de temperatura rectal/oral, neonatal/infantil, 3 m, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601199', 'Dräger', 'consumible'),
+  ('2601200', 'Temp. Probe Neonatal, Skin 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2919.7809-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2601200', 'Dräger', ''),
+  ('2601201', 'Cable de gasto cardíaco*, 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2601201', 'Dräger', 'consumible'),
+  ('2601221', 'IBP transducer adapter cable, Baxter/Edwards, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2601221', 'Dräger', ''),
+  ('2601223', 'Ibp Transducer Adapter Cable, Argon/Bd/Ohmeda, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2601223', 'Dräger', ''),
+  ('2603245', 'Cable Para V300- V500- V500', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2603245', 'Dräger', ''),
+  ('2605124', 'Trampa de agua para flujo secundario de CO2, para Vista 120, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2605124', 'Dräger', 'consumible'),
+  ('2606151', 'Nibp Cuff Infant', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:897.2243-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606151', 'Dräger', ''),
+  ('2606152', 'Manguito PANI, pediátrico (talla pequeña), 13 cm – 17 cm, reutilizable, Vista120', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606152', 'Dräger', 'consumible'),
+  ('2606153', 'NIBP cuff, child', 'accesorios', 'producto', 'Presentación: PIEZA', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:965.6567-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606153', 'Dräger', ''),
+  ('2606154', 'Manguito PANI, adulto (talla pequeña), 20,5 cm – 28 cm, reutilizable, Vista120', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606154', 'Dräger', 'consumible'),
+  ('2606155', 'Manguito Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1034.0891-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606155', 'Dräger', ''),
+  ('2606156', 'Nibp Cuff Larger Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1102.5214-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606156', 'Dräger', ''),
+  ('2606208', 'Sensor SpO2, adulto, 0,5 m, desechable, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606208', 'Dräger', 'consumible'),
+  ('2606209', 'Sensor SpO2, ped., 0,5 m, desechable, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606209', 'Dräger', 'consumible'),
+  ('2606210', 'Sensor SpO2, infant., 0,5 m, desechable, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606210', 'Dräger', 'consumible'),
+  ('2606211', 'Sensor SpO2, neonat., 0,5 m, desechable, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606211', 'Dräger', 'consumible'),
+  ('2606213', 'Sp02 Sensor Neonate 0.5m 25pcs', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606213', 'Dräger', 'listado'),
+  ('2606225', 'Kit transductor de presión PAI, BD/Argon, desechable, 5 kits', 'accesorios', 'producto', 'Presentación: Caja c/5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606225', 'Dräger', 'consumible'),
+  ('2606226', 'Cable IBP Utah', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606226', 'Dräger', 'listado'),
+  ('2606227', 'Adaptador para vías respiratorias CO2, adulto, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606227', 'Dräger', 'consumible'),
+  ('2606228', 'Adaptador para vías respiratorias CO2, neonat. (infantil/pediátrico), desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606228', 'Dräger', 'consumible'),
+  ('2606229', 'Rechargeable Li.ion Battery', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606229', 'Dräger', ''),
+  ('2606231', 'Printing Paper 4 Pcs', 'insumos', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2024-05-08', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:315.6644-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '2606231', 'Dräger', ''),
+  ('2606235', 'Power Cord North America', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606235', 'Dräger', ''),
+  ('2606434', 'Spo2 De Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606434', 'Dräger', ''),
+  ('2606483', 'Sensor De Dedo Spo2', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3114.0182-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606483', 'Dräger', ''),
+  ('2606484', 'Sensor Spo2 De Dedo Adulto 1m Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 42, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2517.2511-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606484', 'Dräger', ''),
+  ('2606485', 'Spo2 Silicone Soft-Tip Sensor, 1m, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4504.5546-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606485', 'Dräger', ''),
+  ('2606486', 'Spo2 Silicone Soft-Tip Sensor, Pediatric, 1m, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3020.7013-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606486', 'Dräger', ''),
+  ('2606487', 'SpO2 extension cable, 2m, reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1510.3507-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606487', 'Dräger', ''),
+  ('2606488', 'Ibp Cable Becton Dickinson', 'accesorios', 'producto', 'Presentación: PIEZA', 34, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1722.3297-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606488', 'Dräger', ''),
+  ('2606489', 'Ibp Cable Edwards', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1126.7147-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606489', 'Dräger', ''),
+  ('2606490', 'Cable PAI Abbott, Medex', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606490', 'Dräger', 'consumible'),
+  ('2606491', 'Cable PAI Utah', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606491', 'Dräger', 'consumible'),
+  ('2606492', 'Ecg Trunk Cable, 3-Lead, For Neonates, Iec & Aha', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1033.3978-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606492', 'Dräger', ''),
+  ('2606493', 'Cables ECG para extremidades, 3 derivaciones, pinza, código de colores IEC / NÚMERO DE PARTE COMO ALTERNATIVA 2612000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606493', 'Dräger', 'consumible'),
+  ('2606494', 'Ecg Limb Wires, 5 Lead, Grabber, Aha', 'accesorios', 'producto', 'Presentación: PIEZA', 26, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1033.3978-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606494', 'Dräger', ''),
+  ('2606495', 'Cable troncal ECG, 3 derivaciones, código de colores IEC/AHA / NÚMERO DE PARTE COMO ALTERNATIVA 2612020', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606495', 'Dräger', 'consumible'),
+  ('2606496', 'Cable troncal ECG, 5 derivaciones, código de colores IEC/AHA  / NÚMERO DE PARTE COMO ALTERNATIVA 2612020', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606496', 'Dräger', 'consumible'),
+  ('2606497', 'Cables ECG para extremidades, 3 derivaciones, pinza, código de colores AHA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2606497', 'Dräger', 'consumible'),
+  ('2606498', 'Cables Ecg Extremidades 5 Derivaciones Grabber Aha', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1627.1695-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2606498', 'Dräger', ''),
+  ('2607006', 'Temperature Probe Skin, Neonatal/Infant, 3m, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2607006', 'Dräger', ''),
+  ('2607032', 'Cable Adaptador Etco2 Vista 120', 'equipos', 'equipo', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4279.08-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '2607032', 'Dräger', ''),
+  ('2607034', 'Manguito PANI, neonatal n.º 1, 3 – 6 cm, desechable, 20 uds., Vista120', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607034', 'Dräger', 'consumible'),
+  ('2607035', 'Nibp Cuff Neo', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PZS', 6, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:8242.2981-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607035', 'Dräger', ''),
+  ('2607036', 'Manguito PANI, neonatal n.º 3, 6 – 11 cm, desechable, 20 uds., Vista120', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607036', 'Dräger', 'consumible'),
+  ('2607037', 'Brazalete pediátrico', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PZS', 2, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:8242.2981-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607037', 'Dräger', ''),
+  ('2607038', 'Manguito PANI, neonatal n.º 5, 8 – 15 cm, desechable, 20 uds., Vista120', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607038', 'Dräger', 'consumible'),
+  ('2607558', 'Cable IBP** 7 pines', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607558', 'Dräger', 'consumible'),
+  ('2607559', 'Cable IBP** 10 pines', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607559', 'Dräger', 'consumible'),
+  ('2607560', 'Cable adaptador BISx Vista 120', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2607560', 'Dräger', 'consumible'),
+  ('2612000', 'Cable ECG, un pin, 3 derivaciones, IEC, 1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612000', 'Dräger', 'consumible')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('2612001', 'ECG 3-lead single pin AHA 1 m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1490.3048-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612001', 'Dräger', ''),
+  ('2612002', 'Cable ECG, un pin, 5 derivaciones, IEC, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612002', 'Dräger', 'consumible'),
+  ('2612003', 'Ecg 5-Leads Pin Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1581.548-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612003', 'Dräger', ''),
+  ('2612020', 'Cable Troncal Ecg 3/5 Derivaciones 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2030.1601-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612020', 'Dräger', ''),
+  ('2612021', 'Ecg Defib Trunk 3/5 Leads Single Pin 2.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2744.8982-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612021', 'Dräger', ''),
+  ('2612024', 'Ecg Esu Trunk 3/5 Leads Single Pin 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2676.4658-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612024', 'Dräger', ''),
+  ('2612025', 'Cable de conexión ESU para ECG, un pin, 3/5 derivaciones, IEC/AHA, 2,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612025', 'Dräger', 'consumible'),
+  ('2612026', 'Cable de conexión desfibrilador para ECG, neonatos, un pin, IEC/AHA, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612026', 'Dräger', 'consumible'),
+  ('2612027', 'Ecg Neo Defib Trunk 3-Leads 2.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2258.268-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2612027', 'Dräger', ''),
+  ('2612028', 'Cable de conexión ESU para ECG, neonatos, un pin, IEC/AHA, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612028', 'Dräger', 'consumible'),
+  ('2612029', 'Cable de conexión ESU para ECG, neonatos, un pin, IEC/AHA, 2,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2612029', 'Dräger', 'consumible'),
+  ('2861', 'Cinta de tela suave no teka de 1° Medipore™ H. Medida: 2.5cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/M12 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2861', 'Masimo', 'listado'),
+  ('2864', 'Cinta de tela suave no tejida de 4" Medipore™ H. Medida: 10.1cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/12 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2864', 'Masimo', 'listado'),
+  ('2866', 'Cinta de tela suave no tejida de 6" Medipore™ H. Medida: 15.2cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/M12 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2866', 'Masimo', 'listado'),
+  ('2868', 'Cinta de tela suave no tejida de 8° Medipore™ H. Medida: 20.3cm x 9.14m', 'accesorios', 'producto', 'Presentación: CAJA C/6 RLLS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2868', 'Masimo', 'listado'),
+  ('2870173', 'Brazalete Nibp Neonatal #3 5.8-15cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 75, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1941.2-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870173', 'Dräger', ''),
+  ('2870181', 'Manguito Nibp Neonatal', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 20, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1941.2-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870181', 'Dräger', ''),
+  ('2870199', 'Brazalete Nibp Neonatal #2 4.3-8cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 19, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1941.2-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870199', 'Dräger', ''),
+  ('2870207', 'Nibp Neo #3 Cuff 5.8-10.9cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 49, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1941.2-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870207', 'Dräger', ''),
+  ('2870215', 'Brazalete Nibp Neonatal #4 7.1-13.1cm', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 21, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1941.2-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870215', 'Dräger', ''),
+  ('2870298', 'Nibp Hose Neonatal Cuff,2.4m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1698.55-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '2870298', 'Dräger', ''),
+  ('2M12754-00', 'SOPORTE', 'accesorios', 'producto', 'Presentación: BOLSA/10 PZA', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M12754-00', 'Dräger', ''),
+  ('2M13259', 'Thermometer for simple temperature monkoring in the breathing circuit', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M13259', 'Dräger', 'listado'),
+  ('2M20434', 'Pasatubos para incubadora 8000, reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M20434', 'Dräger', ''),
+  ('2M20827', 'Gel Masress Babytherm 8000/8010', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M20827', 'Dräger', 'listado'),
+  ('2M20914', 'Mukiple socket for Baby Therm® 8000, 220/240 V', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M20914', 'Dräger', 'listado'),
+  ('2M21009', 'Lampara fuorescente blanca', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21009', 'Dräger', 'listado'),
+  ('2M21010', 'Fluorescent lamp, blue (Leuchtstofflampe, blau)', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21010', 'Dräger', ''),
+  ('2M21012', 'Colchón Babytherm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21012', 'Dräger', 'listado'),
+  ('2M21186', 'Svivel table, reusable, for poles wih @ 38 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21186', 'Dräger', 'listado'),
+  ('2M21390', 'Corner With Surface Finish Ecke M.of', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21390', 'Dräger', ''),
+  ('2M21514', 'Portasueros, reutilizable, 3 ganchos, para tubos con Ø 38 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M21514', 'Dräger', 'consumible'),
+  ('2M30078', 'Light for BabyTherm® 8004 and 8010, 230 V, 7 W', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M30078', 'Dräger', 'listado'),
+  ('2M30079', 'Light for BabyTherm® 8004 and 8010, 230 V, 20 W', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M30079', 'Dräger', 'listado'),
+  ('2M30084', 'Halogen lamp Babytherm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M30084', 'Dräger', 'listado'),
+  ('2M30160', 'Lampara de trabajo Babytherm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M30160', 'Dräger', 'listado'),
+  ('2M30161', 'Lampara nocurna Babytherm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M30161', 'Dräger', 'listado'),
+  ('2M30263', 'Bed wih a& mechanism for BabyTherm® 8004 and 8010', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M30263', 'Dräger', 'listado'),
+  ('2M30462', 'Towel doll Cally, reusable, light blue or pink', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M30462', 'Dräger', 'listado'),
+  ('2M50040', 'Water tank and water transfer hose, for Caleo®, reusable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M50040', 'Dräger', 'listado'),
+  ('2M50385', 'Hose grommet large', 'accesorios', 'producto', 'Presentación: PIEZA', 24, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1003.6966-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M50385', 'Dräger', ''),
+  ('2M50412', 'Pasatubos para Caleo®, reutilizable, tapa', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M50412', 'Dräger', 'consumible'),
+  ('2M60390', 'Colchón SoftBed, para Babyleo TN500, reutilizable, forro: 100 % poliuretano, tejido: 100 % poliéster', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M60390', 'Dräger', 'consumible'),
+  ('2M85011', 'Tapón para recipiente de secreción 700 ml, con protección antirebose', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M85011', 'Dräger', 'consumible'),
+  ('2M85180', 'Soporte para botella', 'accesorios', 'producto', 'Presentación: Caja c 1 Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M85180', 'Dräger', 'consumible'),
+  ('2M85594', 'Recipiente de secreción, PSU (polisulfona), reutilizable, 700 ml, autoclavable hasta 134 °C', 'accesorios', 'producto', 'Presentación: Caja c 1 Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M85594', 'Dräger', 'consumible'),
+  ('2M85834', 'Humidificador de burbujas, para humidificación de O2 hasta aprox. 60% humedad relativa y fluye, hasta 5 l/min', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M85834', 'Dräger', 'consumible'),
+  ('2M85835', 'Valvula espiracion para Evka V300 y V500', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M85835', 'Dräger', 'listado'),
+  ('2M85853', 'Boquila de empalme 02 6mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M85853', 'Dräger', 'listado'),
+  ('2M86248', 'Flujometro 02 para riel, NIST', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M86248', 'Dräger', 'listado'),
+  ('2M86800', 'Valvula respiratoria Oxylog 1000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M86800', 'Dräger', 'listado'),
+  ('2M86832', 'Válvula PEEP para Oxylog® 1000, desechable, ajustable de 5 – 20 mbares', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M86832', 'Dräger', 'consumible'),
+  ('2M86837', 'Sistema paciente VentStar® Oxylog 1000, desechable, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M86837', 'Dräger', 'consumible'),
+  ('2M86841', 'VentStar Oxylog 2000', 'accesorios', 'producto', 'Presentación: Paquete c/5 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '2M86841', 'Dräger', 'listado'),
+  ('3.12.03.001', 'Latiguillos de 5 SG electrocardiograma genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3.12.03.001', 'Dräger', ''),
+  ('30583', 'OXIMETRO BRACKET, RADICAL SLIDE PLATE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '30583', 'Masimo', 'listado'),
+  ('31000', 'Pediatric Full Body BIkt', 'accesorios', 'producto', 'Presentación: CAJA C/10 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '31000', 'Masimo', 'listado'),
+  ('31118733', 'Conductive Adhesive Hydrogel', 'accesorios', 'producto', 'Presentación: PAQUETE/ 100 PZS', 2, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '31118733', 'Dräger', ''),
+  ('31500', 'Muli Access Blanket', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '31500', 'Masimo', 'listado'),
+  ('3343', 'Pelicula protectora no irrkante en hisopo de 1mi', 'accesorios', 'producto', 'Presentación: CAJA 0/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3343', 'Masimo', 'listado'),
+  ('3343E', 'Película protectora sin ardor 3M', 'insumos', 'producto', 'Presentación: CAJA DE 4 PIEZAS', 3, 0, 'caja', '', '3M', '', '', 0.0, '', '2025-02-15', NULL, 'PELICULA PROTECTORA SIN ARDOR 3M
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3343E', '3M', ''),
+  ('3344', 'Pelicula protectora no irrtante en toala de 1mi', 'accesorios', 'producto', 'Presentación: CAJA C/30 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3344', 'Masimo', 'listado'),
+  ('3346', 'Pelicula protecora no irrtante en frasco de 28m', 'accesorios', 'producto', 'Presentación: CAJA 0112 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3346', 'Masimo', 'listado'),
+  ('3368383', 'Adaptdor PAI, de 10 pines a 7 pines', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3368383', 'Dräger', 'consumible'),
+  ('3368391', 'Cable multiparámetro MultiMed® 5 Pod, para ECG, resp., SpO2 y temp., 2,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3368391', 'Dräger', 'consumible'),
+  ('3368425', 'Pod Communication Cable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 19, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1958.2387-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3368425', 'Dräger', ''),
+  ('3368433', 'Spo2 Nellcor Interm Cable, 1m', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1892.67-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3368433', 'Dräger', ''),
+  ('3368458', 'Cable de conexión para CO, 1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3368458', 'Dräger', 'consumible'),
+  ('3375834', 'Spo2 Nellcor Interm Cable, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2145.026-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3375834', 'Dräger', ''),
+  ('3375933', 'Ibp Interm Cable Argon, 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 55, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3961.9343-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3375933', 'Dräger', ''),
+  ('3375941', 'Adaptador de pod, para transductor de presión Argon (antes Becton Dickinson/Ohmeda)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3375941', 'Dräger', 'consumible'),
+  ('3375958', 'Adaptador de pod, 10 pines, para transductor de presión', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3375958', 'Dräger', 'consumible'),
+  ('3391G', 'Crema barrera duradera en tubo de 28gr', 'accesorios', 'producto', 'Presentación: BOLSA C/3 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3391G', 'Masimo', 'listado'),
+  ('33926', 'Crema barrera duradera en tubo de 92gr', 'accesorios', 'producto', 'Presentación: CAJA Ci1 PZA. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '33926', 'Masimo', 'listado'),
+  ('3392GS', 'Crema barrera duradera en sachete de 2gr', 'accesorios', 'producto', 'Presentación: CAJA CM PZA. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3392GS', 'Masimo', 'listado'),
+  ('3457', 'T R2-25A DISPOSABLE OPTICAL SENSORS AND R2-25R REUSABLE OPTICAL SENSORS. (SPO2, £', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3457', 'Masimo', 'listado'),
+  ('3458', 'RNBW SENSOR PEDIATRICO PIEZA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3458', 'Masimo', 'listado'),
+  ('3582', 'Tegaderm+pad', 'insumos', 'producto', 'Presentación: CAJA/ 68 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-12-19', NULL, 'TEGADERM+PAD
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3582', '3M', ''),
+  ('3584', 'Tegaderm', 'insumos', 'producto', 'Presentación: CAJA/ 50 PIEZAS', 6, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-01-02', NULL, 'TEGADERM
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3584', '3M', ''),
+  ('3586', 'Apósito transparente estéril con cojín absorbente', 'insumos', 'producto', 'Presentación: CAJA DE 4 PIEZAS', 1, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-11-25', NULL, 'APOSITO TRANSPARENTE ESTERIL CON COJIN ABSORBENTE
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3586', '3M', '')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('3589', 'Apósko transparente con almohadila Tegaderm™+PAD. Medida: 9 x 15cm', 'accesorios', 'producto', 'Presentación: CAJA 0/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3589', 'Masimo', 'listado'),
+  ('3590', 'Tegaderm+pad', 'insumos', 'producto', 'Presentación: CAJA/ 25 PIEZAS', 2, 0, 'caja', '', '3M', '', '', 0.0, '', '2027-01-15', NULL, 'TEGADERM+PAD
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3590', '3M', ''),
+  ('3591', 'Apósko transparente con almohadila Tegaderm™+PAD. Medida: 9 x 25cm', 'accesorios', 'producto', 'Presentación: CAJA 0/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3591', 'Masimo', 'listado'),
+  ('3593', 'Apósko transparente con almohadila Tegaderm™+PAD. Medida: 9 x 35cm', 'accesorios', 'producto', 'Presentación: CAJA C/25 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3593', 'Masimo', 'listado'),
+  ('36.13.001.004', 'Dedal SpO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '36.13.001.004', 'Dräger', ''),
+  ('36000', '36000 SPOTON SENSOR NON STERILE 25/CASE', 'accesorios', 'producto', 'Presentación: CAJA C/25 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '36000', '3M', 'listado'),
+  ('3639', 'EMMA Kit Capnograph mmHg', 'equipos', 'equipo', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '3639', 'Masimo', ''),
+  ('3645', 'Eve – Modo de tamizaje neonatal CCHD (licencia, Radical-7)', 'refacciones', 'producto', '', 12, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3645', 'Masimo', ''),
+  ('3647', 'rainbow DCI SC-1000 – Sensor adulto SpO2/SpHb/SpMet, 1000 mediciones', 'accesorios', 'producto', '', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3647', 'Masimo', ''),
+  ('3648', 'RBW SENSOR PEDIATRICO PIEZA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3648', 'Masimo', 'listado'),
+  ('37000', '37000 SPOTON TEMP. MONITOR SYSTEM', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '37000', 'Masimo', 'listado'),
+  ('3755', 'LNC MP4 CABLE PIEZA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3755', 'Masimo', 'listado'),
+  ('3756', 'O3 – Sensor adhesivo adulto rSO2 (oximetría regional), uso en un paciente 20/caja', 'insumos', 'producto', '', 27, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-07-01', '2028-09-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3756', 'Masimo', ''),
+  ('3756-2', 'O3 – Sensor adhesivo adulto rSO2 (oximetría regional), uso en un paciente PIEZAS', 'insumos', 'producto', '', 10, 0, 'pieza', 'Insumos', 'Masimo', '', '', 0.0, 'Masimo', '2027-07-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '3756', 'Masimo', ''),
+  ('3792', 'RAINBOW R1 25 ADULT ADHESIVE SENSORS', 'accesorios', 'producto', 'Presentación: CAJA/25 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3792', 'Masimo', 'listado'),
+  ('3793', '‘AINBOW R1 20. PEDIATRIC / SLENDER DIGIT ADHESIVE SENSORS. (SpHb SpHb, SpO2, and SpMei', 'accesorios', 'producto', 'Presentación: CAJA/M0 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3793', 'Masimo', 'listado'),
+  ('3798', 'Dci Mini Sc 400', 'accesorios', 'producto', 'Presentación: PIEZA', 101, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'ACCESORIO
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3798', 'Masimo', ''),
+  ('3799', 'AINBOW OCI-MINI SC 1000 INFANT REUSABLE SENSOR. (SpHb, SpO2 and SpMet).', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3799', 'Masimo', 'listado'),
+  ('390', 'Aurolecior Rapid Azesi"W', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '390', 'Masimo', 'listado'),
+  ('3906', 'Aurolecior Rapid Azesi"W', 'accesorios', 'producto', 'Presentación: CAJA C/20 SACHETTES. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3906', 'Masimo', 'listado'),
+  ('390G', 'Auto-Reader', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'AUTO-READER
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '390G', '3M', ''),
+  ('3E-PC-AHA-CLIP', 'CABLE DE PACIENTE 10 PUNTAS TIPO CLIP PARA ECG EN STRESS (SE-PRO-600)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '3E-PC-AHA-CLIP', 'Welch Allyn', 'listado'),
+  ('4-100', 'Steri-Gas', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 52, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-08-15', NULL, 'ESTERIGAS (CINTA INDICADORA GAS)
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4-100', '3M', ''),
+  ('4002', 'Pulse Oximeter Adhesive Sensor', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', '2026-07-01', NULL, 'INSUMO
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4002', 'Masimo', ''),
-  ('INSUMOS-000116', 'Root Battery Replacement Kit', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, '2024-01-01', 'INSUMO
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4545', 'Masimo', ''),
-  ('INSUMOS-000117', 'Papel térmico químico', 'insumos', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '40457C', 'Philips', ''),
-  ('INSUMOS-000118', '3 Lead Ecg Trunk, Aami/Iec 2.7m', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2022-07-11', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1669A', 'Philips', ''),
-  ('INSUMOS-000119', '3 Leadset, Snap, Aami, Icu', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2021-07-07', NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1673A', 'Philips', ''),
-  ('INSUMOS-000120', 'Papel De Registro Ecg Para Philips', 'insumos', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2481A', 'Philips', ''),
-  ('INSUMOS-000121', 'Papel De Registro Ecg Para Philips', 'insumos', 'producto', 'Presentación: PIEZA', 29, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M3708A', 'Philips', ''),
-  ('INSUMOS-000122', 'Electrodos Stress Kit', 'insumos', 'producto', 'Presentación: CAJA/10', 51, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', '2017-10-01', NULL, '
+  ('4003', 'RD SET Neo, SpO2, PR, Pi, PVi /Adulto 20/caja', 'insumos', 'producto', '', 23, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2022-05-01', '2022-05-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4003', 'Masimo', ''),
+  ('4026', 'RD rainbow SET-2 Adt – Sensor adhesivo adulto SpO2/SpHb/SpMet, 10/caja', 'insumos', 'producto', '', 5, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4026', 'Masimo', ''),
+  ('4026-2', 'RD rainbow SET-2 Adt – Sensor adhesivo adulto SpO2/SpHb/SpMet, PIEZAS', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'Masimo', ' ', '', 0.0, 'Masimo', '2027-01-09', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4026', 'Masimo', ''),
+  ('4029', 'RD rainbow SET-2 Neo – Sensor adhesivo neonatal/adulto SpO2/SpHb/SpMet, 10/caja', 'insumos', 'producto', '', 327, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2028-10-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4029', 'Masimo', ''),
+  ('40457C', 'Papel térmico químico', 'insumos', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '40457C', 'Philips', 'intellivue'),
+  ('4051', 'RD SET DCI-P – Sensor reutilizable pediátrico de clip', 'accesorios', 'producto', '', 10, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2023-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4051', 'Masimo', ''),
+  ('4054', 'RD SET YI – Sensor reutilizable multisitio', 'insumos', 'producto', '', 5, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2021-07-01', '2018-12-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4054', 'Masimo', ''),
+  ('4073', 'RD RAINBOW SET MD20-12 RD Rainbow SET Series Patient Cable', 'accesorios', 'producto', '', 12, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', NULL, '2023-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4073', '', ''),
+  ('4078', 'RD rainbow SET R25-12 – Cable paciente 25 pines, 12 ft', 'accesorios', 'producto', '', 7, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4078', 'Masimo', ''),
+  ('4083', 'RD SET MP-12 – Cable paciente para Philips IntelliVue, 12 ft', 'accesorios', 'producto', '', 48, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4083', 'Masimo', 'intellivue'),
+  ('4119066', 'Adaptador DISS M/QC-AIRE-Chemetron', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119066', 'Dräger', 'consumible'),
+  ('4119068', 'Adaptador DISS M/QC-O2-Chemetron', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119068', 'Dräger', 'consumible'),
+  ('4119070', 'Adaptador DISS M/QC-N2O-Ohmeda', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119070', 'Dräger', 'consumible'),
+  ('4119071', 'Adaptador DISS M/QC-AIRE-Ohmeda', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119071', 'Dräger', 'consumible'),
+  ('4119073', 'Adaptador DISS M/QC-O2-Ohmeda', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119073', 'Dräger', 'consumible'),
+  ('4119076', 'Adaptador DISS M/QC-AIRE-Pur Ben', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119076', 'Dräger', 'consumible'),
+  ('4119078', 'Adaptador DISS M/QC-O2-Pur Ben', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119078', 'Dräger', 'consumible'),
+  ('4119081', 'Adaptador DISS M/QC-AIRE-Schrader', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119081', 'Dräger', 'consumible'),
+  ('4119083', 'Adaptador DISS M/QC-O2-Schrader', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4119083', 'Dräger', 'consumible'),
+  ('412924', 'ESTUCHE', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '412924', 'Welch Allyn', ''),
+  ('41382F', 'Paquete de prueba Rapid Attest™', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '41382F', '3M', 'listado'),
+  ('41482V', 'Paquete de Reto Super Rapid Attest™ + 24 controles', 'accesorios', 'producto', 'Presentación: CARTON C/64 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '41482V', '3M', 'listado'),
+  ('41482VF', 'Paquete de Reto Super Rapid Attest™ + 5 controles', 'accesorios', 'producto', 'Presentación: CAJA C/24 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '41482VF', '3M', 'listado'),
+  ('414873-001', 'Manguera Nibps Ge Medical Systems', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '414873-001', 'Dräger', ''),
+  ('416467', 'Multi-Link Ecg Ldwr Sed', 'accesorios', 'producto', 'Presentación: PIEZA', 35, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '416467', 'Dräger', ''),
+  ('4185141', 'Tubo CS de O2 DISS N/DISS N 15 l', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4185141', 'Dräger', 'consumible'),
+  ('4185143', 'Tubo CS de N2O DISS N/DISS N 15 l', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4185143', 'Dräger', 'consumible'),
+  ('4199591', 'Tubo CS de O2 DISS Manual 15 l', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4199591', 'Dräger', 'consumible'),
+  ('4199593', 'Tubo CS de AIRE DISS Manual 15 l', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4199593', 'Dräger', 'consumible'),
+  ('4199595', 'Tubo CS de N2O DISS Manual 15 l', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4199595', 'Dräger', 'consumible'),
+  ('4199604', 'Tubo CS de AIRE DISS N/DISS N 15 l', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4199604', 'Dräger', 'consumible'),
+  ('4199605', 'Tubo CS de AIRE DISS N/DISS N 10 l', 'accesorios', 'producto', 'Presentación: Caja c 1 Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4199605', 'Dräger', 'consumible'),
+  ('4206', 'Demo Tool', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'EQUIPO
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4206', 'Masimo', ''),
+  ('4235', 'O3 Sensor rSO2 pediatric adhesive 25/caja', 'insumos', 'producto', '', 16, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', '2028-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4235', 'Masimo ', ''),
+  ('4236', 'Rainbow M20-01 Rainbow Patient Cable', 'accesorios', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4236', 'Masimo', ''),
+  ('4248', 'RD SedLine – Sensor EEG ADULTO, 25/caja', 'insumos', 'producto', '', 96, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-04-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4248', 'Masimo', ''),
+  ('4252', 'Red LNC M20-04 LNCS Patient Cable 4ft.', 'accesorios', 'producto', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2020-09-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4252', 'Masimo', ''),
+  ('4253', 'Patient Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'ACCESORIO
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4253', 'Masimo', ''),
+  ('4257', 'RD Rainbow Set M20-12 RD Rainbow SET Series Patient Cable', 'accesorios', 'producto', '', 11, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2024-07-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4257', 'Masimo', ''),
+  ('4298', 'RD SedLine Patient Cable', 'accesorios', 'producto', '', 15, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2023-03-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4298', 'Masimo', ''),
+  ('4319310', 'SHP UNT EtCO2 module white', 'accesorios', 'producto', 'Presentación: KIT', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4319310', 'Dräger', ''),
+  ('43210-30', 'Biological Indicators/Process Challenge Devices', 'insumos', 'producto', '', 25, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', '2025-01-29', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '43210-30', '', ''),
+  ('4321563', 'Ibp Interm Cable Sensor 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 13, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2252.2773-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4321563', 'Dräger', ''),
+  ('4322975', 'e:C02 capnosiat Ill sensor wih 2.4m cable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4322975', 'Dräger', 'listado'),
+  ('4329', 'RD SedLine – Sensor EEG pediátrico 25/caja', 'insumos', 'producto', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-04-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4329', 'Masimo', ''),
+  ('4329-2', 'RD SedLine – Sensor EEG pediátrico Piezas', 'insumos', 'producto', '', 56, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', '2027-05-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4329', 'Masimo', ''),
+  ('4329822', 'Sonda de temperatura cutánea, reutilizable, con conector de 7 pines, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4329822', 'Dräger', 'consumible'),
+  ('4329848', 'Sonda de temperatura universal, reutilizable, niño, conector de 7 pines, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4329848', 'Dräger', 'consumible'),
+  ('4329889', 'Sonda De Temperatura Adulto 1.5 M Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2911.8-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4329889', 'Dräger', ''),
+  ('4384', 'O3 Sensor rSO2 infantil/neonatal 25/caja', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Masimo', 'Masimo', '', 0.0, 'Masimo', '2028-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4384', 'Masimo', ''),
+  ('45003-0000', 'Electrodos Stress Kit', 'insumos', 'producto', 'Presentación: CAJA/10', 51, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', '2017-10-01', NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '45003-0000', 'Welch Allyn', ''),
-  ('INSUMOS-000123', 'Papel Datox 53mm', 'insumos', 'producto', 'Presentación: PAQUETE/ 20 PIEZAS', 4, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+  ('4528741', 'Juego de transductores de presión PAI Argon (antes Becton Dickinson/Ohmeda), desechable, estéril, 5 uds.', 'accesorios', 'producto', 'Presentación: 5 Piezas / Caja. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4528741', 'Dräger', 'consumible'),
+  ('453564146991', 'Monitor Invivo', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '453564146991', 'Philips', ''),
+  ('453564255161', 'Kit Table Mount', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453564255161', 'Philips', 'intellivue'),
+  ('453665000791', 'Lpqgmx400-800 Rel. P.0 Spa', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665000791', 'Philips', ''),
+  ('453665055001', 'Lp Ifu Mx400-500 Rel. Spa', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665055001', 'Philips', '')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('453665087661', 'Lp Add Sg Mx400-850 Tympanic', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665087661', 'Philips', ''),
+  ('453665105801', 'Lp Add Mx450-850 Visual Ip', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665105801', 'Philips', ''),
+  ('453665105861', 'Add Cg Visual Pat', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665105861', 'Philips', ''),
+  ('453665106311', 'Lp Add Cg Visual', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665106311', 'Philips', ''),
+  ('45366510931', 'Lp Qg Mx450-850 Tympanic Temp', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '45366510931', 'Philips', ''),
+  ('453665114081', 'Lp Add Mx400-850 Tymp', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665114081', 'Philips', ''),
+  ('453665125721', 'Lp Add X3 Mx100-850 Stand Comp', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665125721', 'Philips', ''),
+  ('453665133281', 'Lp Is Service Doc. Incenter', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665133281', 'Philips', ''),
+  ('453665145501', 'Lp Is X3 Mxs Nbp Letter', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665145501', 'Philips', ''),
+  ('453665155461', 'Lp Add X3 Mxs Evol R0002 Spa', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '453665155461', 'Philips', ''),
+  ('4545', 'Root Battery Replacement Kit', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, '2024-01-01', 'INSUMO
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '4545', 'Masimo', ''),
+  ('4554', 'Herramienta de prueba para RD SedLine Tester', 'accesorios', 'producto', '', 4, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-08-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4554', 'Masimo', ''),
+  ('4574', 'Clamp (sujetador) para módulo SedLine', 'accesorios', 'producto', '', 47, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2026-01-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4574', 'Masimo', ''),
+  ('4575', 'Clamp para módulo O3 de oximetría regional', 'accesorios', 'producto', '', 10, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2026-02-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4575', 'Masimo', ''),
+  ('4676', 'Batería de reemplazo Radical-7 (Li-ion 3.7 V)', 'refacciones', 'producto', '', 5, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2019-10-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4676', 'Masimo', ''),
+  ('4714387', 'e:C02 nasal cannula, chiki, 10 pos.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4714387', 'Dräger', 'listado'),
+  ('4714395', 'etC02 nasal cannula, adutt, 10 pcs.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4714395', 'Dräger', 'listado'),
+  ('4714429', 'Dehumidificadon tubing for e:C 02 sidesiream sampling, Nafon®), 10 pes.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4714429', 'Dräger', 'listado'),
+  ('4714437', 'Adaptador desechable etC02 sidestream', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4714437', 'Dräger', 'listado'),
+  ('4721408', 'IBP pressure transducer plate, for Hemo2 Pod, universal, 5 pes.', 'accesorios', 'producto', 'Presentación: Caja con 5 Pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4721408', 'Dräger', 'listado'),
+  ('4721416', 'Placa de transductor de presión PAI, para Hemo4 Pod, para Memscap (Capto/SensoNor), 5 uds.', 'accesorios', 'producto', 'Presentación: Caja / 5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4721416', 'Dräger', 'consumible'),
+  ('4721424', 'Placa de transductor de presión PAI, para Hemo4 Pod, universal, 5 uds.', 'accesorios', 'producto', 'Presentación: Caja con 5 Pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4721424', 'Dräger', 'consumible'),
+  ('4721614', 'IBP pressure transducer plate, f Hemo2 Pod, f Memscap (Capto/SensoNor), 5 pes.', 'accesorios', 'producto', 'Presentación: Caja con 5 Pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4721614', 'Dräger', 'listado'),
+  ('4721788', 'Adaptador reualizable de e:C 02 neonatal', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4721788', 'Dräger', 'listado'),
+  ('4721796', 'EtCO2 airway adapter adult', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4721796', 'Dräger', ''),
+  ('4726373', 'Ethernet Patch Cable 1.2m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4726373', 'Dräger', ''),
+  ('4726373-08', 'Ethernet Patch Cable 1.2m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4726373-08', 'Dräger', ''),
+  ('48810-48950', 'LAMPARA GS EXAM LIGHT IV CON PEDESTAL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '48810-48950', 'Welch Allyn', 'listado'),
+  ('490', 'Autolector Super Rapid 24 minutos', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '490', 'Masimo', 'listado'),
+  ('493690', 'MIB cable Nivus/Julian CO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '493690', 'Dräger', ''),
+  ('4A21326-0000', 'SOPORTE PARA PARED TERMOMETRO SURE TEMP', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4A21326-0000', 'Welch Allyn', 'listado'),
+  ('4A45008-0000', 'ELECTRODO DESECHABLE TIPO CAIMAN PARA ECG DE REPOSO C/1000', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '4A45008-0000', 'Welch Allyn', 'listado'),
+  ('5098-30', 'Esfigmomanómetro', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '5098-30', 'Welch Allyn', ''),
+  ('50H-10', 'Cuff, WA, soft, small adult', 'accesorios', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '50H-10', 'Welch Allyn', ''),
+  ('5191221', 'Cable multiparámetro MultiMed® 6 Pod, para ECG, resp., SpO2 y temp., 2,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5191221', 'Dräger', 'consumible'),
+  ('5192112', 'Placa transductor de presión PAI, para Hemo2/4 Pods, para Abbott Transpac II/III/Braun, 5 uds.', 'accesorios', 'producto', 'Presentación: Caja con 5 Pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5192112', 'Dräger', 'consumible'),
+  ('5194779', 'Ecg Neo Adapter Pins', 'accesorios', 'producto', 'Presentación: PAQUETE 10', 10, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1603.0092-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5194779', 'Dräger', ''),
+  ('5195180', 'Cable en Y PAI, para Memscap (Capto/SensoNor), 3,7 m', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5195180', 'Dräger', 'consumible'),
+  ('5195198', 'Cable de conexión de pod, 5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5195198', 'Dräger', 'consumible'),
+  ('5196980', 'Adaptador de pod, para transductor de presión Edwards', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5196980', 'Dräger', 'consumible'),
+  ('5196998', 'Adaptador de pod, para transductor de presión Abbott/Medex', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5196998', 'Dräger', 'consumible'),
+  ('5198333', 'Temp Probe Adapter Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1310.31-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5198333', 'Dräger', ''),
+  ('5204644', 'Temp. Probe, Reus, Adult, 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4200-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5204644', 'Dräger', ''),
+  ('5204651', 'Temp Probe, Reus., Child. 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3761.075-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5204651', 'Dräger', ''),
+  ('5204669', 'Skin Temp Probe Reusable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4974.325-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5204669', 'Dräger', ''),
+  ('5206581', 'IBP Y-cable Argon (former Becton Dickinson/Ohmeda}, 3.7 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5206581', 'Dräger', 'listado'),
+  ('5206607', 'Ibp Y- Cable Baxter, 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:8611.6485-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '5206607', 'Dräger', ''),
+  ('52432-U', 'Espéculo pediátrico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '52432-U', 'Welch Allyn', ''),
+  ('52434', 'Kleen Spec Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '52434', 'Welch Allyn', ''),
+  ('52434-U', 'Kleen Spec Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '52434-U', 'Welch Allyn', ''),
+  ('52500', 'Lower Body Blanket', 'accesorios', 'producto', 'Presentación: CAJA C/10 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '52500', 'Dräger', 'listado'),
+  ('54500', 'Sábana térmica adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, '(SABANA TERMICA ADULT)
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '54500', '3M', ''),
+  ('55000', 'Manta térmica pediátrica', 'accesorios', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'MANTA TERMICA PEDIATRICA
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '55000', '3M', ''),
+  ('55001', 'Manta térmica pediátrica', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 73, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-05-16', NULL, 'MANTA TERMICA PEDIATRICA
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '55001', '3M', ''),
+  ('55501', 'Pediatric Underbody Bikt', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '55501', 'Masimo', 'listado'),
+  ('5588095', 'Adaptdor en Y PAI, de 10 pines a 7 pines', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5588095', 'Dräger', 'consumible'),
+  ('5590539', 'Cable multiparámetro NeoMed Pod, para ECG, resp., SpO2, temp. y FiO2, 2,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5590539', 'Dräger', 'consumible'),
+  ('5591925', 'Hemomed Cable To Monitor 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:6226.8843-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5591925', 'Dräger', ''),
+  ('5592147', 'Ibp Cable Y-Cable 16 To 7 Pin', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3577.1463-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5592147', 'Dräger', ''),
+  ('5592154', 'Temperature Y-Cable', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3761.075-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5592154', 'Dräger', ''),
+  ('5592162', 'Ecg Neomed Adapter Cable, 1.5 M', 'accesorios', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1993.6124-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5592162', 'Dräger', ''),
+  ('5702321', 'Resuckador niños MR-100', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5702321', 'Dräger', 'listado'),
+  ('5702322', 'Resuckador neonatal MR-100', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5702322', 'Dräger', 'listado'),
+  ('5702871', 'VentStar Oxylog3000F,2000p 150', 'accesorios', 'producto', 'Presentación: Caja c/5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5702871', 'Dräger', 'consumible'),
+  ('5702881', 'Man. breathing bag MR-100, reus., kx-tr., A, w/ pressure valve, 60+10mbar*', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5702881', 'Dräger', 'listado'),
+  ('5703041', 'Sistema paciente VentStar® Oxylog 3000F, 2000p, VE300, desechable, 1,5 m, 5 uds., para uso exclusivo con Oxylog VE300 con opción Plus', 'accesorios', 'producto', 'Presentación: 5 Piezas / Caja. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5703041', 'Dräger', 'consumible'),
+  ('5704962', 'Circuito respiratorio VentStar® Carina® ExpV, desechable, 2 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5704962', 'Dräger', 'consumible'),
+  ('5704964', 'Sistema paciente VentStar® Oxylog 3000, 3000+,desechable, P, 1,9 m, 5 uds., Oxylog 3000: ≥ SW 1.20, no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Paquete c/5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5704964', 'Dräger', 'consumible'),
+  ('5731281', 'Adaptador en Y PAI, 10 pines', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5731281', 'Dräger', 'consumible'),
+  ('5734418', 'ECG cable, 3-lead, dual-pin connecor, IEC2 (AHA/US color code), 1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5734418', 'Dräger', 'listado'),
+  ('5741975', 'Pieza en T termistor CO Argon (antes Becton Dickinson/Ohmeda)', 'accesorios', 'producto', 'Presentación: 25 Piezas / Caja. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5741975', 'Dräger', 'consumible'),
+  ('59004', 'Espejo Vaginal Grande', 'accesorios', 'producto', 'Presentación: CAJA/ 4 PZS', 10, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '59004', 'Welch Allyn', ''),
+  ('5947226', 'Bloque ECG ESU, para uso en OR de cables ECG de 3 ó 5 derivaciones con MultiMed® 5', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5947226', 'Dräger', 'consumible'),
+  ('5947804', 'Eeg Leads 0.6m, Reusable, 9pc.', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4003.725-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5947804', 'Dräger', ''),
+  ('5950196', 'Multimed 5 Pod, 1.5 M', 'accesorios', 'producto', 'Presentación: PIEZA', 36, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:8235.6381-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5950196', 'Dräger', ''),
+  ('5954859', 'Block F.eeg Ref Id Conversion', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:11525.875-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5954859', 'Dräger', ''),
+  ('5957126', 'Sensor for respiratory mechanics, tow and CO2, disp., adut/chid, 10 pes.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5957126', 'Dräger', 'listado'),
+  ('5957134', 'Sensor for respiratory mechanics and flow, disposable, aduk/chikd, 10 pes.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5957134', 'Dräger', 'listado'),
+  ('5957142', 'Sensor for respiratory mechanics, fow and CO2, disposable, chiki, 10 pcs.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '5957142', 'Dräger', 'listado'),
+  ('60-032', 'Adaptador En T Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '60-032', 'Dräger', '')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('60-8046-001', 'Reusable bipolar cord, 12 ft (3.6m) genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '60-8046-001', 'Dräger', ''),
+  ('60813', 'Mango Laringoscopio Ligero F/O', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '60813', 'Welch Allyn', ''),
+  ('622000', 'Mania de cuerpo superior mubiposición 198x61 cm', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '622000', 'Masimo', 'listado'),
+  ('63500', 'Manta térmica', 'insumos', 'producto', 'Presentación: CAJA/ 5 PIEZAS', 199, 0, 'caja', '', '3M', '', '', 0.0, '', '2029-01-01', NULL, 'MANTA TERMICA
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '63500', '3M', ''),
+  ('6635', '6635 loban. Area Adhesiva: 10 x 20 cm', 'accesorios', 'producto', 'Presentación: CAJA C/10 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6635', 'Masimo', 'listado'),
+  ('6640', '6640 loban. Area total: 44 x 35 cm. Area Adhesiva: 34 x 35 cm', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6640', 'Masimo', 'listado'),
+  ('6650', 'Loban 2 Antimicrobial', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 4, 0, 'caja', '', '3M', '', '', 0.0, '', '2026-01-21', NULL, 'LOBAN 2 ANTIMICROBIAL
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6650', '3M', ''),
+  ('6651', '6651 loban. Area total: 66 x 85 cm. Area Adhesiva: 56 x 85 cm', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6651', 'Masimo', 'listado'),
+  ('6723976', 'Filtro bacteriano 767, para eyectores (gama de modelos hasta 2010), 5 uds.', 'accesorios', 'producto', 'Presentación: Caja c/5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6723976', 'Dräger', 'consumible'),
+  ('6724492', 'Anesheik iker', 'accesorios', 'producto', 'Presentación: 5 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6724492', 'Dräger', 'listado'),
+  ('6733895', 'Microbial iker 654', 'accesorios', 'producto', 'Presentación: 5 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6733895', 'Dräger', 'listado'),
+  ('6737545', 'Microfilter', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6737545', 'Dräger', ''),
+  ('68040', 'Sterilization Wrap', 'insumos', 'producto', '', 28, 0, 'pieza', '', 'Halyard', '', '', 0.0, 'ASP', '2051-10-05', '2025-05-02', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '68040', 'Halyard', ''),
+  ('68060', 'Hoja de laringoscopio #0 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68060', 'Welch Allyn', ''),
+  ('68061', 'Hoja de laringoscopio #2 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68061', 'Welch Allyn', ''),
+  ('68062', 'Hoja de laringoscopio #2 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68062', 'Welch Allyn', ''),
+  ('68063', 'Hoja de laringoscopio #3', 'accesorios', 'producto', 'Presentación: PIEZA', 24, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68063', 'Welch Allyn', ''),
+  ('68064', 'Hoja de laringoscopio #4', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68064', 'Welch Allyn', ''),
+  ('68065', 'Hoja de laringoscopio #00 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '68065', 'Welch Allyn', ''),
+  ('684056', 'In-line injection temp. probe', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '684056', 'Dräger', ''),
+  ('6850250', '02 sensor housing Oxydig, for 02 sensor capsule, wih spiral cable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6850250', 'Dräger', 'listado'),
+  ('6850645', 'O2 SENSOR', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2026-12-21', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1804.894-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6850645', 'Dräger', ''),
+  ('6850930', 'Fast 02 Sensor', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6850930', 'Dräger', 'listado'),
+  ('6870279', 'Co2-Cuvette Erw', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1230.4879-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6870279', 'Dräger', ''),
+  ('6870280', 'Co2-Cuvette (Cubeta Co2)', 'accesorios', 'producto', 'Presentación: PIEZA', 31, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1538.6913-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6870280', 'Dräger', ''),
+  ('6871500', 'Mainstream Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6871500', 'Dräger', ''),
+  ('6871950', 'Mcable-Mainstream Co2 (Sensor Co2 Mainstream)', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6871950', 'Dräger', ''),
+  ('6871980', 'Infinity Id Flow Sensor', 'accesorios', 'producto', 'Presentación: PAQUETE/5', 20, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1828.3192-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6871980', 'Dräger', ''),
+  ('6872', 'WaterLock2 12/caja', 'insumos', 'producto', '', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6872', 'Dragër ', ''),
+  ('6872020', 'Infinity ID WaterLock 2', 'accesorios', 'producto', 'Presentación: PAQUETE/12 PIEZAS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:5529.888-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6872020', 'Dräger', ''),
+  ('6872128', 'Upgr. Kk Adapter WaterLock 2', 'accesorios', 'producto', 'Presentación: Caja c/6 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6872128', 'Dräger', 'listado'),
+  ('6872130', 'Water Trap (Trampa De Agua)', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 179, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2030-01-14', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2252.2773-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '6872130', 'Dräger', ''),
+  ('6872666', '01-Sensor Oxycell A', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:7174-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '6872666', 'Dräger', ''),
+  ('6873065', 'SENSOR DE O2 OXYCELL PARA BABYLEO TN500', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '6873065', 'Dräger', 'consumible'),
+  ('69061', '#1 Mac F/O laryngoscope', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69061', 'Welch Allyn', ''),
+  ('69062', 'Hoja de laringoscopio #2 recta', 'accesorios', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69062', 'Welch Allyn', ''),
+  ('69063', 'Hoja de laringoscopio #3 curvo', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69063', 'Welch Allyn', ''),
+  ('69064', 'Hoja De Laringoscopio Mac #4 Curva F/O', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '69064', 'Welch Allyn', ''),
+  ('700-0006-08', 'Trulink Ecg Lead Wire Set Shielded, 5 Lead', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '700-0006-08', 'Dräger', ''),
+  ('700-0006-16', 'Trulink Ecg Lead Wire Set Shielded, 5 Lead', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '700-0006-16', 'Dräger', ''),
+  ('7014616', 'Protective Covers Temp', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:449.43-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '7014616', 'Dräger', ''),
+  ('7257988', 'Pod Communication Cable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2363.2701-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7257988', 'Dräger', ''),
+  ('7262764', 'Sensor de dedo SpO2 Nellcor® DURA DS 100A', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7262764', 'Dräger', 'consumible'),
+  ('7265155', 'Kit gasto cardíaco, Baxter', 'accesorios', 'producto', 'Presentación: Kit. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7265155', 'Dräger', 'consumible'),
+  ('7265163', 'Cardiac Output Kit Argon', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:33784.1595-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7265163', 'Dräger', ''),
+  ('7270304', 'Shp Acc Masimo Lnop Dcip Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270304', 'Dräger', ''),
+  ('7270304-02', 'Shp Acc Masimo Lnop Dcip Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270304-02', 'Dräger', ''),
+  ('7270304-1', 'Shp Acc Masimo Lnop Dcip Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270304-1', 'Dräger', ''),
+  ('7270312', 'Sensor Spo2 Masimo Lnop Dcip Reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270312', 'Dräger', ''),
+  ('7270460', 'Placa de transductor de presión PAI, para Hemo2/4 Pods, para Abbott Transpac IV, 5 uds.', 'accesorios', 'producto', 'Presentación: Caja con 5 Pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7270460', 'Dräger', 'consumible'),
+  ('73002', 'Scoxhcast Conformable Rofl Splint, 5cm x 4.57m (2")', 'accesorios', 'producto', 'Presentación: CARTON C/2 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '73002', 'Masimo', 'listado'),
+  ('73003', 'Scotchcast Conformable Roll Splint, 7.5cm x 4.57m (3°)', 'accesorios', 'producto', 'Presentación: CARTON C/2 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '73003', 'Masimo', 'listado'),
+  ('73004', 'Scoxchcas: Conformable Roll Splint, 10cm x 4.57m (4%)', 'accesorios', 'producto', 'Presentación: CARTON C/2 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '73004', 'Masimo', 'listado'),
+  ('73005', 'Scotchcast Conformable Roll Splint, 12.5cm x 4.57m (5")', 'accesorios', 'producto', 'Presentación: CARTON C/2 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '73005', 'Masimo', 'listado'),
+  ('73160', 'Process Challenge Device (PCD)', 'insumos', 'producto', '', 2, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', '2028-09-01', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '73160', 'ASP', ''),
+  ('73180', 'VERISURE Bowie-Dick Test Pack', 'insumos', 'producto', '', 2, 0, 'caja', '', 'ASP', '', '', 0.0, 'ASP', '2028-09-01', '2023-09-01', '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '73180', 'ASP', ''),
+  ('7356931', 'Mibii Proto Conv-Ls', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '7356931', 'Dräger', ''),
+  ('74205', 'Papel Datox 53mm', 'insumos', 'producto', 'Presentación: PAQUETE/ 20 PIEZAS', 4, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '74205', 'Welch Allyn', ''),
-  ('INSUMOS-000124', 'Papel ECG CP1200 (cardiopulmonar) caja 1000 hjs', 'insumos', 'producto', 'Presentación: CAJA/ 1000 HJS', 12, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+  ('7486140', 'Bloque ECG ESU, para uso en OR de cables ECG de 3, 5 ó 6 derivaciones con MultiMed® 6', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7486140', 'Dräger', 'consumible'),
+  ('7486876', 'IBP pressure transducer cable for Memscap (Capio/SensoNor} 844, 3m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7486876', 'Dräger', 'listado'),
+  ('7489375', 'Infinity Dock Station Can/Mib', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2021-01-06', NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, true, 0, 0, '7489375', 'Dräger', ''),
+  ('7489417', 'Cable de transductor de presión PAI para Memscap(Capto/SensoNor) 844, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7489417', 'Dräger', 'consumible'),
+  ('7489433', 'Juego de transductor de presión PAI para Memscap (Capto/SensoNor) 844, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7489433', 'Dräger', 'consumible'),
+  ('7492601', 'Sp02 Ext ProCal Cable Masimo 2.0m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7492601', 'Masimo', 'listado'),
+  ('7496875', 'Sensor Spo2 Masimo Adhesivo Cuadrado 12 Pzs', 'accesorios', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1233.8331-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496875', 'Dräger', ''),
+  ('7496891', 'Banda de espuma SpO2 Masimo® Foam-Wrap, neo., sensor SpO2 LNOP YI, 12 uds.', 'accesorios', 'producto', 'Presentación: Caja c/12 piezas. 12 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496891', 'Dräger', 'consumible'),
+  ('7496909', 'Banda adhesiva SpO2 Masimo® Petite-Wrap, para sensor SpO2 LNOP YI, 100 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496909', 'Dräger', 'consumible'),
+  ('7496917', 'Banda adhesiva SpO2 Masimo® Multisite-Wrap, para sensor SpO2 LNOP YI, 100 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496917', 'Dräger', 'consumible'),
+  ('7496933', 'Sp02 adhesive wrap Masimo® Posey-Wrap, for NeoPt SpO2 sensor, 12 pcs.', 'accesorios', 'producto', 'Presentación: Caja c/12 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496933', 'Masimo', 'listado'),
+  ('7496966', 'Masimo SpO2 LNOP NeoPt', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496966', 'Masimo', 'listado'),
+  ('7496974', 'Masimo Sp02 LNOP Neo', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496974', 'Masimo', 'listado'),
+  ('7496990', 'Masimo Sp02 LNOP Adt', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7496990', 'Masimo', 'listado'),
+  ('7497006', 'Masimo SpO2 LNOP Tl', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7497006', 'Masimo', 'listado'),
+  ('7497014', 'Masimo SpO2 sensor muliske', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7497014', 'Masimo', 'listado'),
+  ('7498921', 'Temp Probe+Cover Inf Kit', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7498921', 'Dräger', 'consumible'),
+  ('7498939', 'TEMP PROBE&COVER KIT ADULT General-purpose temp. probe, reus., adult, 7-pin conn., 1.5 m, w/ 10 prot.covers', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7498939', 'Dräger', 'consumible'),
+  ('7498947', 'Juego de transductor de presión PAI para Memscap (Capto/SensoNor) 844', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7498947', 'Dräger', 'consumible'),
+  ('7499812', 'Ecg 3-Lead Trust Ahu/Us, Telem Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 42, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7499812', 'Dräger', ''),
+  ('76430', 'One Sep Roll Splint 10.1 om x 76cm - 4°X30°', 'accesorios', 'producto', 'Presentación: BOLSA C/5 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '76430', 'Masimo', 'listado'),
+  ('775', '120V-ENG-E Bair Hugger Warming Unk', 'accesorios', 'producto', 'Presentación: EQUIPO. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '775', '3M', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('77500', 'Bair Hugger Warming Unit (usado)', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'BAIR HUGER WARMING UNIT (USADO)
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '77500', '3M', ''),
+  ('7864155', 'Soporte PAI para transductor de presión Memscap (Capto/SensoNor) 844, 4 uds.', 'accesorios', 'producto', 'Presentación: 4 Piezas / Caja. 4 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7864155', 'Dräger', 'consumible'),
+  ('7864908', 'Transductor de presión PAI para Memscap (Capto/SensoNor) 844, desechable, estéril, 50 uds.', 'accesorios', 'producto', 'Presentación: 50 Piezas / Caja. 50 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7864908', 'Dräger', 'consumible'),
+  ('7869469', 'etC02 nasal cannula Microstream®, chid, max. 12 h, 25 pes.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869469', 'Dräger', 'listado'),
+  ('7869477', 'e:C02 nasal cannula Microsiream®), aduk, max. 12 h, 25 pes.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869477', 'Dräger', 'listado'),
+  ('7869485', 'e:C02 nasal cannula Microstream, + 02, chiki, max. 24 h, 25 pes.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869485', 'Dräger', 'listado'),
+  ('7869493', 'etC02 nasal cannula Microstream®, + 02, aduk, max. 24 h, 25 pes.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869493', 'Dräger', 'listado'),
+  ('7869501', 'etC02 nasal/mouth cannula Microstream®, chid, max. 12 h, 25 pes.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869501', 'Dräger', 'listado'),
+  ('7869535', 'etC 02 airway adapter Microstream®, adul/chid, max. 12 h, 25 pos.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869535', 'Dräger', 'listado'),
+  ('7869543', 'etC02 airway adapter Microstream®, adul/chid, max. 72 h, 25 pos.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869543', 'Dräger', 'listado'),
+  ('7869550', 'Etco2 Airw Adaptr Microstr N/P', 'accesorios', 'producto', 'Presentación: KIT', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869550', 'Dräger', ''),
+  ('7869584', 'etC02 nasal/mouth cannula Microstream®, + 02, chid, max. 12 h, 25 pes.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869584', 'Dräger', 'listado'),
+  ('7869592', 'e:C02 nasal cannula Microsiream®),aduk, max. 24 h, 25 pcs.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869592', 'Dräger', 'listado'),
+  ('7869618', 'e:C02 nasal cannula Microsiream®), neonate/chikd, max. 24 h, 25 pes.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '7869618', 'Dräger', 'listado'),
+  ('7872174', 'Interm Cbl Trident (Nmt), 1.9m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:10433.95-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '7872174', 'Dräger', ''),
+  ('79950152', 'Thumb adapter for acceleration transduction', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '79950152', 'Dräger', ''),
+  ('79950163', 'Acceleration transducer', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '79950163', 'Dräger', ''),
+  ('8-170', 'Steri-Gas', 'insumos', 'producto', 'Presentación: CAJA/ 12 PIEZAS', 17, 0, 'caja', '', '3M', '', '', 0.0, '', '2030-07-30', NULL, 'ESTERI GAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8-170', '3M', ''),
+  ('82002', 'Scotchcast™ Plus Blanca 5.0 cm x 3.65 m {2°}', 'accesorios', 'producto', 'Presentación: CAJA C/10 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '82002', 'Masimo', 'listado'),
+  ('82002B', 'Scorchcasi Y Plus Azul 5.0 cm x 3.65 m (2°}', 'accesorios', 'producto', 'Presentación: CAJA C/24PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '82002B', 'Masimo', 'listado'),
+  ('82003', 'Scochcas™ Plus Blanca 7.5 cm x 3.65 m (3")', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '82003', 'Masimo', 'listado'),
+  ('820038', 'Sootchcast''* Plus Azui 7.5 cm x 3.65 m (3")', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '820038', 'Masimo', 'listado'),
+  ('82004', 'Sootchcast''* Plus Blanca 10.0 cm x 3.65 m (4*)', 'accesorios', 'producto', 'Presentación: CAJA C/10 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '82004', 'Masimo', 'listado'),
+  ('82004B', 'Scorchcasi Y Plus Azul 10.0 cm x 3.65 m (4")', 'accesorios', 'producto', 'Presentación: CAJA C/10 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '82004B', 'Masimo', 'listado'),
+  ('82005', 'Scochcasi™ Plus Blanca 12.5 cm x 3.65 m (5°}', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '82005', 'Masimo', 'listado'),
+  ('820058', 'Sootchcast™ Plus Azui 12.5 cm x 3.65 m (5")', 'accesorios', 'producto', 'Presentación: CAJA CM0 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '820058', 'Masimo', 'listado'),
+  ('8201012', 'Banda adhesiva para Nellcor® Oxiband™ A/N, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8201012', 'Dräger', 'consumible'),
+  ('8201013', 'Oxiband Sensor A/N', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8201013', 'Dräger', ''),
+  ('8290266/', 'Sample Line Set 10/bolsa', 'insumos', 'producto', '', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8290266/', 'Dragër ', ''),
+  ('8290285', 'Connector wih Luer Lock port, reusable, 15 mm/22 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8290285', 'Dräger', 'listado'),
+  ('8290286', 'Sample Line Set', 'insumos', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2030-03-01', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:430.8704-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8290286', 'Dräger', ''),
+  ('8306488', 'Cable de conexión Babylink', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8306488', 'Dräger', 'consumible'),
+  ('84010179', 'Spirolog flow sensor', 'accesorios', 'producto', 'Presentación: PAQUETE/5', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '84010179', 'Dräger', ''),
+  ('8401645', 'Tapón, reutilizable, 7 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8401645', 'Dräger', 'consumible'),
+  ('8402868', 'Filtro bacteriológico para monitores de paciente de Dräger, desechable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8402868', 'Dräger', 'consumible'),
+  ('8402953-02', 'Juego De Tapas (Set Of Caps)', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8402953-02', 'Dräger', ''),
+  ('8403075', 'Pieza en Y con abertura de aspiración', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403075', 'Dräger', ''),
+  ('8403077', 'Y-piece, reusable, P, angled', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403077', 'Dräger', 'listado'),
+  ('8403201', 'Pulmón de prueba, bolsa de 1,5 litros, silicona', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403201', 'Dräger', 'consumible'),
+  ('8403208', 'Test lung (Testlunge)', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403208', 'Dräger', ''),
+  ('8403345', 'Rail damp for Aquapor EL, for standard rail', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403345', 'Dräger', 'listado'),
+  ('8403684', 'Set Stand Cone P Plastic', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PZS', 4, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403684', 'Dräger', ''),
+  ('8403735', 'Sensor De Flujo Spirolog', 'accesorios', 'producto', 'Presentación: PAQUETE/5', 24, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1365.1911-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8403735', 'Dräger', ''),
+  ('8403896', 'Tubo fexible', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8403896', 'Dräger', 'listado'),
+  ('8405000', 'Pneumaic medicadon nebulzer, for Evita) and Evia) 2', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8405000', 'Dräger', 'listado'),
+  ('8405029', 'Parte Paciente Aquapor', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8405029', 'Dräger', 'listado'),
+  ('8405371', 'Temp. Sensor Aquapor EL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8405371', 'Dräger', 'listado'),
+  ('8405371-21', 'Temperature Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8405371-21', 'Dräger', ''),
+  ('8407475', 'Válvula PEEP para Oxylog® 1000, reutilizable, ajustable de 0 – 10 mbares', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8407475', 'Dräger', 'consumible'),
+  ('8408950', 'Válvula espiratoria para Babylog® 8000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8408950', 'Dräger', 'consumible'),
+  ('8409626', 'Cable de sensor de flujo para sensor de flujo neonatal, p. ej., Babylog', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8409626', 'Dräger', 'consumible'),
+  ('8409742', 'Tesi Lung neonatal', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8409742', 'Dräger', 'listado'),
+  ('8409742-07', 'Test Lung, Kompl', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8409742-07', 'Dräger', ''),
+  ('8409742-10', 'Test Lung, Cpl', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8409742-10', 'Dräger', ''),
+  ('8410079', 'Pulmón de prueba silicona N con tubo flexible', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8410079', 'Dräger', ''),
+  ('8410179', 'Neonatal Flow Sensor Insert', 'accesorios', 'producto', 'Presentación: CAJA/5 PZA', 22, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3709.6332-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8410179', 'Dräger', ''),
+  ('8410185', 'Y-Piece Neo Flow Sensor', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8410185', 'Dräger', 'listado'),
+  ('8410230', 'Connecion set for bacterial ier', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8410230', 'Dräger', 'listado'),
+  ('8410580', 'Válvula de espiración, PatientSys', 'accesorios', 'producto', 'Válvula respiratoria ', 22, 0, 'pieza', 'A/1', 'Dräger', '', 'N/A', 0.0, 'Drager', NULL, NULL, '<!--mas-cost:2808.7223-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8410580', 'Drager', ''),
+  ('8410929', 'Línea de medición de flujo para Oxylog® 2000/3000 family, 1,5 m, 2 uds.', 'accesorios', 'producto', 'Presentación: Caja con 2 pzs. 2 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8410929', 'Dräger', 'consumible'),
+  ('8411023', 'VentSiar Oxylog 2000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411023', 'Dräger', 'listado'),
+  ('8411024', 'Tapón sellante (sealing plug)', 'accesorios', 'producto', 'Presentación: PAQUETE/5 PZS', 3, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411024', 'Dräger', ''),
+  ('8411030', 'Nebulizador Babylog', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411030', 'Dräger', 'listado'),
+  ('8411031', 'Accessories nebuliser BO 8000', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411031', 'Dräger', ''),
+  ('8411044', 'Conector de pieza en T, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411044', 'Dräger', 'consumible'),
+  ('8411045', 'Calentador de tubos, A, 1,1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411045', 'Dräger', 'consumible'),
+  ('8411047', 'Cámara humidificadora para F&P MR 340, reutilizable, N/P', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411047', 'Dräger', 'consumible'),
+  ('8411048', 'Dual Temp. Sensor F&P MR 700/730', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411048', 'Dräger', 'listado'),
+  ('8411050', 'Draw Wire', 'accesorios', 'producto', 'Presentación: PIEZA', 53, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:681.3612-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411050', 'Dräger', ''),
+  ('8411073', 'Papel De Recarga', 'insumos', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8411073', 'Dräger', ''),
+  ('8411074', 'Juego de fijación para humidificador', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1892.67-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411074', 'Dräger', ''),
+  ('8411075', 'Soporte de tubuladuras, reutilizable, 40 cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411075', 'Dräger', 'consumible'),
+  ('8411130', 'Sensor de flujo neonatal ISO 15, PSU, esterilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411130', 'Dräger', 'consumible'),
+  ('8411154', 'Calentador De Tubos Para F&p Mr 700/730, 70cm', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2902.094-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8411154', 'Dräger', ''),
+  ('8411956', 'Soporte Humidificador', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8411956', 'Dräger', 'consumible'),
+  ('8412001', 'Válvula de ventilación para Oxylog® 2000/3000, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412001', 'Dräger', 'consumible'),
+  ('8412015', 'Pieza Dräger 8412015', 'insumos', 'producto', 'Cedros DRAGER · ubicación E/26', 160, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Cedros DRAGER · ubicación E/26
+<!--mas-cost:762.949-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8412015', 'Dräger', ''),
+  ('8412034', 'Flow Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:5696.9367-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8412034', 'Dräger', ''),
+  ('8412068', 'Juego de tubos resp. para Oxylog® 2000/3000, reutilizable, línea med. de flujo, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412068', 'Dräger', 'consumible'),
+  ('8412092', 'Set de Venálación Aquapor aduko', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412092', 'Dräger', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('8412217', 'Cámara humidificadora para F&P MR 340, reutilizable, A', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412217', 'Dräger', 'consumible'),
+  ('8412235', '90° Winkeltuelle', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:252.3011-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412235', 'Dräger', ''),
+  ('8412913', 'Juego de tubos resp. para Oxylog® 2000/3000, reutilizable, línea de med. de flujo, 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412913', 'Dräger', 'consumible'),
+  ('8412935', 'Nebulizer Evia / Savina', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412935', 'Dräger', 'listado'),
+  ('8412985', 'Nebulizador Hose', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:832.7748-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8412985', 'Dräger', ''),
+  ('8413125', 'Trampa de agua para Evita® 2 dura, Evita® 4, Evita® XL, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8413125', 'Dräger', 'consumible'),
+  ('8413293', 'Línea de medición de flujo para Oxylog® 2000/3000 family, 3 m, 2 uds.', 'accesorios', 'producto', 'Presentación: 2 piezas/ caja. 2 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8413293', 'Dräger', 'consumible'),
+  ('8413563-25', 'Kit Neoflow', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8413563-25', 'Dräger', ''),
+  ('8413660', 'ID expiration valve complete', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8413660', 'Dräger', ''),
+  ('8414776', 'Válvula espiratoria para Evita® 2 dura, 4ta edición, XL, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414776', 'Dräger', 'consumible'),
+  ('8414966', 'Sonda de temperatura/sensor de flujo para F&P MR 850, para todos los circuitos respiratorios, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414966', 'Dräger', 'consumible'),
+  ('8414968', 'Adaptador de calentador de tubo', 'accesorios', 'producto', '', 126, 0, 'pieza', 'A/1', 'Dräger', 'Drager ', '', 46.0, 'Drager', NULL, NULL, '<!--mas-cost:3627.3432-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8414968', 'Drager', ''),
+  ('8414969', 'Calentador de tubo para F&P MR 700/730 y MR 850, para circuito respiratorio reutilizable, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414969', 'Dräger', 'consumible'),
+  ('8414987', 'Blueset Heated (N)', 'accesorios', 'producto', 'Presentación: KIT', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8414987', 'Dräger', ''),
+  ('8414989', 'Sonda de temperatura/sensor de flujo para F&P MR 850, para todos los circuitos respiratorios, 1,1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414989', 'Dräger', 'consumible'),
+  ('8414991', 'Circuito respiratorio Fisher & Paykel RT212,desechable, insp. calefactado, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414991', 'Dräger', 'consumible'),
+  ('8414992', 'Adaptador de calentador de tubo para F&P MR 850, para circuito respiratorio desechable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414992', 'Dräger', 'consumible'),
+  ('8414993', 'Calentador de tubo para F&P MR 700/730 y MR 850, para circuito respiratorio reutilizable, 1,1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414993', 'Dräger', 'consumible'),
+  ('8414994', 'Circuito respiratorio Fisher & Paykel RT225, desechable, N, insp. calefactado, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8414994', 'Dräger', 'consumible'),
+  ('8415195', 'Safety Valve', 'accesorios', 'producto', 'Presentación: PIEZA', 23, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8415195', 'Dräger', ''),
+  ('8415270', 'Válvula espiratoria Infinity ID reutilizable (Babylog VN500)', 'accesorios', 'producto', 'Presentación: PIEZA', 46, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:7757.4234-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8415270', 'Dräger', ''),
+  ('8415296', 'Expiration Valve Reuse', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4431-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8415296', 'Dräger', ''),
+  ('8415978', 'Filtro de Polvo para Evita 2 Dura, Evita 4 y Evita XL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8415978', 'Dräger', 'consumible'),
+  ('8416352', 'Standby Holder W/O Calibration', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8416352', 'Dräger', ''),
+  ('8416600', 'Cable de sensor de flujo para V500 con opción Neo y VN500', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8416600', 'Dräger', 'consumible'),
+  ('8416750', 'Válvula espiratoria ID reutilizable (Evita Infinity V500)', 'accesorios', 'producto', 'Presentación: PIEZA', 38, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:5283.6544-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8416750', 'Dräger', ''),
+  ('8417050', 'Válvula espiratoria ID completa', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4146.2091-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8417050', 'Dräger', ''),
+  ('8418054-02', 'Medikamente Vernebler P', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418054-02', 'Dräger', ''),
+  ('8418077', 'Pulmón de prueba para simular pulmones neonatales, con maletín', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418077', 'Dräger', 'consumible'),
+  ('8418282', 'Cámara humidificadora para F&P MR 290, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418282', 'Dräger', 'consumible'),
+  ('8418283', 'F&P MR290 camara desechable', 'accesorios', 'producto', 'Presentación: Caja c/40 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418283', 'Dräger', 'listado'),
+  ('8418415', 'Gafas nasales BabyFlow, estándar, desechables, tamaño XS, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418415', 'Dräger', 'consumible'),
+  ('8418416', 'Gafas nasales BabyFlow, estándar, desechables, tamaño M, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418416', 'Dräger', 'consumible'),
+  ('8418417', 'Gafas nasales BabyFlow, estándar, desechables, tamaño XL, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418417', 'Dräger', 'consumible'),
+  ('8418418', 'Headband Xs', 'accesorios', 'producto', 'Presentación: BOLSA/5', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418418', 'Dräger', ''),
+  ('8418423', 'Headband Xxl', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418423', 'Dräger', ''),
+  ('8418433', 'Hose heater adapter for F&P MR 730, for third-party breathing circuk', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418433', 'Dräger', 'listado'),
+  ('8418433-03', 'Adapter-Schlauchheizung', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418433-03', 'Dräger', ''),
+  ('8418462', 'Adaptador para cable calefactor', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418462', 'Dräger', 'listado'),
+  ('8418462-01', 'Adaptador de calentador de tubo', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418462-01', 'Dräger', ''),
+  ('8418490', 'Neo Mask M', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2026-11-10', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3878.7117-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8418490', 'Dräger', ''),
+  ('8418491', 'Mascarilla neonatal, silicona, desechable, tamaño S, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418491', 'Dräger', 'consumible'),
+  ('8418523', 'Humidifier MR850JSU 115V', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418523', 'Dräger', ''),
+  ('8418531', 'Gafas nasales BabyFlow, estándar, desechables, tamaño L, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418531', 'Dräger', 'consumible'),
+  ('8418533', 'Gorro BabyFlow, desechable, tamaño XS, blanco, circunferencia de la cabeza de 18 – 20,5 cm, 5 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418533', 'Dräger', 'consumible'),
+  ('8418533-04', 'CAP XS', 'accesorios', 'producto', 'Presentación: BOLSA/5', 3, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418533-04', 'Dräger', ''),
+  ('8418534', 'Cap S (Small 5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2246.9778-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418534', 'Dräger', ''),
+  ('8418535', 'Cap M (Medium, 5 Pcs.)', 'accesorios', 'producto', 'Presentación: BOLSA/5 PZAS', 12, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2246.9778-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418535', 'Dräger', ''),
+  ('8418536', 'Cap L (Large 5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2246.9778-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418536', 'Dräger', ''),
+  ('8418537', 'Cap Xl (Extra Large 5 Pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2246.9778-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418537', 'Dräger', ''),
+  ('8418538', 'Cap Xxl(Ex.ex.large (5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2246.9778-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418538', 'Dräger', ''),
+  ('8418539', 'Cap Xxl Plus 5pcs)', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2246.9778-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418539', 'Dräger', ''),
+  ('8418583', 'BabyFlow disposable (20x) Nasal CPAP system BabyFlow, disposable, 20 pcs.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418583', 'Dräger', 'consumible'),
+  ('8418603', 'Gafas nasales BabyFlow, anchas, desechables, tamaño 3, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418603', 'Dräger', 'consumible'),
+  ('8418605', 'Gafas nasales BabyFlow, estándar, desechables, tamaño S, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418605', 'Dräger', 'consumible'),
+  ('8418607', 'Gafas nasales BabyFlow, anchas, desechables, tamaño 4, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418607', 'Dräger', 'consumible'),
+  ('8418609', 'Gafas nasales BabyFlow, anchas, desechables, tamaño 5, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418609', 'Dräger', 'consumible'),
+  ('8418611', 'Gafas nasales BabyFlow, anchas, desechables, tamaño 6, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418611', 'Dräger', 'consumible'),
+  ('8418617', 'Gafas nasales BabyFlow, estándar, desechables, tamaño XXL, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Piezas / Caja. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8418617', 'Dräger', 'consumible'),
+  ('8418619', 'Neomask L', 'accesorios', 'producto', 'Presentación: CAJA/ 10 PZS', 2, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3878.7117-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8418619', 'Dräger', ''),
+  ('8419160', 'Cable de catéter de CO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8419160', 'Dräger', 'consumible'),
+  ('8420077', 'Cable termistor Ohmeda', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8420077', 'Dräger', 'listado'),
+  ('8420432', 'Kit mandatory minute ventilation', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '8420432', 'Dräger', ''),
+  ('844-26', 'Monitoring Line Set', 'accesorios', 'producto', 'Presentación: KIT', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '844-26', 'Dräger', ''),
+  ('8539983', 'Cable termisior Edwards / Baxer', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8539983', 'Dräger', 'listado'),
+  ('8601473', 'Data Cable 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8601473', 'Dräger', ''),
+  ('8609643', 'Holder For Suction Drive Unit', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8609643', 'Dräger', ''),
+  ('8610', 'Loción Removedora Sobres de 15 mi', 'accesorios', 'producto', 'Presentación: CAJA C/20 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8610', 'Masimo', 'listado'),
+  ('8621198', 'Kit cylinder wrench', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8621198', 'Dräger', ''),
+  ('8621751', 'Set 4x Pneumatic Nozzle For Atlan', 'insumos', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2028-11-25', NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8621751', 'Dräger', ''),
+  ('8630', 'Duraprep Aplicador c/26 mi', 'accesorios', 'producto', 'Presentación: CAJA C/20 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8630', 'Masimo', 'listado'),
+  ('8635', 'Duraprep Aplicador c/6 mi', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '8635', 'Masimo', 'listado'),
+  ('866066', 'IntelliVue Patient Monitor MX550', 'equipos', 'equipo', '', 33, 0, 'pieza', 'Sala de cámaras', 'Philips', 'MX550', '', 0.0, 'Philips', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '866066', 'Philips', 'intellivue'),
+  ('866199', 'Desfibrilador EFFICIA DFM100', 'equipos', 'equipo', '', 28, 0, 'pieza', 'Sala de cámaras', 'Philips', 'EFFICIA DFM100', '', 0.0, 'Philips', '2022-10-21', NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '866199', 'Philips', 'dfm100'),
+  ('867030-002', 'Instrucciones de uso para monitor de paciente IntelliVue MX100/X3', 'equipos', 'equipo', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '867030-002', 'Philips', ''),
+  ('867039', 'Intellivue Hemodynamic Extension', 'accesorios', 'producto', 'Presentación: PIEZA', 134, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, 'APROX
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '867039', 'Philips', 'intellivue'),
+  ('867040', 'Extensión de capnografía IntelliVue', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Módulos Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '867040', 'Philips', 'intellivue'),
+  ('867041', 'Extensión Microstream CO2 IntelliVue', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Módulos Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '867041', 'Philips', 'intellivue'),
+  ('867043/002', 'Cable Assembly', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '867043/002', 'Philips', ''),
+  ('867207', 'Cargador de batería para DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Energía Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '867207', 'Philips', 'dfm100')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('896140021', 'Cable de interfaz', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '896140021', 'Dräger', ''),
+  ('90002', 'Apósko Tegaderm™ Hidrocoloide Cuadrado. Medida: 10 x 10cm', 'accesorios', 'producto', 'Presentación: CAJA C/5 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '90002', 'Masimo', 'listado'),
+  ('90003', 'Apósko Tegaderm™ Hidrocolokle Ovalado. Medida: 10 x 12cm', 'accesorios', 'producto', 'Presentación: CAJA C/5 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '90003', 'Masimo', 'listado'),
+  ('90090', 'Bair Hugger Rolling Cart (usado)', 'equipos', 'equipo', 'Presentación: EQUIPO', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'BAIR HUGER ROLLING CAR (USADO)
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '90090', '3M', ''),
+  ('900MR558', 'Adaptador De Calentador De Manguera', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '900MR558', 'Dräger', ''),
+  ('900MR569', 'Sonda De Temperatura Para Conductos', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900MR569', 'Dräger', ''),
+  ('900MR754', 'Hose Heater Adapter 900 Mr 754', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900MR754', 'Dräger', ''),
+  ('900MR805', 'Adaptador Del Alambre Calentador Para Circuitos Respiratorios Calentados', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '900MR805', 'Dräger', ''),
+  ('900MR868', 'PROBE TEMP/FLOW RT ANG 1450mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '900MR868', 'F&P', 'listado'),
+  ('900MR869', 'Sensor de temperatura para MR850', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900MR869', 'Dräger', ''),
+  ('900PT405', 'TRAY POLE MOUNT AIRVO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '900PT405', 'F&P', 'listado'),
+  ('900PT421', 'MOBILE POLE STAND', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '900PT421', 'F&P', 'listado'),
+  ('900PT422', 'Airvo 2 Oxygen Inlet Kit', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900PT422', 'Dräger', ''),
+  ('900PT912', 'Filter Holder Airvo 2', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '900PT912', 'Dräger', ''),
+  ('9010', 'Cubrebocas', 'accesorios', 'producto', 'Presentación: BOLSA/75', 7, 0, 'paquete', '', '3M', '', '', 0.0, '', NULL, NULL, 'CUBREBOCAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9010', '3M', ''),
+  ('90100', 'BP fitting, M locking', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '90100', 'Welch Allyn', ''),
+  ('901000', 'Accessory/component', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '901000', 'Welch Allyn', ''),
+  ('901006', 'Papel ECG CP1200 (cardiopulmonar) caja 1000 hjs', 'insumos', 'producto', 'Presentación: CAJA/ 1000 HJS', 12, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '901006', 'Welch Allyn', ''),
-  ('INSUMOS-000125', 'Recording Papers', 'insumos', 'producto', 'Presentación: CAJA/ 1000 HJS', 10, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+  ('901026', 'Estuche de diagnóstico Pocket LED (3.5V HAL coaxial ophth/oto)', 'accesorios', 'producto', 'Presentación: KIT', 128, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901026', 'Welch Allyn', ''),
+  ('901043', 'Brazalete Reutilizable Niño Chico 2 Tubos', 'accesorios', 'producto', 'Presentación: PIEZA', 13, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901043', 'Welch Allyn', ''),
+  ('901056', 'Vital Signs Device', 'equipos', 'equipo', 'Presentación: EQUIPO', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '901056', 'Welch Allyn', ''),
+  ('901058', 'Monitor De Signos Vitales', 'equipos', 'equipo', 'Presentación: EQUIPO', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '901058', 'Welch Allyn', ''),
+  ('901087', 'Mango Laringoscopio Ligero Recargable', 'accesorios', 'producto', 'Presentación: PIEZA', 78, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901087', 'Welch Allyn', ''),
+  ('901093', 'Wall Transformer', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '901093', 'Welch Allyn', ''),
+  ('901122', 'Batería recargable 3 celdas', 'accesorios', 'producto', 'Presentación: PIEZA', 26, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '901122', 'Welch Allyn', ''),
+  ('9023', 'Radical Docking Station RDS-3 signal extraction pulse oximeter', 'accesorios', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2017-10-01', '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9023', 'Masimo', ''),
+  ('9081', 'Full Rainbow License Rainbow Parameter Installation tool Includes Measurements: SpCO, SpMet, SpHb, SpOC, Pi Delta 3D Alarm, Desat Index 3D alarm, Pleth Variability Index (PVi)', 'refacciones', 'producto', '', 6, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, true, false, 0, 0, '9081', 'Masimo', ''),
+  ('9081-2', 'Field Upgrader Rainbow Parameter Installation Tool Pleth Variability Index (PVi)', 'refacciones', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9081', 'Masimo', ''),
+  ('9081-3', 'Field Upgrader Rainbow Parameter Installation Tool SpHb, SpOC', 'refacciones', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9081', 'Masimo', ''),
+  ('90OPT501', 'BREATHING TUBE PT100 HOSP 10Pk', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '90OPT501', 'F&P', 'listado'),
+  ('9130', 'Placa Aduko / Pediátrica sin cable', 'accesorios', 'producto', 'Presentación: CAJA C/100 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9130', 'Masimo', 'listado'),
+  ('9160', 'Placa Aduko/Pediárrica universal (Bilobulada / Sin cable)', 'accesorios', 'producto', 'Presentación: CAJA C/M100 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9160', 'Masimo', 'listado'),
+  ('9165', 'Placa Aduto/Pediátrica universal (Blobulada / Con cable)', 'accesorios', 'producto', 'Presentación: CAJA C/40 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9165', 'Masimo', 'listado'),
+  ('9167', 'CO-OXIMETER RAINBOW PRONTO RAINBOW PRONTO NEONATAL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9167', 'Masimo', 'listado'),
+  ('9196', 'Rad Handheld signal extraction pulse oximeter', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9196', 'Masimo', ''),
+  ('9200', 'Avagard CHG 1%, 500ml', 'accesorios', 'producto', 'Presentación: CAJA C/8 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9200', 'Masimo', 'listado'),
+  ('9201', 'Broche De Pared Bomba De Pie', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'BROCHE DE PARED BOMBA DE PIE
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9201', '3M', ''),
+  ('9202', 'Dispensador CHG Mano', 'accesorios', 'producto', 'Presentación: CAJA CM PZA. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9202', 'Masimo', 'listado'),
+  ('9215', 'KIT RAD-5V HANDHELD, INTERNACIONAL.', 'accesorios', 'producto', 'Presentación: BASE. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9215', 'Masimo', 'listado'),
+  ('9222', 'Avagard D 500 mi', 'accesorios', 'producto', 'Presentación: CAJA 0/12 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9222', 'Masimo', 'listado'),
+  ('9228', 'Dispensador CHG Elecrónico', 'accesorios', 'producto', 'Presentación: CAJA C/4 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9228', 'Masimo', 'listado'),
+  ('9236', 'Dispensador Avagard D', 'accesorios', 'producto', 'Presentación: CAJA C/16 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9236', 'Masimo', 'listado'),
+  ('9246', 'Foaming White Bracket', 'accesorios', 'producto', 'Presentación: CAJA/ 16 PIEZAS', 2, 0, 'caja', '', '3M', '', '', 0.0, '', NULL, NULL, 'FOAMING WHITE BRACKET
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9246', '3M', ''),
+  ('9500', 'Radical-7', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9500', 'Masimo', ''),
+  ('9513', 'SedLine Sedation Monitor', 'equipos', 'equipo', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9513', 'Masimo', ''),
+  ('9515', 'Root', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9515', 'Masimo', ''),
+  ('9637', 'O3 Regional Oximeter', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2025-12-01', '', 'operativo', NULL, NULL, true, true, true, false, 0, 0, '9637', 'Masimo', ''),
+  ('9680', 'Cuchilla para Recortadora', 'accesorios', 'producto', 'Presentación: CAJA C/50 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9680', 'Masimo', 'listado'),
+  ('9681', 'Next Generañon Surgical Clipper', 'accesorios', 'producto', 'Presentación: CAJA C/1 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9681', 'Masimo', 'listado'),
+  ('9682', 'Cargador para Clipper', 'accesorios', 'producto', 'Presentación: CAJA CM PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9682', 'Masimo', 'listado'),
+  ('97-200', 'Estuche de diagnóstico', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, 'PARTE DE ATRAS
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '97-200', 'Welch Allyn', ''),
+  ('97150-C', 'Otoscope-Ophthal Set', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '97150-C', 'Welch Allyn', ''),
+  ('9757', 'KIT, PRONTO HNDHLD, NEX GEN PIEZA', 'accesorios', 'producto', 'Presentación: CAJA/20 PZAS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '9757', 'Masimo', 'listado'),
+  ('98-0400-98', 'Nibp Cuff Neo', 'accesorios', 'producto', 'Presentación: CAJA/ 20 PZS', 1, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '98-0400-98', 'Dräger', ''),
+  ('9848', 'Upgrade Tool, Eve', 'refacciones', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'refaccion
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9848', 'Masimo', ''),
+  ('9849', 'Rad-G Pulse Oximeter', 'equipos', 'equipo', '', 1, 0, 'pieza', '', 'Masimo', 'Rad-G Pulse Oximeter', '6000106190', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9849', 'Masimo', ''),
+  ('9853', 'Masimo Trace', 'refacciones', 'producto', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9853', 'Masimo', ''),
+  ('989803104151', 'Comfort Care Cuff, Pediatric', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803104151', 'Philips', 'intellivue-dfm100'),
+  ('989803105071', 'Cable adaptador de presión invasiva reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: IBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803105071', 'Philips', 'intellivue'),
+  ('989803139261', 'SMART Pads II, 1 juego', 'insumos', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '989803139261', 'Philips', 'dfm100'),
+  ('989803143181', 'Juego de cables ECG 3 derivaciones AAMI', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803143181', 'Philips', 'intellivue'),
+  ('989803143201', '5 Lead Aami Leadset', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803143201', 'Philips', 'intellivue-dfm100'),
+  ('989803149981', 'SMART Pads III, 1 juego', 'insumos', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '989803149981', 'Philips', 'dfm100'),
+  ('989803149991', 'SMART Pads III, 5 juegos', 'insumos', 'producto', 'Presentación: PAQUETE Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '989803149991', 'Philips', 'dfm100'),
+  ('989803160641', 'Cable tronco ECG Efficia 3/5 derivaciones AAMI/IEC', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803160641', 'Philips', 'dfm100'),
+  ('989803160651', 'Juego ECG Efficia 3 derivaciones grabber AAMI', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803160651', 'Philips', 'dfm100'),
+  ('989803160661', 'Juego ECG Efficia 3 derivaciones grabber IEC', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803160661', 'Philips', 'dfm100'),
+  ('989803160691', 'Juego ECG Efficia 5 derivaciones grabber miembros AAMI', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803160691', 'Philips', 'dfm100'),
+  ('989803160701', 'Juego ECG Efficia 5 derivaciones grabber miembros IEC', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803160701', 'Philips', 'dfm100'),
+  ('989803162081', 'Sonda de temperatura esofágica/rectal 10 Fr reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Temperatura Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803162081', 'Philips', 'intellivue'),
+  ('989803162091', 'Sonda de temperatura cutánea reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Temperatura Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803162091', 'Philips', 'intellivue'),
+  ('989803170171', 'Cable tronco ECG 3 derivaciones quirófano, AAMI/IEC', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803170171', 'Philips', 'intellivue-dfm100'),
+  ('989803170181', 'Cable tronco ECG 5 derivaciones quirófano, AAMI/IEC', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803170181', 'Philips', 'intellivue-dfm100'),
+  ('989803171271', 'Plug de prueba en cortocircuito para DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Prueba Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803171271', 'Philips', 'dfm100'),
+  ('989803174581', 'IntelliVue NMT patient cable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803174581', 'Philips', 'intellivue'),
+  ('989803174601', 'Sensor NMT reutilizable IntelliVue', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NMT Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803174601', 'Philips', 'intellivue'),
+  ('989803176161', 'Juego ECG 5 derivaciones snap miembros, apantallado AAMI', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803176161', 'Philips', 'dfm100'),
+  ('989803177471', 'Manguera de interconexión NBP reutilizable 3 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803177471', 'Philips', 'dfm100'),
+  ('989803177511', 'Manguito NBP reutilizable pediátrico (GCF1202)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803177511', 'Philips', 'dfm100'),
+  ('989803177521', 'Manguito NBP reutilizable adulto (GCF1203)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803177521', 'Philips', 'dfm100')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('989803177531', 'Manguito NBP reutilizable adulto grande (GCF1204)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803177531', 'Philips', 'dfm100'),
+  ('989803182601', 'Manguito NBP Comfort Care infantil', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803182601', 'Philips', 'intellivue'),
+  ('989803182621', 'Manguito NBP pediátrico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803182621', 'Philips', 'intellivue-dfm100'),
+  ('989803182641', 'Manguito Nbp Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803182641', 'Philips', 'intellivue-dfm100'),
+  ('989803182661', 'Manguito Nbp Adulto Largo', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803182661', 'Philips', 'intellivue-dfm100'),
+  ('989803182681', 'Manguito NBP Comfort Care adulto grande', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803182681', 'Philips', 'intellivue'),
+  ('989803182701', 'Manguito NBP Comfort Care muslo', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803182701', 'Philips', 'intellivue'),
+  ('989803183231', 'Manguera interconexión de presión neonatal', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803183231', 'Philips', 'intellivue-dfm100'),
+  ('989803190331', 'Sistema de almacenamiento de accesorios hospitalario DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803190331', 'Philips', 'dfm100'),
+  ('989803190341', 'Sistema de almacenamiento de accesorios prehospitalario DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803190341', 'Philips', 'dfm100'),
+  ('989803190351', 'Cintas de sujeción de cables DFM100 (2 piezas)', 'accesorios', 'producto', 'Presentación: PAR Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'par', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803190351', 'Philips', 'dfm100'),
+  ('989803190361', 'Soporte de barandal de cama para DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803190361', 'Philips', 'dfm100'),
+  ('989803190371', 'Batería de ion de litio recargable con indicador para DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Energía Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803190371', 'Philips', 'dfm100'),
+  ('989803190381', 'Papel térmico químico 50 mm sin cuadrícula, 12 rollos', 'insumos', 'producto', 'Presentación: CAJA Grupo: Papel Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '989803190381', 'Philips', 'dfm100'),
+  ('989803194281', 'Collarín para cable de terapia DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803194281', 'Philips', 'dfm100'),
+  ('989803196431', 'Paletas externas Efficia con PCI, resistentes al agua 4.8 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803196431', 'Philips', 'dfm100'),
+  ('989803197111', 'Cable adaptador de parches de terapia 2.1 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803197111', 'Philips', 'dfm100'),
+  ('989803197571', 'Correa de hombro para estuche DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803197571', 'Philips', 'dfm100'),
+  ('989803197581', 'Funda de bandeja DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803197581', 'Philips', 'dfm100'),
+  ('989803197591', 'Electrodos de recambio para paletas Efficia 989803196431', 'refacciones', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803197591', 'Philips', 'dfm100'),
+  ('989803199241', 'Estación de acoplamiento DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803199241', 'Philips', 'dfm100'),
+  ('989803199251', 'Cable de alimentación de 3 terminales para estación DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Energía Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803199251', 'Philips', 'dfm100'),
+  ('989803199601', 'Paquete estación de acoplamiento DFM100 (estación, cable y soporte de barandal)', 'accesorios', 'producto', 'Presentación: PAQUETE Grupo: Montaje Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803199601', 'Philips', 'dfm100'),
+  ('989803202611', 'Memoria USB para descarga de datos DFM100', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Datos Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803202611', 'Philips', 'dfm100'),
+  ('989803209751', 'Neonatal Nibp Air Hose 3.0m', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803209751', 'Philips', 'intellivue-dfm100'),
+  ('989803209761', 'Manguera NBP adulto 1.5 m (entrada 5 mm)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803209761', 'Philips', 'dfm100'),
+  ('989803209771', 'Manguera Nibp Adulto 3.0m', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '989803209771', 'Philips', 'intellivue-dfm100'),
+  ('989803210521', 'Batería de ion de litio recargable para IntelliVue MX400–MX550', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Energía Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803210521', 'Philips', 'intellivue'),
+  ('989803217001', 'Entrada NBP 5 mm para DFM100, juego de 5 con llaves Allen', 'refacciones', 'producto', 'Presentación: PAQUETE Grupo: NBP Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, '989803217001', 'Philips', 'dfm100'),
+  ('9913', 'Kit de herramientas para reemplazo de batería para Root', 'refacciones', 'producto', '', 6, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9913', 'Masimo', ''),
+  ('A6100-24USB', 'CABLE INTERFACE PARA ABPM 6100', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'A6100-24USB', 'Welch Allyn', 'listado'),
+  ('A702745-502', 'TAPON C/ROSCA PARA MANGOS POCKET', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'A702745-502', 'Welch Allyn', 'listado'),
+  ('A710168-501', 'CONVERTIDOR P/MANGO RECARGABLE A BATERIA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'A710168-501', 'Welch Allyn', 'listado'),
+  ('A791003-502', 'TRANSFORMADOR P/LAMPARA FRONTAL 46003', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'A791003-502', 'Welch Allyn', 'listado'),
+  ('AABPM-7100S', 'MONITOR AMBULATORIO DE PRESION ARTERIAL (ABPM) MOD.7100', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'AABPM-7100S', 'Welch Allyn', 'listado'),
+  ('AB4MTVXP-B', 'MONITOR CONNEX DE PARED CIWS MASIMO SPO2 SURETEMP PLUS SCS PANOPTIC Y', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'AB4MTVXP-B', 'Masimo', 'listado'),
+  ('ACCESORIOS-000006', 'Temperature probe skin 3m', 'accesorios', 'producto', '', 1, 0, 'pieza', 'A/2', 'Dräger', '', '', 0.0, 'Drager ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '', 'Drager', ''),
+  ('ACP150A-3ESB', 'ELECTROCARDIOGRAFO CP150 CON ELECTRODOS REUSABLES WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'ACP150A-3ESB', 'Welch Allyn', 'listado'),
+  ('AG-AS3036', 'Solo Pediatric T-Piece 10mm', 'accesorios', 'producto', 'Presentación: PIEZA', 19, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'AG-AS3036', 'Dräger', ''),
+  ('ASE-PRO-BELT', 'BASE RODABLE DE LUJO C/SOPORTE P/MONIT SPOT CSM', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'ASE-PRO-BELT', 'Welch Allyn', 'listado'),
+  ('ASOFT-12-1TP', 'BRAZALETE FLEXIPORT DESECHABLE # 12 CON UN TUBO CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'ASOFT-12-1TP', 'Welch Allyn', 'listado'),
+  ('ASS028', 'Superficie de prevención NP50', 'refacciones', 'producto', '', 0, 10, 'pieza', 'Palma ', 'Hill-Rom', 'NP50', '2540-N-0096-03', 5500.0, 'Hill-Rom', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 10, 'ASS028', 'Hill-Rom', ''),
+  ('AT7710-71ML', 'MANGO CONVERTIBLE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'AT7710-71ML', 'Welch Allyn', 'listado'),
+  ('BRAZGEN1', 'Manguera para brazalete genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'BRAZGEN1', 'Dräger', ''),
+  ('CABLEBOM10', 'Cable de corriente para bomba genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CABLEBOM10', 'Dräger', ''),
+  ('CABTRNGEN1.10', 'Troncal de SpO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CABTRNGEN1.10', 'Dräger', ''),
+  ('CFF1-270R', 'en ira de 10', 'accesorios', 'producto', 'Presentación: CAJA C/250 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CFF1-270R', 'Masimo', 'listado'),
+  ('CFF10-250R', 'Tapa proteciora con almohadilla con alcohol isopropilico al 70%. Conector libre de aguja. Presentación', 'accesorios', 'producto', 'Presentación: CAJA C/10 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CFF10-250R', 'Masimo', 'listado'),
+  ('CM5-200R', 'Tapa protectora con almohadila con alcohol isopropilico al 70% Conector libre de aguja. Presentación', 'accesorios', 'producto', 'Presentación: CAJA C/270 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CM5-200R', 'Masimo', 'listado'),
+  ('CS2340SO', 'AAMI compatible direct-connect ECG cable, 3 leads snap, adult/pediatric, AHA', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CS2340SO', 'Dräger', ''),
+  ('CSA1-270R', 'Unkaria', 'accesorios', 'producto', 'Presentación: CAJA C/200 PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CSA1-270R', 'Masimo', 'listado'),
+  ('CSAS-250R', 'Punta proecora con almohadilla con alcohol isopropilico al 70%.', 'accesorios', 'producto', 'Presentación: RTON C/8 CAJAS, CAJA 270. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CSAS-250R', 'Masimo', 'listado'),
+  ('CTG1-270R', 'Tapa protectora con alcohol isopropiico al 70% Stopper luer hembra. Presentación Unkaria e', 'accesorios', 'producto', 'Presentación: PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'CTG1-270R', 'Masimo', 'listado'),
+  ('D137001000', 'Reusable Peep 10 Valve', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'D137001000', 'Dräger', ''),
+  ('DED2POG', 'Dedal SpO2 de pulsioximetría genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'DED2POG', 'Dräger', ''),
+  ('DS100A', 'Sensor Spo2 Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'DS100A', 'Dräger', ''),
+  ('DS44-MC', 'Durashock Ds44 Multi', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'DS44-MC', 'Welch Allyn', ''),
+  ('E4541', 'Tapa proteciora con alcohol isopropilico al 70% Siopper luer hembra. Presentación tra de 5 e', 'accesorios', 'producto', 'Presentación: RTON C/8 CAJAS, CAJA 250. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'E4541', 'Masimo', 'listado'),
+  ('E9001EZ', 'Recording Papers', 'insumos', 'producto', 'Presentación: CAJA/ 1000 HJS', 10, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'E9001EZ', 'Welch Allyn', ''),
-  ('INSUMOS-000126', 'Lámpara dual de quirófano Polaris 100/200', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Dräger', 'Polaris 100 /200', '', 0.0, 'Dräger', NULL, NULL, '', 'operativo', NULL, NULL, true, true, true, true, 0, 0, 'G16981 / G16982', 'Dräger', ''),
-  ('INSUMOS-000127', 'Pieza Dräger 8412015', 'insumos', 'producto', 'Cedros DRAGER · ubicación E/26', 160, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Cedros DRAGER · ubicación E/26', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '8412015', 'Dräger', ''),
-  ('INSUMOS-000128', 'Insumo Dräger MP00352', 'insumos', 'producto', 'Cedros DRAGER · CAJA/25 PIEZAS · Bodega Palma', 40, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Cedros DRAGER · CAJA/25 PIEZAS · Bodega Palma', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00352', 'Dräger', ''),
-  ('INSUMOS-000129', 'Pieza Welch Allyn 11470', 'insumos', 'producto', 'Cedros WA · ubicación A/3', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Cedros WA · ubicación A/3', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '11470', 'Welch Allyn', ''),
-  ('INSUMOS-000130', 'Electrodos descartables ECG / Electrodo neonatal (genérico)', 'insumos', 'producto', 'Cedros DRAGER+3M · MPGBW-78RT', 98, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', '2027-02-06', NULL, 'Cedros DRAGER+3M · MPGBW-78RT', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MPGBW-78RT', 'Dräger', ''),
-  ('REFACCIONES-000001', 'Superficie de prevención NP50', 'refacciones', 'producto', '', 0, 10, 'pieza', 'Palma ', 'Hill-Rom', 'NP50', '2540-N-0096-03', 5500.0, 'Hill-Rom', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 10, 'ASS028', 'Hill-Rom', ''),
-  ('REFACCIONES-000002', 'Batería de reemplazo Radical-7 (Li-ion 3.7 V)', 'refacciones', 'producto', '', 5, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, '2019-10-01', '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '4676', 'Masimo', ''),
-  ('REFACCIONES-000003', 'Eve – Modo de tamizaje neonatal CCHD (licencia, Radical-7)', 'refacciones', 'producto', '', 12, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '3645', 'Masimo', ''),
-  ('REFACCIONES-000004', 'Kit de herramientas para reemplazo de batería para Root', 'refacciones', 'producto', '', 6, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9913', 'Masimo', ''),
-  ('REFACCIONES-000005', 'Masimo Trace', 'refacciones', 'producto', '', 2, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9853', 'Masimo', ''),
-  ('REFACCIONES-000006', 'Accessory handheld lock for use with Radical 7 Color Screen signal extraction pulse oximeter', 'refacciones', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, false, true, false, false, 0, 0, '2350', 'Masimo', ''),
-  ('REFACCIONES-000007', 'Full Rainbow License Rainbow Parameter Installation tool Includes Measurements: SpCO, SpMet, SpHb, SpOC, Pi Delta 3D Alarm, Desat Index 3D alarm, Pleth Variability Index (PVi)', 'refacciones', 'producto', '', 6, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, true, true, false, 0, 0, '9081', 'Masimo', ''),
-  ('REFACCIONES-000008', 'Field Upgrader Rainbow Parameter Installation Tool Pleth Variability Index (PVi)', 'refacciones', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9081', 'Masimo', ''),
-  ('REFACCIONES-000009', 'Field Upgrader Rainbow Parameter Installation Tool SpHb, SpOC', 'refacciones', 'producto', '', 0, 0, 'pieza', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, '9081', 'Masimo', ''),
-  ('REFACCIONES-000010', 'Juego De Piezas De Repuesto', 'refacciones', 'producto', 'Presentación: PAQUETE/30 PZS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+  ('ECGGEN1', 'Cable ECG 3m/10 ft, AAMI genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'ECGGEN1', 'Dräger', ''),
+  ('EMW04', 'Cast Padding', 'insumos', 'producto', 'Presentación: 4 BOLSAS CON20 ROLLOS C/U', 5, 0, 'paquete', '', '3M', '', '', 0.0, '', '2025-04-02', NULL, 'CAST PADDING
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'EMW04', '3M', ''),
+  ('G13568', 'Heavy Duty Anchor', 'accesorios', 'producto', 'Presentación: PAQUETE', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G13568', 'Dräger', ''),
+  ('G16981 / G16982', 'Lámpara de quirófano dual Polaris 100/200', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Dräger', 'Polaris 100/200', '', 430000.0, 'Dräger', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'G16981 / G16982', 'Dräger', ''),
+  ('G16981 / G16982-2', 'Lámpara dual de quirófano Polaris 100/200', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Dräger', 'Polaris 100 /200', '', 0.0, 'Dräger', NULL, NULL, '', 'operativo', NULL, NULL, true, true, true, true, 0, 0, 'G16981 / G16982', 'Dräger', ''),
+  ('G18339', 'Halogen Lamp 700', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G18339', 'Dräger', ''),
+  ('G18362', 'Lamp Base', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G18362', 'Dräger', ''),
+  ('G93111', 'Soporte De Humidificador M25.2', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'G93111', 'Dräger', ''),
+  ('INSUMOS-000037', 'Red Dot Monitoring Electrode with foam Tape', 'insumos', 'producto', '', 0, 0, 'paquete', '', '', '', '', 0.0, '', NULL, NULL, '', 'operativo', NULL, NULL, false, true, false, true, 0, 0, '', '', ''),
+  ('INSUMOS-000043', 'Electrodos desechables ECG', 'insumos', 'producto', '', 0, 0, 'paquete', '', '', '', '', 0.0, 'Neo Tecnia ', NULL, NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, '', 'Médico electrodes international LTD', ''),
+  ('LATELECGEN1', 'Latiguillos de 3 SG electrocardiograma genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'LATELECGEN1', 'Dräger', ''),
+  ('LATELECGEN1.10', 'Latiguillos SG electrocardiograma genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'LATELECGEN1.10', 'Dräger', ''),
+  ('LX25', 'Clean, Trace', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', '3M', '', '', 0.0, '', NULL, NULL, 'CLEAN, TRACE
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'LX25', '3M', ''),
+  ('M01911', 'Classi:Star® vented, single-pañent use, size L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M01911', 'Dräger', 'listado'),
+  ('M05128-11', 'Packing Ring', 'accesorios', 'producto', 'Presentación: PAQUETE/6 PZA', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M05128-11', 'Dräger', ''),
+  ('M06258', 'Adaptador para conectar, por ejemplo, un tubo o una cánula nasal a un flujómetro de O2, M34×1,5 a una boquilla de 6 mm', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M06258', 'Dräger', 'consumible'),
+  ('M07582', 'Mirilla de control de secreciones', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M07582', 'Dräger', 'consumible'),
+  ('M11015', 'Inhalason mask for Inhaleze, autoclavalable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M11015', 'Dräger', 'listado'),
+  ('M1131A', 'Sensor SpO2 desechable adulto/pediátrico, clip de dedo', 'insumos', 'producto', 'Presentación: CAJA Grupo: SpO2 Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1131A', 'Philips', 'intellivue-dfm100'),
+  ('M1132A', 'Sensor SpO2 desechable pediátrico', 'insumos', 'producto', 'Presentación: CAJA Grupo: SpO2 Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1132A', 'Philips', 'intellivue-dfm100'),
+  ('M1133A', 'Sensor SpO2 desechable neonatal', 'insumos', 'producto', 'Presentación: CAJA Grupo: SpO2 Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1133A', 'Philips', 'intellivue')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('M1134A', 'Sensor SpO2 desechable infantil', 'insumos', 'producto', 'Presentación: CAJA Grupo: SpO2 Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1134A', 'Philips', 'intellivue'),
+  ('M1191B', 'Sensor SpO2 adulto reutilizable 2 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: SpO2 Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1191B', 'Philips', 'intellivue-dfm100'),
+  ('M1191BL', 'Sensor Spo2 Adulto Reusable (3mts)', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1191BL', 'Philips', 'intellivue-dfm100'),
+  ('M1192A', 'Sensor SpO2 de dedo adulto, pediátrico reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1192A', 'Philips', 'intellivue-dfm100'),
+  ('M1193A', 'Sensor Spo2 Pie, Mano Neonatal Reusable (1.5m)', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1193A', 'Philips', 'intellivue-dfm100'),
+  ('M1194A', 'Sensor SpO2 adulto pediátrico reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1194A', 'Philips', 'intellivue-dfm100'),
+  ('M1196A', 'Sensor Reusable Spo2 Adulto (3mts)', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1196A', 'Philips', 'intellivue-dfm100'),
+  ('M12394', 'Mouthpiece for Inhaleze, autoclavalable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M12394', 'Dräger', 'listado'),
+  ('M1567A', 'Transductor de presión invasiva desechable', 'insumos', 'producto', 'Presentación: PIEZA Grupo: IBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1567A', 'Philips', 'intellivue'),
+  ('M1571A', 'Manguito NBP Comfort Care infantil (10–15 cm)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1571A', 'Philips', 'intellivue'),
+  ('M1572A', 'Manguito pediátrico Comfort Care', 'accesorios', 'producto', 'Presentación: PIEZA', 77, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1572A', 'Philips', 'intellivue'),
+  ('M1573A', 'Manguito NBP Comfort Care adulto pequeño (20.5–28 cm)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1573A', 'Philips', 'intellivue'),
+  ('M1574A', 'Manguito NBP Comfort Care adulto (27–35 cm)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1574A', 'Philips', 'intellivue'),
+  ('M1575A', 'Manguito NBP Comfort Care adulto grande', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1575A', 'Philips', 'intellivue'),
+  ('M1576A', 'Brazalete Comfort Care Muslo', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1576A', 'Philips', 'intellivue'),
+  ('M1597B', 'Cable interconexión de presión neonatal', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1597B', 'Philips', 'intellivue-dfm100'),
+  ('M1597C', 'Neonatal Nibp Air Hose 3.0m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1597C', 'Philips', 'intellivue-dfm100'),
+  ('M1598B', 'Manguera Nibp Adulta 1.5', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1598B', 'Philips', 'intellivue-dfm100'),
+  ('M1599B', 'Manguera NBP adulto 3.0 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: NBP Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1599B', 'Philips', 'intellivue'),
+  ('M1602A', 'Juego de cables ECG 3 derivaciones, snap ICU, AAMI', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1602A', 'Philips', 'intellivue'),
+  ('M1644A', '5 Leadset, Snap, Aami, Icu', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'M1644A', 'Philips', 'intellivue-dfm100'),
+  ('M1645A', 'Juego de cables ECG 5 derivaciones, snap ICU, IEC 1.6 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1645A', 'Philips', 'intellivue-dfm100'),
+  ('M1663A', 'Cable tronco ECG 10 derivaciones (5+5) AAMI/IEC 2 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1663A', 'Philips', 'intellivue'),
+  ('M1668A', 'Cable tronco ECG 5 derivaciones AAMI/IEC 2.7 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1668A', 'Philips', 'intellivue-dfm100'),
+  ('M1669A', '3 Lead Ecg Trunk, Aami/Iec 2.7m', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2022-07-11', NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1669A', 'Philips', 'intellivue-dfm100'),
+  ('M1671A', 'Juego de cables ECG 3 derivaciones, grabber ICU, AAMI 1 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1671A', 'Philips', 'intellivue-dfm100'),
+  ('M1672A', 'Juego de cables ECG 3 derivaciones, grabber ICU, IEC 1 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1672A', 'Philips', 'intellivue-dfm100'),
+  ('M1673A', '3 Leadset, Snap, Aami, Icu', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2021-07-07', NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M1673A', 'Philips', 'intellivue-dfm100'),
+  ('M1674A', 'Juego de cables ECG 3 derivaciones, snap ICU, IEC 1 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1674A', 'Philips', 'intellivue-dfm100'),
+  ('M1675A', 'Juego de cables ECG 3 derivaciones, grabber quirófano, AAMI', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1675A', 'Philips', 'intellivue'),
+  ('M1941A', 'Cable extensión SpO2 2 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: SpO2 Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1941A', 'Philips', 'intellivue-dfm100'),
+  ('M1949A', 'Cable tronco ECG 10 derivaciones (5+5) AAMI/IEC 2.7 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1949A', 'Philips', 'intellivue'),
+  ('M1968A', 'Juego de cables ECG 5 derivaciones, grabber ICU, AAMI 1.6 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1968A', 'Philips', 'intellivue-dfm100'),
+  ('M1971A', 'Juego de cables ECG 5 derivaciones, grabber ICU, IEC 1.6 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M1971A', 'Philips', 'intellivue-dfm100'),
+  ('M21262', 'Juego de 5 itros adaptador.', 'accesorios', 'producto', 'Presentación: Kk. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M21262', 'Dräger', 'listado'),
+  ('M2202A', 'Electrodos ECG de espuma radiolúcidos, caja con 300', 'insumos', 'producto', 'Presentación: CAJA Grupo: ECG Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2202A', 'Philips', 'intellivue-dfm100'),
+  ('M2481A', 'Papel De Registro Ecg Para Philips', 'insumos', 'producto', 'Presentación: PIEZA', 22, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2481A', 'Philips', 'intellivue'),
+  ('M2501A', 'Sensor De Co2 Principal', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M2501A', 'Philips', 'intellivue-dfm100'),
+  ('M2513A', 'Adaptador de vía aérea CO2 reutilizable adulto/pediátrico (ET > 4.0 mm)', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M2513A', 'Philips', 'intellivue-dfm100'),
+  ('M2522A', 'Adaptador de vía aérea CO2 desechable infantil (ET ≤ 4.0 mm)', 'insumos', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2522A', 'Philips', 'intellivue'),
+  ('M2533A', 'Adaptador de vía aérea CO2 desechable adulto (ET > 4.0 mm)', 'insumos', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con IntelliVue MX400/450/500/550 y Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550 y Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2533A', 'Philips', 'intellivue-dfm100'),
+  ('M25647', 'Double Adapter', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M25647', 'Dräger', ''),
+  ('M25682', 'Pieza en Y, poliamida, reutilizable, A, acodada, sin Luer Lock', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M25682', 'Dräger', 'consumible'),
+  ('M25780', 'Tubo de aspiración, silicona, reutilizable, 1,5 m, para aspiración médica', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M25780', 'Dräger', 'consumible'),
+  ('M26842', 'Garra de riel tipo palanca', 'accesorios', 'producto', 'Presentación: Caja c 1 Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M26842', 'Dräger', 'consumible'),
+  ('M2702A', 'Monitor fetal Avalon FM20/FM30', 'equipos', 'equipo', '', 20, 0, 'pieza', 'Sala de cámaras', 'Philips', 'FM20/FM30', '', 0.0, 'Philips', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'M2702A', 'Philips', ''),
+  ('M2736A', 'Tocógrafo', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M2736A', 'Philips', ''),
+  ('M2741A', 'Sensor de CO2 sidestream', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M2741A', 'Philips', 'dfm100'),
+  ('M2744A', 'Cánula nasal de CO2 adulto', 'insumos', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2744A', 'Philips', 'dfm100'),
+  ('M2745A', 'Cánula nasal de CO2 pediátrica', 'insumos', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2745A', 'Philips', 'dfm100'),
+  ('M2750A', 'Cánula nasal CO2/O2 adulto', 'insumos', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2750A', 'Philips', 'dfm100'),
+  ('M27542', 'BlueSet anestesia (N)', 'accesorios', 'producto', 'Presentación: Set. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M27542', 'Dräger', 'consumible'),
+  ('M2768A', 'Juego de adaptador de vía aérea CO2 adulto/pediátrico', 'insumos', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2768A', 'Philips', 'dfm100'),
+  ('M2776A', 'Línea de muestreo CO2 recta', 'insumos', 'producto', 'Presentación: PIEZA Grupo: CO2 Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M2776A', 'Philips', 'dfm100'),
+  ('M30146', 'BlueSet anestesia (P/A)', 'accesorios', 'producto', 'Presentación: Set. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M30146', 'Dräger', 'consumible'),
+  ('M30543', 'Y-piece, polyamide, reusable, A, temperature tap', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M30543', 'Dräger', 'listado'),
+  ('M33278', 'Y-piece 90° with Luer Lock (A)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M33278', 'Dräger', 'consumible'),
+  ('M33681', 'Anesthesia Set pediaric', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M33681', 'Dräger', 'listado'),
+  ('M34568-01', '90-Luerlock For Neonates', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M34568-01', 'Dräger', ''),
+  ('M34875', 'Adaptador O2, DISS-NIST', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M34875', 'Dräger', 'consumible'),
+  ('M34877', 'Adaptador AIRE, DISS-NIST', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M34877', 'Dräger', 'consumible'),
+  ('M3543A', 'Paletas water resistant', 'equipos', 'equipo', 'Presentación: EQUIPO', 19, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2016-06-01', NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, true, 0, 0, 'M3543A', 'Philips', 'dfm100'),
+  ('M35500', 'D-Vapor', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de cámaras', 'Dräger', 'D-Vapor', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'M35500', 'Drager', ''),
+  ('M3708A', 'Papel De Registro Ecg Para Philips', 'insumos', 'producto', 'Presentación: PIEZA', 29, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M3708A', 'Philips', 'intellivue'),
+  ('M3713A', 'Parches multifunción Plus adulto/niño, 10 juegos/caja', 'insumos', 'producto', 'Presentación: CAJA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M3713A', 'Philips', 'dfm100'),
+  ('M3716A', 'Parches multifunción radiolúcidos adulto/niño, 10 juegos/caja', 'insumos', 'producto', 'Presentación: CAJA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M3716A', 'Philips', 'dfm100'),
+  ('M3717A', 'Parches multifunción Plus infantil, 5 juegos/caja', 'insumos', 'producto', 'Presentación: CAJA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M3717A', 'Philips', 'dfm100'),
+  ('M3718A', 'Parches multifunción radiotransparentes adulto/niño, 10 juegos/caja', 'insumos', 'producto', 'Presentación: CAJA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M3718A', 'Philips', 'dfm100'),
+  ('M3719A', 'Parches multifunción radiotransparentes infantil, 5 juegos/caja', 'insumos', 'producto', 'Presentación: CAJA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'M3719A', 'Philips', 'dfm100'),
+  ('M3725A', 'Carga de prueba 50 ohm, conector tipo plug', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Prueba Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M3725A', 'Philips', 'dfm100'),
+  ('M4605A', 'Batería de ion de litio recargable 10.8 V para IntelliVue MX400–MX550', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Energía Compatible con IntelliVue MX400/450/500/550. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'IntelliVue MX550', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · IntelliVue MX400/450/500/550.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M4605A', 'Philips', 'intellivue'),
+  ('M4741A', 'Paletas internas conmutadas 7.5 cm, 3.9 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M4741A', 'Philips', 'dfm100'),
+  ('M4742A', 'Paletas internas conmutadas 6.0 cm, 3.9 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M4742A', 'Philips', 'dfm100'),
+  ('M4743A', 'Paletas internas conmutadas 4.5 cm, 3.9 m', 'accesorios', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M4743A', 'Philips', 'dfm100'),
+  ('M4759A', 'Electrodos de recambio para paletas M3543A', 'refacciones', 'producto', 'Presentación: PIEZA Grupo: Terapia Compatible con Efficia DFM100. Alta de catálogo Philips. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Philips', 'Efficia DFM100', '', 0.0, 'Philips', NULL, NULL, 'Catálogo Philips · Efficia DFM100.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'M4759A', 'Philips', 'dfm100'),
+  ('M5072A', 'Pads Para Uso Para Desfibrilador', 'equipos', 'equipo', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Philips', '', '', 0.0, '', '2021-04-30', NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, true, true, 0, 0, 'M5072A', 'Philips', ''),
+  ('MANGNBPS1', 'Manguera NIBP genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MANGNBPS1', 'Dräger', ''),
+  ('MK00514', 'Filtro antibacteriano desechable, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MK00514', 'Dräger', 'consumible'),
+  ('MK01900', 'Sensor de flujo SpiroLife®, PPSU, esterilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MK01900', 'Dräger', 'consumible'),
+  ('MK04248', 'BlueSet anestesia trampa de agua (P/A)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MK04248', 'Dräger', 'consumible')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MK09270', 'Medibus.X 3m accessory kit', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MK09270', 'Dräger', ''),
+  ('MP00053', 'Tubo De Conexión Ntp Adulto', 'accesorios', 'producto', 'Presentación: PIEZA', 31, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00053', 'Dräger', ''),
+  ('MP00061', 'Juego de aspiracion, desechable, VacuSmart®, 700 ml y VacuSmart® Tube, 25 uds. cada uno', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00061', 'Dräger', 'consumible'),
+  ('MP00220', 'Válvula espiratoria para Carina®, desechable', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00220', 'Dräger', 'consumible'),
+  ('MP00222', 'Juego de bolsa reservorio VentStar®, desechable, 2 l, 0,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00222', 'Dräger', 'consumible'),
+  ('MP00224', 'Válvula de fugas para Carina® SyncVent, desechable, 5 uds.', 'accesorios', 'producto', 'Presentación: Caja c/5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00224', 'Dräger', 'consumible'),
+  ('MP00234', 'Cámara de humidificador VentStar®, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00234', 'Dräger', 'consumible'),
+  ('MP00300', 'Circuito respiratorio Vent Set, desechable, básico, 1,5 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00300', 'Dräger', 'consumible'),
+  ('MP00301', 'Juego de anestesia, desechable, básico, 1,5 m/0,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: caja con 25 pzs. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00301', 'Dräger', 'consumible'),
+  ('MP00303', 'Juego de anestesia, desechable, extensible, 1,8 m/0,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: caja con 25 pzs. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00303', 'Dräger', 'consumible'),
+  ('MP00305', 'Circuito respiratorio Vent Set, desechable, extensible, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00305', 'Dräger', 'consumible'),
+  ('MP00306', 'VentSiar®, latex-free, dual heated, 1.5 m, (Se debe pedir el paqueze con 10 piezas)', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00306', 'Dräger', 'listado'),
+  ('MP00307', 'VentStar®, latex-free, heated, 1.5 m,(Se debe pedir el paquete con 10 piezas)', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00307', 'Dräger', 'listado'),
+  ('MP00308', 'VentSiar heated (N) (se debe pedir el paqueze con 10 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00308', 'Dräger', 'listado'),
+  ('MP00309', 'VentStan®, lxx-fr. N, heated, w/o chamber, 1.2 m, (se debe pedir el paquete con 10 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00309', 'Dräger', 'listado'),
+  ('MP00310', 'Circuito respiratorio para Resuscitaire VentStar®, desechable, N, 1 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00310', 'Dräger', 'consumible'),
+  ('MP00311', 'Circuito respiratorio para Resuscitaire VentStar®, desechable, N, línea de medición de presión, 1 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00311', 'Dräger', 'consumible'),
+  ('MP00312', 'Circuito respiratorio VentStar® Carina® LeakV, desechable, 1,5 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00312', 'Dräger', 'consumible'),
+  ('MP00313', 'Circuito respiratorio VentStar® Carina® ExpV, desechable, 1,5 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00313', 'Dräger', 'consumible'),
+  ('MP00315', 'VentSei Coax (se debe pedir el paquete con 20 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00315', 'Dräger', 'listado'),
+  ('MP00316', 'Vent Set, latex-free,coax, wih hokler, 1.5m, (se debe pedir el paquete con 20 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00316', 'Dräger', 'listado'),
+  ('MP00327', 'VentStar MRI 300 (se debe pedir el paquete con 10 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00327', 'Dräger', 'listado'),
+  ('MP00329', 'VentSiar®, latex-iree, N,MRI, 3 m, (se debe pedir el paquete con 10 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00329', 'Dräger', 'listado'),
+  ('MP00330', 'Juego de anestesia VentStar®, desechable, sin Luer Lock, 1,8 m/0,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00330', 'Dräger', 'consumible'),
+  ('MP00331', 'Juego de anestesia VentStar®, desechable, P, sin Luer Lock, 1,5 m/1,1m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00331', 'Dräger', 'consumible'),
+  ('MP00333', 'VentStar Anesthesia (N) 180. 25/caja', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '<!--mas-cost:10851.308-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00333', 'Dragër ', ''),
+  ('MP00333-2', 'Ventstar Anesthesia (N) 180. Pieza', 'insumos', 'producto', '', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dragër ', NULL, NULL, '<!--mas-cost:10851.308-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00333', 'Dragër ', ''),
+  ('MP00334', 'Circuito respiratorio VentStar®, desechable, trampa de agua, sin LL, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00334', 'Dräger', 'consumible'),
+  ('MP00335', 'Sistema paciente VentStar® Oxylog 3000F, 2000p, VE300, desechable, 3 m, 5 uds., para uso exclusivo con Oxylog VE300 con opción Plus', 'accesorios', 'producto', 'Presentación: Paquete c/5 piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00335', 'Dräger', 'consumible'),
+  ('MP00337', 'Ventstar Watertrap 180', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:7255.7836-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00337', 'Dräger', ''),
+  ('MP003374', 'Ventstar Watertrap 180', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP003374', 'Dräger', ''),
+  ('MP00338', 'Circuito respiratorio VentStar®, desechable, P, básico, sin LL, 1,5 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00338', 'Dräger', 'consumible'),
+  ('MP00349', 'Ventstar Basic 180', 'insumos', 'producto', 'Presentación: CAJA/25 PIEZAS', 132, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2027-10-17', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3975.1556-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00349', 'Dräger', ''),
+  ('MP00350', 'Circuito respiratorio VentStar®, desechable, básico, 2,5 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00350', 'Dräger', 'consumible'),
+  ('MP00351', 'Ventstar Basic (P) 180', 'insumos', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2027-09-18', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3785.34-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00351', 'Dräger', ''),
+  ('MP00352', 'Insumo Dräger MP00352', 'insumos', 'producto', 'Cedros DRAGER · CAJA/25 PIEZAS · Bodega Palma', 40, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Cedros DRAGER · CAJA/25 PIEZAS · Bodega Palma
+<!--mas-cost:4305.4128-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00352', 'Dräger', ''),
+  ('MP00353', 'Circuito respiratorio VentStar®, desechable, N, básico, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00353', 'Dräger', 'consumible'),
+  ('MP00355', 'Circuito respiratorio VentStar®, desechable, extensible, 2,2 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00355', 'Dräger', 'consumible'),
+  ('MP00356', 'VentSiar®, latex-free, coaxial, 1.8m, (se debe pedir el paquete con 20 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00356', 'Dräger', 'listado'),
+  ('MP00361', 'Circuito respiratorio VentStar®, desechable, P, trampa de agua, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00361', 'Dräger', 'consumible'),
+  ('MP00362', 'Circuito respiratorio VentStar®, desechable, P, trampa de agua, sin LL, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00362', 'Dräger', 'consumible'),
+  ('MP00363', 'Circuito respiratorio VentStar®, desechable, N, trampa de agua, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00363', 'Dräger', 'consumible'),
+  ('MP00365', 'Juego de anestesia VentStar®, desechable, básico, 2 l, 1,8 m/1,5 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00365', 'Dräger', 'consumible'),
+  ('MP00366', 'Juego de anestesia VentStar®, desechable, básico, 2 l, 2,5 m/1,5 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00366', 'Dräger', 'consumible'),
+  ('MP00371', 'Juego de anestesia VentStar®, desechable, trampa de agua, sin LL, 2 l, 1,8 m/1,5 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00371', 'Dräger', 'consumible'),
+  ('MP00372', 'Juego de anestesia VentStar®, desechable, trampa de agua, 2 l, 1,8 m/1,5 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00372', 'Dräger', 'consumible'),
+  ('MP00374', 'Juego de anestesia VentStar®, desechable, P, trampa de agua, 1 l, 1,8 m/1,1 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00374', 'Dräger', 'consumible'),
+  ('MP00375', 'Juego de anestesia VentStar®, desechable, P, trampa de agua, sin LL, 1 l, 1,8 m/1,1 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00375', 'Dräger', 'consumible'),
+  ('MP00379', 'Circuito respiratorio VentStar®, desechable, P, coaxial, 1,5 m, 20 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/20 pzas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00379', 'Dräger', 'consumible'),
+  ('MP00380', 'Juego de bolsa reservorio VentStar®, desechable, 2 l, 1,2 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00380', 'Dräger', 'consumible'),
+  ('MP00381', 'Juego de bolsa reservorio VentStar®, desechable, 2 l, 1,5 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00381', 'Dräger', 'consumible'),
+  ('MP00383', 'Juego de bolsa reservorio VentStar®, desechable, N, 0,5 l, 1,1 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00383', 'Dräger', 'consumible'),
+  ('MP00384', 'Juego de bolsa reservorio VentStar®, desechable, P, 1 l, 1,1 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00384', 'Dräger', 'consumible'),
+  ('MP00416', 'Adaptador, con boquilla de 6 mm, para mascarillas respiratorias desechables, conexión 9/16''''', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00416', 'Dräger', 'consumible'),
+  ('MP00511', 'VarioVac D Schiene', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00511', 'Dräger', 'consumible'),
+  ('MP00545', 'VarioAir® P Riel', 'accesorios', 'producto', 'Presentación: Caja c 1 Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00545', 'Dräger', 'consumible'),
+  ('MP00547', 'Eyector VarioAir® P compacto', 'accesorios', 'producto', 'Presentación: Caja c 1 Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00547', 'Dräger', 'consumible'),
+  ('MP00598', 'Accesorios Succión para Babyleo TN500', 'accesorios', 'producto', 'Presentación: Caja c 1 Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00598', 'Dräger', 'consumible'),
+  ('MP00721', 'Soporte para MultiMed® 5/6, MultiMed® Plus/OR y NeoMed Pods, girable 360°', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00721', 'Dräger', 'consumible'),
+  ('MP00748', 'Cable intermedio Nellcor®, 1,2 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00748', 'Dräger', 'consumible'),
+  ('MP00788', 'Sensor SpO2 Masimo® LNCS-TC-I para oreja, reutilizable, pediátrico/adulto', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00788', 'Dräger', 'consumible'),
+  ('MP00789', 'Sensor SpO2 Masimo® LNCS-YI multisitio, reutilizable, neonatal/pediátrico/adulto', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00789', 'Dräger', 'consumible'),
+  ('MP00790', 'Sensor SpO2 adhesivo Masimo® LNCS Adtx, desechable, adulto, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00790', 'Dräger', 'consumible'),
+  ('MP00791', 'Sensor SpO2 adhesivo Masimo® LNCS Inf, desechable, bebé, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00791', 'Dräger', 'consumible'),
+  ('MP00792', 'Sensor SpO2 adhesivo Masimo® LNCS Neo, desechable, neonato, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00792', 'Dräger', 'consumible'),
+  ('MP00793', 'Sensor SpO2 adhesivo Masimo® LNCS Pdtx, desechable, niño, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00793', 'Dräger', 'consumible'),
+  ('MP00794', 'Sensor SpO2 adhesivo Masimo® LNCS NeoPt, desechable, bebé prematuro, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00794', 'Dräger', 'consumible'),
+  ('MP00795', 'Sensor de dedo SpO2 Masimo® LNCS DCIP, reutilizable, niño', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00795', 'Dräger', 'consumible'),
+  ('MP00796', 'Sensor de dedo SpO2 Masimo® LNCS DCI, reutilizable, adulto', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00796', 'Dräger', 'consumible'),
+  ('MP00797', 'Cable SpO2 intermedio Masimo® LNCS, 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00797', 'Dräger', 'consumible'),
+  ('MP00799', 'Sensor SpO2 Masimo® LNCS-TF-I, reutilizable, pediátrico/adulto', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00799', 'Dräger', 'consumible'),
+  ('MP00800', 'Cable SpO2 intermedio Masimo® LNCS, 1,2 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00800', 'Dräger', 'consumible'),
+  ('MP00877', 'Cable ECG, 3 derivaciones, conector de un solo pin, para un solo paciente, IEC2 (código de colores AHA/US), 1 m, 20 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/20 pzas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00877', 'Dräger', 'consumible'),
+  ('MP00881', 'Cable ECG, 5 derivaciones, conector de un solo pin, para un solo paciente, IEC2 (código de colores AHA/US), 1/1,5 m, 20 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/20 pzas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00881', 'Dräger', 'consumible'),
+  ('MP00911', 'Manguito PANI XXS, reutilizable, niño pequeño, 8 – 13 cm/13 cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00911', 'Dräger', 'consumible'),
+  ('MP00912', 'Manguito Nbp Xs, 12-19cm', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:273.245-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00912', 'Dräger', ''),
+  ('MP00913', 'Nbp Cuff S, 17-25/29cm, Box', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:352.37-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00913', 'Dräger', ''),
+  ('MP00915', 'Manguito PANI M, reutilizable, adulto, 23 – 33 cm/33 cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00915', 'Dräger', 'consumible'),
+  ('MP00916', 'Manguito PANI M+, reutilizable, adulto, largo, 23 – 33 cm/43 cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00916', 'Dräger', 'consumible'),
+  ('MP00917', 'Nbp Cuff M 23-33cm', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:558.095-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00917', 'Dräger', '')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MP00918', 'Manguito PANI L, reutilizable, adulto grande, 31 – 40 cm/40 cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00918', 'Dräger', 'consumible'),
+  ('MP00919', 'Brazalete Nbp L+ 31-40/55cm', 'accesorios', 'producto', 'Presentación: PIEZA', 53, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:692.08-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00919', 'Dräger', ''),
+  ('MP00921', 'Nbp Cuff Xl, 38-50 Cm', 'accesorios', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:789.14-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00921', 'Dräger', ''),
+  ('MP00924', 'Manguito PANI XXS, uso en un solo paciente, niño pequeño, 8 – 13 cm/13 cm, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00924', 'Dräger', 'consumible'),
+  ('MP00925', 'Nbp Cuff Xs, 12-19cm, Box10', 'accesorios', 'producto', 'Presentación: PAQUETE/ 10 PZS', 3, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2062.525-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00925', 'Dräger', ''),
+  ('MP00926', 'Brazalete Nbp S 17-25/29cm', 'accesorios', 'producto', 'Presentación: PIEZA', 93, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2426.5-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00926', 'Dräger', ''),
+  ('MP00928', 'Manguito PANI M, uso en un solo paciente, adulto, 23 – 33 cm/33 cm, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00928', 'Dräger', 'consumible'),
+  ('MP00929', 'Brazalete Adulto Desechable', 'accesorios', 'producto', 'Presentación: PIEZA', 68, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3094.315-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00929', 'Dräger', ''),
+  ('MP00930', 'Manguito PANI M++, para un solo paciente, adulto extra largo, 23 – 33 cm/53 cm, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00930', 'Dräger', 'consumible'),
+  ('MP00931', 'Manguito PANI L, uso en un solo paciente, adulto grande, 31 – 40 cm/40 cm, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00931', 'Dräger', 'consumible'),
+  ('MP00932', 'Manguito PANI L+, para un solo paciente, adulto grande largo, 31 – 40 cm/55 cm, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00932', 'Dräger', 'consumible'),
+  ('MP00934', 'Manguito PANI XL, uso en un solo paciente, muslo, 38 – 50 cm/50 cm, 10 uds.', 'accesorios', 'producto', 'Presentación: 10 Pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00934', 'Dräger', 'consumible'),
+  ('MP00943', 'Toma de adaptador TEMP', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00943', 'Dräger', 'consumible'),
+  ('MP00944', 'Adaptador TEM P 2 pines', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00944', 'Dräger', 'consumible'),
+  ('MP00945', 'Nbp Adapter, Box10', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PZA', 11, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2123.715-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00945', 'Dräger', ''),
+  ('MP00953', 'Manguera de extensión adulto 3.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 41, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1577.225-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP00953', 'Dräger', ''),
+  ('MP00991', 'Sonda de temperatura universal, para un solo paciente, adulto, conector de 7 pines, 1,6 m M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00991', 'Dräger', 'consumible'),
+  ('MP00992', 'General Purpose Temperature Adult 3 M', 'insumos', 'producto', 'Presentación: PAQUETE/20 PZS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', '2026-06-12', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:310.2852-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP00992', 'Dräger', ''),
+  ('MP00993', 'Sonda de temperatura universal, para un solo paciente, niño, conector de 7 pines, 1,6 m', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00993', 'Dräger', 'consumible'),
+  ('MP00994', 'Sonda de temperatura universal, para un solo paciente, niño, conector de 7 pines, 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00994', 'Dräger', 'consumible'),
+  ('MP00995', 'Sonda de temperatura cutánea, para un solo paciente, adulto, conector de 7 pines, 1,6 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00995', 'Dräger', 'consumible'),
+  ('MP00996', 'Sonda de temperatura cutánea, para un solo paciente, adulto, conector de 7 pines, 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00996', 'Dräger', 'consumible'),
+  ('MP00997', 'Sonda de temperatura cutánea, para un solo paciente, niño/neo., conector de 7 pines, 1,6 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00997', 'Dräger', 'consumible'),
+  ('MP00998', 'Sonda de temperatura cutánea, para un solo paciente, niño/neo., conector de 7 pines, 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP00998', 'Dräger', 'consumible'),
+  ('MP01001', 'Adaptador de calentador de tubo', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01001', 'Dräger', ''),
+  ('MP01002', 'Soporte para humidificador F&P en forma de U, para carro, con garra de riel', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01002', 'Dräger', 'consumible'),
+  ('MP01006', 'Adaptador De Cable Calentador', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:6221.124-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01006', 'Dräger', ''),
+  ('MP01007', 'Adaptador de sonda de temperatura 900 MR 532, para humidificadores F&P', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01007', 'Dräger', 'consumible'),
+  ('MP01007-03', 'Temp.probe Housing 900mr532', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01007-03', 'Dräger', ''),
+  ('MP01008', 'Soporte de bolsa de agua 900 MR 290', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01008', 'Dräger', 'consumible'),
+  ('MP01030', 'Nebulizer uni wih der cap for Aeroneb Pro', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01030', 'Dräger', 'listado'),
+  ('MP01031', 'Adaptador en T adulto con tapón, caja 5', 'accesorios', 'producto', 'Presentación: PIEZA', 100, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01031', 'Dräger', ''),
+  ('MP01032', 'Adaptador en T neonatal con tapón, caja 5', 'accesorios', 'producto', 'Presentación: PIEZA', 69, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01032', 'Dräger', ''),
+  ('MP01035', 'Filer cap for Aeroneb Pro, silicone, 5 pcs.', 'accesorios', 'producto', 'Presentación: Caja c/Spiezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01035', 'Dräger', 'listado'),
+  ('MP01036', 'Cable de control para Aerogen Pro', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01036', 'Dräger', 'consumible'),
+  ('MP01037', 'T-connecor for Aeroneb Pro, 12 mm, wkh plug, 5 pcs.', 'accesorios', 'producto', 'Presentación: Caja c/Spiezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01037', 'Dräger', 'listado'),
+  ('MP01060', 'Infinity ID, válvula espiratoria, desechable, 10 uds. / NÚMERO DE PARTE COMO ALTERNATIVA MP20108', 'accesorios', 'producto', 'Presentación: Caja c/10 pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01060', 'Dräger', 'consumible'),
+  ('MP01061', 'Válvula espiratoria, desechable, 10 uds. / NÚMERO DE PARTE COMO ALTERNATIVA MP20109', 'accesorios', 'producto', 'Presentación: Paquete c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01061', 'Dräger', 'consumible'),
+  ('MP01062', 'Disposable Co2 Cuvette, Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:595.02-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01062', 'Dräger', ''),
+  ('MP01063', 'Cubeta de CO2, desechable, pediátrico, 10 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01063', 'Dräger', 'consumible'),
+  ('MP01071', 'Kx de inicio Aeroneb solo IN', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01071', 'Dräger', 'listado'),
+  ('MP01072', 'Kk de inicio Aeroneb solo NE', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01072', 'Dräger', 'listado'),
+  ('MP01073', 'Kx de inicio Aeroneb solo SE', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01073', 'Dräger', 'listado'),
+  ('MP01074', 'Kk de inicio Aeroneb solo SC', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01074', 'Dräger', 'listado'),
+  ('MP01075', 'Kx de inicio Aeroneb solo UK', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01075', 'Dräger', 'listado'),
+  ('MP01076', 'Kk de inicio Aeroneb solo US', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01076', 'Dräger', 'listado'),
+  ('MP01077', 'AeroS T-Piece;F&P Neo.;10box Disp. Neo T-Piece (12M/12mmF); Fits Fisher&Paykel Neonate circuits. Pkg of 10', 'accesorios', 'producto', 'Presentación: Paquete c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01077', 'Dräger', 'consumible'),
+  ('MP01078', 'Cabezal para nebulizador, 5 uds.', 'accesorios', 'producto', 'Presentación: Caja c/5piezas. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01078', 'Dräger', 'consumible'),
+  ('MP01079', 'Cabezal para nebulizador, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 pzas.. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01079', 'Dräger', 'consumible'),
+  ('MP01085', 'Adaptador T para adultos, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 pzas.. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01085', 'Dräger', 'consumible'),
+  ('MP01086', 'Adaptador T para pediatría, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 pzas.. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01086', 'Dräger', 'consumible'),
+  ('MP01087', 'Kx T-Adapter, Pediatric wih Neo connectors, 10 pes.', 'accesorios', 'producto', 'Presentación: Caja c/10 pzas.. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01087', 'Dräger', 'listado'),
+  ('MP01101', 'Mask Litestar 1 W/O Hook', 'insumos', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01101', 'Dräger', ''),
+  ('MP01229', 'DigiFlow 02 para riel, NIST', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01229', 'Dräger', 'listado'),
+  ('MP01232', 'Neonate T-Adapter W,Plug,Box5 T-Adapter M.ver (Neon.),Box5', 'accesorios', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01232', 'Dräger', ''),
+  ('MP01350', 'Circuito respiratorio Infinity® ID, desechable, básico, 1,8 m, 25 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01350', 'Dräger', 'consumible'),
+  ('MP01401', 'SoftBed Isolette', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2029-02-14', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2775.916-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01401', 'Dräger', ''),
+  ('MP01402', 'Colchón SoftBed, para Resuscitaire®, reutilizable, sin balanza, forro: 100 % poliuretano, tejido: 100 % poliéster', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01402', 'Dräger', 'consumible'),
+  ('MP01403', 'SoftBed Resuscitaire / IICS-90 SB cuna grande', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01403', 'Dräger', 'listado'),
+  ('MP01404', 'Colchón SoftBed, para Resuscitaire®, reutilizable, con balanza, forro: 100 % poliuretano, tejido: 100 % poliéster', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01404', 'Dräger', 'consumible'),
+  ('MP01405', 'SoftBed Resuscitaire / ¡IC S-90 wkh scale cuna grande', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01405', 'Dräger', 'listado'),
+  ('MP01414', 'Colchón calentador TransWarmer®, desechable, autocalent. durante aprox. 2 h, 6 uds.', 'accesorios', 'producto', 'Presentación: Caja c/6 piezas. 6 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01414', 'Dräger', 'consumible'),
+  ('MP01415', 'Set Chico', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01415', 'Dräger', ''),
+  ('MP01416', 'Hug k Tamaño M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01416', 'Dräger', 'listado'),
+  ('MP01417', 'Nesing', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01417', 'Dräger', 'listado'),
+  ('MP01418', 'Set, Klein', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01418', 'Dräger', ''),
+  ('MP01419', 'Colchón SoftBed, para TI 500 y TI 500 Globe-Trotter, reutilizable, forro: 100 % poliuretano, tejido: 100 % poliéster', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01419', 'Dräger', 'consumible'),
+  ('MP01423', 'Cubierta de incubadora para Caleo®, reutilizable, tejido exterior: 100 % algodón, tejido interior: 100 % poliéster', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01423', 'Dräger', 'consumible'),
+  ('MP01424', 'Cubierta de incubadora para Isolette® C2000, 8000 y 8000 plus, reutilizable, tejido exterior: 100 % algodón, tejido interior: 100 % poliéster', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01424', 'Dräger', 'consumible'),
+  ('MP01425', 'Incubator cover for Incubator 8000, reusable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01425', 'Dräger', 'listado'),
+  ('MP01426', 'Kx de inicio Caleo', 'accesorios', 'producto', 'Presentación: Kk. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01426', 'Dräger', 'listado'),
+  ('MP01427', 'Starter package for Isolese® C2000/C8000, reus., cover and pos#oning aids', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01427', 'Dräger', 'listado'),
+  ('MP01442', 'Sensor de O2* para MX 300 y MX 300-i, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01442', 'Dräger', 'consumible'),
+  ('MP01456', 'Softconnector N', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01456', 'Dräger', ''),
+  ('MP01480', 'NEO MASK 4', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01480', 'Dräger', ''),
+  ('MP01494', 'Mascarilla neonatal, TPE, desechable, tamaño 4, 10 uds.', 'accesorios', 'producto', 'Presentación: caja con 10 pzs. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01494', 'Dräger', 'consumible'),
+  ('MP01495', 'Mascarilla neonatal, TPE, desechable, tamaño 5, 10 uds.', 'accesorios', 'producto', 'Presentación: caja con 10 pzs. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01495', 'Dräger', 'consumible'),
+  ('MP01496', 'Mascarilla neonatal, TPE, desechable, tamaño 6, 10 uds.', 'accesorios', 'producto', 'Presentación: caja con 10 pzs. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01496', 'Dräger', 'consumible'),
+  ('MP01501', 'PROBE 1,SKIN TEMP,DISP,BOX/10', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01501', 'Dräger', 'listado'),
+  ('MP01502', 'LieStar Size 1 (se debe pedir el paquete con 30 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01502', 'Dräger', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MP01503', 'LieStar Sze 2 (se debe pedir el paquete con 30 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01503', 'Dräger', 'listado'),
+  ('MP01504', 'LieStar Size 3 (se debe pedir el paquete con 30 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01504', 'Dräger', 'listado'),
+  ('MP01505', 'LieStar Sze 4 (se debe pedir el paquete con 30 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01505', 'Dräger', 'listado'),
+  ('MP01506', 'LieStar Size 5 (se debe pedir el paquete con 30 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01506', 'Dräger', 'listado'),
+  ('MP01510', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., est., tamaño 0, prem., 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01510', 'Dräger', 'consumible'),
+  ('MP01511', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., est., tamaño 1, neo., 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01511', 'Dräger', 'consumible'),
+  ('MP01512', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., est., tamaño 2, bebé, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01512', 'Dräger', 'consumible'),
+  ('MP01513', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., est., tamaño 3, niño, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01513', 'Dräger', 'consumible'),
+  ('MP01514', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., est., tamaño 4, adt. S, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01514', 'Dräger', 'consumible'),
+  ('MP01515', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., est., tamaño 5, adt. M, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01515', 'Dräger', 'consumible'),
+  ('MP01516', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., est., tamaño 6, adt. L, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01516', 'Dräger', 'consumible'),
+  ('MP01521', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., fresa, tamaño 1, neo., 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01521', 'Dräger', 'consumible'),
+  ('MP01522', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., fresa, tamaño 2, bebé, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01522', 'Dräger', 'consumible'),
+  ('MP01523', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., fresa, tamaño 3, niño, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01523', 'Dräger', 'consumible'),
+  ('MP01524', 'Mascarilla oron. anest. ComfortStar®, desechable, anillo de eng., fresa, tamaño 4, adt. S, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01524', 'Dräger', 'consumible'),
+  ('MP01531', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., chicle, tamaño 1, neo., 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01531', 'Dräger', 'consumible'),
+  ('MP01532', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., chicle, tamaño 2, bebé, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01532', 'Dräger', 'consumible'),
+  ('MP01533', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., chicle, tamaño 3, niño, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01533', 'Dräger', 'consumible'),
+  ('MP01534', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., chicle, tamaño 4, adt. S, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01534', 'Dräger', 'consumible'),
+  ('MP01543', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., menta, tamaño 3, niño, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01543', 'Dräger', 'consumible'),
+  ('MP01544', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., menta, tamaño 4, adt. S, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01544', 'Dräger', 'consumible'),
+  ('MP01545', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., menta, tamaño 5, adt. M, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01545', 'Dräger', 'consumible'),
+  ('MP01546', 'Mascarilla de anestesia ComfortStar®, desechable, anillo de eng., menta, tamaño 6, adt. L, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01546', 'Dräger', 'consumible'),
+  ('MP01552-00', 'Anillo Gancho Para Mascarilla Litestar Conector 22mm', 'insumos', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01552-00', 'Dräger', ''),
+  ('MP01557', 'Headgear Reusable Silicone Small', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01557', 'Dräger', ''),
+  ('MP01558', 'Absorber intermediate plate, to connect adapter to Caio, Cicero, or Fabius', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01558', 'Dräger', 'listado'),
+  ('MP01559', 'Arnés de cabeza, desechable, tejido suave, pequeño', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01559', 'Dräger', 'consumible'),
+  ('MP01560', 'Arnés de cabeza, desechable, tejido suave, grande', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01560', 'Dräger', 'consumible'),
+  ('MP01561', 'Kopfband Einweg, Weiches Gummi, Klein', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:190.955-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01561', 'Dräger', ''),
+  ('MP01562', 'Kopfband Einweg, Weiches Gummi, Gross', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:213.11-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01562', 'Dräger', ''),
+  ('MP01564', 'VentStar Helix una rama calentadora Aduko', 'accesorios', 'producto', 'Presentación: Caja c/3 pzas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01564', 'Dräger', 'listado'),
+  ('MP01565', 'Mascarilla reusable NovaStar nasal Tamaño S sin valvula de no rehinalacion Paquete con 3 piezas', 'accesorios', 'producto', 'Presentación: Caja c/3 pzas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01565', 'Dräger', 'listado'),
+  ('MP01566', 'Mascarila reusable NovaStar nasal Tamaño M sin valvula de no rehinalacion Paquete con 3 piezas', 'accesorios', 'producto', 'Presentación: Caja c/3 pzas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01566', 'Dräger', 'listado'),
+  ('MP01568', 'Mascarilla reusable NovaStar nasal Tamaño L sin valvula de no rehinalacion Paqueze con 3 piezas', 'accesorios', 'producto', 'Presentación: Caja c/3 pzas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01568', 'Dräger', 'listado'),
+  ('MP01569', 'Mascarila reusable NovaStar nasal Tamaño M con valvula de no rehinalacion Paquete con 3 piezas', 'accesorios', 'producto', 'Presentación: Caja c/3 pzas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01569', 'Dräger', 'listado'),
+  ('MP01570', 'Mascarilla oronasal para NIV ClassicStar® AAV, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01570', 'Dräger', 'consumible'),
+  ('MP01571', 'Mascarilla oronasal para NIV ClassicStar® AAV, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01571', 'Dräger', 'consumible'),
+  ('MP01572', 'Mascarilla oronasal para NIV ClassicStar® AAV, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01572', 'Dräger', 'consumible'),
+  ('MP01573', 'Mascarilla oronasal para NIV ClassicStar® SE, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01573', 'Dräger', 'consumible'),
+  ('MP01574', 'Mascarilla oronasal para NIV ClassicStar® SE, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01574', 'Dräger', 'consumible'),
+  ('MP01575', 'Mascarilla Facial Niv', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2029-08-04', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1210.7708-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01575', 'Dräger', ''),
+  ('MP01576', 'NovaStar SE size M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01576', 'Dräger', 'listado'),
+  ('MP01577', 'NovaStar SE size L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01577', 'Dräger', 'listado'),
+  ('MP01578', 'NovaStar® TS AAV reusable, size S', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01578', 'Dräger', 'listado'),
+  ('MP01579', 'ClasskSiar® AAV single-pañent use, size M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01579', 'Dräger', 'listado'),
+  ('MP01580', 'ClassicStar® AAV single-pañent use, size L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01580', 'Dräger', 'listado'),
+  ('MP01581', 'NovaSiar SE size S', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01581', 'Dräger', 'listado'),
+  ('MP01583', 'Headgear for NovaStar® TS SE NIV fuibface mask', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01583', 'Dräger', 'listado'),
+  ('MP01584', 'Headgear for NovaSzar® TS AAV NIV full-face mask', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01584', 'Dräger', 'listado'),
+  ('MP01585', 'Magnes clip for headgears for NovaStar® TS SE and AAV, 4 pes.', 'accesorios', 'producto', 'Presentación: 4 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01585', 'Dräger', 'listado'),
+  ('MP01590', 'Bomba bidireccional para regulación del aire', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01590', 'Dräger', 'consumible'),
+  ('MP01590-02', '2 Side Pump Ball For Air Management', 'accesorios', 'producto', 'Presentación: PIEZA', 29, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01590-02', 'Dräger', ''),
+  ('MP01590-1', '2 Side Pump Ball For Air Management', 'accesorios', 'producto', 'Presentación: PIEZA', 29, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01590-1', 'Dräger', ''),
+  ('MP01620', 'Mascarilla nasal NIV ClassicStar® ventilada, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01620', 'Dräger', 'consumible'),
+  ('MP01621', 'Mascarilla nasal NIV ClassicStar® ventilada, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01621', 'Dräger', 'consumible'),
+  ('MP01622', 'Mascarilla nasal NIV ClassicStar® ventilada, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01622', 'Dräger', 'consumible'),
+  ('MP01623', 'Mascarilla nasal NIV ClassicStar® no ventilada, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01623', 'Dräger', 'consumible'),
+  ('MP01624', 'Mascarilla nasal NIV ClassicStar® no ventilada, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01624', 'Dräger', 'consumible'),
+  ('MP01625', 'Mascarilla nasal NIV ClassicStar® no ventilada, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01625', 'Dräger', 'consumible'),
+  ('MP01701', 'Mascarilla facial de anestesia SediStar®, desechable, sin aro de enganche, talla 1, infant, 30 uds.', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. 30 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01701', 'Dräger', 'consumible'),
+  ('MP01702', 'Mask LiteStar 2 w/o hook', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:896.75-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01702', 'Dräger', ''),
+  ('MP01703', 'Mascarilla facial de anestesia SediStar®, desechable, sin aro de enganche, talla 3, pediátrica, 30 uds.', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. 30 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01703', 'Dräger', 'consumible'),
+  ('MP01704', 'Mascarilla facial de anestesia SediStar®, desechable, sin aro de enganche, talla 4, adulto pequeño, 30 uds.', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. 30 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01704', 'Dräger', 'consumible'),
+  ('MP01705', 'Mask LiteStar 5 w/o hook', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:896.75-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP01705', 'Dräger', ''),
+  ('MP01706', 'Mascarilla facial de anestesia SediStar®, desechable, sin aro de enganche, talla 6, adulto grande, 30 uds.', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. 30 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01706', 'Dräger', 'consumible'),
+  ('MP01707', 'Mascarilla facial de anestesia SediStar®, desechable, sin aro de enganche, talla 7, adulto extra grande, 30 uds.', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. 30 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01707', 'Dräger', 'consumible'),
+  ('MP01708', 'Aro de enganche para mascarillas SediStar®, con conector con D.I. de 22 mm (tallas 3-7), 30 uds.', 'accesorios', 'producto', 'Presentación: Caja c/30 piezas. 30 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01708', 'Dräger', 'consumible'),
+  ('MP01730', 'HumidStar 55 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01730', 'Dräger', 'listado'),
+  ('MP01735', 'HumidStar 25 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01735', 'Dräger', 'listado'),
+  ('MP01740', 'HumidStar 10A (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01740', 'Dräger', 'listado'),
+  ('MP01745', 'HumidStar 2 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01745', 'Dräger', 'listado'),
+  ('MP01750', 'HumidStar Trach (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01750', 'Dräger', 'listado'),
+  ('MP01755', 'CareStar 45 (se debe pedir el paqueze con 50 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 50 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01755', 'Dräger', 'listado'),
+  ('MP01765', 'CareStar 40A (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 50 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01765', 'Dräger', 'listado'),
+  ('MP01770', 'CareStar 30 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: caja con 50 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01770', 'Dräger', 'listado'),
+  ('MP01781', 'Filtro espiratorio, desechable, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01781', 'Dräger', 'consumible'),
+  ('MP01785', 'SafeSiar 80 (se debe pedir el paqueze con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01785', 'Dräger', 'listado'),
+  ('MP01790', 'SafeStar 55 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01790', 'Dräger', 'listado'),
+  ('MP01795', 'SafeSiar 60A (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01795', 'Dräger', 'listado'),
+  ('MP01800', 'TwinStar 90 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01800', 'Dräger', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MP01801', 'TwinStar HEPA (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01801', 'Dräger', 'listado'),
+  ('MP01805', 'TwinStar 55 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01805', 'Dräger', 'listado'),
+  ('MP01810', 'TwinSiar 65A (se debe pedir el paquere con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01810', 'Dräger', 'listado'),
+  ('MP01815', 'TwinStar 25 (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01815', 'Dräger', 'listado'),
+  ('MP01820', 'TwinSar 8 (se debe pedir el paqueze con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01820', 'Dräger', 'listado'),
+  ('MP01825', 'TwinStar 10A (se debe pedir el paquete con 50 Piezas)', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01825', 'Dräger', 'listado'),
+  ('MP01840', 'Ergo Star 40cm', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2019-09-21', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2914.7118-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01840', 'Dräger', ''),
+  ('MP01845', 'Conexión ErgoStar® CM 45, desechable, 15 cm, codo giratorio doble, 50 uds.', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. 50 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01845', 'Dräger', 'consumible'),
+  ('MP01850', 'Ergo Star 50cm', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2019-10-17', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2517.2511-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01850', 'Dräger', ''),
+  ('MP01855', 'Conexión ErgoStar® CM 55, desechable, 15 cm, recta, 50 uds.', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. 50 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01855', 'Dräger', 'consumible'),
+  ('MP01860', 'Conexión ErgoStar® CM 60, desechable, 10 cm, peq., codo giratorio doble, 50 uds.', 'accesorios', 'producto', 'Presentación: Caja c/50 piezas. 50 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01860', 'Dräger', 'consumible'),
+  ('MP01890', 'Conect. vías resp. ErgoStar® AC 90, desechable, codo gir. doble con tapa doble, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01890', 'Dräger', 'consumible'),
+  ('MP01895', 'Conect. vías resp. ErgoStar® AC 95, desechable, puerto de muestreo Luer-Lock, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01895', 'Dräger', 'consumible'),
+  ('MP01910', 'Mask silicone inf small 0 reusable', 'insumos', 'producto', '', 14, 0, 'pieza', 'A/2', 'Dräger', '', '', 0.0, 'Drager', NULL, NULL, '<!--mas-cost:160-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01910', 'Drager', ''),
+  ('MP01911', 'Mascarilla De Silicona Neonatal T1 Reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:170-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01911', 'Dräger', ''),
+  ('MP01912', 'Mascarilla De Silicona Niño Chico T2 Reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:190-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01912', 'Dräger', ''),
+  ('MP01913', 'Mascarilla De Silicona Niño Grande T3 Reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:363.975-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01913', 'Dräger', ''),
+  ('MP01914', 'Mascarilla de silicona tamaño 4, adulto pequeño reutilizable', 'insumos', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:363.975-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP01914', 'Dräger', ''),
+  ('MP01915', 'Mascarilla de silicona, reutilizable, tamaño 5, adulto grande', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01915', 'Dräger', 'consumible'),
+  ('MP01916', 'Anillo de enganche para mascarillas de silicona, reutilizable, D.E. 15 mm, tamaño 00 – 1, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01916', 'Dräger', 'consumible'),
+  ('MP01917', 'Anillo de enganche para mascarillas de silicona, reutilizable, D.I. 22 mm, tamaño 2 – 5, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP01917', 'Dräger', 'consumible'),
+  ('MP02400', 'SetiTest Lung', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02400', 'Dräger', 'listado'),
+  ('MP02400RI09', 'Pulmón de prueba para comprobación de equipo', 'accesorios', 'producto', 'Presentación: PIEZA', 27, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP02400RI09', 'Dräger', ''),
+  ('MP02401', 'Spare pans sei SeliTestLung, wih locking braceand azachment bok', 'accesorios', 'producto', 'Presentación: Set. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02401', 'Dräger', 'listado'),
+  ('MP02405', 'Smart Lung', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02405', 'Dräger', 'listado'),
+  ('MP02605', 'Humidificador, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02605', 'Dräger', 'consumible'),
+  ('MP02606', 'VentStar Helix, doble hilo calefator, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02606', 'Dräger', 'consumible'),
+  ('MP02607', 'VentStar Helix, hilo calefator, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 pzas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02607', 'Dräger', 'consumible'),
+  ('MP02608', 'Circuito respiratorio VentStar® Helix,desechable, N, calefactado, 1,7 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02608', 'Dräger', 'consumible'),
+  ('MP02650', 'Circuito respiratorio VentStar® Helix, desechable, N, doble calefactado, 1,7 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02650', 'Dräger', 'consumible'),
+  ('MP02655', 'Conector doble 11ID/15OD, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02655', 'Dräger', 'consumible'),
+  ('MP02710', 'Bolsa reservorio VentStar®, 0,5 l, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02710', 'Dräger', 'consumible'),
+  ('MP02711', 'Bolsa reservorio VentStar®, 1 l, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02711', 'Dräger', 'consumible'),
+  ('MP02712', 'Bolsa reservorio VentStar®, 2 l, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02712', 'Dräger', 'consumible'),
+  ('MP02713', 'Ventstar Breathing Bag 3l', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2350-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP02713', 'Dräger', ''),
+  ('MP02720', 'Juego de anestesia VentStar®, desechable, trampa de agua, sin Luer Lock, 2 l, 2,8 m/1,5 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02720', 'Dräger', 'consumible'),
+  ('MP02721', 'Juego de anestesia VentStar®, desechable, trampa de agua, 2 l, 2,8 m/1,5 m, 10 uds., no fabricado con látex de caucho natural', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02721', 'Dräger', 'consumible'),
+  ('MP02900', 'Mascarilla de silicona, reutilizable, tamaño 00, bebé prematuro', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02900', 'Dräger', 'consumible'),
+  ('MP02991', 'Cable intermedio SpO2 Masimo® Red LNCS, 1,2 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02991', 'Dräger', 'consumible'),
+  ('MP02992', 'Cable intermedio SpO2 Masimo® Red LNCS, 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02992', 'Dräger', 'consumible'),
+  ('MP02993', 'Sensor SpO2 Masimo® LNC S -DBI, reutilizable, adulto', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP02993', 'Dräger', 'consumible'),
+  ('MP03121', 'Cable ECG, 4 derivaciones, conector de un solo pin, para un solo paciente, IEC2 (código de colores AHA/US ), 1 m, 20 uds', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03121', 'Dräger', 'consumible'),
+  ('MP03123', 'Cable ECG, 6 derivaciones, conector de un solo pin, para un solo paciente, IEC2 (código de colores AHA/US), 1/1,5 m, 20 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/20 pzas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03123', 'Dräger', 'consumible'),
+  ('MP03191', 'Sensor Masimo® LNCS Trauma, adulto, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03191', 'Dräger', 'consumible'),
+  ('MP03192', 'Sensor Masimo® LNCS Trauma, neonatal, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03192', 'Dräger', 'consumible'),
+  ('MP03193', 'Sensor Masimo® LNCS Trauma, infant./ped., 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03193', 'Dräger', 'consumible'),
+  ('MP03194', 'Cable SpO2 intermedio Masimo® LNCS, 4,3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03194', 'Dräger', 'consumible'),
+  ('MP03196', 'Cable intermedio SpO2 Masimo® Red LNCS, 4,3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03196', 'Dräger', 'consumible'),
+  ('MP03232', 'Válvula de conmutación Medela', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03232', 'Dräger', 'consumible'),
+  ('MP03233', 'Manguera de conexión Medela', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03233', 'Dräger', 'consumible'),
+  ('MP03325', 'Adaptador 9/16‘‘ a M34×1,5 para el humidificador reutilizable Dräger', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03325', 'Dräger', 'consumible'),
+  ('MP03402', 'Cubierta De Incubadora Babyleo', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1325.4176-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03402', 'Dräger', ''),
+  ('MP03404', 'Ecg 5-Lead Dual-Pin Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1956.3076-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03404', 'Dräger', ''),
+  ('MP03405', 'Cubierta De Incubadora Babyleo', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03405', 'Dräger', ''),
+  ('MP03406', 'Ecg 6-Lead Single-P Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2334.8416-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03406', 'Dräger', ''),
+  ('MP03408', 'Cable ECG, 4 derivaciones, conector de un solo pin, IEC2 (código de colores AHA/US ), 1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03408', 'Dräger', 'consumible'),
+  ('MP03412', 'Ecg-Lead Dual-Pin Aha, 1m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1362.7224-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03412', 'Dräger', ''),
+  ('MP03414', 'Ecg 5-Lead Dual-Pin Aha 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2018.848-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03414', 'Dräger', ''),
+  ('MP03416', 'Cable ECG, 6 derivaciones, conector de pines dual, IEC2 (código de colores AHA/US), 1/1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03416', 'Dräger', 'consumible'),
+  ('MP03418', 'Cable ECG para derivaciones V, IEC2 (código de colores AHA/US), 1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03418', 'Dräger', 'consumible'),
+  ('MP03422', 'Cable ECG, 3 derivaciones, Infinity® TruST ™, IEC2 (código de colores AHA/US ), 70 cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03422', 'Dräger', 'consumible'),
+  ('MP03424', 'Cable ECG 5 derivaciones telemetría AHA 70cm', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, '2020-09-01', '<!--mas-color:rojo-->
+<!--mas-cost:4927.1302-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03424', 'Dräger', ''),
+  ('MP03426', 'Cable ECG, 6 derivaciones, Infinity® TruST ™, IEC2 (código de colores AHA/US ), 70 cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03426', 'Dräger', 'consumible'),
+  ('MP03700', 'BabyFlow plus, desechable, tamaño S, 20 uds.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03700', 'Dräger', 'consumible'),
+  ('MP03701', 'BabyFlow plus, desechable, tamaño M, 20 uds.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03701', 'Dräger', 'consumible'),
+  ('MP03702', 'BabyFlow plus, desechable, tamaño L, 20 uds.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03702', 'Dräger', 'consumible'),
+  ('MP03703', 'Paquete de demostración BabyFlow plus, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03703', 'Dräger', 'consumible'),
+  ('MP03704', 'Paquete de demostración BabyFlow plus, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03704', 'Dräger', 'consumible'),
+  ('MP03705', 'Paquete de demostración BabyFlow plus, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03705', 'Dräger', 'consumible'),
+  ('MP03730', 'Babyleo Incubator Cover', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:8424.7844-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03730', 'Dräger', ''),
+  ('MP03737', 'Muñeco de trapo Babyleo TN500,
+león, naranja', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03737', 'Dräger', 'consumible'),
+  ('MP03760', 'Cortina de protección de luz para BiliLux, reutilizable, tejido: 100 % algodón, otro: poliéster (PE S)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03760', 'Dräger', 'consumible'),
+  ('MP03770', 'Eyemax 2 Micro', 'accesorios', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2346.9986-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03770', 'Dräger', ''),
+  ('MP03771', 'Máscara de fototerapia Eyemax 2, desechable, prematuro, circunferencia de la cabeza 26-32 cm, 20 uds.', 'accesorios', 'producto', 'Presentación: caja con 20 pz. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03771', 'Dräger', 'consumible'),
+  ('MP03772', 'Eyemax 2 Regular', 'accesorios', 'producto', 'Presentación: PAQUETE/20 PZS', 10, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2346.9986-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP03772', 'Dräger', ''),
+  ('MP03826', 'Conector blando N, desechable, 20 uds.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03826', 'Dräger', 'consumible'),
+  ('MP03870', 'Fixiation Strap Babyflow 13cm', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03870', 'Dräger', 'consumible'),
+  ('MP03871', 'Fixiation Strap Babyflow 15cm', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03871', 'Dräger', 'consumible'),
+  ('MP03872', 'Fixiation Strap Babyflow 18cm', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03872', 'Dräger', 'consumible'),
+  ('MP03873', 'Fixiation Strap Babyflow 20cm', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03873', 'Dräger', 'consumible')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MP03880', 'Arnés de cabeza, desechable, tamaño XXS, circunferencia de la cabeza de 17 – 20 cm, 5 uds.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03880', 'Dräger', 'consumible'),
+  ('MP03881', 'Arnés de cabeza, desechable, tamaño XS, circunferencia de la cabeza de 20 – 23 cm, 5 uds.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03881', 'Dräger', 'consumible'),
+  ('MP03882', 'Arnés de cabeza, desechable, tamaño S, circunferencia de la cabeza de 23 – 27 cm, 5 uds.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03882', 'Dräger', 'consumible'),
+  ('MP03883', 'Arnés de cabeza, desechable, tamaño M, circunferencia de la cabeza de 27 – 31 cm, 5 uds.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03883', 'Dräger', 'consumible'),
+  ('MP03884', 'Arnés de cabeza, desechable, tamaño L, circunferencia de la cabeza de 31 – 37 cm, 5 uds.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03884', 'Dräger', 'consumible'),
+  ('MP03885', 'Arnés de cabeza, desechable, tamaño XL, circunferencia de la cabeza de 37 – 42 cm, 5 uds.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP03885', 'Dräger', 'consumible'),
+  ('MP04201', 'Oxymixer High Flow', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04201', 'Dräger', 'consumible'),
+  ('MP04202', 'Oxymixer High Flow con monitor', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04202', 'Dräger', 'consumible'),
+  ('MP04203', 'Oxymixer Low Flow', 'accesorios', 'producto', 'Presentación: caja con 1 pz. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04203', 'Dräger', 'consumible'),
+  ('MP04204', 'Oxymixer Low Flow con monitor', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04204', 'Dräger', 'consumible'),
+  ('MP04213', 'Flujómetro Oxymixer 0-3L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04213', 'Dräger', 'consumible'),
+  ('MP04214', 'Flujómetro Oxymixer 0-6L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04214', 'Dräger', 'consumible'),
+  ('MP04215', 'Flujómetro Oxymixer 0-15L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04215', 'Dräger', 'consumible'),
+  ('MP04216', 'Flujómetro Oxymixer 0-32L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04216', 'Dräger', 'consumible'),
+  ('MP04217', 'Flujómetro Oxymixer 0-85L', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04217', 'Dräger', 'consumible'),
+  ('MP04218', 'Amortiguador de sonido para Oxymixer 9/16“', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04218', 'Dräger', 'consumible'),
+  ('MP04219', 'Amortiguador de sonido para Oxymixer 22 y 15 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04219', 'Dräger', 'consumible'),
+  ('MP04225', 'Oxymixer O2 monitor for FiO2 control', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04225', 'Dräger', 'consumible'),
+  ('MP04229', 'Oxymixer Low Flow con flujómetro 1 - 15 l (derecha)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04229', 'Dräger', 'consumible'),
+  ('MP04711', 'Mascarilla oronasal para NIV ClassicStar® plus SE, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04711', 'Dräger', 'consumible'),
+  ('MP04712', 'Mascarilla oronasal para NIV ClassicStar® plus SE, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04712', 'Dräger', 'consumible'),
+  ('MP04713', 'Mascarilla oronasal para NIV ClassicStar® plus SE, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04713', 'Dräger', 'consumible'),
+  ('MP04714', 'Mascarilla oronasal para NIV ClassicStar® plus SE, desechable, tamaño XL', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04714', 'Dräger', 'consumible'),
+  ('MP04721', 'Mascarilla oronasal para NIV ClassicStar® plus AAV, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04721', 'Dräger', 'consumible'),
+  ('MP04722', 'Mascarilla oronasal para NIV ClassicStar® plus AAV, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04722', 'Dräger', 'consumible'),
+  ('MP04723', 'Mascarilla oronasal para NIV ClassicStar® plus AAV, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04723', 'Dräger', 'consumible'),
+  ('MP04724', 'Mascarilla oronasal para NIV ClassicStar® plus AAV, desechable, tamaño XL', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04724', 'Dräger', 'consumible'),
+  ('MP04731', 'Mascarilla oronasal para NIV ClassicStar® plus AAV sin puertos de espiración, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04731', 'Dräger', 'consumible'),
+  ('MP04732', 'Mascarilla oronasal para NIV ClassicStar® plus AAV sin puertos de espiración, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04732', 'Dräger', 'consumible'),
+  ('MP04733', 'Mascarilla oronasal para NIV ClassicStar® plus AAV sin puertos de espiración, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04733', 'Dräger', 'consumible'),
+  ('MP04734', 'Mascarilla oronasal para NIV ClassicStar® plus AAV sin puertos de espiración, desechable, tamaño XL', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04734', 'Dräger', 'consumible'),
+  ('MP04741', 'Mascarilla nasal para ClassicStar® plus, no ventilada, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04741', 'Dräger', 'consumible'),
+  ('MP04742', 'Mascarilla nasal para ClassicStar® plus, no ventilada, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04742', 'Dräger', 'consumible'),
+  ('MP04743', 'Mascarilla nasal para ClassicStar® plus, no ventilada, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04743', 'Dräger', 'consumible'),
+  ('MP04744', 'Mascarilla nasal para ClassicStar® plus, no ventilada, desechable, tamaño XL', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04744', 'Dräger', 'consumible'),
+  ('MP04751', 'Mascarilla nasal para ClassicStar® plus, ventilada, desechable, tamaño S', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04751', 'Dräger', 'consumible'),
+  ('MP04752', 'Mascarilla nasal para ClassicStar® plus, ventilada, desechable, tamaño M', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04752', 'Dräger', 'consumible'),
+  ('MP04753', 'Mascarilla nasal para ClassicStar® plus, ventilada, desechable, tamaño L', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04753', 'Dräger', 'consumible'),
+  ('MP04754', 'Mascarilla nasal para ClassicStar® plus, ventilada, desechable, tamaño XL', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. 5 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04754', 'Dräger', 'consumible'),
+  ('MP04800', 'VentStar MRI 300', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04800', 'Dräger', 'consumible'),
+  ('MP04802', 'VentStar MRI (N) 300', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP04802', 'Dräger', 'consumible'),
+  ('MP05115', 'Ecg 6-Lead Single-P Aha 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 60, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3280-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP05115', 'Dräger', ''),
+  ('MP05122', 'ECG Monolead 5, EURO, 2.5m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05122', 'Dräger', 'consumible'),
+  ('MP05131', 'Cable ECG, 3 derivaciones, conector pin sencillo MonoLead® 2da generación (código de colores AHA/US), 4,1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05131', 'Dräger', 'consumible'),
+  ('MP05132', 'ECG MonoLead 5, EURO, 5.3m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05132', 'Dräger', 'consumible'),
+  ('MP05507', 'Kit de válvula HI-Flow Star con válvula de apertura rápida y conector 22 mm, desechable, 15 uds.', 'accesorios', 'producto', 'Presentación: caja con 15 pzs. 15 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05507', 'Dräger', 'consumible'),
+  ('MP05511', 'Cánula nasal HI-Flow Star, desechable, adulto tamaño S, rango de flujo < 60 l/min, 25 uds.', 'accesorios', 'producto', 'Presentación: caja con 25 pzs. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05511', 'Dräger', 'consumible'),
+  ('MP05512', 'Hi- Flow Star Adult M', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:15376.625-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP05512', 'Dräger', ''),
+  ('MP05513', 'Cánula nasal HI-Flow Star, desechable, adulto tamaño L, rango de flujo < 60 l/min, 25 uds.', 'accesorios', 'producto', 'Presentación: caja con 25 pzs. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05513', 'Dräger', 'consumible'),
+  ('MP05601', 'Sistema HI-Flow Star, circuito respiratorio inspiratorio calefactado, formado por: tubo inspiratorio calefactado, cámara humidificadora, tubuladura cuando se usa con ventilador, tubo de O2 cuando se usa con mezclador de oxígeno, clip de cama, desechable, 25 uds.', 'accesorios', 'producto', 'Presentación: caja con 25 pzs. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05601', 'Dräger', 'consumible'),
+  ('MP05700', 'Empuñadura desechable Polaris, dual, para Polaris 100/200, 600 y Multimedia, se necesita adaptador, 60 uds.', 'accesorios', 'producto', 'Presentación: caja c/60 piezas. 60 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05700', 'Dräger', 'consumible'),
+  ('MP05701', 'Empuñadura desechable Polaris, individual, para Polaris 100/200, 600 y Multimedia, se necesita adaptador, 120 uds.', 'accesorios', 'producto', 'Presentación: Caja c/120 piezas. 120 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05701', 'Dräger', 'consumible'),
+  ('MP05730', 'HME HumidStar® 55 Plus, desechable, ~55 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05730', 'Dräger', 'consumible'),
+  ('MP05735', 'HME HumidStar® 25 Plus, desechable, ~25 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05735', 'Dräger', 'consumible'),
+  ('MP05750', 'HME HumidStar® Trach plus, desechable, 6 ml de espacio muerto, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05750', 'Dräger', 'consumible'),
+  ('MP05755', 'Filtro electrostático CareStar® 35 Plus, desechable, ~35 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05755', 'Dräger', 'consumible'),
+  ('MP05770', 'Filtro Filtercare Star 20 Plus', 'insumos', 'producto', 'Presentación: CAJA/100 PIEZAS', 133, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2028-06-12', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2800-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP05770', 'Dräger', ''),
+  ('MP05785', 'Filtro mecánico SafeStar® 90 Plus, desechable, ~90 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05785', 'Dräger', 'consumible'),
+  ('MP05790', 'Filtro mecánico SafeStar® 55 Plus, desechable, ~55 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05790', 'Dräger', 'consumible'),
+  ('MP05795', 'Filtro mecánico SafeStar® 60A Plus, desechable, ~60 ml de espacio muerto, en ángulo', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05795', 'Dräger', 'consumible'),
+  ('MP05800', 'Filtro + HME TwinStar® 90 Plus, desechable, ~90 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05800', 'Dräger', 'consumible'),
+  ('MP05801', 'Filtro mecánico + HME TwinStar® HEPA Plus, desechable, ~90 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05801', 'Dräger', 'consumible'),
+  ('MP05805', 'Filter/Hme Twinstar 55 Plus', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2027-05-29', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:4770-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP05805', 'Dräger', ''),
+  ('MP05810', 'Filtro + HME TwinStar® 60A Plus, desechable, ~60 ml de espacio muerto, en ángulo', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05810', 'Dräger', 'consumible'),
+  ('MP05815', 'Filtro + HME TwinStar® 25 Plus, desechable, ~25 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05815', 'Dräger', 'consumible'),
+  ('MP05820', 'Filtro + HME TwinStar® 9 Plus, desechable, ~9 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05820', 'Dräger', 'consumible'),
+  ('MP05845', 'HME HumidStar® 2 Plus, desechable, 2 ml de espacio muerto', 'accesorios', 'producto', 'Presentación: caja con 100 pzs. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP05845', 'Dräger', 'consumible'),
+  ('MP0692', 'Sujetador De Cables', 'accesorios', 'producto', 'Presentación: PAQUETE DE 2', 4, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP0692', 'Dräger', ''),
+  ('MP11001', 'Mask LiteStar 1 w/o Hook 50/caja', 'insumos', 'producto', '', 52, 0, 'caja', '', 'Dräger', 'Talla 1', '', 0.0, 'Drager', '2028-01-15', NULL, '<!--mas-cost:1670-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11001', 'Drager', ''),
+  ('MP11001-2', 'Mask LiteStar 1 w/o Hook 50/caja', 'insumos', 'producto', '', 0, 0, 'caja', '', 'Dräger', 'Talla 1', '', 0.0, 'Drager', NULL, NULL, '<!--mas-cost:1670-->', 'operativo', NULL, NULL, false, true, false, true, 0, 0, 'MP11001', 'Drager', ''),
+  ('MP11002', 'Mascarilla Litestar T2 Sin Gancho', 'insumos', 'producto', 'Presentación: CAJA/50 PZS', 46, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2028-02-20', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1670-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11002', 'Dräger', ''),
+  ('MP11003', 'Mask LiteStar 3 w/o hook 50/caja', 'insumos', 'producto', '', 103, 0, 'pieza', '', 'Dräger', 'Talla 3', '', 0.0, 'Drager', '2027-01-07', NULL, '<!--mas-cost:1670-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11003', 'Drager', ''),
+  ('MP11003-2', 'Mask LiteStar 3 w/o hook 30/caja', 'insumos', 'producto', '', 0, 0, 'caja', '', 'Dräger', 'Talla 3', '', 0.0, 'Drager', NULL, NULL, '<!--mas-cost:1670-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11003', 'Drager', ''),
+  ('MP11004', 'Mask Line 4 W/O Hook', 'insumos', 'producto', 'Presentación: CAJA/50 PZS', 84, 0, 'caja', '', 'Dräger', '', '', 0.0, '', '2027-01-07', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1670-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11004', 'Dräger', ''),
+  ('MP11005', 'Mascarilla Litestar T5 Sin Gancho', 'insumos', 'producto', 'Presentación: PIEZA', 66, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2028-07-15', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1670-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP11005', 'Dräger', ''),
+  ('MP11006', 'B Mascarilla de anestesia LiteStar, desechable, sin aro de enganche, talla 6, adulto L.', 'accesorios', 'producto', 'Presentación: caja con 50 pzs. 50 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP11006', 'Dräger', 'consumible'),
+  ('MP11007', 'B Mascarilla de anestesia LiteStar, desechable, sin aro de enganche, talla 7, adulto XL.', 'accesorios', 'producto', 'Presentación: caja con 50 pzs. 50 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP11007', 'Dräger', 'consumible'),
+  ('MP11008', 'Aro de enganche para mascarilla de anestesia LiteStar, Desechable, D.I. 22 mm, para tallas 3-7.', 'accesorios', 'producto', 'Presentación: caja con 30 pzs. 30 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP11008', 'Dräger', 'consumible'),
+  ('MP13020', 'Carro multiusos 5 RUEDAS CESTA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP13020', 'Dräger', 'consumible'),
+  ('MP13021', 'Carro multiusos básico**', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP13021', 'Dräger', 'consumible')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MP13022', 'Abrazadera de riel de carro Multi-P', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP13022', 'Dräger', 'consumible'),
+  ('MP13023', 'Cesta de carro de transporte Multi-P', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP13023', 'Dräger', 'consumible'),
+  ('MP13024', 'Base de carro de transporte Multi-P', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP13024', 'Dräger', 'consumible'),
+  ('MP13025', 'Poste de carro de transporte Multi-P', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP13025', 'Dräger', 'consumible'),
+  ('MP13026', 'Conjunto de montaje de carro Multi-P', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP13026', 'Dräger', 'consumible'),
+  ('MP1911', 'Silikon Mask Infant Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP1911', 'Dräger', ''),
+  ('MP200050', 'Neonatal Test Lung, Reusable', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MP200050', 'Dräger', ''),
+  ('MP20020', 'SelfTestLung', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MP20020', 'Dräger', 'consumible'),
+  ('MP20050', 'Neonatal Test Lung, Reusable', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1666.9422-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MP20050', 'Dräger', ''),
+  ('MPGBW-78RT', 'Electrodos descartables ECG / Electrodo neonatal (genérico)', 'insumos', 'producto', 'Cedros DRAGER+3M · MPGBW-78RT', 98, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', '2027-02-06', NULL, 'Cedros DRAGER+3M · MPGBW-78RT', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MPGBW-78RT', 'Dräger', ''),
+  ('MR340S', 'CHAMBER INFANT ITA/SPA/POR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MR340S', 'F&P', 'listado'),
+  ('MR35371', 'Adaptador Ecg Para Cable Ecg De Pin Sencillo', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MR35371', 'Dräger', ''),
+  ('MR370', 'CHAMBER - ADULT REUSABLE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MR370', 'F&P', 'listado'),
+  ('MR810JSU', 'HUMIDIFIER MR810 115V E/POR/SP', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MR810JSU', 'F&P', 'listado'),
+  ('MS02', 'Tapa protectora con alcohol isopropilico al 70% Tego para hemodiaisis. Presentación Unitaria e', 'accesorios', 'producto', 'Presentación: PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS02', 'Dräger', 'listado'),
+  ('MS03', 'Tiras eséries para cierre de heridas Seri-Strip"" elásico. Medida: 6 mm x 7.5cm', 'accesorios', 'producto', 'Presentación: RTON C/8 CAJAS, CAJA 270. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS03', 'Dräger', 'listado'),
+  ('MS04', 'Rolo 10 cm x 22.8 m', 'accesorios', 'producto', 'Presentación: CAJA Ci PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS04', 'Dräger', 'listado'),
+  ('MS06', 'Rolo 15 cm x 22.8 m', 'accesorios', 'producto', 'Presentación: CAJA CM PZS. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS06', 'Dräger', 'listado'),
+  ('MS13218', 'Nmt Cbl Trident, 2-Lead, 0.3 M', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1552.96-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS13218', 'Dräger', ''),
+  ('MS13235', 'Sensor SpO2 Dräger reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3091.9096-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS13235', 'Dräger', ''),
+  ('MS13865', 'Cable Scio/Ids 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS13865', 'Dräger', ''),
+  ('MS13926', 'Spo2 Cable Masimo Procal , 1.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 35, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS13926', 'Dräger', ''),
+  ('MS14428', 'Cuff 12-19 Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS14428', 'Dräger', ''),
+  ('MS14430', 'Cuff 12-19 Child', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS14430', 'Dräger', ''),
+  ('MS14556', 'Monolead 3, Aha/Us, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14556', 'Dräger', ''),
+  ('MS14560', 'Ecg Cbl Monolead 6 Aha/Us 5.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 20, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14560', 'Dräger', ''),
+  ('MS14679', 'Multimed 5 Singlepin Adapter', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2093.2491-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14679', 'Dräger', ''),
+  ('MS14679E530U', 'Monolead-Multimed Adapter 6/5', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14679E530U', 'Dräger', ''),
+  ('MS14680', 'Adaptador ECG para cable ECG de pin sencillo a MultiMed® 6', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14680', 'Dräger', 'consumible'),
+  ('MS14681', 'Telemery cable adaprer, connecs single-pin cable to telemety tansmizer', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14681', 'Dräger', 'listado'),
+  ('MS14682', 'Monolead 6 AHA/US, 3 m', 'accesorios', 'producto', 'Presentación: PIEZA', 6, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS14682', 'Dräger', ''),
+  ('MS15053', 'Nmt-Thermistor Trident', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3639.75-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS15053', 'Dräger', ''),
+  ('MS15084', 'Nmt Thumb Adpt Trident 5opcs', 'accesorios', 'producto', 'Presentación: CAJA/50 PZS', 5, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15084', 'Dräger', ''),
+  ('MS15085', 'Nmt Accelerometer Trident', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:10919.25-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15085', 'Dräger', ''),
+  ('MS15086', 'Adaptador de mano NMT Trident®', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15086', 'Dräger', 'consumible'),
+  ('MS15087', 'Bed Clip For Cables', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:692.08-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15087', 'Dräger', ''),
+  ('MS15088', 'Nmt Hand Adapter Trident', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15088', 'Dräger', ''),
+  ('MS15893', 'Cable Control Cnap Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15893', 'Dräger', ''),
+  ('MS15894', 'Brazalete dedal chico', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS15894', 'Dräger', 'listado'),
+  ('MS15895', 'Cnap Sensor Cuff, Medium', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS15895', 'Dräger', ''),
+  ('MS15896', 'Cuff Cnap Pod Large', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS15896', 'Dräger', ''),
+  ('MS16229', 'Cable ECG, 5 derivaciones, conector de pin dual MonoLead® 5, IEC2 (código de colores AHA/US), 2,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16229', 'Dräger', 'consumible'),
+  ('MS16230', 'Monolead 5 chest AHA, 1.5 m', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:5678.01-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16230', 'Dräger', ''),
+  ('MS16233', 'Cable ECG, 3 derivaciones, conector pin dual MonoLead® 3, IEC2 (código de colores AHA/US), 2 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16233', 'Dräger', 'consumible'),
+  ('MS16256', 'Ecg Extension Single Pin. 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3280.628-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16256', 'Dräger', ''),
+  ('MS16299', 'Monolead 5 Dual-Pin Aha, 2.5m', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16299', 'Dräger', ''),
+  ('MS16444', 'Sensor SpO2 adhesivo Dräger, espuma, desechable, niño, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16444', 'Dräger', 'consumible'),
+  ('MS16445', 'Sensor SpO2 adhesivo Dräger, espuma, desechable, adulto, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16445', 'Dräger', 'consumible'),
+  ('MS16446', 'Sensor SpO2 adhesivo Dräger, tela, desechable, neonato, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16446', 'Dräger', 'consumible'),
+  ('MS16447', 'Sensor SpO2 adhesivo Dräger, tela, desechable, bebé, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16447', 'Dräger', 'consumible'),
+  ('MS16448', 'Sensor SpO2 adhesivo Dräger, vinilo, desechable, niño, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16448', 'Dräger', 'consumible'),
+  ('MS16449', 'Sensor SpO2 adhesivo Dräger, vinilo, desechable, adulto, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16449', 'Dräger', 'consumible'),
+  ('MS16492', 'ECG cable for V lead, IEC2 (AHA/US color code}, 1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16492', 'Dräger', 'listado'),
+  ('MS16916', 'Cable CO para Infinity® PiCCO Pod', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16916', 'Dräger', 'consumible'),
+  ('MS16918', 'Cable de catéter CO para Infinity® PiCCO Pod', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16918', 'Dräger', 'consumible'),
+  ('MS16919', 'Cable de termistor CO para Infinity® PiCCO Pod', 'accesorios', 'producto', 'Presentación: pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16919', 'Dräger', 'consumible'),
+  ('MS16920', 'Cable adaptador para Infinity® PiCCO SmartPod®, para conector de 10 pines', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS16920', 'Dräger', 'consumible'),
+  ('MS17041', 'SpO2 interm cbl Masimo LNOP, 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 18, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS17041', 'Dräger', ''),
+  ('MS17330', 'Spo2 Intermediate Cable, 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3218.0876-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS17330', 'Dräger', ''),
+  ('MS17522', 'Spo2 Masimo Cable 3m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:7696.858-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS17522', 'Dräger', ''),
+  ('MS18680', 'Spo2 Cable Masimo Lnop, 1.2m Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 47, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS18680', 'Dräger', ''),
+  ('MS18683', 'Spo2 Intermediate Cable, 1.2 M', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2839.5536-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS18683', 'Dräger', ''),
+  ('MS20093', 'Multimed Plus', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:10125.7845-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS20093', 'Dräger', ''),
+  ('MS20094', 'Cable multiparámetro MultiMed® plus OR, para ECG, resp., SpO2 y temp., 2,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS20094', 'Dräger', 'consumible'),
+  ('MS20163', 'MonoLead 3 pin dual', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS20163', 'Dräger', 'listado'),
+  ('MS20979', 'Cable intermedio Nellcor®, 3 m MS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS20979', 'Dräger', 'consumible'),
+  ('MS22147', 'Cable adaptador para transductor de presión PAI, Baxter/Edwards / NÚMERO DE PARTE COMO ALTERNATIVA 2601221', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS22147', 'Dräger', 'consumible'),
+  ('MS22148', 'Cable adaptador para transductor de presión PAI, Argon (antes Becton Dickinson/Ohmeda) / NÚMERO DE PARTE COMO ALTERNATIVA 2601223', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS22148', 'Dräger', 'consumible'),
+  ('MS22532', 'Cable adaptador para transductor de presión PAI, Dräger, 10 patillas / NÚMERO DE PARTE COMO ALTERNATIVA 2601225', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS22532', 'Dräger', 'consumible'),
+  ('MS22533', 'Cable adaptador para transductor de presión PAI, Dräger, 7 patillas / NÚMERO DE PARTE COMO ALTERNATIVA 2601227', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS22533', 'Dräger', 'consumible'),
+  ('MS22534', 'Cable adaptador para transductor de presión PAI, Utah Medical / NÚMERO DE PARTE COMO ALTERNATIVA 2601229', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS22534', 'Dräger', 'consumible'),
+  ('MS22535', 'Adaptador para transductor PAI, Abbott/Medex / NÚMERO DE PARTE COMO ALTERNATIVA 2601231', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS22535', 'Dräger', 'consumible'),
+  ('MS23598', 'Adaptador de pod SensoNor, para conectar cables de transductor de presión, 7 pines', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS23598', 'Dräger', 'consumible'),
+  ('MS24303', 'Spo2 Masimo Cable Lncs 1.2m', 'accesorios', 'producto', 'Presentación: PIEZA', 17, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:7696.858-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS24303', 'Dräger', ''),
+  ('MS25951', 'Ecg Neo Adapter Cable Mm, 2m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:8958.638-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS25951', 'Dräger', ''),
+  ('MS26122', 'Cnap Arm Strap Generation 2, Latex Free', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS26122', 'Dräger', ''),
+  ('MS26123', 'Cnap Cuff Control Cradle Gen2', 'accesorios', 'producto', 'Presentación: PIEZA', 4, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS26123', 'Dräger', ''),
+  ('MS26125', 'Shp Asy Cnap Gen2', 'insumos', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MS26125', 'Dräger', ''),
+  ('MS28558', 'ECG cable, 5-lead,single-pin connector MonoLead® 5, IEC2 (AHA/US color code}, 5.3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS28558', 'Dräger', 'listado'),
+  ('MS28560', 'Ecg Cbl Monolead 6 Aha/Us 5.7m', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS28560', 'Dräger', '')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MS28597', 'ECG cable, 3-lead, single-pin connecior MonoLead8 3, IEC2 (AHA/US color code}, 4.1 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS28597', 'Dräger', 'listado'),
+  ('MS32153', 'Cable de extensión', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS32153', 'Dräger', 'consumible'),
+  ('MS32154', 'Sensor manual, reutilizable, adulto MS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS32154', 'Dräger', 'consumible'),
+  ('MS32289', 'TOF hand sensor, ped. SW1,7', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:30268.161-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MS32289', 'Dräger', ''),
+  ('MS32290', 'Sensor de pie, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS32290', 'Dräger', 'consumible'),
+  ('MS32291', 'Sensor de ceja, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS32291', 'Dräger', 'consumible'),
+  ('MS32958', 'Adapter Db9f-Rj45', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS32958', 'Dräger', ''),
+  ('MS33726', 'Sensor Masimo® RD -SET , adulto, desechable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33726', 'Dräger', 'consumible'),
+  ('MS33727', 'Sensor Masimo® RD -SET , pediátrico, desechable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33727', 'Dräger', 'consumible'),
+  ('MS33728', 'Sensor Masimo® RD -SET , infantil, desechable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33728', 'Dräger', 'consumible'),
+  ('MS33729', 'Sensor Masimo® RD-SET, neonatal, desechable / REEMPLAZA AL 7496974 (Masimo SpO2 LNOP NeoPt)', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33729', 'Dräger', 'consumible'),
+  ('MS33730', 'Sensor Masimo® RD-SET, neonatal para prematuros, desechable / REEMPLAZA AL 7496966 (Masimo SpO2 LNOP NeoPt)', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33730', 'Dräger', 'consumible'),
+  ('MS33731', 'RD to LNOP adapter', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33731', 'Dräger', 'consumible'),
+  ('MS33732', 'RD to LNCS adapter', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33732', 'Dräger', 'consumible'),
+  ('MS33733', 'Cable adaptador RD-SET a MultiMed®, para conectar los sensores RD-SET a MultiMed® 5/6/12, NeoMed Pods y a MultiMed® Plus/Plus OR con los cables intermedios correspondientes 3368433/3375834 o MS18683/MS17330', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33733', 'Dräger', 'consumible'),
+  ('MS33736', 'Cable intermedio RD -SET para Masimo® SET MCable, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33736', 'Dräger', 'consumible'),
+  ('MS33737', 'Cable intermedio RD -SET para Masimo® SET MCable, 3,6 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33737', 'Dräger', 'consumible'),
+  ('MS33738', 'Cable intermedio RD -SET para Masimo® rainbow SET MCable, 1,5 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33738', 'Dräger', 'consumible'),
+  ('MS33739', 'Cable intermedio RD -SET para Masimo® rainbow SET MCable, 3,6 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33739', 'Dräger', 'consumible'),
+  ('MS33740', 'Sensor Masimo® RD -SET DCI, adulto, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33740', 'Dräger', 'consumible'),
+  ('MS33741', 'Sensor Masimo® RD-SET DC-IP, pediátrico, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS33741', 'Dräger', 'consumible'),
+  ('MS34009', 'Monitor de signos vitales Vista 120 C', 'equipos', 'equipo', '', 4, 0, 'pieza', 'Sala de cámaras', 'Dräger', 'Vista 120 C', '', 0.0, 'Drager', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'MS34009', 'Drager', ''),
+  ('MS34009-2', 'Vista 120', 'equipos', 'equipo', '', 1, 0, 'pieza', 'Sala de Cámaras ', 'Dräger', '', 'VGSRF0051', 0.0, 'Drager', NULL, '2022-06-06', '', 'operativo', '2026-10-06', NULL, true, false, true, false, 0, 0, 'MS34009', 'Drager', ''),
+  ('MS34209', 'Sticker for eyebrow sensor (MS32291) TOFScan', 'accesorios', 'producto', 'Presentación: Caja c/96 piezas. 96 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS34209', 'Dräger', 'consumible'),
+  ('MS34436', 'Cable intermedio SpO2 Masimo® RD -SET , 1.2 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS34436', 'Dräger', 'consumible'),
+  ('MS34437', 'Cable intermedio SpO2 Masimo® RD -SET , 3 m', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS34437', 'Dräger', 'consumible'),
+  ('MS34677', 'Sensor de SpO2 Nellcor® FLEXM AX* Adulto', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS34677', 'Dräger', 'consumible'),
+  ('MS34678', 'Sensor de SpO2 Nellcor® FLEXM AX* Pediátrico', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS34678', 'Dräger', 'consumible'),
+  ('MS40067', 'Sensor Masimo® RD-SET sensor TC-I Ear, pediatric/adult, reusable /REEMPLAZA AL 7497006 (Masimo SpO2 LNOP TI)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS40067', 'Dräger', 'consumible'),
+  ('MS40070', 'Sensor Multisitio Masimo® RD-SET sensor YI Multisite(,) neonate/pediatric/adult(,) reusable / REEMPLAZA AL 7497014 (Masimo SpO2 sensor multisite)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS40070', 'Dräger', 'consumible'),
+  ('MS40073', 'Sensor Masimo® RD -SET TF -I, pediátrico/adulto, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS40073', 'Dräger', 'consumible'),
+  ('MS40243', 'Funda protectora* para sonda de temp. universal, sin látex, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS40243', 'Dräger', 'consumible'),
+  ('MS40317', 'Sensor manual, reutilizable, adulto, a partir del Software 1.8 MS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS40317', 'Dräger', 'consumible'),
+  ('MS40319', 'Sensor manual, reutilizable, pediátrico pequeño, a partir del Software 1.8', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS40319', 'Dräger', 'consumible'),
+  ('MS40321', 'Sensor de ceja, reutilizable, a partir del Software 1.8', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MS40321', 'Dräger', 'consumible'),
+  ('MU03876', 'Manguito de puerto iris, desechable, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU03876', 'Dräger', 'consumible'),
+  ('MU04366', 'Rommet_spcl_hood_access', 'accesorios', 'producto', 'Presentación: PIEZA', 14, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:114.1088-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU04366', 'Dräger', ''),
+  ('MU04472', 'Filtro de toma de Air para TI 500 y TI 500 Globe-Trotter, reutilizable, 6 uds.', 'accesorios', 'producto', 'Presentación: Caja c/6 piezas. 6 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU04472', 'Dräger', 'consumible'),
+  ('MU04771', 'Tubuladuras para TI 500 Globe-Trotter, desechables, 20 uds.', 'accesorios', 'producto', 'Presentación: 20 Piezas / Caja. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU04771', 'Dräger', 'consumible'),
+  ('MU04804', 'O2 sensor, Bio-Med 10006', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU04804', 'Dräger', ''),
+  ('MU04991', 'Filter,Repl,Isolette', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:543.114-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU04991', 'Dräger', ''),
+  ('MU06008', 'Almohadilla humidificadora, desechable, antibacteriana, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06008', 'Dräger', 'consumible'),
+  ('MU06009', 'Colchón de reemplazo, reusable', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06009', 'Dräger', 'listado'),
+  ('MU06011', 'Correa de retención, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06011', 'Dräger', 'consumible'),
+  ('MU06570', 'Manguito para abertura de entrada de manos, desechable, ovalado, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06570', 'Dräger', 'consumible'),
+  ('MU06933', 'Sonda de temperatura cutánea Premi-Probe 1, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06933', 'Dräger', 'consumible'),
+  ('MU06941', 'Cover for skin temperature probe Criser Cover, foam, disposable, 600 pcs.', 'accesorios', 'producto', 'Presentación: Caja c/600 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06941', 'Dräger', 'listado'),
+  ('MU06942', 'Critter Covers, Box/100', 'accesorios', 'producto', 'Presentación: PAQUETE/100', 8, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06942', 'Dräger', ''),
+  ('MU06943', 'Cubierta para sonda de temperatura cutánea CARE-FOR-ME, hidrogel, desechable, grande, 100 uds.', 'accesorios', 'producto', 'Presentación: Caja c/100 piezas. 100 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06943', 'Dräger', 'consumible'),
+  ('MU06944', 'Cover, Probe, Cfm,Std, Box/100', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2026-01-31', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:2271.204-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MU06944', 'Dräger', ''),
+  ('MU06951', 'Sonda de temperatura cutánea reutilizable', 'accesorios', 'producto', 'Presentación: PIEZA', 25, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1300.182-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU06951', 'Dräger', ''),
+  ('MU06955-01', 'Sonda De Temperatura De Aire Sobre Infante', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU06955-01', 'Dräger', ''),
+  ('MU06971', 'Sonda de temperatura cutánea', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU06971', 'Dräger', ''),
+  ('MU09577', 'Colchón Resuscitaire', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU09577', 'Dräger', 'listado'),
+  ('MU10841', 'Tubo respiratorio para Resuscitaire® con AutoBreath, desechable, 25 uds.', 'accesorios', 'producto', 'Presentación: 25 Piezas / Caja. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10841', 'Dräger', 'consumible'),
+  ('MU10900', 'Breathing circuk for Resuscitaire VentSiar®,, latex-free, disp., N, 1 m, 25 pes.', 'accesorios', 'producto', 'Presentación: 25 Piezas / Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10900', 'Dräger', 'listado'),
+  ('MU10902', 'Conector en T, desechable, Ø 15 mm, 25 uds.', 'accesorios', 'producto', 'Presentación: Paquete c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10902', 'Dräger', 'consumible'),
+  ('MU10915', 'Filtro para botella de aspiración 40 ml para Resuscitaire®, desechable, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10915', 'Dräger', 'consumible'),
+  ('MU10916', 'Botella de aspiración con soporte para Resuscitaire, desechable, 40 ml', 'accesorios', 'producto', 'Presentación: Kit. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10916', 'Dräger', 'consumible'),
+  ('MU10917', 'Botella de aspiración, desechable, 40 ml, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10917', 'Dräger', 'consumible'),
+  ('MU10918', 'Botella de aspiración con filtro y tubo para Isolette® 8000, desechable, 800 ml, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 piezas. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10918', 'Dräger', 'consumible'),
+  ('MU10923', 'Filtro y tubo de succión', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU10923', 'Dräger', 'consumible'),
+  ('MU11225', 'Probe 3, skin temp, reusable', 'accesorios', 'producto', '', 51, 0, 'pieza', 'A/2', 'Dräger', 'Drager', '2152-01', 0.0, 'Drager', NULL, NULL, '<!--mas-cost:1766.492-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU11225', 'Drager', ''),
+  ('MU11225-2', 'Probe skin 3, skin temp, reusable', 'accesorios', 'producto', '', 2, 0, 'pieza', 'A/2', 'Dräger', 'Drager', '2145-02', 0.0, 'Drager', NULL, NULL, '<!--mas-cost:1766.492-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU11225', 'Drager', ''),
+  ('MU11228', 'Probe3, Skintemp, Dual, Disp, Bx10', 'accesorios', 'producto', 'Presentación: CAJA/1O PZS', 4, 0, 'caja', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:5930.366-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU11228', 'Dräger', ''),
+  ('MU12249', 'Colchón C2000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU12249', 'Dräger', 'listado'),
+  ('MU12504', 'Filtro de toma de aire para Isolette® C2000, 8000 y 8000 plus, reutilizable, 4 uds.', 'accesorios', 'producto', 'Presentación: Caja c/4 piezas. 4 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU12504', 'Dräger', 'consumible'),
+  ('MU12520', 'Adaptador sensor de temp. C2000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU12520', 'Dräger', 'listado'),
+  ('MU12525', 'Sensor de temperatura des. C2000', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU12525', 'Dräger', 'listado'),
+  ('MU12533', 'Sonda de temperatura cutánea Premi-Probe 5, reutilizable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU12533', 'Dräger', 'consumible'),
+  ('MU12551', 'Probe 5, Ig Skin Tmp,Ysi, Box/10', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PIEZAS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:5930.366-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MU12551', 'Dräger', ''),
+  ('MU12609', 'Grommet, Access', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:97.6508-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU12609', 'Dräger', ''),
+  ('MU13223-06', 'Cell-Oxygen', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU13223-06', 'Dräger', ''),
+  ('MU13223-08', 'Cell-Oxygen', 'insumos', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MU13223-08', 'Dräger', ''),
+  ('MU13400', 'Kit, Head Shield Hinge Isolette', 'accesorios', 'producto', 'Presentación: PIEZA', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU13400', 'Dräger', ''),
+  ('MU16052', 'Bateria T1500', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU16052', 'Dräger', 'listado'),
+  ('MU21120', 'Tubos de gestión del condensado para Isolette® 8000 y 8000 plus, desechable, 20 uds.', 'accesorios', 'producto', 'Presentación: Caja c/20 pzs. 20 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU21120', 'Dräger', 'consumible'),
+  ('MU22416', 'Kit Esquineros', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU22416', 'Dräger', ''),
+  ('MU24403', 'NIBP cuff, disposable, neonate, size 1, 3.3-5.6 cm, 10 pos.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU24403', 'Dräger', 'listado'),
+  ('MU24404', 'NIBP cuf, disposable, neonate, size 2, 4.2-7.1 cm, 10 pos.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU24404', 'Dräger', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('MU24405', 'NIBP cuff, disposable, neonate, size 3, 5.4-9.1 cm, 10 pos.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU24405', 'Dräger', 'listado'),
+  ('MU24406', 'NIBP cuf, disposable, neonate, size 4, 6.9-11.7 cm, 10 pes.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU24406', 'Dräger', 'listado'),
+  ('MU24903', 'Oxygen sensor kit', 'insumos', 'producto', 'Presentación: KIT', 5, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2027-03-20', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:7823.036-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MU24903', 'Dräger', ''),
+  ('MU26041', 'Sonda de temperatura cutánea Premi-Probe para Isolette® 8000 plus, desechable, amarilla, central, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU26041', 'Dräger', 'consumible'),
+  ('MU26042', 'Sonda de temperatura cutánea Premi-Probe para Isolette® 8000 plus, desechable, blanca, periférica, 10 uds.', 'accesorios', 'producto', 'Presentación: Caja c/10 piezas. 10 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU26042', 'Dräger', 'consumible'),
+  ('MU8933', 'Probe 1, Skin Temp, Disp, Box/10', 'accesorios', 'producto', 'Presentación: PAQUETE/10 PZS', 2, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MU8933', 'Dräger', ''),
+  ('MW003', 'Rollos 7.5 cm x 3.65 m e', 'accesorios', 'producto', 'Presentación: 20 ROLLOS C/BOLSA. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MW003', 'Masimo', 'listado'),
+  ('MW004', 'Rolos 10 cm x 3.65 m c', 'accesorios', 'producto', 'Presentación: ''RTON CON 4 BOLSAS CON. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MW004', 'Masimo', 'listado'),
+  ('MW02', 'Rolos 5 cm x 3.65 m c', 'accesorios', 'producto', 'Presentación: \RTON CON 4 BOLSAS CON. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Masimo', '', '', 0.0, 'Masimo', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MW02', 'Masimo', 'listado'),
+  ('MX00001', 'Cal sodada Drägersorb® 800+ para absorción de CO2, garrafa, 5 l, 2 uds.', 'accesorios', 'producto', 'Presentación: caja con 2 pzs. 2 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX00001', 'Dräger', 'consumible'),
+  ('MX00004', 'CLIC Absorber 800+, cartucho desechable, 1,2 l, 6 uds.', 'accesorios', 'producto', 'Presentación: Caja c/6 bidones de 1,2 litros. 6 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX00004', 'Dräger', 'consumible'),
+  ('MX00013', 'CO2 absorber CLIC Free, disposable absorber, 1.2 L, wth RFID, 6 pcs. (Se debe de pedir caja con 6', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX00013', 'Dräger', 'listado'),
+  ('MX01004', 'Sensor SpO2 multisitio Nellcor® DURA-Y™, reutilizable', 'accesorios', 'producto', 'Presentación: Kit. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX01004', 'Dräger', 'consumible'),
+  ('MX01005', 'Clip de oreja para Nellcor® DURA-Y™', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX01005', 'Dräger', 'consumible'),
+  ('MX01049', 'O2-Sensor Oxytrace Ve', 'insumos', 'producto', 'Presentación: PIEZA', 9, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', '2029-01-20', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:5930.366-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MX01049', 'Dräger', ''),
+  ('MX01050', 'Sensor de O2 OxyTrace INCU, para Caleo®', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX01050', 'Dräger', 'consumible'),
+  ('MX03300', 'Universal laryngoscope set, reusable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03300', 'Dräger', 'listado'),
+  ('MX03301', 'Batzery grip, aduk, 2.5 V, 28 mm @', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03301', 'Dräger', 'listado'),
+  ('MX03303', 'Blade size 1 (Mac}, reusable, 92 x 18 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03303', 'Dräger', 'listado'),
+  ('MX03307', 'Blade size 0 (Miler), reusable, 79 x 10 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03307', 'Dräger', 'listado'),
+  ('MX03311', 'Vacuum lamp for blade (size 2-5}', 'accesorios', 'producto', 'Presentación: Paquete c/6 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03311', 'Dräger', 'listado'),
+  ('MX03313', 'Laryngoscope set, adui, reusable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03313', 'Dräger', 'listado'),
+  ('MX03314', 'Basery grip, pediatric, 2.5 V, 19 mm &', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03314', 'Dräger', 'listado'),
+  ('MX03316', 'Vacuum lamp for blade (size 0-1}', 'accesorios', 'producto', 'Presentación: Paquete c/6 plezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03316', 'Dräger', 'listado'),
+  ('MX03317', 'F.O. universal laryngoscope sex, reusable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03317', 'Dräger', 'listado'),
+  ('MX03318', 'F.O. bagery grip, aduk, 2.5 V, 28 mm @', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03318', 'Dräger', 'listado'),
+  ('MX03319', 'F.O. blade size 0 (Mac), reusable, 83 x 14 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03319', 'Dräger', 'listado'),
+  ('MX03320', 'F..O. blade size 1 (Mac), reusable, 93 x 14 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03320', 'Dräger', 'listado'),
+  ('MX03321', 'F.O. blade size 2 (Mac), reusable, 113 x 20 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03321', 'Dräger', 'listado'),
+  ('MX03322', 'F.0. blade size 3 (Mac), reusable, 133 x 20 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03322', 'Dräger', 'listado'),
+  ('MX03323', 'F.O. blade size 4 (Mac), reusable, 155 x 20 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03323', 'Dräger', 'listado'),
+  ('MX03324', 'F.O. blade size 0 (Miler}, reusable, 79 x 11 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03324', 'Dräger', 'listado'),
+  ('MX03325', 'F.0. blade size 1 (Miler), reusable, 103 x 11 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03325', 'Dräger', 'listado'),
+  ('MX03326', 'F.O. blade size 2 (Miler), reusable, 156 x 13 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03326', 'Dräger', 'listado'),
+  ('MX03327', 'Bazery, aduk, 2.5 V', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03327', 'Dräger', 'listado'),
+  ('MX03328', 'Xenon lamps for basery grip, 2.5 V', 'accesorios', 'producto', 'Presentación: Caja c/6 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03328', 'Dräger', 'listado'),
+  ('MX03329', 'F.O. laryngoscope set, pediatric, reusable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03329', 'Dräger', 'listado'),
+  ('MX03330', 'F.O. laryngoscope set, adui, reusable', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03330', 'Dräger', 'listado'),
+  ('MX03331', 'F.O. bazery grip, pediatric, 2.5 V, 19 mm &', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX03331', 'Dräger', 'listado'),
+  ('MX10209', 'Canister Key', 'accesorios', 'producto', 'Presentación: PIEZA', 8, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:869.9479-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX10209', 'Dräger', ''),
+  ('MX11000', 'Sonda de temperatura cutánea', 'accesorios', 'producto', 'Presentación: PIEZA', 44, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3744.963-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MX11000', 'Dräger', ''),
+  ('MX11001', 'Sonda de temperatura cutánea', 'insumos', 'producto', 'Presentación: BOLSAS/5', 37, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', '2028-09-15', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:3744.963-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MX11001', 'Dräger', ''),
+  ('MX11002', 'Thermopad', 'accesorios', 'producto', 'Presentación: KIT', 150, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX11002', 'Dräger', ''),
+  ('MX17012', 'Colchón SoftBed, para Caleo®, reutilizable, forro: 100 % poliuretano, tejido: 100 % poliéster', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX17012', 'Dräger', 'consumible'),
+  ('MX17015', 'Filtro De Aire', 'accesorios', 'producto', 'Presentación: PAQUETE/ 20 PZS', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:722.2429-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX17015', 'Dräger', ''),
+  ('MX17018', 'Juego De Transferencia', 'insumos', 'producto', 'Presentación: PAQUETE/ 20 PZS', 5, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', '2025-08-03', NULL, '<!--mas-color:rojo-->
+<!--mas-cost:1900-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'MX17018', 'Dräger', ''),
+  ('MX23023', 'Recipiente de secreción VacuSmart®, PE (polietileno), desechable, 700 ml, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX23023', 'Dräger', 'consumible'),
+  ('MX23025', 'Recipiente de secreción VacuSmart® Gel, PE (polietileno), desechable, 700 ml, 25 uds.', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. 25 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX23025', 'Dräger', 'consumible'),
+  ('MX23026', 'VacuSman Tube', 'accesorios', 'producto', 'Presentación: Caja c/25 piezas. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX23026', 'Dräger', 'listado'),
+  ('MX50004', 'Infinity ID CLIC Absorber 800+, cartucho desechable, 1,2 l, 6 uds.', 'accesorios', 'producto', 'Presentación: Caja c/6 bidones de 1,2 litros. 6 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50004', 'Dräger', 'consumible'),
+  ('MX50028', 'D Universal charging station MedCharge 4000 “ALL in ONE"', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50028', 'Dräger', 'listado'),
+  ('MX50050', 'Cal sodada Drägersorb® Free para absorción de CO2, garrafa, 5 l, 2 uds.', 'accesorios', 'producto', 'Presentación: Caja c/2 piezas. 2 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50050', 'Dräger', 'consumible'),
+  ('MX50052', 'F.0. blade size 00 (Miller), reusable, 65 x 11 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50052', 'Dräger', 'listado'),
+  ('MX50053', 'F.0. blade size 3 (Miler), reusable, 193 x 13 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50053', 'Dräger', 'listado'),
+  ('MX50054', 'F.O. blade size 4 (Miler), reusable, 204 x 17 mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50054', 'Dräger', 'listado'),
+  ('MX50065', 'Sensor SpO2 adhes. Nellcor® Oximax® Max-A, desechable, adulto, cable 46 cm, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50065', 'Dräger', 'consumible'),
+  ('MX50066', 'Sensor SpO2 adhesivo Nellcor® Oximax® Max-P, desechable, niño, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50066', 'Dräger', 'consumible'),
+  ('MX50067', 'Sensor SpO2 adhesivo Nellcor® Oximax® Max-I, desechable, niño, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50067', 'Dräger', 'consumible'),
+  ('MX50068', 'Sensor SpO2 adhesivo Nellcor® Oximax® Max-N, desechable, neonato/adulto, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50068', 'Dräger', 'consumible'),
+  ('MX50069', 'Sensor SpO2 adh. Nellcor® Oximax® Max-R, desechable, aplicación en nariz, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50069', 'Dräger', 'consumible'),
+  ('MX50070', 'Sensor SpO2 adh. Nellcor® Oximax® Max-Fast, desechable, aplicación en frente, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50070', 'Dräger', 'consumible'),
+  ('MX50071', 'Sensor SpO2 adhes. Nellcor® Oximax® Max-AL, desechable, adulto, cable 91 cm, 24 uds.', 'accesorios', 'producto', 'Presentación: Caja c/24 piezas. 24 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50071', 'Dräger', 'consumible'),
+  ('MX50090', 'Adaptador de cartucho CLIC para estaciones de anestesia Dräger', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'pieza', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50090', 'Dräger', 'consumible'),
+  ('MX50100', 'CLIC Absorber Free, cartucho desechable, 1,2 l, 6 uds.', 'accesorios', 'producto', 'Presentación: Caja c/6 bidones de 1,2 litros. 6 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50100', 'Dräger', 'consumible'),
+  ('MX50115', 'Soda Lime Dust Filter', 'accesorios', 'producto', 'Presentación: PIEZA', 2, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '<!--mas-color:rojo-->
+<!--mas-cost:896.75-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'MX50115', 'Dräger', ''),
+  ('MX50120', 'Infinity ID CLIC Absorber Free, cartucho desechable, 1,2 l, 6 uds.', 'accesorios', 'producto', 'Presentación: Caja c/6 bidones de 1,2 litros. 6 pzs por pack. Alta desde lista de precios consumible Dräger 2025. Precio de venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Lista de precios consumible Dräger vigente 2025.', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MX50120', 'Dräger', 'consumible'),
+  ('MXDM100000975', 'Juego De Piezas De Repuesto', 'refacciones', 'producto', 'Presentación: PAQUETE/30 PZS', 1, 0, 'paquete', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
 <!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'MXDM100000975', 'Dräger', ''),
-  ('REFACCIONES-000011', 'Upgrade Tool, Eve', 'refacciones', 'producto', 'Presentación: PIEZA', 7, 0, 'pieza', '', 'Masimo', '', '', 0.0, '', NULL, NULL, 'refaccion
-<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, '9848', 'Masimo', '')
+  ('NA01690-410', 'Termomero electronico Sure Temp Plus 690', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA01690-410', 'Welch Allyn', 'listado'),
+  ('NA01690-500', 'Termometro elesronico Sure Temp Plus 690 con montaje de pared', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA01690-500', 'Welch Allyn', 'listado'),
+  ('NA02678-000', 'TRANSDUCTOR ORAL DE TEMPERATURA DE 2.7m P/SPOT', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA02678-000', 'Welch Allyn', 'listado'),
+  ('NA02678-100', 'TRANSDUCTOR ORAL DE TEMPERATURA DE 2.7m P/SPOT', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA02678-100', 'Welch Allyn', 'listado'),
+  ('NA02893-000', 'TRANSDUCTOR ORAL DE TEMPERATURA DE 1.2m P/TERMOMETRO SURE TEMP', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA02893-000', 'Welch Allyn', 'listado'),
+  ('NA02895-000', 'TRANSDUCTOR DE TEMPERATURA PARA SPOT LXI', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA02895-000', 'Welch Allyn', 'listado'),
+  ('NA05031-110', 'CUBRE SONDA P/TERMOMETRO P/25pzas', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA05031-110', 'Welch Allyn', 'listado'),
+  ('NA06000-005', 'CUBRE SONDA P/TERMOMETRO BRAUN 10 CAJAS C/20 PIEZAS C/U', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA06000-005', 'Welch Allyn', 'listado'),
+  ('NA06000-300', 'Termometro electronico Braun Pro 6000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA06000-300', 'Welch Allyn', 'listado'),
+  ('NA105341-43', 'CARRO PARA ELECTROCARDIOGRAFO CP150 CON BRAZO P/ CABLES', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA105341-43', 'Welch Allyn', 'listado'),
+  ('NA7000-APM', 'ADAPTADOR DE ESFIGMOMANOMETRO DURASHOCK INTEGRADO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA7000-APM', 'Welch Allyn', 'listado'),
+  ('NA92871BLU', 'EQUIPO DIAGNOSTICO LED 3 LUMENS AZUL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA92871BLU', 'Welch Allyn', 'listado'),
+  ('NA92871PUR', 'EQUIPO DIAGNOSTICO LED 3 LUMENS LILA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA92871PUR', 'Welch Allyn', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('NA92880BLU', 'EQUIPO DIAGNOSTICO LED PLUS 6 LUMENS AZUL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA92880BLU', 'Welch Allyn', 'listado'),
+  ('NA97200-MC', 'BATERIA €', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NA97200-MC', 'Welch Allyn', 'listado'),
+  ('NAS200-101A', 'FUENTE DE PODER/CARGADOR p/SPOT/VSM WA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NAS200-101A', 'Welch Allyn', 'listado'),
+  ('NAS2880PUR', 'EQUIPO DIAGNOSTICO LED PLUS 6 LUMENS LILA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NAS2880PUR', 'Welch Allyn', 'listado'),
+  ('NASOFT-11L', 'BRAZALETE FLEXIPORT DESECHABLE # 11 LARGO CAJA C/20', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NASOFT-11L', 'Welch Allyn', 'listado'),
+  ('NASOFT-12L', 'BRAZALETE FLEXIPORT DESECHABLE # 12 LARGO CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'NASOFT-12L', 'Welch Allyn', 'listado'),
+  ('NTL 10', 'Disposable Neonatal Test Lung', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'NTL 10', 'Dräger', ''),
+  ('OPT842', '880 NASAL INTFC ADULT SML BX20', 'accesorios', 'producto', 'Presentación: CAJA C/50 SOBRES. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'OPT842', 'F&P', 'listado'),
+  ('OPT844', 'HUMID NASAL INTERFCE ADULT MED', 'accesorios', 'producto', 'Presentación: CAJA C/25 SOBRES. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'OPT844', 'F&P', 'listado'),
+  ('OPT846', 'HUMID NASAL INTERFACE ADULT LG', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'OPT846', 'F&P', 'listado'),
+  ('P3700E100473', 'Affinity 4 Birthing Bed', 'equipos', 'equipo', '', 0, 0, 'pieza', '', 'Hill-Rom', 'P3700', '', 400000.0, 'BAXTER/Hill-Rom', NULL, NULL, '', 'operativo', NULL, NULL, true, false, true, false, 0, 0, 'P3700E100473', 'BAXTER/Hill-Rom', ''),
+  ('PT101US', 'AIRVO HUMIDIFIER HOSP US PLUG', 'accesorios', 'producto', 'Presentación: CAJA C/50 SOBRES. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'PT101US', 'F&P', 'listado'),
+  ('PX260', 'TruWave 3 cc/60 in (150cm) 10/caja', 'insumos', 'producto', '', 709, 0, 'caja', '', 'Edwards Lifesciences', '', '', 0.0, 'Edwards Lifesciences', '2027-02-05', NULL, '', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'PX260', 'Edwards Lifesciences', ''),
+  ('R1541', 'Tiras esériles para cierre de heridas Steri-Srip™ reforzado. Medida: 0.6 x 7.5cm', 'accesorios', 'producto', 'Presentación: 20 ROLLOS C/BOLSA. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'R1541', '3M', 'listado'),
+  ('R1546', 'Tiras estériles para cierre de heridas Steri-Strip"* reforzado. Medida: 0.6 x 10.0cm', 'accesorios', 'producto', 'Presentación: \RTON CON 4 BOLSAS CON. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'R1546', '3M', 'listado'),
+  ('R1547', 'Tiras eséries para cierre de heridas Steri-Srrip™ reforzado. Medida: 1.2 x 10.0cm', 'accesorios', 'producto', 'Presentación: 20 ROLLOS C/BOLSA. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'R1547', '3M', 'listado'),
+  ('RE-PC-AHA-BAN', 'CABLE DE PACIENTE 10 PUNTAS TIPO BANANA PARA ECG EN REPOSO (SE-PRO-600)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'RE-PC-AHA-BAN', 'Welch Allyn', 'listado'),
+  ('REUSE', 'Cuff, Reus Sm Child 1', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE', 'Welch Allyn', ''),
+  ('REUSE-06-1TP', 'BRAZALETE FLEXIPORT REUSABLE #6 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-06-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-07-1 HP', 'Cuff, Reuse Infant', 'accesorios', 'producto', 'Presentación: PIEZA', 51, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-07-1 HP', 'Welch Allyn', ''),
+  ('REUSE-07-1TP', 'BRAZALETE FLEXIPORT REUSABLE #7 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-07-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-07-2TP', 'BRAZALETE FLEXIPORT REUSABLE # 7 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-07-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-08-1 HP', 'Cuff, Reus Sm Child 1', 'accesorios', 'producto', 'Presentación: PIEZA', 72, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-08-1 HP', 'Welch Allyn', ''),
+  ('REUSE-08-1TP', 'BRAZALETE FLEXIPORT REUSABLE # 8 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-08-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-08-2TP', 'BRAZALETE FLEXIPORT REUSABLE # 8 INFANTE CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-08-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-09-1TP', 'BRAZALETE FLEXIPORT REUSABLE # 9 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-09-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-09-2TP', 'BRAZALETE FLEXIPORT REUSABLE # 9 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-09-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-10-1TP', 'BRAZALETE FLEXIPORT REUSABLE # 10 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-10-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-10-2TP', 'BRAZALETE FLEXIPORT REUSABLE # 10 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-10-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-11 L', 'Cuff, Wa, Reusable Adult', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-11 L', 'Welch Allyn', ''),
+  ('REUSE-11-1SC', 'BRAZALETE FLEXIPORT REUSABLE $ 11 CON 1 TUBO PARA MONITOR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-11-1SC', 'Welch Allyn', 'listado'),
+  ('REUSE-11-1TP', 'BRAZALETE FLEXIPORT REUSABLE # 11 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-11-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-11-2TP', 'BRAZALETE FLEXIPORT REUSABLE # 11 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-11-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-11L-1TP', 'BRAZALETE FLEXIPORT REUSABLE # 11 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-11L-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-11L-2TP', 'BRAZALETE FLEXIPORT REUSABLE # 11 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-11L-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-12-1TP', 'BRAZALETE FLEXIPORT REUSABLE # 12 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-12-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-12-2MQ', 'BRAZALETE FLEXIPORT REUSABLE # 12 CON 2 TUBOS PARA SPOT LXi', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-12-2MQ', 'Welch Allyn', 'listado'),
+  ('REUSE-12-2TP', 'BRAZALETE FLEXIPORT REUSABLE $ 12 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-12-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-12L-2TP', 'BRAZALETE FLEXIPORT REUSABLE # 12 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-12L-2TP', 'Welch Allyn', 'listado'),
+  ('REUSE-13-1 HP', 'Cuff, Reus Sm Child 1', 'accesorios', 'producto', 'Presentación: PIEZA', 3, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'REUSE-13-1 HP', 'Welch Allyn', ''),
+  ('REUSE-13-1TP', 'BRAZALETE FLEXIPORT REUSABLE # 13 CON 1 TUBO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-13-1TP', 'Welch Allyn', 'listado'),
+  ('REUSE-13-2TP', 'BRAZALETE FLEXIPORT REUSABLE $ 13 CON 2 TUBOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'REUSE-13-2TP', 'Welch Allyn', 'listado'),
+  ('RT206', 'CIRCUIT KIT ADULT INS-HTD 10BX', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'RT206', 'F&P', 'listado'),
+  ('RT225', 'CIRCUIT KIT NEO BIAS-FLOW 10BX', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'F&P', '', '', 0.0, 'F&P', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'RT225', 'F&P', 'listado'),
+  ('SB0301', 'Ibp Adapter Cable Edward Transducer', 'insumos', 'producto', 'Presentación: PIEZA', 15, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'SB0301', 'Dräger', ''),
+  ('SENSTEMP1', 'Sensor de temperatura genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 16, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SENSTEMP1', 'Dräger', ''),
+  ('SOFT-06', 'BRAZALETE FLEXIPORT DESECHABLE # 6 CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SOFT-06', 'Welch Allyn', 'listado'),
+  ('SOFT-07', 'BRAZALETE FLEXIPORT DESECHABLE # 7 CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SOFT-07', 'Welch Allyn', 'listado'),
+  ('SOFT-08', 'BRAZALETE FLEXIPORT DESECHABLE # 8 CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SOFT-08', 'Welch Allyn', 'listado'),
+  ('SOFT-09', 'BRAZALETE FLEXIPORT DESECHABLE # 9 CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SOFT-09', 'Welch Allyn', 'listado'),
+  ('SOFT-10', 'BRAZALETE FLEXIPORT DESECHABLE # 10 CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SOFT-10', 'Welch Allyn', 'listado'),
+  ('SOFT-11', 'BRAZALETE FLEXIPORT DESECHABLE # 11 CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SOFT-11', 'Welch Allyn', 'listado'),
+  ('SOFT-12', 'BRAZALETE FLEXIPORT DESECHABLE # 12 CAJA C/20', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SOFT-12', 'Welch Allyn', 'listado'),
+  ('SPOGEN-1', 'Sensor de SpO2 genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 21, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'SPOGEN-1', 'Dräger', ''),
+  ('TRONCGEN1', 'Cable troncal genérico', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'TRONCGEN1', 'Dräger', ''),
+  ('TS-G3', 'Breathing Bag 2.3 L, Silicone', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'TS-G3', 'Dräger', ''),
+  ('U403-01P', 'Reusable Adult Finger Clip Spo2 Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 10, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'U403-01P', 'Dräger', ''),
+  ('U403S-01', 'Reusable Adult Soft Tip Spo2 Sensor Unimedic', 'accesorios', 'producto', 'Presentación: PIEZA', 12, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'U403S-01', 'Dräger', ''),
+  ('U710-70', 'Reusable Adult Finger Clip Spo2 Sensor', 'accesorios', 'producto', 'Presentación: PIEZA', 11, 0, 'pieza', '', 'Dräger', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, false, 0, 0, 'U710-70', 'Dräger', ''),
+  ('VA03100-LED', 'FOCO OTOSCOPIO LED 3.54', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA03100-LED', 'Welch Allyn', 'listado'),
+  ('VA03800-LED', 'FOCO OFTALMOSCOPIO LED PANOPTIC', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA03800-LED', 'Welch Allyn', 'listado'),
+  ('VA04900-LED', 'FOCO OFTALMOSCOPIO LED 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA04900-LED', 'Welch Allyn', 'listado'),
+  ('VA05242-UBX', 'ESTUCHE SOLO P/EQUIPO DIAGNOSTICO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA05242-UBX', 'Welch Allyn', 'listado'),
+  ('VA06000-LED', 'FOCO LARINGOSCOPIO F.O. LED 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA06000-LED', 'Welch Allyn', 'listado'),
+  ('VA06500-LED', 'FOCO OTOSCOPIO LED 3.5v MACROVIEW', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA06500-LED', 'Welch Allyn', 'listado'),
+  ('VA209026-501', 'LENTE NEGRO PARA OTOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA209026-501', 'Welch Allyn', 'listado'),
+  ('VA211026-502', 'Headgear, disposable, size L, 31 — 37 cm (12.2 — 14.6 in) head circumference, 5 pcs.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA211026-502', 'Dräger', 'listado'),
+  ('VA235005-501', 'LENTE P/VENTANA DE OTOSCOPIO 3.5v 20000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA235005-501', 'Welch Allyn', 'listado'),
+  ('VA460154-501', 'CONECTOR MACHO P/LAMPARA FRONTAL 46003', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA460154-501', 'Welch Allyn', 'listado'),
+  ('VA5082-101-1', 'BRAZALETE NEONATAL DESECHABLE # 1 DE 1 TUBO CAJA CM0', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-101-1', 'Welch Allyn', 'listado'),
+  ('VA5082-101-2', 'BRAZALETE NEONATAL DESECHABLE # 1 DE 2 TUBOS CAJA C/10', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-101-2', 'Welch Allyn', 'listado'),
+  ('VA5082-102-1', 'BRAZALETE NEONATAL DESECHABLE + 2 DE 1 TUBO CAJA CM0', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-102-1', 'Welch Allyn', 'listado'),
+  ('VA5082-102-2', 'BRAZALETE NEONATAL DESECHABLE # 2 DE 2 TUBOS CAJA C/10', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-102-2', 'Welch Allyn', 'listado'),
+  ('VA5082-103-1', 'BRAZALETE NEONATAL DESECHABLE # 3 DE 1 TUBO CAJA C0', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-103-1', 'Welch Allyn', 'listado'),
+  ('VA5082-103-2', 'BRAZALETE NEONATAL DESECHABLE # 3 DE 2 TUBOS CAJA C/10', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-103-2', 'Welch Allyn', 'listado'),
+  ('VA5082-104-1', 'BRAZALETE NEONATAL DESECHABLE # 4 DE 1 TUBO CAJA C/M0', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-104-1', 'Welch Allyn', 'listado'),
+  ('VA5082-104-2', 'BRAZALETE NEONATAL DESECHABLE # 4 DE 2 TUBOS CAJA C/10', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-104-2', 'Welch Allyn', 'listado'),
+  ('VA5082-105-1', 'BRAZALETE NEONATAL DESECHABLE + 5 DE 1 TUBO CAJA C/M0', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-105-1', 'Welch Allyn', 'listado'),
+  ('VA5082-105-2', 'BRAZALETE NEONATAL DESECHABLE # 5 DE 2 TUBOS CAJA C/10', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA5082-105-2', 'Welch Allyn', 'listado'),
+  ('VA58549-0000', 'BabyF low plus, disposable, size M, 20 pcs.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Dräger', '', '', 0.0, 'Dräger', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA58549-0000', 'Dräger', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('VA608125-501', 'SWITCH CON FOCO 06000 P/MANGO LARINGOSCOPIO FO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA608125-501', 'Welch Allyn', 'listado'),
+  ('VA60813-LED', 'MANGO LARINGOSCOPIO MEDIANO LED', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA60813-LED', 'Welch Allyn', 'listado'),
+  ('VA60814-LED', 'MANGO LARINGOSCOPIO CHICO LED', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA60814-LED', 'Welch Allyn', 'listado'),
+  ('VA608351-501', 'SWITCH CON FOCO 00300-u P/MANGO LARINGOSCOPIO FO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA608351-501', 'Welch Allyn', 'listado'),
+  ('VA710125-502', 'KIT DE MANGO RECARGABLE Y CONVERTIBLE 2.5V Y 3.5V', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA710125-502', 'Welch Allyn', 'listado'),
+  ('VA710127-503', 'SECCION SUPERIOR P/MANGO 71000 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA710127-503', 'Welch Allyn', 'listado'),
+  ('VA710171-501', 'BATERIA DE LITIO PARA CP200', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA710171-501', 'Welch Allyn', 'listado'),
+  ('VA716101-504', 'TAPA C/ADAPTADOR P/MANGO RECARGABLE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VA716101-504', 'Welch Allyn', 'listado'),
+  ('VAPRO-60023', 'CABLE USB PARA SOFTWARE CARDIOPERFECT 2 METROS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VAPRO-60023', 'Welch Allyn', 'listado'),
+  ('VAPRO-60024', 'CABLE USB PARA SOFTWARE CARDIOPERFECT 3 METROS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VAPRO-60024', 'Welch Allyn', 'listado'),
+  ('VAPRO-60025', 'CABLE USB PARA SOFTWARE CARDIOPERFECT 5 METROS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'VAPRO-60025', 'Welch Allyn', 'listado'),
+  ('W8512', 'Sistema Steri-Strip™ c/apósto transparente TEGADERM™. Medida: 6 x 4.8cm', 'accesorios', 'producto', 'Presentación: CAJA C/50 SOBRES. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', '3M', '', '', 0.0, '3M', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'W8512', '3M', 'listado'),
+  ('WA00200', 'FOCO TRANSILUMINADOR HALOGENO 2.5v.', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA00200', 'Welch Allyn', 'listado'),
+  ('WA00300-U', 'FOCO LARINGOSCOPIO F.O. HALOGENO HPX 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA00300-U', 'Welch Allyn', 'listado'),
+  ('WA00600', 'FOCO SIGMOIDOSCOPIO HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA00600', 'Welch Allyn', 'listado'),
+  ('WA00900', 'FOCO OFTALMOSCOPIO HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA00900', 'Welch Allyn', 'listado'),
+  ('WA01200', 'FOCO OFTALMOSCOPIO INDIRECTO HALOGENO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA01200', 'Welch Allyn', 'listado'),
+  ('WA01300', 'FOCO LAMPARITA NORMAL 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA01300', 'Welch Allyn', 'listado'),
+  ('WA01400', 'FOCO LAMPARITA NORMAL 2.54', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA01400', 'Welch Allyn', 'listado'),
+  ('WA02000', 'FOCO LAMPARA FRONTAL NORMAL 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA02000', 'Welch Allyn', 'listado'),
+  ('WA02500', 'FOCO LAMPARA FRONTAL NORMAL 6v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA02500', 'Welch Allyn', 'listado'),
+  ('WA02600', 'FOCO LAMPARA FRONTAL HALOGENO 6v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA02600', 'Welch Allyn', 'listado'),
+  ('WA02800', 'FOCO OFTALMOSCOPIO KLINIC NORMAL 2v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA02800', 'Welch Allyn', 'listado'),
+  ('WA03000', 'FOCO OFTALMOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA03000', 'Welch Allyn', 'listado'),
+  ('WA03100', 'FOCO OTOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA03100', 'Welch Allyn', 'listado'),
+  ('WA03300', 'FOCO OFTALMOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA03300', 'Welch Allyn', 'listado'),
+  ('WA03400', 'FOCO OTOSCOPIO HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA03400', 'Welch Allyn', 'listado'),
+  ('WA03700', 'FOCO RETINOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA03700', 'Welch Allyn', 'listado'),
+  ('WA03800', 'FOCO OFTALMOSCOPIO HALOGENO PANOPTIC', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA03800', 'Welch Allyn', 'listado'),
+  ('WA03900', 'FOCO OFTALMOSCOPIO HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA03900', 'Welch Allyn', 'listado'),
+  ('WA04100', 'FOCO FUENTE DE LUZ HALOGENO 12v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04100', 'Welch Allyn', 'listado'),
+  ('WA04200', 'FOCO LAMPARA DE EXAMEN HALOGENO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04200', 'Welch Allyn', 'listado'),
+  ('WA04400', 'FOCO OFTALMOSCOPIO HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04400', 'Welch Allyn', 'listado'),
+  ('WA04430', 'FOCO LAMPARA LS-135 HALOGENO 12v35w', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04430', 'Welch Allyn', 'listado'),
+  ('WA04450', 'FOCO LAMPARA LS-150 HALOGENO 12v50w', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04450', 'Welch Allyn', 'listado'),
+  ('WA04500', 'FOCO RETINOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04500', 'Welch Allyn', 'listado'),
+  ('WA04600', 'FOCO RETINOSCOPIO HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04600', 'Welch Allyn', 'listado'),
+  ('WA04700', 'FOCO LARINGOSCOPIO NORMAL 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04700', 'Welch Allyn', 'listado'),
+  ('WA04800', 'FOCO LARINGOSCOPIO NORMAL 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04800', 'Welch Allyn', 'listado'),
+  ('WA04900', 'FOCO OFTALMOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA04900', 'Welch Allyn', 'listado'),
+  ('WA05120-U', 'ESTUCHE BLANDO PARA OFTALMOSCOPIO BINOCULAR INDIRECTO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05120-U', 'Welch Allyn', 'listado'),
+  ('WA05232', 'ESTUCHE SOLO SUAVE P/OTOSCOPIO/LAMPARA FRONTAL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05232', 'Welch Allyn', 'listado'),
+  ('WA05258-M', 'ESTUCHE SOLO P/EQUIPO DIAGNOSTICO PANOPTIC', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05258-M', 'Welch Allyn', 'listado'),
+  ('WA05259-M', 'ESTUCHE SOLO P/EQUIPO DIAGNOSTICO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05259-M', 'Welch Allyn', 'listado'),
+  ('WA05280-1', 'ESTUCHE SOLO P/EQUIPO DIAGNOSTICO POCKET (duro)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05280-1', 'Welch Allyn', 'listado'),
+  ('WA05681-U', 'ESTUCHE SOLO LARINGO-RECTO MILLER', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05681-U', 'Welch Allyn', 'listado'),
+  ('WA05691-U', 'ESTUCHE SOLO LARINGO-CURVO MACINTOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05691-U', 'Welch Allyn', 'listado'),
+  ('WA05928-U', 'ESTUCHE SOLO P/EQUIPO POCKETSCOPE SUAVE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA05928-U', 'Welch Allyn', 'listado'),
+  ('WA06000', 'FOCO LARINGOSCOPIO F.O. HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA06000', 'Welch Allyn', 'listado'),
+  ('WA06100', 'FOCO LAMPARA DE EXAMEN 48400 14.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA06100', 'Welch Allyn', 'listado'),
+  ('WA06200', 'FOCO AUDIOSCOPIO HALOGENO DE 3.5 v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA06200', 'Welch Allyn', 'listado'),
+  ('WA06300', 'FOCO LAMPARA LS-100 HALOGENO 12v20w', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA06300', 'Welch Allyn', 'listado'),
+  ('WA06400', 'FOCO LAMPARA LS-200 HALOGENO 12v20w', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA06400', 'Welch Allyn', 'listado'),
+  ('WA06500', 'FOCO OTOSCOPIO HALOGENO 3.5v MACROVIEW', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA06500', 'Welch Allyn', 'listado'),
+  ('WA07200', 'FOCO RETINOSCOPIO HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA07200', 'Welch Allyn', 'listado'),
+  ('WA07600', 'FOCO LAMPARITA HALOGENO 3.0v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA07600', 'Welch Allyn', 'listado'),
+  ('WA07800', 'FOCO ESPEJO VAGINAL HALOGENO 6v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA07800', 'Welch Allyn', 'listado'),
+  ('WA08100', 'FOCO LAMPARA TASKLITE HALOGENO 12v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA08100', 'Welch Allyn', 'listado'),
+  ('WA08200', 'FOCO RETINOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA08200', 'Welch Allyn', 'listado'),
+  ('WA08300', 'FOCO RETINOSCOPIO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA08300', 'Welch Allyn', 'listado'),
+  ('WA08400', 'FOCO RETINOSCOPIO POCKET 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA08400', 'Welch Allyn', 'listado'),
+  ('WA08500', 'FOCO TELELUPA Y OTOSC BINOCULAR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA08500', 'Welch Allyn', 'listado'),
+  ('WA08800', 'FOCO ESPEJO VAGINAL HALOGENO 6v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA08800', 'Welch Allyn', 'listado'),
+  ('WA09500', 'FOCO FUENTE DE LUZ SOLARC 49500', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA09500', 'Welch Allyn', 'listado'),
+  ('WA09800', 'FOCO COLPOSCOPIO SOLARC 21w C/ANILLO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA09800', 'Welch Allyn', 'listado'),
+  ('WA1-MQ', 'CONECTOR P/BRAZALETE FLEXIPORT 1 TUBO Cierre', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA1-MQ', 'Welch Allyn', 'listado'),
+  ('WA1-SC', 'CONECTOR P/BRAZALETE FLEXIPORT 1 TUBO Rosca', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA1-SC', 'Welch Allyn', 'listado'),
+  ('WA100680', 'CLIP DE SPIROMETRIA CP-200 PARA LA NARIZ P/25', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA100680', 'Welch Allyn', 'listado'),
+  ('WA101340', 'BRAZALETE DURABLE P/ABPM ADULTO PEQUEÁ''O (18-27CM)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA101340', 'Welch Allyn', 'listado'),
+  ('WA101341', 'BRAZALETE DURABLE P/ABPM ADULTO MEDIANO (25-35CM)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA101341', 'Welch Allyn', 'listado'),
+  ('WA101342', 'BATERIA DE LITIO PARA CP50 BATERIA DE LITIO PARA MONITOR CONNEX SPOT Y CP150 BATERIA DE LITIO PARA PROBP BATERIA RECARGABLE 2.5v COLOR ROJA BATERIA RECARGABLE 3.54 COLOR NARANJA BATERIA RECARGABLE 3.5v COLOR NEGRA BATERIA RECARGABLE 3.5v P/MANGO DE LITIO BATERIA RECARGABLE C/CARGADOR LUMIVIEW Y 49020 BATERIA RECARGABLE LAMPARA FRONTAL BATERIA RECARGABLE P/MANGOS Pocket azul 2.5v BATERIA RECARGABLE P/OF TALMOSCOPIO INDIRECTO BINAURAL PARA ESTETOSCOPIO HARVEY ELITE DLX 71CM NEGRO BOLSA PARA CABLES', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA101342', 'Welch Allyn', 'listado'),
+  ('WA101343', 'BRAZALETE DURABLE P/ABPM ADULTO GRANDE (39-46 CM)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA101343', 'Welch Allyn', 'listado'),
+  ('WA104299', 'MANGO DE REPUESTO PARA 767', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA104299', 'Welch Allyn', 'listado'),
+  ('WA104713', 'CABLE USB DOBLE 2.4 MT', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA104713', 'Welch Allyn', 'listado'),
+  ('WA104996', 'FUENTE DE ALIMENTACION DE 5W', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA104996', 'Welch Allyn', 'listado'),
+  ('WA105204', 'ARILLO PARA CAMPANA ESTETOSCOPIO HARVEY ADULTO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA105204', 'Welch Allyn', 'listado'),
+  ('WA105342', 'CARRO DE LUJO PARA ELECTROCARDIOGRAFO CP150', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA105342', 'Welch Allyn', 'listado'),
+  ('WA105353', 'PAPEL PARA CP100 CP150 Y CP200 5 PAQUETES DE 200 HOJAS', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA105353', 'Welch Allyn', 'listado'),
+  ('WA105631', 'ANOSCOPIO DESECHABLE PIEZA C/U', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA105631', 'Welch Allyn', 'listado'),
+  ('WA105632', 'ADAPTADOR UNIVERSAL PARA ELECTRODO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA105632', 'Welch Allyn', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('WA11710', 'OFTALMOSCOPIO HALOGENO DE 3.5v Coaxial', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA11710', 'Welch Allyn', 'listado'),
+  ('WA11720', 'OFTALMOSCOPIO HALOGENO DE 3.5v Autosep', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA11720', 'Welch Allyn', 'listado'),
+  ('WA11730', 'OFTALMOSCOPIO HALOGENO 3.5v Presage coaxiabplus', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA11730', 'Welch Allyn', 'listado'),
+  ('WA11735', 'MONTAJE DE PARED PARA TRANSFORMADOR 77710', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA11735', 'Welch Allyn', 'listado'),
+  ('WA11810', 'OFTALMOSCOPIO PANOPTIC 3.5v C/FILTRO COBALTO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA11810', 'Welch Allyn', 'listado'),
+  ('WA11820', 'OFTALMOSCOPIO HALOGENO DE 3.5v Standar', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA11820', 'Welch Allyn', 'listado'),
+  ('WA11870', 'FUELLE P/OFTALMOSOCOPIO PANOPTIC', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA11870', 'Welch Allyn', 'listado'),
+  ('WA12060', 'DEPRESOR ESCLERAL P/OFTALMOSCOPIA INDIRECTA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA12060', 'Welch Allyn', 'listado'),
+  ('WA12302', 'LUPA PIOFTALMOSCOPIO BINOCULAR 20 DIOPTRIAS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA12302', 'Welch Allyn', 'listado'),
+  ('WA12550', 'ESPEJO PARA ENSEÑANZA P/OF TALMOSCOPIA INDIRECTA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA12550', 'Welch Allyn', 'listado'),
+  ('WA12821', 'OFTALMOSCOPIO POCKET C/ESTUCHE hag', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA12821', 'Welch Allyn', 'listado'),
+  ('WA12850', 'OFTALMOSCOPIO POCKET JUNIOR C/MANGO SIN ESTUCHE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA12850', 'Welch Allyn', 'listado'),
+  ('WA12851', 'OFTALMOSCOPIO POCKET JUNIOR C/MANGO Y ESTUCHE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA12851', 'Welch Allyn', 'listado'),
+  ('WA130008-1', 'ILUMINADOR DE NUMEROS P/OFTALMOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA130008-1', 'Welch Allyn', 'listado'),
+  ('WA18245', 'RETINOSCOPIO HALOGENO 3.5v Elke HPX', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA18245', 'Welch Allyn', 'listado'),
+  ('WA18250', 'TARJETA P/RETINOSCOPIO (SET)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA18250', 'Welch Allyn', 'listado'),
+  ('WA18320C', 'EQUIPO DIAGNOSTICO OF TALMICO 3.5v RETINOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA18320C', 'Welch Allyn', 'listado'),
+  ('WA2-MQ', 'CONECTOR P/BRAZALETE FLEXIPORT 2 TUBOS Cierre', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA2-MQ', 'Welch Allyn', 'listado'),
+  ('WA2-SC', 'CONECTOR P/BRAZALETE FLEXIPORT 2 TUBOS Rosca', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA2-SC', 'Welch Allyn', 'listado'),
+  ('WA20000', 'OTOSCOPIO HALOGENO DE 3.5v C/ILUMINADOR DE GARGANTA (sin mango)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA20000', 'Welch Allyn', 'listado'),
+  ('WA20200', 'OTOSCOPIO NEUMATICO HALOGENO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA20200', 'Welch Allyn', 'listado'),
+  ('WA211005', 'LENTE P/ENTANA DE OTOSCOPIO POCKET', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA211005', 'Welch Allyn', 'listado'),
+  ('WA21504', 'BULBO INSUFLADOR PARA OTOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA21504', 'Welch Allyn', 'listado'),
+  ('WA21700', 'OTOSCOPIO HALOGENO C/ESPECULOS (sin mango)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA21700', 'Welch Allyn', 'listado'),
+  ('WA22002', 'ESPECULO OTOSCOPIO POLIPROPILENO DE 2mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22002', 'Welch Allyn', 'listado'),
+  ('WA22003', 'ESPECULO OTOSCOPIO POLIPROPILENO DE 3mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22003', 'Welch Allyn', 'listado'),
+  ('WA22004', 'ESPECULO OTOSCOPIO POLIPROPILENO DE 4mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22004', 'Welch Allyn', 'listado'),
+  ('WA22005', 'ESPECULO OTOSCOPIO POLIPROPILENO DE 5mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22005', 'Welch Allyn', 'listado'),
+  ('WA22009', 'ESPECULO OTOSCOPIO POLIPROPILENO DE $mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22009', 'Welch Allyn', 'listado'),
+  ('WA22064', 'ESPECULO VETERINARIO POLIPROPILENO DE 4mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22064', 'Welch Allyn', 'listado'),
+  ('WA22065', 'ESPECULO VETERINARIO POLIPROPILENO DE 5mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22065', 'Welch Allyn', 'listado'),
+  ('WA22067', 'ESPECULO VETERINARIO POLIPROPILENO DE 7mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22067', 'Welch Allyn', 'listado'),
+  ('WA22821', 'OTOSCOPIO POCKET SCOPE CON MANGO Y ESTUCHE 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22821', 'Welch Allyn', 'listado'),
+  ('WA22841', 'OTOSCOPIO POCKET JUNIOR CON MANGO Y ESTUCHE 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22841', 'Welch Allyn', 'listado'),
+  ('WA22870BLK', 'OTOSCOPIO POCKET LED 3 LUMENS NEGRO, CON ESTUCHE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA22870BLK', 'Welch Allyn', 'listado'),
+  ('WA23400', 'ESPECULOS SOFT P/AUDIOSCOPIO JUEGO DE 3', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23400', 'Welch Allyn', 'listado'),
+  ('WA23557', 'Headgear, disposable, size M, 27 - 31 cm (10.6 — 12.2 in} head circumference, 5 pes.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23557', 'Welch Allyn', 'listado'),
+  ('WA23630', 'ESPECULOS P/MICROTYMP C/4 SOFT', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23630', 'Welch Allyn', 'listado'),
+  ('WA23804', 'BULBO INSUFLADOR PARA OTOSCOPIO MACROVIEW', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23804', 'Welch Allyn', 'listado'),
+  ('WA23810', 'OTOSCOPIO HALOGENO DE 3.54 MACROVIEW S/ILUMINADOR DE GARGANTA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23810', 'Welch Allyn', 'listado'),
+  ('WA23814', 'OTOSCOPIO HALOGENO DE 3.54 MACROVIEW CON BULBO INSUFLADOR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23814', 'Welch Allyn', 'listado'),
+  ('WA23820', 'OTOSCOPIO HALOGENO DE 3.54 MACROVIEW C/ILUMINADOR GARGANTA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23820', 'Welch Allyn', 'listado'),
+  ('WA23820-L', 'OTOSCOPIO LED MACROVIEW C/ILUMINADOR GARGANTA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23820-L', 'Welch Allyn', 'listado'),
+  ('WA23900-10', 'CABLE USB 10 FT PARA MACROVIEW', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23900-10', 'Welch Allyn', 'listado'),
+  ('WA23920', 'OTOSCOPIO DIGITAL MACROVIEW CON CABLE USB', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA23920', 'Welch Allyn', 'listado'),
+  ('WA24302-U', 'ESPECULO DE POLIPROPILENO DE 2.5mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA24302-U', 'Welch Allyn', 'listado'),
+  ('WA24304-U', 'ESPECULO DE POLIPROPILENO DE 4mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA24304-U', 'Welch Allyn', 'listado'),
+  ('WA24305-U', 'ESPECULO DE POLIPROPILENO DE 5mm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA24305-U', 'Welch Allyn', 'listado'),
+  ('WA24320', 'PUNTA DE SELLADO P/ ESPECULO PEDIATRICO C/80', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA24320', 'Welch Allyn', 'listado'),
+  ('WA24330', 'PUNTA DE SELLADO P/ESPECULO ADULTO C/80', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA24330', 'Welch Allyn', 'listado'),
+  ('WA24400-U', 'ESPECULO REUSABLE P/OTOSCOPIO JUEGO CON 4', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA24400-U', 'Welch Allyn', 'listado'),
+  ('WA24420', 'ESPECULO REUSABLE P/OTOSCOPIO SOFT JUEGO CON 3', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA24420', 'Welch Allyn', 'listado'),
+  ('WA25020', 'OTOSCOPIO HALOGENO DE 3.5v S/ILUMINADOR DE GARGANTA (sin mango)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA25020', 'Welch Allyn', 'listado'),
+  ('WA26535', 'ILUMINADOR NASAL SIN ADAPTADOR PARA MANGO 3.5V', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA26535', 'Welch Allyn', 'listado'),
+  ('WA27000', 'ILUMINADOR DE LARINGE COMPLETO C/ESPEJO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA27000', 'Welch Allyn', 'listado'),
+  ('WA27010', 'ESPEJO LARINGEO 3.5v (SOLO)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA27010', 'Welch Allyn', 'listado'),
+  ('WA27060', 'ESPEJO NASOFARINGE DE 3.5v (SOLO)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA27060', 'Welch Allyn', 'listado'),
+  ('WA27070', 'ILUMINADOR F.O. PARA ESPEJOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA27070', 'Welch Allyn', 'listado'),
+  ('WA28100', 'PORTA DEPRESOR DE LENGUA 3.5v HALOGENO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA28100', 'Welch Allyn', 'listado'),
+  ('WA29360', 'ESPECULO DESECHABLE P/LAVADOR OIDOS C/25', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA29360', 'Welch Allyn', 'listado'),
+  ('WA30200', 'BULBO INSUFLADOR PARA PROCTOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA30200', 'Welch Allyn', 'listado'),
+  ('WA36019', 'ILUMINADOR CON VENTANA P/PROCTOSCOP', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA36019', 'Welch Allyn', 'listado'),
+  ('WA406021', 'PAPEL PARA ELECTROCARDIOGRAFO CP50 TIPO Z C/U', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA406021', 'Welch Allyn', 'listado'),
+  ('WA406815', 'CARRO PARA ELECTROCARDIOGRAFO PARA MODELO CP50', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA406815', 'Welch Allyn', 'listado'),
+  ('WA407672', 'BULBO Y TUBO PARA PRUEBA DE VOLUMEN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA407672', 'Welch Allyn', 'listado'),
+  ('WA41100', 'TRANSILUMINADOR CORTO DE 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA41100', 'Welch Allyn', 'listado'),
+  ('WA412909', 'ESTUCHE SOLO P/EQUIPO DIAG 3.5V OFTALMICO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA412909', 'Welch Allyn', 'listado'),
+  ('WA412924', 'ESTUCHE SOLO LARINGO-CURVO MACINTOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA412924', 'Welch Allyn', 'listado'),
+  ('WA412925', 'ESTUCHE SOLO LARINGO-RECTO MILLER', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA412925', 'Welch Allyn', 'listado'),
+  ('WA412928', 'ESTUCHE SOLO LARINGO CURVO y RECTO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA412928', 'Welch Allyn', 'listado'),
+  ('WA43300', 'TRANSILUMINADOR LARGO DE 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA43300', 'Welch Allyn', 'listado'),
+  ('WA44400', 'LAMPARA GS-300 CON PEDESTAL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA44400', 'Welch Allyn', 'listado'),
+  ('WA44410', 'LAMPARA GS-300 CON BASE DE PARED Y TECHO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA44410', 'Welch Allyn', 'listado'),
+  ('WA44600', 'LAMPARA GS-600 CON PEDESTAL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA44600', 'Welch Allyn', 'listado'),
+  ('WA44900', 'LAMPARA GS-900 CON PEDESTAL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA44900', 'Welch Allyn', 'listado'),
+  ('WA44900-C', 'LAMPARA GS-900 CON MONTAJE DE TECHO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA44900-C', 'Welch Allyn', 'listado'),
+  ('WA44900-W', 'LAMPARA GS-900 CON MONTAJE DE PARED', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA44900-W', 'Welch Allyn', 'listado'),
+  ('WA4500-30', 'MANGUERA DE PRESION ARTERIAL 1.5 METROS PARA SPOT LX', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA4500-30', 'Welch Allyn', 'listado'),
+  ('WA4500-31', 'MANGUERA DE PRESION ARTERIAL 3 METROS PARA SPOT LXi', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA4500-31', 'Welch Allyn', 'listado'),
+  ('WA4500-901', 'KIT DE TUBO Y BOMBA PARA PARA SPOT LXi', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA4500-901', 'Welch Allyn', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('WA4601-61', 'ADAPTADOR 1 TUBO BRAZALETES FLEXIPORT C/U', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA4601-61', 'Welch Allyn', 'listado'),
+  ('WA460155', 'CONECTOR HEMBRA P/LAMPARA FRONTAL 46003', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA460155', 'Welch Allyn', 'listado'),
+  ('WA4602-61', 'Headgear, disposable, size XL, 37 — 42 cm (14.6 — 16.5 in} head circumference, 5 pes.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA4602-61', 'Welch Allyn', 'listado'),
+  ('WA46070', 'LAMPARA FRONTAL ESTADO SOLIDO 1 waa 20 lumen 120 gr', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA46070', 'Welch Allyn', 'listado'),
+  ('WA48955', 'ADAPTADOR 2 TUBOS BRAZALETES FLEXIPORT C/U', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA48955', 'Welch Allyn', 'listado'),
+  ('WA49020', 'LAMPARA FRONTAL ESTADO SOLIDO 5 waz 50 lumen 180 gr', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA49020', 'Welch Allyn', 'listado'),
+  ('WA49099', 'ESTUCHE SOLO PARA LAMPARA 49020', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA49099', 'Welch Allyn', 'listado'),
+  ('WA50120', 'TARJETA PARA OFTALMOSCOPIO BIO PARA FONDO DE OJO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA50120', 'Welch Allyn', 'listado'),
+  ('WA5079-118', 'Sof connektor N, disposable, 20 pcs.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-118', 'Welch Allyn', 'listado'),
+  ('WA5079-121', 'BASE RODABLE DE C/SOPORTE P/MONIT SPOT CSM', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-121', 'Welch Allyn', 'listado'),
+  ('WA5079-124', 'DIAFRAGMA P/ESTETOSCOPIO PEDIATRCIO WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-124', 'Welch Allyn', 'listado'),
+  ('WA5079-125', 'ESTETOSCOPIO HARVEY ELITE ADULTO NEGRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-125', 'Welch Allyn', 'listado'),
+  ('WA5079-126', 'Headgear, disposable, size XXS, 17 — 20 cm (6.7 — 7.9 in) head circumference, 5 pcs.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-126', 'Welch Allyn', 'listado'),
+  ('WA5079-145', 'ESTETOSCOPIO SPECTRUM PEDIATRICO NEGRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-145', 'Welch Allyn', 'listado'),
+  ('WA5079-180', 'Neo-mask, TPE, disposable, size 5, 10 pcs.', 'accesorios', 'producto', 'Presentación: caja con 10 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-180', 'Welch Allyn', 'listado'),
+  ('WA5079-313', 'OLIVAS DE ROSCA P/ESTETOSCOPIO SUAVE (PAR)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5079-313', 'Welch Allyn', 'listado'),
+  ('WA5082-167', 'CONECTOR METAL MACHO DE PRESION P/10', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5082-167', 'Welch Allyn', 'listado'),
+  ('WA5082-168', 'CONECTOR PLASTICO TIPO LUER HEMBRA P/10', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5082-168', 'Welch Allyn', 'listado'),
+  ('WA5082-174', 'CONECTOR PLASTICO DE ROSCA HEMBRA P/MONITOR 4mm c/u', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5082-174', 'Welch Allyn', 'listado'),
+  ('WA5082-178', 'CONECTOR PLASTICO DE CIERRE CM0', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5082-178', 'Welch Allyn', 'listado'),
+  ('WA5082-179', 'CONECTOR METALICO TIPO BAYONETA MACHO 4mm P/10', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5082-179', 'Welch Allyn', 'listado'),
+  ('WA5082-184', 'CONECTOR PLASTICO MACHO TIPO BAYONETA P/10', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5082-184', 'Welch Allyn', 'listado'),
+  ('WA5082-188', 'TUBO PARA BRAZALETES FLEXIPORT 8 C/U', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5082-188', 'Welch Allyn', 'listado'),
+  ('WA5086-03', 'PERA SOLA P/ESFIGMO WELCH ALLYN (GRANDE SIN VALVULA)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5086-03', 'Welch Allyn', 'listado'),
+  ('WA5086-04', 'PERA P/ESFIGMO SILVER RING WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5086-04', 'Welch Allyn', 'listado'),
+  ('WA5087-01', 'VALVULA ESTANDAR PARA ESFIGMOMANETRO WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5087-01', 'Welch Allyn', 'listado'),
+  ('WA5087-10', 'VALVULA PARA ESFIGMO DS58', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5087-10', 'Welch Allyn', 'listado'),
+  ('WA5088-01', 'PERA P/ESFIGMO CON VALVULA WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5088-01', 'Welch Allyn', 'listado'),
+  ('WA5089-11', 'CONECTOR PLASTICO TWIST-FIT set/2 LADOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5089-11', 'Welch Allyn', 'listado'),
+  ('WA5089-13', 'TUBO EN ESPIRAL 8 P/ESFIGMO WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5089-13', 'Welch Allyn', 'listado'),
+  ('WA5098-27', 'ESFIGMO ANEROIDE DURASHOCK SERIE GOLD', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5098-27', 'Welch Allyn', 'listado'),
+  ('WA5200-07', 'TUBO EXTENSION P/BRAZALETE MONITORES', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5200-07', 'Welch Allyn', 'listado'),
+  ('WA52401', 'DISPENSADOR DE PARED P/ESPECULOS DESECHABLES', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA52401', 'Welch Allyn', 'listado'),
+  ('WA52432-U', 'ESPECULO DESECHABLE P/OTOSCOPIO P/34 PEDIATRICO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA52432-U', 'Welch Allyn', 'listado'),
+  ('WA52600', 'PAPEL TERMICO PARA AUTOTYMP C/5', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA52600', 'Welch Allyn', 'listado'),
+  ('WA52630', 'FUNDA DESECHABLE PARA LAMPARAS GS GREEN SERIES CAJA C/50', 'accesorios', 'producto', 'Presentación: Caja. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA52630', 'Welch Allyn', 'listado'),
+  ('WA53110', 'BabyFlow plus, disposable, size L, 20 pes.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA53110', 'Welch Allyn', 'listado'),
+  ('WA53130', 'SIGMOIDOSCOPIO DESECHABLE KleenSpec PIEZA C/U', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA53130', 'Welch Allyn', 'listado'),
+  ('WA53600', 'PAPEL TERMICO SURE/MICROTIMP 5.6cm 4 ROLLOS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA53600', 'Welch Allyn', 'listado'),
+  ('WA56100', 'PAPEL TERMICO Pneumo/Audiopath 11cm', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA56100', 'Welch Allyn', 'listado'),
+  ('WA59000', 'ESPEJO VAGINAL DESECHABLE C/ILUMINA CHICO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA59000', 'Welch Allyn', 'listado'),
+  ('WA59001', 'ESPEJO VAGINAL DESECHABLE C/ILUMINA MEDIANO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA59001', 'Welch Allyn', 'listado'),
+  ('WA5S079-135', 'ESTETOSCOPIO SPECTRUM ADULTO NEGRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5S079-135', 'Welch Allyn', 'listado'),
+  ('WA5S079-195', 'TUBO Y AURICULAR P/ESTETOSCOPIO SPECTRUM 25 NEGRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5S079-195', 'Welch Allyn', 'listado'),
+  ('WA5S082-165', 'CONECTOR PLASTICO TIPO LUER MACHO P/10', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5S082-165', 'Welch Allyn', 'listado'),
+  ('WA5S082-175', 'CONECTOR PLASTICO DE ROSCA HEMBRA P/MONITOR 3.2mm c/u', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5S082-175', 'Welch Allyn', 'listado'),
+  ('WA5S082-185', 'CONECTOR METALICO TIPO BAYONETA HEMBRA P/2', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA5S082-185', 'Welch Allyn', 'listado'),
+  ('WA60301', 'MANGO LARINGOSCOPIO MEDIANO STD BAT C', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60301', 'Welch Allyn', 'listado'),
+  ('WA60305', 'MANGO LARINGOSCOPIO CHICO STD BAT AA stubby', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60305', 'Welch Allyn', 'listado'),
+  ('WA60400', 'MANGO LARINGOSCOPIO CHICO STD BAT AA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60400', 'Welch Allyn', 'listado'),
+  ('WA60713', 'MANGO LARINGOSCOPIO RECARGABLE 2.5v FO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60713', 'Welch Allyn', 'listado'),
+  ('WA60715', 'MANGO Y TRANSFORMADOR RECARGABLE P/LARINGO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60715', 'Welch Allyn', 'listado'),
+  ('WA60813', 'MANGO LARINGOSCOPIO MEDIANO FO BAT C', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60813', 'Welch Allyn', 'listado'),
+  ('WA60814', 'MANGO LARINGOSCOPIO CHICO FO BAT AA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60814', 'Welch Allyn', 'listado'),
+  ('WA60815', 'MANGO LARINGOSCOPIO CORTO F.0.', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60815', 'Welch Allyn', 'listado'),
+  ('WA60835', 'MANGO LARINGOSCOPIO 3.5V RECARGABLE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA60835', 'Welch Allyn', 'listado'),
+  ('WA6200-15', 'TRANSDUCTOR DE TEMPERATURA P/MONITOR ATLAS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA6200-15', 'Welch Allyn', 'listado'),
+  ('WA68040', 'LARINGOSCOPIO RECTO MILLER 0', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68040', 'Welch Allyn', 'listado'),
+  ('WA68041', 'LARINGOSCOPIO RECTO MILLER 1', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68041', 'Welch Allyn', 'listado'),
+  ('WA68042', 'LARINGOSCOPIO RECTO MILLER 2', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68042', 'Welch Allyn', 'listado'),
+  ('WA68043', 'LARINGOSCOPIO RECTO MILLER 3', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68043', 'Welch Allyn', 'listado'),
+  ('WA68044', 'LARINGOSCOPIO RECTO MILLER 4', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68044', 'Welch Allyn', 'listado'),
+  ('WA68045', 'LARINGOSCOPIO RECTO MILLER 00', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68045', 'Welch Allyn', 'listado'),
+  ('WA68060', 'LARINGOSCOPIO RECTO MILLER FO 0', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68060', 'Welch Allyn', 'listado'),
+  ('WA68061', 'LARINGOSCOPIO RECTO MILLER FO 1', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68061', 'Welch Allyn', 'listado'),
+  ('WA68062', 'LARINGOSCOPIO RECTO MILLER FO 2', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68062', 'Welch Allyn', 'listado'),
+  ('WA68063', 'LARINGOSCOPIO RECTO MILLER FO 3', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68063', 'Welch Allyn', 'listado'),
+  ('WA68064', 'LARINGOSCOPIO RECTO MILLER FO 4', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68064', 'Welch Allyn', 'listado'),
+  ('WA68065', 'LARINGOSCOPIO RECTO MILLER FO 00', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA68065', 'Welch Allyn', 'listado'),
+  ('WA69041', 'LARINGOSCOPIO CURVO MACINTOSH 1', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69041', 'Welch Allyn', 'listado'),
+  ('WA69042', 'LARINGOSCOPIO CURVO MACINTOSH 2', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69042', 'Welch Allyn', 'listado'),
+  ('WA69043', 'LARINGOSCOPIO CURVO MACINTOSH 3', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69043', 'Welch Allyn', 'listado'),
+  ('WA69044', 'LARINGOSCOPIO CURVO MACINTOSH 4', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69044', 'Welch Allyn', 'listado'),
+  ('WA69061', 'LARINGOSCOPIO CURVO MACINTOSH FO 1', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69061', 'Welch Allyn', 'listado'),
+  ('WA69062', 'LARINGOSCOPIO CURVO MACINTOSH FO 2', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69062', 'Welch Allyn', 'listado'),
+  ('WA69063', 'LARINGOSCOPIO CURVO MACINTOSH FO 3', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69063', 'Welch Allyn', 'listado'),
+  ('WA69064', 'LARINGOSCOPIO CURVO MACINTOSH FO 4', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA69064', 'Welch Allyn', 'listado'),
+  ('WA7000-MS3', 'ADAPTADOR DE ELECTRODO CAIMAN TIPO BANANA C/10', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA7000-MS3', 'Welch Allyn', 'listado'),
+  ('WA7000-PS', 'FUENTE DE PODER PARA MONITOR CONNEX SPOT', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA7000-PS', 'Welch Allyn', 'listado'),
+  ('WA703415', 'TUBOS DE PRESION PARA SPIROPERFECT 2M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA703415', 'Welch Allyn', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('WA703418', 'BATERIA DE ACIDO PLOMO PARA SPOT VITAL SIGNS 6.4V', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA703418', 'Welch Allyn', 'listado'),
+  ('WA703419', 'BATERIA DE ACIDO PLOMO PARA SPOT LXi', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA703419', 'Welch Allyn', 'listado'),
+  ('WA70501', 'MANGO METALICO BATERIA NORMAL 2.5v P/98502', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA70501', 'Welch Allyn', 'listado'),
+  ('WA705042', 'TAPON C/ROSCA PARA MANGOS 70501', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA705042', 'Welch Allyn', 'listado'),
+  ('WA707237', 'SWITCH PARA SPOT LXi', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA707237', 'Welch Allyn', 'listado'),
+  ('WA70P450', 'VALVULA PARA ESFIGMO SILVER RING', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA70P450', 'Welch Allyn', 'listado'),
+  ('WA7100-24', 'CABLE INTERFACE PARA ABPM 7100', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA7100-24', 'Welch Allyn', 'listado'),
+  ('WA71000-A', 'MANGO METALICO RECARGABLE 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71000-A', 'Welch Allyn', 'listado'),
+  ('WA71000-C', 'MANGO METALICO REC CONVERTIBLE 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71000-C', 'Welch Allyn', 'listado'),
+  ('WA71040', 'FUENTE DE PODER WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71040', 'Welch Allyn', 'listado'),
+  ('WA71140', 'CARGADOR UNIVERSAL ESCRITORIO MANGOS FO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71140', 'Welch Allyn', 'listado'),
+  ('WA715006', 'Pack demo BabyFlow plus, desechable, Tamaño G', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA715006', 'Welch Allyn', 'listado'),
+  ('WA715107', 'MALETIN PARA CP50', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA715107', 'Welch Allyn', 'listado'),
+  ('WA71670', 'MANGO METALICO RECARGABLE P/CARGADOR DE ESCRITORIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71670', 'Welch Allyn', 'listado'),
+  ('WA71900', 'MANGO RECARGABLE BATERIA DE LITIO 3.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71900', 'Welch Allyn', 'listado'),
+  ('WA71950', 'CARGADOR P/MANGO DE LITIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71950', 'Welch Allyn', 'listado'),
+  ('WA71960', 'BASE C/FOCO P/OTOSCOPIO 20000 Luer', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71960', 'Welch Allyn', 'listado'),
+  ('WA719653', 'CABLE DE 10 PUNTAS PARA ELECTROS CP50 CP150 Y AT-1 AHA BANANA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA719653', 'Welch Allyn', 'listado'),
+  ('WA71WT-B', 'MACROVIEW', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA71WT-B', 'Welch Allyn', 'listado'),
+  ('WA72000', 'ARILLO PARA DIAFRAGMA ADULTO WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA72000', 'Welch Allyn', 'listado'),
+  ('WA72200', 'AROS DE COLORES PARA ESFIGMO DURASHOCK C/4', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA72200', 'Welch Allyn', 'listado'),
+  ('WA72240', 'BASE DE PARED Y ESCRITORIO PARA LAMPARAS GS300 Y GS600', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA72240', 'Welch Allyn', 'listado'),
+  ('WA72270', 'BASE DE ESCRITORIO PARA PROBP 3400', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA72270', 'Welch Allyn', 'listado'),
+  ('WA72300', 'ARILLO PARA DIAFRAGMA PEDIATRICO WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA72300', 'Welch Allyn', 'listado'),
+  ('WA72600', 'BASE DE PARED PARA PROBP 3400', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA72600', 'Welch Allyn', 'listado'),
+  ('WA72801', 'MANGO METALICO EQUIPOS POCKET SCOPE 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA72801', 'Welch Allyn', 'listado'),
+  ('WA73211', 'MANGO DE LUZ CON CORDON P/PROCTOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA73211', 'Welch Allyn', 'listado'),
+  ('WA73300', 'CABLE EXTENSION DE CONEXION PARA OFTALMOSCOPIO BIO2', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA73300', 'Welch Allyn', 'listado'),
+  ('WA73305', 'TRANSFORMADOR 6v P/ILUMIDADOR VAGINAL/PROCTOLOGIA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA73305', 'Welch Allyn', 'listado'),
+  ('WA73410', 'TRANSFORMADOR CON CABLE 5 P/ILUMINADOR VAGINAL', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA73410', 'Welch Allyn', 'listado'),
+  ('WA73500', 'GUIA DE LUZ FIBRA OPTICA P/ANOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA73500', 'Welch Allyn', 'listado'),
+  ('WA73910', 'CARGADOR PARA ILUMINADOR DE ESPEJOS VAGINALES 79900', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA73910', 'Welch Allyn', 'listado'),
+  ('WA74170', 'CARGADOR P/LAMPARA FRONTAL 46070', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA74170', 'Welch Allyn', 'listado'),
+  ('WA74180', 'TRANSFORMADOR PARA LUMIVIEW', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA74180', 'Welch Allyn', 'listado'),
+  ('WA74350', 'FUENTE DE PODER MESA/PARED P/OFTALMO BINOCULAR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA74350', 'Welch Allyn', 'listado'),
+  ('WA74360', 'FUENTE DE PODER PORTATIL P/OFTALMO BINOCULAR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA74360', 'Welch Allyn', 'listado'),
+  ('WA75260', 'BASE C/FOCO PIOTOSCOPIO POCKET', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA75260', 'Welch Allyn', 'listado'),
+  ('WA75270', 'TRANSFORMADOR PARA LAMPARA 49020', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA75270', 'Welch Allyn', 'listado'),
+  ('WA75910', 'CABLE AUXILIAR PARA ILUMINADOR DE ESPEJOS VAGINALES 79900', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA75910', 'Welch Allyn', 'listado'),
+  ('WA76400', 'CABLE ALIMENTACION CA GRADO MEDICO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA76400', 'Welch Allyn', 'listado'),
+  ('WA76600', 'LAMPARITA BOLSILLO DE HALOGENO 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA76600', 'Welch Allyn', 'listado'),
+  ('WA7670-01', 'EQUIPO DIAGNOSTICO RECARGABLE HALOGENO 3.54 OTOSCOPIO MACROVIEW Y MANGO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA7670-01', 'Welch Allyn', 'listado'),
+  ('WA7670-10', '71000-C', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA7670-10', 'Welch Allyn', 'listado'),
+  ('WA76700', 'SEGURO PARA INSTRUMENTOS DE 3.5v C/2 piezas', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA76700', 'Welch Allyn', 'listado'),
+  ('WA77710', 'TRANSFORMADOR DE PARED S/RELOJ 3.5v (modelo nuevo)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA77710', 'Welch Allyn', 'listado'),
+  ('WA77790-3', 'MONITOR CONNEX SPOT', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA77790-3', 'Welch Allyn', 'listado'),
+  ('WA78820', 'SOPORTE DE PARED PARA SISTEMA DE ILUMINACION DE ESPEJO VAGINAL.', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA78820', 'Welch Allyn', 'listado'),
+  ('WA90133', 'FOCO LAMPARA FRONTAL COGENT XENON 100w', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA90133', 'Welch Allyn', 'listado'),
+  ('WA92821', 'EQUIPO DIAGNOSTICO BOLSILLO POCKET SCOPE 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA92821', 'Welch Allyn', 'listado'),
+  ('WA92871BLK', 'EQUIPO DIAGNOSTICO LED 3 LUMENS NEGRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA92871BLK', 'Welch Allyn', 'listado'),
+  ('WA92871WHI', 'EQUIPO DIAGNOSTICO LED 3 LUMENS BLANCO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA92871WHI', 'Welch Allyn', 'listado'),
+  ('WA92880BLK', 'EQUIPO DIAGNOSTICO LED PLUS 6 LUMENS NEGRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA92880BLK', 'Welch Allyn', 'listado'),
+  ('WA92880WHI', 'EQUIPO DIAGNOSTICO LED PLUS 6 LUMENS BLANCO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA92880WHI', 'Welch Allyn', 'listado'),
+  ('WA95001', 'EQUIPO DIAGNOSTICO BOLSILLO POCKET JUNIOR 2.5v', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA95001', 'Welch Allyn', 'listado'),
+  ('WA97150-C', 'EQUIPO DIAGNOSTICO RECARGABLE HALOGENO 3.54 OFTALMO COAXIAL Y CONVERTIDOR', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA97150-C', 'Welch Allyn', 'listado'),
+  ('WA97200-C', 'RINOSCOPIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA97200-C', 'Welch Allyn', 'listado'),
+  ('WA97200-CL', 'EQUIPO DIAGNOSTICO RECARGABLE HALOGENO 3.5v OFTALMO STANDAR OTOSCOPIO 25020', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA97200-CL', 'Welch Allyn', 'listado'),
+  ('WA97200-SM', 'EQUIPO DIAGNOSTICO RECARGABLE HALOGENO 3.5v BATERIA LITIO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA97200-SM', 'Welch Allyn', 'listado'),
+  ('WA97210-C', 'EQUIPO DIAGNOSTICO RECARGABLE HALOGENO 3.5v OFTALMO COAXIAL OTOSCOPIO 20000', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WA97210-C', 'Welch Allyn', 'listado'),
+  ('WABATT11', 'ARILLO PARA CAMPANA SPECTRUM PEDIATRICO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WABATT11', 'Welch Allyn', 'listado'),
+  ('WABATT33', 'ARILLO PARA CAMPANA ESTETOSCOPIO HARVEY PEDIATRICO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WABATT33', 'Welch Allyn', 'listado'),
+  ('WABATT99', 'ARILLO PARA CAMPANA SPECTRUM ADULTO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WABATT99', 'Welch Allyn', 'listado'),
+  ('WADS44-114', 'ESFIGMO ANEROIDE DE PARED WELCH ALLYN (BLANCO)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WADS44-114', 'Welch Allyn', 'listado'),
+  ('WADS44-MC', 'EQUIPO ESTUCHE DE DIAGNOSTICO DE PARED INCLUYE /77710/11720-L / 23810-L FOCO LED', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WADS44-MC', 'Welch Allyn', 'listado'),
+  ('WADS44-V', 'Headgear, disposable, size S, 23 — 27 cm (9.1 — 10.6 in) head circumference, 5 pcs.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WADS44-V', 'Welch Allyn', 'listado'),
+  ('WADS48-11', 'EQUIPO DIAGNOSTICO RECARGABLE LED 3.5V OF TALMO COAXIAL Y CONVERTIDOR BATERÍA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WADS48-11', 'Welch Allyn', 'listado'),
+  ('WADSS58-114', 'e', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WADSS58-114', 'Welch Allyn', 'listado'),
+  ('WAPORT-1', 'Pack demo BabyFlow plus, desechable, Tamaño CH', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAPORT-1', 'Welch Allyn', 'listado'),
+  ('WAPORT-2', 'Pack demo BabyFlow plus, desechable, Tamaño M', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAPORT-2', 'Welch Allyn', 'listado'),
+  ('WAS079-113', 'OLIVAS DE ROSCA P/ESTETO EXTRA LARGE (PAR}', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-113', 'Welch Allyn', 'listado'),
+  ('WAS079-117', 'Neo-mask, TPE, disposable, size 4, 10 pcs.', 'accesorios', 'producto', 'Presentación: caja con 10 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-117', 'Welch Allyn', 'listado'),
+  ('WAS079-120', 'TUBO EN Y P/ESTETOSCOPIO HARVEY 25 NEGRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-120', 'Welch Allyn', 'listado'),
+  ('WAS079-123', 'DIAFRAGMA P/ESTETOSCOPIO WELCH ALLYN ADULTO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-123', 'Welch Allyn', 'listado'),
+  ('WAS079-127', 'Headgear, disposable, size XS, 20 — 23 cm (7.9 — 9.1 in} head circumference, 5 pes.', 'accesorios', 'producto', 'Presentación: caja con 5 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-127', 'Welch Allyn', 'listado'),
+  ('WAS079-170', 'OLIVAS DE ROSCA P/ESTETO SUAVE (PAR) GRIS', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-170', 'Welch Allyn', 'listado'),
+  ('WAS079-182', 'Neo-mask, TPE, disposable, size 6, 10 pcs.', 'accesorios', 'producto', 'Presentación: caja con 10 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-182', 'Welch Allyn', 'listado'),
+  ('WAS079-280', 'KIT DE ACCESORIOS GRIS PARA ESTETOSCOPIO HARVEY ELITE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-280', 'Welch Allyn', 'listado'),
+  ('WAS079-336', 'OLIVAS DE ROSCA P/ESTETO HARVEY SUAVE (PAR) NEGRA', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-336', 'Welch Allyn', 'listado'),
+  ('WAS079-366', 'OLIVAS PARA ESTETOSCOPIO WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS079-366', 'Welch Allyn', 'listado'),
+  ('WAS082-159', 'TAPA DE SELLADO PARA LAVADO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS082-159', 'Welch Allyn', 'listado')
+on conflict (sku) do update set
+  name = excluded.name,
+  category = excluded.category,
+  item_kind = excluded.item_kind,
+  description = excluded.description,
+  min_stock = excluded.min_stock,
+  unit = excluded.unit,
+  location = excluded.location,
+  brand = excluded.brand,
+  model = excluded.model,
+  serial_number = excluded.serial_number,
+  unit_price = excluded.unit_price,
+  supplier = excluded.supplier,
+  expiry_date = excluded.expiry_date,
+  manufactured_at = excluded.manufactured_at,
+  notes = excluded.notes,
+  asset_status = excluded.asset_status,
+  last_maintenance_date = excluded.last_maintenance_date,
+  next_maintenance_date = excluded.next_maintenance_date,
+  is_active = excluded.is_active,
+  tracks_lot = excluded.tracks_lot,
+  tracks_serial = excluded.tracks_serial,
+  tracks_expiry = excluded.tracks_expiry,
+  max_stock = excluded.max_stock,
+  reorder_point = excluded.reorder_point,
+  part_number = excluded.part_number,
+  manufacturer = excluded.manufacturer,
+  subcategory = excluded.subcategory;
+
+insert into public.inventory_items (
+  sku,
+  name,
+  category,
+  item_kind,
+  description,
+  quantity,
+  min_stock,
+  unit,
+  location,
+  brand,
+  model,
+  serial_number,
+  unit_price,
+  supplier,
+  expiry_date,
+  manufactured_at,
+  notes,
+  asset_status,
+  last_maintenance_date,
+  next_maintenance_date,
+  is_active,
+  tracks_lot,
+  tracks_serial,
+  tracks_expiry,
+  max_stock,
+  reorder_point,
+  part_number,
+  manufacturer,
+  subcategory
+) values
+  ('WAS082-163', 'CONECTOR PLASTICO PLUG P/ESFIGMOMANOMETRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS082-163', 'Welch Allyn', 'listado'),
+  ('WAS082-164', 'CONECTOR PLASTICO DE ROSCA MACHO P/MONITOR P/10', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS082-164', 'Welch Allyn', 'listado'),
+  ('WAS082-170', 'CONECTOR PLASTICO PARA TUBOS DE 4mm C/10', 'accesorios', 'producto', 'Presentación: Paquete. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'paquete', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS082-170', 'Welch Allyn', 'listado'),
+  ('WAS082-194', 'TUBO PARA BRAZALETES FLEXIPORT 31.5 C/U', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS082-194', 'Welch Allyn', 'listado'),
+  ('WAS082-257', 'BabyFlow plus, disposable, size S, 20 pes.', 'accesorios', 'producto', 'Presentación: caja con 20 pzs. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'caja', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS082-257', 'Welch Allyn', 'listado'),
+  ('WAS085-09', 'ESTUCHE BLANDO PARA ESFIGMOMANOMETRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS085-09', 'Welch Allyn', 'listado'),
+  ('WAS086-01', 'PERA SOLA P/ESFIGMO WELCH ALLYN (CHICA SIN VALVULA)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS086-01', 'Welch Allyn', 'listado'),
+  ('WAS086-05', 'PERA P/ESFIGMO PROCHECK WELCH ALLYN', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS086-05', 'Welch Allyn', 'listado'),
+  ('WAS086-06', 'PERA P/ESFIGMO CLASIC WELCH ALLYN (DS58-11)', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS086-06', 'Welch Allyn', 'listado'),
+  ('WAS090-29', 'VALVULA DE EXTREMO P/PERA DE ESFIGMOMANOMETRO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS090-29', 'Welch Allyn', 'listado'),
+  ('WAS098-30', 'ESFIGMO ANEROIDE DURASHOCK SERIE GOLD C/3 BRAZALETES', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS098-30', 'Welch Allyn', 'listado'),
+  ('WAS2434-U', 'ESPECULO DESECHABLE P/OTOSCOPIO P/34 ADULTO', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS2434-U', 'Welch Allyn', 'listado'),
+  ('WAS2450', 'ESPECULO DESECHABLE P/OTOSCOPIO/Cerumen P/100', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS2450', 'Welch Allyn', 'listado'),
+  ('WAS9004', 'ESPEJO VAGINAL DESECHABLE C/ILUMINA GRANDE', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAS9004', 'Welch Allyn', 'listado'),
+  ('WASPIRO-S', 'ESPIROMETRO DE PC PARA CPWS CON JERINGA DE CALIBRACION 3Es', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WASPIRO-S', 'Welch Allyn', 'listado'),
+  ('WAVS100S-B', 'SpotTM Vision Screener autorefracior', 'accesorios', 'producto', 'Presentación: Pieza. Alta desde listado de catálogo. Existencia 0, alerta de agotado apagada, venta pendiente.', 0, 0, 'pieza', '', 'Welch Allyn', '', '', 0.0, 'Welch Allyn', NULL, NULL, 'Alta desde listado capturado (ITEM / descripción / marca).', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WAVS100S-B', 'Welch Allyn', 'listado'),
+  ('WIRC5ECMR', 'Rollo de cable sólido CMR azul', 'accesorios', 'producto', 'Presentación: PIEZA', 1, 0, 'pieza', '', 'Philips', '', '', 0.0, '', NULL, NULL, '
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, false, false, false, 0, 0, 'WIRC5ECMR', 'Philips', ''),
+  ('YP206000272', 'Venda 82004 Color Blanco', 'insumos', 'producto', 'Presentación: CAJA/ 10 PIEZAS', 27, 0, 'caja', '', '3M', '', '', 0.0, '', '2028-10-12', NULL, 'VENDA 82004 COLOR BLANCO
+<!--mas-color:rojo-->', 'operativo', NULL, NULL, true, true, false, true, 0, 0, 'YP206000272', '3M', '')
 on conflict (sku) do update set
   name = excluded.name,
   category = excluded.category,

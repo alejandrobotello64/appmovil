@@ -605,7 +605,7 @@ export async function parseProductWorkbook(
       });
       continue;
     }
-    if (!sku) sku = fallbackSku(name, rowNumber);
+    if (!sku) sku = cellText(record.numero_parte) || fallbackSku(name, rowNumber);
 
     const skuKey = sku.toLowerCase();
     if (seen.has(skuKey)) {

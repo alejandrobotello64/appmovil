@@ -155,7 +155,15 @@ export function InventoryForm({
     key: K,
     value: InventoryItemInput[K]
   ) {
-    setForm((current) => ({ ...current, [key]: value }));
+    setForm((current) => {
+      const next = { ...current, [key]: value };
+      if (key === "partNumber" && typeof value === "string") {
+        const skuFollowsPart =
+          !item || current.sku.trim() === current.partNumber.trim() || !current.sku.trim();
+        if (skuFollowsPart) next.sku = value.trim();
+      }
+      return next;
+    });
   }
 
   function handleImagePick(file: File | null) {
@@ -276,27 +284,20 @@ export function InventoryForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">SKU / Código</span>
+          <span className="text-sm font-medium">SKU / n.º de parte</span>
           <input
             required={Boolean(item)}
             value={form.sku}
-            readOnly={!item}
             placeholder={
-              item
-                ? undefined
-                : "Se asignará al guardar (ej. EQUIPO-000001)"
+              item ? undefined : "Se toma del n.º de parte o referencia"
             }
             onChange={(event) => handleChange("sku", event.target.value)}
-            className={
-              item
-                ? "h-10 w-full rounded-lg border border-input bg-muted/40 px-3 text-sm outline-none"
-                : "h-10 w-full rounded-lg border border-input bg-muted/30 px-3 text-sm text-muted-foreground outline-none"
-            }
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
           />
           {!item ? (
             <span className="text-xs text-muted-foreground">
-              El SKU se genera solo según la categoría (INSUMOS-, MEDICAMENTOS-,
-              ACCESORIOS-, EQUIPO-, etc.).
+              El SKU es el n.º de parte o referencia del fabricante. Si lo dejas
+              vacío se genera un código interno.
             </span>
           ) : null}
         </label>
@@ -514,7 +515,7 @@ export function InventoryForm({
             </datalist>
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">N.º de parte</span>
+            <span className="text-sm font-medium">N.º de parte / referencia</span>
             <input
               value={form.partNumber}
               onChange={(event) => handleChange("partNumber", event.target.value)}
