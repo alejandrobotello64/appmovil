@@ -239,6 +239,16 @@ export function skuPrefixForCategory(category: InventoryCategoryId) {
   return SKU_PREFIX_BY_CATEGORY[category] ?? "ITEM";
 }
 
+const SEQUENTIAL_SKU_RE = new RegExp(
+  `^(${Object.values(SKU_PREFIX_BY_CATEGORY).join("|")})-\\d{4,}$`,
+  "i"
+);
+
+/** SKU interno del catálogo: EQUIPO-000001, INSUMOS-000001, ACCESORIOS-000001… */
+export function isSequentialCatalogSku(sku: string | null | undefined) {
+  return SEQUENTIAL_SKU_RE.test(String(sku ?? "").trim());
+}
+
 export function isProductCategory(
   category: InventoryCategoryId
 ): category is ProductCategoryId {

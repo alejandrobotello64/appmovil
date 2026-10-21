@@ -2,8 +2,8 @@
 /**
  * Cruza LISTA DE PRECIOS CONSUMIBLE DRÄGER 2025 con el catálogo registrado.
  * - Actualiza cost_price (precio de lista) en coincidencias. No cambia unit_price (venta).
- * - Da de alta los ITEMs que no están registrados, con ese código como SKU y n.º de parte.
- *   Existencia 0, alerta de agotado apagada, venta pendiente.
+ * - Da de alta los ITEMs que no están registrados, con ese código como n.º de parte
+ *   y SKU interno (ACCESORIOS-000123). Existencia 0, alerta de agotado apagada, venta pendiente.
  *
  *   node scripts/cargar-precios-drager-2025.mjs [--dry-run] [--cloud] [--no-insert]
  */
@@ -11,6 +11,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { createSkuAllocator } from "./lib/catalog-sku.mjs";
 
 const require = createRequire(import.meta.url);
 const XLSX = require("xlsx");
@@ -286,8 +287,9 @@ function unitFromList(row) {
 }
 
 function buildNewRow(list, options = {}) {
-  const sku = String(list.item).trim();
-  const name = (list.name || sku).slice(0, 500);
+  const part = String(list.item).trim();
+  const sku = options.sku || part;
+  const name = (list.name || part).slice(0, 500);
   const details = [];
   if (list.presentation) details.push(`Presentación: ${list.presentation}`);
   if (Number(list.packPieces) > 1) details.push(`${list.packPieces} pzs por pack`);
@@ -323,7 +325,7 @@ function buildNewRow(list, options = {}) {
     tracks_expiry: false,
     max_stock: 0,
     reorder_point: 0,
-    part_number: sku,
+    part_number: part,
     manufacturer: "Dräger",
     subcategory: "consumible",
   };
@@ -338,7 +340,7 @@ function omitUnknownColumns(row, missing) {
   return next;
 }
 
-async function insertNewProducts(base, key, unmatched) {
+async function insertNewProducts(base, key, unmatched, nextSku) {
   const result = {
     inserted: 0,
     skipped: 0,
@@ -360,6 +362,7 @@ async function insertNewProducts(base, key, unmatched) {
           omitAlerts: missing.has("stock_alerts_enabled"),
           useCostMarker,
           useAlertMarker,
+          sku: nextSku?.("accesorios"),
         }),
         missing
       )
@@ -482,7 +485,7 @@ async function main() {
     excelNotInCatalog: result.excelUnmatched.length,
     toInsert: toInsert.length,
     sampleNew: toInsert.slice(0, 12).map((row) => ({
-      sku: row.item,
+      partNumber: row.item,
       name: row.name,
       cost: row.price,
     })),
@@ -568,7 +571,12 @@ async function main() {
     }
   }
 
-  const inserted = await insertNewProducts(base, key, toInsert);
+  const inserted = await insertNewProducts(
+    base,
+    key,
+    toInsert,
+    createSkuAllocator(items)
+  );
 
   console.log(
     JSON.stringify(

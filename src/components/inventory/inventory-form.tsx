@@ -160,15 +160,7 @@ export function InventoryForm({
     key: K,
     value: InventoryItemInput[K]
   ) {
-    setForm((current) => {
-      const next = { ...current, [key]: value };
-      if (key === "partNumber" && typeof value === "string") {
-        const skuFollowsPart =
-          !item || current.sku.trim() === current.partNumber.trim() || !current.sku.trim();
-        if (skuFollowsPart) next.sku = value.trim();
-      }
-      return next;
-    });
+    setForm((current) => ({ ...current, [key]: value }));
   }
 
   function handleImagePick(file: File | null) {
@@ -289,20 +281,24 @@ export function InventoryForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">SKU / n.º de parte</span>
+          <span className="text-sm font-medium">SKU</span>
           <input
             required={Boolean(item)}
             value={form.sku}
             placeholder={
-              item ? undefined : "Se toma del n.º de parte o referencia"
+              item
+                ? undefined
+                : isEquipment
+                  ? "Se genera EQUIPO-000001…"
+                  : "Se genera INSUMOS-000001, ACCESORIOS-000001…"
             }
             onChange={(event) => handleChange("sku", event.target.value)}
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
           />
           {!item ? (
             <span className="text-xs text-muted-foreground">
-              El SKU es el n.º de parte o referencia del fabricante. Si lo dejas
-              vacío se genera un código interno.
+              Si lo dejas vacío se asigna el siguiente código interno de la
+              categoría. El n.º de parte del fabricante va en su propio campo.
             </span>
           ) : null}
         </label>

@@ -13,6 +13,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createSkuAllocator } from "./lib/catalog-sku.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DEFAULT_JSON = join(
@@ -271,7 +272,8 @@ function noteWithoutStockAlert(notes) {
 }
 
 function buildNewRow(list, options = {}) {
-  const sku = String(list.item).trim();
+  const part = String(list.item).trim();
+  const sku = options.sku || part;
   const compatible = compatibleLabel(list.equipment);
   const details = [];
   if (list.presentation) details.push(`Presentación: ${list.presentation}`);
@@ -311,7 +313,7 @@ function buildNewRow(list, options = {}) {
     tracks_expiry: disposable,
     max_stock: 0,
     reorder_point: 0,
-    part_number: sku,
+    part_number: part,
     manufacturer: BRAND,
     subcategory: lineKey(list.equipment),
   };
@@ -321,7 +323,7 @@ function buildNewRow(list, options = {}) {
   return row;
 }
 
-async function insertNewProducts(base, key, unmatched) {
+async function insertNewProducts(base, key, unmatched, nextSku) {
   const result = {
     inserted: 0,
     skipped: 0,
@@ -340,6 +342,7 @@ async function insertNewProducts(base, key, unmatched) {
         omitAlerts: missing.has("stock_alerts_enabled"),
         omitColor: missing.has("color_tag"),
         useAlertMarker,
+        sku: nextSku?.(list.category || "accesorios"),
       });
       for (const column of missing) delete row[column];
       return row;
@@ -565,7 +568,7 @@ async function main() {
       name: row.existing?.name,
     })),
     sampleNew: unmatched.slice(0, 10).map((row) => ({
-      sku: row.item,
+      partNumber: row.item,
       name: row.name,
       line: lineKey(row.equipment),
     })),
@@ -578,7 +581,12 @@ async function main() {
     return;
   }
 
-  const inserted = await insertNewProducts(base, key, unmatched);
+  const inserted = await insertNewProducts(
+    base,
+    key,
+    unmatched,
+    createSkuAllocator(items)
+  );
   const refreshed = await restAll(
     base,
     key,

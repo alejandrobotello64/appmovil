@@ -9,6 +9,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createSkuAllocator } from "./lib/catalog-sku.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DEFAULT_JSON = join(ROOT, "scripts/data/listado-catalogo-captura.json");
@@ -174,7 +175,8 @@ function noteWithoutStockAlert(notes) {
 }
 
 function buildNewRow(list, options = {}) {
-  const sku = String(list.item).trim();
+  const part = String(list.item).trim();
+  const sku = options.sku || part;
   const brand = list.brand || "Dräger";
   const details = [];
   if (list.presentation) details.push(`Presentación: ${list.presentation}`);
@@ -209,7 +211,7 @@ function buildNewRow(list, options = {}) {
     tracks_expiry: false,
     max_stock: 0,
     reorder_point: 0,
-    part_number: sku,
+    part_number: part,
     manufacturer: brand,
     subcategory: "listado",
   };
@@ -219,7 +221,7 @@ function buildNewRow(list, options = {}) {
   return row;
 }
 
-async function insertNewProducts(base, key, unmatched) {
+async function insertNewProducts(base, key, unmatched, nextSku) {
   const result = {
     inserted: 0,
     skipped: 0,
@@ -238,6 +240,7 @@ async function insertNewProducts(base, key, unmatched) {
         omitAlerts: missing.has("stock_alerts_enabled"),
         omitColor: missing.has("color_tag"),
         useAlertMarker,
+        sku: nextSku?.("accesorios"),
       });
       for (const column of missing) delete row[column];
       return row;
@@ -339,7 +342,7 @@ async function main() {
       name: row.name,
     })),
     sampleNew: unmatched.slice(0, 12).map((row) => ({
-      sku: row.item,
+      partNumber: row.item,
       brand: row.brand,
       name: row.name,
     })),
@@ -350,7 +353,12 @@ async function main() {
     return;
   }
 
-  const inserted = await insertNewProducts(base, key, unmatched);
+  const inserted = await insertNewProducts(
+    base,
+    key,
+    unmatched,
+    createSkuAllocator(items)
+  );
   console.log(
     JSON.stringify(
       {

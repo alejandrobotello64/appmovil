@@ -11,6 +11,7 @@ import type {
   SupplyCategoryId,
 } from "./types";
 import {
+  isSequentialCatalogSku,
   skuPrefixForCategory,
   SUPPLY_CATEGORY_IDS,
 } from "./types";
@@ -471,14 +472,14 @@ export async function createInventoryItem(
       ? ("equipos" as InventoryCategoryId)
       : input.category;
   const part = (input.partNumber ?? "").trim();
-  const sku = input.sku.trim() || part || (await nextInventorySku(category));
+  const sku = input.sku.trim() || (await nextInventorySku(category));
 
   await ensureInventoryExtraColumns();
   const mapped = mapInputToRow({
     ...input,
     sku,
     category,
-    partNumber: part || sku,
+    partNumber: part,
   });
   let payload = payloadForWrite(mapped, input);
   let { data, error } = await supabase
@@ -726,10 +727,30 @@ export async function bulkImportInventoryItems(
   const bySku = new Map(
     existing.map((item) => [item.sku.trim().toLowerCase(), item])
   );
+  const byPart = new Map<string, InventoryItem>();
+  for (const item of existing) {
+    const part = item.partNumber.trim().toLowerCase();
+    if (part && !byPart.has(part)) byPart.set(part, item);
+  }
   let created = 0;
   let updated = 0;
   const errors: Array<{ sku: string; message: string }> = [];
   const actor = createdBy.trim() || "sistema";
+
+  function remember(item: InventoryItem) {
+    bySku.set(item.sku.trim().toLowerCase(), item);
+    const part = item.partNumber.trim().toLowerCase();
+    if (part && !byPart.has(part)) byPart.set(part, item);
+  }
+
+  function findExisting(sku: string, partNumber: string) {
+    const skuKey = sku.trim().toLowerCase();
+    const partKey = partNumber.trim().toLowerCase();
+    if (skuKey && bySku.has(skuKey)) return bySku.get(skuKey);
+    if (partKey && byPart.has(partKey)) return byPart.get(partKey);
+    if (skuKey && byPart.has(skuKey)) return byPart.get(skuKey);
+    return undefined;
+  }
 
   for (const [index, raw] of rows.entries()) {
     const input: InventoryItemInput = {
@@ -756,9 +777,11 @@ export async function bulkImportInventoryItems(
           ? raw.nextMaintenanceDate
           : "",
     };
-    const key = input.sku.toLowerCase();
+    const partNumber =
+      (input.partNumber ?? "").trim() ||
+      (isSequentialCatalogSku(input.sku) ? "" : input.sku);
     try {
-      const current = bySku.get(key);
+      const current = findExisting(input.sku, partNumber);
       const priced: InventoryItemInput = options?.preservePrices
         ? {
             ...input,
@@ -769,31 +792,49 @@ export async function bulkImportInventoryItems(
       if (current) {
         await updateInventoryItem(current.id, {
           ...priced,
+          sku: current.sku,
+          partNumber: partNumber || current.partNumber,
           quantity: current.quantity,
           stockAlertsEnabled:
             input.stockAlertsEnabled ?? current.stockAlertsEnabled,
         });
+        remember({
+          ...current,
+          partNumber: partNumber || current.partNumber,
+        });
         updated += 1;
       } else {
         try {
-          const item = await createInventoryItem(priced, actor);
-          bySku.set(key, item);
+          const item = await createInventoryItem(
+            {
+              ...priced,
+              sku: isSequentialCatalogSku(input.sku) ? input.sku : "",
+              partNumber,
+            },
+            actor
+          );
+          remember(item);
           created += 1;
         } catch (err) {
           const message = err instanceof Error ? err.message : "";
           if (!isUniqueSkuError(message)) throw err;
           const latest = await getInventoryItems({ includeInactive: true });
           const found = latest.find(
-            (item) => item.sku.trim().toLowerCase() === key
+            (item) =>
+              item.sku.trim().toLowerCase() === input.sku.toLowerCase() ||
+              (partNumber &&
+                item.partNumber.trim().toLowerCase() === partNumber.toLowerCase())
           );
           if (!found) throw err;
           await updateInventoryItem(found.id, {
             ...priced,
+            sku: found.sku,
+            partNumber: partNumber || found.partNumber,
             quantity: found.quantity,
             stockAlertsEnabled:
               input.stockAlertsEnabled ?? found.stockAlertsEnabled,
           });
-          bySku.set(key, found);
+          remember({ ...found, partNumber: partNumber || found.partNumber });
           updated += 1;
         }
       }

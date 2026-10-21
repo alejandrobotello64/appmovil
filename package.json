@@ -17,6 +17,7 @@
     "db:listado-catalogo": "node scripts/cargar-listado-catalogo.mjs",
     "db:accesorios-philips": "node scripts/cargar-accesorios-philips.mjs",
     "db:sku-parte": "node scripts/sku-desde-numero-parte.mjs",
+    "db:sku-secuencial": "node scripts/sku-secuencial-categoria.mjs",
     "db:export-catalog": "bash scripts/export-catalog.sh",
     "dev:api": "bash scripts/start-local-api.sh",
     "db:push": "supabase db push",
