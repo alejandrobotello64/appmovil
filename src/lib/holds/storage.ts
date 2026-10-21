@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { applyStockMovement } from "@/lib/warehouse/stock";
+import { applyOutboundStock } from "@/lib/warehouse/stock";
 import type {
   HoldStatus,
   InventoryHold,
@@ -265,9 +265,8 @@ export async function fulfillInventoryHold(
   }
 
   for (const line of hold.lines) {
-    await applyStockMovement({
+    await applyOutboundStock({
       productId: line.productId,
-      movementType: "salida",
       quantity: line.quantity,
       createdBy,
       reason: "Apartado entregado a proyecto",

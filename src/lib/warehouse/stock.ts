@@ -325,6 +325,101 @@ export async function applyStockMovement(input: {
   };
 }
 
+type OutboundBin = {
+  warehouseId: string;
+  locationId: string | null;
+  lotNumber: string | null;
+  available: number;
+  expiryDate: string;
+};
+
+async function listOutboundBins(productId: string): Promise<OutboundBin[]> {
+  const { data, error } = await db
+    .from("inventory_balances")
+    .select(
+      "warehouse_id, location_id, qty_on_hand, qty_reserved, lot:lots(lot_number, expiry_date)"
+    )
+    .eq("product_id", productId)
+    .gt("qty_on_hand", 0);
+  if (error) throw new Error(error.message);
+
+  const bins: OutboundBin[] = [];
+  for (const row of (data ?? []) as Record<string, unknown>[]) {
+    const onHand = Number(row.qty_on_hand ?? 0);
+    const reserved = Number(row.qty_reserved ?? 0);
+    const available = Math.max(0, onHand - reserved);
+    if (available <= 0) continue;
+    const lotRaw = row.lot;
+    const lot = ((Array.isArray(lotRaw) ? lotRaw[0] : lotRaw) ?? {}) as Record<
+      string,
+      unknown
+    >;
+    bins.push({
+      warehouseId: String(row.warehouse_id ?? ""),
+      locationId: row.location_id ? String(row.location_id) : null,
+      lotNumber: String(lot.lot_number ?? "").trim() || null,
+      available,
+      expiryDate: String(lot.expiry_date ?? ""),
+    });
+  }
+  return bins
+    .filter((bin) => bin.warehouseId)
+    .sort(
+      (a, b) =>
+        Number(Boolean(b.lotNumber)) - Number(Boolean(a.lotNumber)) ||
+        (a.expiryDate || "9999").localeCompare(b.expiryDate || "9999") ||
+        b.available - a.available
+    );
+}
+
+/**
+ * Salida para surtir: descuenta de las ubicaciones/lotes donde sí hay existencia.
+ * Si un solo bin no alcanza, reparte la cantidad entre varios.
+ */
+export async function applyOutboundStock(input: {
+  productId: string;
+  quantity: number;
+  createdBy: string;
+  reason?: string;
+  note?: string;
+}): Promise<StockMovementResult> {
+  const qty = Number(input.quantity);
+  if (!Number.isFinite(qty) || qty <= 0) {
+    throw new Error("La cantidad debe ser mayor a 0.");
+  }
+
+  const bins = await listOutboundBins(input.productId);
+  const onHand = bins.reduce((sum, bin) => sum + bin.available, 0);
+  if (qty > onHand + 0.0001) {
+    throw new Error(`No hay existencia disponible (${onHand}). Solicitado: ${qty}`);
+  }
+
+  let remaining = qty;
+  let last: StockMovementResult | null = null;
+  for (const bin of bins) {
+    if (remaining <= 0) break;
+    const take = Math.min(remaining, bin.available);
+    if (take <= 0) continue;
+    last = await applyStockMovement({
+      productId: input.productId,
+      movementType: "salida",
+      quantity: take,
+      createdBy: input.createdBy,
+      reason: input.reason,
+      note: input.note,
+      warehouseId: bin.warehouseId,
+      locationId: bin.locationId,
+      lotNumber: bin.lotNumber,
+    });
+    remaining -= take;
+  }
+
+  if (remaining > 0.0001 || !last) {
+    throw new Error(`No hay existencia disponible (${onHand}). Solicitado: ${qty}`);
+  }
+  return last;
+}
+
 export type ProductLot = {
   id: string;
   lotNumber: string;

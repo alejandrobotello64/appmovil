@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { getProductAvailableQty } from "@/lib/holds/storage";
-import { applyStockMovement } from "@/lib/warehouse/stock";
+import { applyOutboundStock } from "@/lib/warehouse/stock";
 import {
   sameRequester,
   type CreateQuoteRequisitionInput,
@@ -419,9 +419,8 @@ export async function fulfillServiceOrderRequisition(
   for (const item of toFulfill) {
     const line = req.lines.find((l) => l.id === item.lineId)!;
     if (line.productId) {
-      await applyStockMovement({
+      await applyOutboundStock({
         productId: line.productId,
-        movementType: "salida",
         quantity: item.quantity,
         createdBy: fulfilledBy,
         reason: fromQuote ? "Surtido a venta (cotización)" : "Surtido a orden de servicio",
