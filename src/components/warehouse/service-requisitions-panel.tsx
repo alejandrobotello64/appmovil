@@ -7,6 +7,7 @@ import { PurchaseRequestForm } from "@/components/purchasing/purchase-request-fo
 import { PurchaseStatusBadge, formatQty } from "@/components/purchasing/purchasing-shared";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
+import { getProductsAvailableQty } from "@/lib/holds/storage";
 import { getPurchaseRequests, getRequisitionShortages } from "@/lib/purchasing/storage";
 import { isPurchaseOpen, type PurchaseRequest, type RequisitionShortage } from "@/lib/purchasing/types";
 import {
@@ -60,6 +61,20 @@ function groupDraftQty(group: GroupedRequisitionLine, qtyDraft: Record<string, s
   return group.sources.reduce((sum, source) => sum + Number(qtyDraft[source.line.id] || 0), 0);
 }
 
+function fulfillCap(
+  group: GroupedRequisitionLine,
+  stock: Map<string, number> | null
+) {
+  if (group.offCatalog || !group.productId || !stock) return group.pending;
+  return Math.min(group.pending, Math.max(0, stock.get(group.productId) ?? 0));
+}
+
+function availableTone(pending: number, available: number) {
+  if (available <= 0) return "text-rose-700 dark:text-rose-300";
+  if (available + 0.0001 < pending) return "text-amber-700 dark:text-amber-300";
+  return "text-emerald-700 dark:text-emerald-300";
+}
+
 function groupSourceHint(group: GroupedRequisitionLine) {
   if (group.sources.length < 2) return "";
   const byFolio = new Map<string, { folio: string; origin: string; qty: number }>();
@@ -98,7 +113,7 @@ export function ServiceRequisitionsPanel({
   permissionModule = "solicitudes",
   allowFulfill,
   title = "Solicitudes de surtimiento",
-  subtitle = "Elige una solicitud y luego otra para surtirlas juntas. El mismo código suma en una sola cantidad. Imprime la suma para verificar productos, o cada orden por su folio.",
+  subtitle = "Elige una solicitud y luego otra para surtirlas juntas. El mismo código suma en una sola cantidad y verás cuánto hay disponible en almacén. Imprime la suma para verificar productos, o cada orden por su folio.",
 }: {
   /** Limita la bandeja a un origen; sin valor se muestran todos con filtro. */
   source?: RequisitionSource;
@@ -131,6 +146,8 @@ export function ServiceRequisitionsPanel({
   const [warehouseNotes, setWarehouseNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [printBusy, setPrintBusy] = useState<"folios" | "suma" | "">("");
+  const [availableByProduct, setAvailableByProduct] = useState<Map<string, number> | null>(null);
+  const [availableLoading, setAvailableLoading] = useState(false);
   const [purchaseForm, setPurchaseForm] = useState<{
     requisition: ServiceOrderRequisition;
     shortages: RequisitionShortage[];
@@ -187,6 +204,93 @@ export function ServiceRequisitionsPanel({
   );
   const pickGroups = useMemo(() => groupRequisitionLines(selectedItems), [selectedItems]);
   const pickPending = pickGroups.reduce((sum, group) => sum + group.pending, 0);
+  const pickProductIds = useMemo(
+    () =>
+      [...new Set(pickGroups.map((group) => group.productId).filter((id): id is string => Boolean(id)))],
+    [pickGroups]
+  );
+  const pickStockKey = pickProductIds.join("|");
+
+  useEffect(() => {
+    let active = true;
+    if (!pickProductIds.length) {
+      setAvailableByProduct(new Map());
+      setAvailableLoading(false);
+      return;
+    }
+    setAvailableLoading(true);
+    setAvailableByProduct(null);
+    getProductsAvailableQty(pickProductIds)
+      .then((map) => {
+        if (!active) return;
+        setAvailableByProduct(map);
+        setQtyDraft((current) => {
+          const next = { ...current };
+          let changed = false;
+          for (const group of pickGroups) {
+            if (!group.productId || group.offCatalog || group.pending <= 0) continue;
+            const cap = Math.min(group.pending, Math.max(0, map.get(group.productId) ?? 0));
+            const currentQty = group.sources.reduce(
+              (sum, source) => sum + Number(current[source.line.id] || 0),
+              0
+            );
+            if (currentQty <= cap + 0.0001) continue;
+            const allocated = allocateFulfillmentQty(
+              group.sources.map((source) => source.line),
+              cap
+            );
+            for (const [lineId, qty] of Object.entries(allocated)) {
+              const value = formatQty(qty);
+              if (next[lineId] !== value) {
+                next[lineId] = value;
+                changed = true;
+              }
+            }
+          }
+          return changed ? next : current;
+        });
+        setGroupQtyDraft((currentGroups) => {
+          const nextGroups = { ...currentGroups };
+          let changed = false;
+          for (const group of pickGroups) {
+            if (!group.productId || group.offCatalog || group.pending <= 0) continue;
+            const cap = Math.min(group.pending, Math.max(0, map.get(group.productId) ?? 0));
+            const raw = currentGroups[group.key];
+            const parsed = raw != null && raw.trim() !== "" ? Number(raw) : group.pending;
+            if (!Number.isFinite(parsed) || parsed <= cap + 0.0001) continue;
+            nextGroups[group.key] = formatQty(cap);
+            changed = true;
+          }
+          return changed ? nextGroups : currentGroups;
+        });
+      })
+      .catch(() => {
+        if (!active) return;
+        const empty = new Map<string, number>();
+        for (const id of pickProductIds) empty.set(id, 0);
+        setAvailableByProduct(empty);
+      })
+      .finally(() => {
+        if (active) setAvailableLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+    // pickGroups se alinea con la selección y los códigos cargados.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickStockKey, selectedIds, reloadKey]);
+
+  const pickAvailableUnits = pickGroups.reduce((sum, group) => {
+    if (group.offCatalog || !group.productId) return sum;
+    const available = availableByProduct?.get(group.productId);
+    if (available == null) return sum;
+    return sum + Math.min(group.pending, Math.max(0, available));
+  }, 0);
+  const pickShortageCount = pickGroups.filter((group) => {
+    if (group.offCatalog || !group.productId || group.pending <= 0) return false;
+    const available = availableByProduct?.get(group.productId);
+    return available != null && available + 0.0001 < group.pending;
+  }).length;
 
   const filtered = useMemo(
     () =>
@@ -804,10 +908,28 @@ export function ServiceRequisitionsPanel({
               ) : null}
 
               {pickGroups.length ? (
-                <p className="text-xs text-muted-foreground">
-                  {pickGroups.length} código{pickGroups.length === 1 ? "" : "s"} ·{" "}
-                  {formatQty(pickPending)} {pickPending === 1 ? "unidad pendiente" : "unidades pendientes"}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    {pickGroups.length} código{pickGroups.length === 1 ? "" : "s"} ·{" "}
+                    {formatQty(pickPending)} {pickPending === 1 ? "unidad pendiente" : "unidades pendientes"}
+                    {availableByProduct && pickProductIds.length ? (
+                      <>
+                        {" "}
+                        · {formatQty(pickAvailableUnits)}{" "}
+                        {pickAvailableUnits === 1
+                          ? "unidad disponible para surtir"
+                          : "unidades disponibles para surtir"}
+                      </>
+                    ) : null}
+                  </p>
+                  {pickShortageCount > 0 ? (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      {pickShortageCount === 1
+                        ? "1 código no tiene existencia suficiente; la cantidad a surtir se ajustó al stock disponible."
+                        : `${pickShortageCount} códigos no tienen existencia suficiente; la cantidad a surtir se ajustó al stock disponible.`}
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
 
               <div className="space-y-2">
@@ -818,8 +940,20 @@ export function ServiceRequisitionsPanel({
                       requisitionLinePending(source.line) > 0
                   );
                   const hint = groupSourceHint(group);
+                  const cap = fulfillCap(group, availableByProduct);
+                  const available = group.productId
+                    ? availableByProduct?.get(group.productId)
+                    : undefined;
+                  const drafted = Number(
+                    groupQtyDraft[group.key] ?? formatQty(groupDraftQty(group, qtyDraft))
+                  );
                   const inputValue =
                     groupQtyDraft[group.key] ?? formatQty(groupDraftQty(group, qtyDraft));
+                  const overStock =
+                    !group.offCatalog &&
+                    available != null &&
+                    Number.isFinite(drafted) &&
+                    drafted > available + 0.0001;
                   return (
                     <div key={group.key} className="rounded-xl border border-border bg-background p-3">
                       <p className="text-sm font-medium">
@@ -830,11 +964,34 @@ export function ServiceRequisitionsPanel({
                         <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                           Fuera de catálogo · se compra y se entrega directo, sin descontar inventario
                         </p>
-                      ) : null}
+                      ) : (
+                        <p
+                          className={cn(
+                            "mt-1 text-sm font-semibold tabular-nums",
+                            availableLoading || available == null
+                              ? "text-muted-foreground"
+                              : availableTone(group.pending, available)
+                          )}
+                        >
+                          {availableLoading || available == null
+                            ? "Consultando existencia…"
+                            : `Disponible para surtir: ${formatQty(available)} ${group.unit}`}
+                        </p>
+                      )}
                       <p className="mt-1 text-xs text-muted-foreground">
                         Pedido: {formatQty(group.quantityRequested)} {group.unit} · Surtido:{" "}
                         {formatQty(group.quantityFulfilled)} · Pendiente: {formatQty(group.pending)}
                       </p>
+                      {!group.offCatalog &&
+                      available != null &&
+                      group.pending > 0 &&
+                      available + 0.0001 < group.pending ? (
+                        <p className="text-xs text-amber-700 dark:text-amber-300">
+                          {available <= 0
+                            ? "Sin existencia: no se puede surtir este código hasta que entre mercancía o se libere un apartado."
+                            : `Stock insuficiente: se pueden surtir ${formatQty(available)} de ${formatQty(group.pending)} ${group.unit}.`}
+                        </p>
+                      ) : null}
                       {hint ? <p className="text-xs text-[#3B46A5]">{hint}</p> : null}
                       <p className="text-xs text-muted-foreground">
                         {requisitionLineStatusLabel(group.lineStatus)}
@@ -845,12 +1002,16 @@ export function ServiceRequisitionsPanel({
                           <input
                             type="number"
                             min={0}
-                            max={group.pending}
+                            max={cap}
                             step="0.01"
                             className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
                             value={inputValue}
                             onChange={(e) => {
-                              const raw = e.target.value;
+                              let raw = e.target.value;
+                              const parsed = Number(raw);
+                              if (raw !== "" && Number.isFinite(parsed) && parsed > cap) {
+                                raw = formatQty(cap);
+                              }
                               setGroupQtyDraft((current) => ({ ...current, [group.key]: raw }));
                               const allocated = allocateFulfillmentQty(
                                 group.sources.map((source) => source.line),
@@ -865,6 +1026,11 @@ export function ServiceRequisitionsPanel({
                               });
                             }}
                           />
+                          {overStock ? (
+                            <span className="mt-1 block text-[11px] text-rose-700 dark:text-rose-300">
+                              Máximo disponible: {formatQty(cap)} {group.unit}
+                            </span>
+                          ) : null}
                         </label>
                       ) : null}
                     </div>
@@ -914,7 +1080,7 @@ export function ServiceRequisitionsPanel({
                   <>
                     <Button
                       type="button"
-                      disabled={busy}
+                      disabled={busy || availableLoading}
                       onClick={() => void onFulfill()}
                       className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
                     >

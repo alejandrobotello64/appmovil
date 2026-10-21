@@ -15,6 +15,7 @@ import {
   type PdfColumn,
   type PdfRow,
 } from "@/lib/brand/pdf-layout";
+import { getProductsAvailableQty } from "@/lib/holds/storage";
 import { getPurchaseRequests } from "@/lib/purchasing/storage";
 import { isPurchaseOpen, purchaseStatusLabel, type PurchaseRequest } from "@/lib/purchasing/types";
 import { supabase } from "@/lib/supabase/client";
@@ -319,11 +320,12 @@ export async function downloadRequisitionsPdf(
 const PICK_COLUMNS: PdfColumn[] = [
   { key: "ok", label: "✓", width: 8, align: "center" },
   { key: "n", label: "#", width: 8, align: "center" },
-  { key: "sku", label: "SKU", width: 26 },
-  { key: "desc", label: "Producto", width: 78 },
+  { key: "sku", label: "SKU", width: 24 },
+  { key: "desc", label: "Producto", width: 64 },
   { key: "unit", label: "Unidad", width: 16, align: "center" },
-  { key: "qty", label: "A surtir", width: 18, align: "center" },
-  { key: "from", label: "Folios", width: 28 },
+  { key: "qty", label: "A surtir", width: 16, align: "center" },
+  { key: "disp", label: "Disp.", width: 16, align: "center" },
+  { key: "from", label: "Folios", width: 24 },
 ];
 
 function pickQtyForGroup(
@@ -366,10 +368,12 @@ export async function downloadRequisitionPickListPdf(
     throw new Error("No hay productos pendientes para la lista de verificación.");
   }
 
-  const parts = await partNumbersByProductId(
-    rowsToPrint.flatMap((row) =>
-      row.group.sources.map((source) => source.line.productId ?? "")
-    )
+  const catalogIds = rowsToPrint.flatMap((row) =>
+    row.group.sources.map((source) => source.line.productId ?? "")
+  );
+  const parts = await partNumbersByProductId(catalogIds);
+  const stock = await getProductsAvailableQty(catalogIds).catch(
+    () => new Map<string, number>()
   );
   const lookup = await loadStaffProfileLookup();
   const requesterKeys = [...new Set(requisitions.map((item) => item.requestedBy).filter(Boolean))];
@@ -423,6 +427,10 @@ export async function downloadRequisitionPickListPdf(
     const from = [
       ...new Set(row.group.sources.map((source) => source.requisition.folio)),
     ].join(", ");
+    const available =
+      row.group.offCatalog || !row.group.productId
+        ? null
+        : stock.get(row.group.productId);
     return {
       cells: {
         ok: "",
@@ -434,6 +442,8 @@ export async function downloadRequisitionPickListPdf(
         ].filter(Boolean),
         unit: row.group.unit,
         qty: formatPdfQty(row.qty),
+        disp:
+          available == null ? "—" : formatPdfQty(Math.max(0, available)),
         from,
       },
       styles: { qty: "bold" },

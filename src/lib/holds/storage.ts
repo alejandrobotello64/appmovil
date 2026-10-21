@@ -95,6 +95,31 @@ export async function getProductAvailableQty(productId: string): Promise<number>
   return Number(data ?? 0);
 }
 
+/** Existencia neta (inventario menos apartados activos) para varios productos. */
+export async function getProductsAvailableQty(
+  productIds: string[]
+): Promise<Map<string, number>> {
+  const ids = [...new Set(productIds.filter(Boolean))];
+  const available = new Map<string, number>();
+  for (const id of ids) available.set(id, 0);
+  if (ids.length === 0) return available;
+
+  const { data, error } = await db
+    .from("inventory_items")
+    .select("id, quantity")
+    .in("id", ids);
+  if (error) throw new Error(error.message);
+
+  const reserved = await getReservedQuantities();
+  for (const row of data ?? []) {
+    const id = String(row.id);
+    const onHand = Number(row.quantity ?? 0);
+    const held = reserved.get(id) ?? 0;
+    available.set(id, Math.max(0, onHand - held));
+  }
+  return available;
+}
+
 export async function getInventoryHolds(): Promise<InventoryHold[]> {
   const { data: holds, error } = await db
     .from("inventory_holds")

@@ -61,7 +61,7 @@ El SKU del catálogo es interno por categoría: **EQUIPO-000001**, **INSUMOS-000
 
 El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nuevo producto. Acepta la plantilla MAS o un inventario con columnas habituales (`Código`, `Descripción`, `Cantidad`, `Precio`). Los SKU nuevos se dan de alta; los que ya existen se actualizan. La columna de existencia solo carga stock inicial en altas nuevas.
 
-En **Almacén → Surtimientos** se elige una solicitud y luego otra de la **misma persona** (aunque vengan de distintas OS o cotizaciones). El mismo código suma en una sola cantidad. El inventario se descuenta de las elegidas y al imprimir sale **una hoja por solicitud**. El visto del grupo marca todas las de esa persona.
+En **Almacén → Surtimientos** se elige una solicitud y luego otra de la **misma persona** (aunque vengan de distintas OS o cotizaciones). El mismo código suma en una sola cantidad y se muestra cuánto hay **disponible en almacén** (existencia menos apartados). Si el pendiente supera el stock, la cantidad a surtir se ajusta a lo disponible. El inventario se descuenta de las elegidas y al imprimir sale **una hoja por solicitud**; la suma de verificación también trae la columna Disp. El visto del grupo marca todas las de esa persona.
 
 La recepción de pedidos puede ser **parcial**. Entradas y salidas piden almacén, ubicación, lote/caducidad/serie cuando el producto lo exige. Los roles (`administrador`, `almacén`, `compras`, `ventas`, `servicio`, `dirección`) filtran el menú y bloquean escritura.
 
