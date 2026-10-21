@@ -52,7 +52,7 @@ export const WAREHOUSE_TABS = [
   {
     id: "solicitudes",
     label: "Surtimientos",
-    description: "Quien surte ve cada código una sola vez; al imprimir sale una hoja por solicitud",
+    description: "Quien surte ve cada código una sola vez; imprime la suma para verificar y cada orden por folio",
     href: "/dashboard/almacen?tab=solicitudes",
   },
   {

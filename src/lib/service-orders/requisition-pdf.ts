@@ -46,11 +46,26 @@ const COLUMNS: PdfColumn[] = [
   { key: "buy", label: "Estatus / compra", width: 36 },
 ];
 
+export type PdfOutput = "print" | "download";
+
 export type RequisitionPrintOptions = {
   /** Usuario que imprime; si es de almacén y aún no hay surtido, aparece como quien surte. */
   printedBy?: { username: string; fullName: string | null };
   printedByWarehouse?: boolean;
+  output?: PdfOutput;
+  /** Cantidad a recoger por grupo de código (lista de verificación). */
+  quantities?: Record<string, number>;
 };
+
+function finishPdf(doc: jsPDF, fileName: string, output: PdfOutput = "print", note?: string) {
+  drawBrandedFooter(doc, note);
+  if (output === "print") {
+    doc.autoPrint();
+    window.open(doc.output("bloburl"), "_blank");
+    return;
+  }
+  doc.save(fileName);
+}
 
 function compactSection(cursor: PdfCursor, title: string) {
   cursor.ensure(7);
@@ -293,13 +308,164 @@ export async function downloadRequisitionsPdf(
     );
   }
 
-  drawBrandedFooter(doc);
   const first = packed[0];
   const filename =
     packed.length > 1
-      ? `surtimiento-${packed.length}-solicitudes.pdf`
+      ? `surtimiento-${packed.length}-folios.pdf`
       : `${first.requisition.folio}-orden-surtimiento.pdf`;
-  doc.save(filename);
+  finishPdf(doc, filename, options.output ?? "print");
+}
+
+const PICK_COLUMNS: PdfColumn[] = [
+  { key: "ok", label: "✓", width: 8, align: "center" },
+  { key: "n", label: "#", width: 8, align: "center" },
+  { key: "sku", label: "SKU", width: 26 },
+  { key: "desc", label: "Producto", width: 78 },
+  { key: "unit", label: "Unidad", width: 16, align: "center" },
+  { key: "qty", label: "A surtir", width: 18, align: "center" },
+  { key: "from", label: "Folios", width: 28 },
+];
+
+function pickQtyForGroup(
+  group: ReturnType<typeof groupRequisitionLines>[number],
+  quantities?: Record<string, number>
+) {
+  const override = quantities?.[group.key];
+  if (Number.isFinite(override) && (override as number) > 0) return override as number;
+  if (group.pending > 0) return group.pending;
+  return group.quantityRequested;
+}
+
+async function partNumbersByProductId(productIds: string[]) {
+  const ids = [...new Set(productIds.filter(Boolean))];
+  const map = new Map<string, string>();
+  if (!ids.length) return map;
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .select("id, part_number")
+    .in("id", ids);
+  if (error || !data) return map;
+  for (const row of data) {
+    const part = String(row.part_number ?? "").trim();
+    if (part) map.set(String(row.id), part);
+  }
+  return map;
+}
+
+/** Suma agrupada de lo que se va a recoger. Solo referencia para verificar productos. */
+export async function downloadRequisitionPickListPdf(
+  requisitions: ServiceOrderRequisition[],
+  options: RequisitionPrintOptions = {}
+) {
+  if (!requisitions.length) throw new Error("Selecciona al menos una solicitud para imprimir la suma.");
+  const groups = groupRequisitionLines(requisitions);
+  const rowsToPrint = groups
+    .map((group) => ({ group, qty: pickQtyForGroup(group, options.quantities) }))
+    .filter((row) => row.qty > 0);
+  if (!rowsToPrint.length) {
+    throw new Error("No hay productos pendientes para la lista de verificación.");
+  }
+
+  const parts = await partNumbersByProductId(
+    rowsToPrint.flatMap((row) =>
+      row.group.sources.map((source) => source.line.productId ?? "")
+    )
+  );
+  const lookup = await loadStaffProfileLookup();
+  const requesterKeys = [...new Set(requisitions.map((item) => item.requestedBy).filter(Boolean))];
+  const requesterNames = requesterKeys.map((key) => lookup(key)?.fullName || key);
+  const folios = requisitions.map((item) => item.folio);
+  const origins = [
+    ...new Set(
+      requisitions.map((item) => {
+        const origin = item.sourceType === "cotizacion" ? item.quoteFolio : item.serviceOrderFolio;
+        const prefix = item.sourceType === "cotizacion" ? "COT" : "OS";
+        return origin ? `${prefix} ${origin}` : "";
+      }).filter(Boolean)
+    ),
+  ];
+  const picker =
+    options.printedBy?.fullName || options.printedBy?.username || "";
+  const totalQty = rowsToPrint.reduce((sum, row) => sum + row.qty, 0);
+
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const start = await drawBrandedHeader(doc, {
+    title: "Lista de verificación · suma a surtir",
+    folio: folios.length === 1 ? folios[0] : `${folios.length} FOLIOS`,
+    rightLines: [
+      "SOLO REFERENCIA",
+      `${rowsToPrint.length} código${rowsToPrint.length === 1 ? "" : "s"} · ${formatPdfQty(totalQty)} pzas`,
+    ],
+  });
+  const cursor = new PdfCursor(doc, start);
+
+  compactSection(cursor, "Qué verifica esta hoja");
+  drawParagraph(
+    cursor,
+    "Uso",
+    "Agrupa el mismo código en una sola cantidad para comprobar lo que se va a recoger. No sustituye la orden por folio: esa hoja sí se entrega y se firma."
+  );
+  compactFields(cursor, [
+    ["Solicitudes", folios.join(" · ")],
+    ["Órdenes / cotizaciones", origins.join(" · ")],
+    ["Solicita", requesterNames.join(" · ")],
+    ["Prepara", picker || "Almacén"],
+  ]);
+
+  compactSection(cursor, "Productos a surtir (cantidades juntas)");
+  const rows: PdfRow[] = rowsToPrint.map((row, index) => {
+    const part =
+      (row.group.productId && parts.get(row.group.productId)) ||
+      row.group.sources
+        .map((source) => parts.get(source.line.productId ?? ""))
+        .find(Boolean) ||
+      "";
+    const from = [
+      ...new Set(row.group.sources.map((source) => source.requisition.folio)),
+    ].join(", ");
+    return {
+      cells: {
+        ok: "",
+        n: String(index + 1),
+        sku: row.group.productSku || "—",
+        desc: [
+          row.group.description || row.group.productName,
+          part ? `n.º ${part}` : "",
+        ].filter(Boolean),
+        unit: row.group.unit,
+        qty: formatPdfQty(row.qty),
+        from,
+      },
+      styles: { qty: "bold" },
+    };
+  });
+  drawTable(cursor, PICK_COLUMNS, rows);
+
+  cursor.ensure(8);
+  cursor.doc.setFont("helvetica", "bold");
+  cursor.doc.setFontSize(9);
+  cursor.doc.setTextColor(...PDF_INK);
+  cursor.doc.text(
+    `Total a surtir: ${rowsToPrint.length} código${rowsToPrint.length === 1 ? "" : "s"} · ${formatPdfQty(totalQty)} unidades`,
+    PDF_MARGIN + cursor.contentW,
+    cursor.y + 3,
+    { align: "right" }
+  );
+  cursor.y += 10;
+
+  compactPeople(cursor, [
+    { title: "Prepara / verifica", name: picker, empty: "Almacén" },
+    { title: "Recoge", name: requesterNames[0] ?? "", empty: "Solicitante" },
+  ]);
+
+  finishPdf(
+    doc,
+    folios.length === 1
+      ? `${folios[0]}-suma-surtir.pdf`
+      : `suma-surtir-${folios.length}-folios.pdf`,
+    options.output ?? "print",
+    "Referencia para verificar productos. La entrega formal es la hoja por folio."
+  );
 }
 
 function drawQuoteOrigin(cursor: PdfCursor, requisition: ServiceOrderRequisition, quote: Row) {

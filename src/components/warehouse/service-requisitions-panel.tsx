@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, PackageCheck, Printer, RefreshCw, ShoppingCart, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, PackageCheck, Printer, RefreshCw, ShoppingCart, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PurchaseRequestForm } from "@/components/purchasing/purchase-request-form";
 import { PurchaseStatusBadge, formatQty } from "@/components/purchasing/purchasing-shared";
@@ -14,7 +14,10 @@ import {
   fulfillServiceOrderRequisitions,
   getServiceOrderRequisitions,
 } from "@/lib/service-orders/requisition-storage";
-import { downloadRequisitionsPdf } from "@/lib/service-orders/requisition-pdf";
+import {
+  downloadRequisitionPickListPdf,
+  downloadRequisitionsPdf,
+} from "@/lib/service-orders/requisition-pdf";
 import {
   REQUISITION_SOURCES,
   REQUISITION_STATUSES,
@@ -95,7 +98,7 @@ export function ServiceRequisitionsPanel({
   permissionModule = "solicitudes",
   allowFulfill,
   title = "Solicitudes de surtimiento",
-  subtitle = "Elige una solicitud y luego otra para surtirlas juntas. El mismo código suma en una sola cantidad. Al imprimir sale una hoja por solicitud.",
+  subtitle = "Elige una solicitud y luego otra para surtirlas juntas. El mismo código suma en una sola cantidad. Imprime la suma para verificar productos, o cada orden por su folio.",
 }: {
   /** Limita la bandeja a un origen; sin valor se muestran todos con filtro. */
   source?: RequisitionSource;
@@ -127,6 +130,7 @@ export function ServiceRequisitionsPanel({
   const [groupQtyDraft, setGroupQtyDraft] = useState<Record<string, string>>({});
   const [warehouseNotes, setWarehouseNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [printBusy, setPrintBusy] = useState<"folios" | "suma" | "">("");
   const [purchaseForm, setPurchaseForm] = useState<{
     requisition: ServiceOrderRequisition;
     shortages: RequisitionShortage[];
@@ -376,16 +380,58 @@ export function ServiceRequisitionsPanel({
     }
   }
 
-  async function onPrint() {
-    if (!selectedItems.length) return;
+  function printOptions() {
+    return {
+      printedBy: session
+        ? { username: session.username, fullName: session.fullName }
+        : undefined,
+      printedByWarehouse: canFulfill,
+    };
+  }
+
+  function pickQuantities(items: ServiceOrderRequisition[]) {
+    const groups = groupRequisitionLines(items);
+    const quantities: Record<string, number> = {};
+    for (const group of groups) {
+      const drafted = groupQtyDraft[group.key];
+      const qty =
+        drafted != null && drafted.trim() !== ""
+          ? Number(drafted)
+          : groupDraftQty(group, qtyDraft);
+      quantities[group.key] =
+        Number.isFinite(qty) && qty > 0 ? qty : group.pending;
+    }
+    return quantities;
+  }
+
+  async function onPrintFolios(items = selectedItems) {
+    if (!items.length) return;
     setError("");
+    setPrintBusy("folios");
     try {
-      await downloadRequisitionsPdf(selectedItems, {
-        printedBy: session ? { username: session.username, fullName: session.fullName } : undefined,
-        printedByWarehouse: canFulfill,
+      await downloadRequisitionsPdf(items, printOptions());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo imprimir por folio.");
+    } finally {
+      setPrintBusy("");
+    }
+  }
+
+  async function onPrintSum(items = selectedItems) {
+    if (!items.length) return;
+    setError("");
+    setPrintBusy("suma");
+    try {
+      await downloadRequisitionPickListPdf(items, {
+        ...printOptions(),
+        quantities: pickQuantities(items),
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo generar el PDF.");
+      setError(
+        err instanceof Error ? err.message : "No se pudo imprimir la suma de productos."
+      );
+    } finally {
+      setPrintBusy("");
     }
   }
 
@@ -594,12 +640,28 @@ export function ServiceRequisitionsPanel({
                         />
                       </td>
                       <td className="px-3 py-3">
-                        <p className="font-medium">{item.folio}</p>
-                        {item.priority === "urgente" ? (
-                          <span className="mt-1 inline-flex rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
-                            Urgente
-                          </span>
-                        ) : null}
+                        <div className="flex items-start gap-1.5">
+                          <div className="min-w-0">
+                            <p className="font-medium">{item.folio}</p>
+                            {item.priority === "urgente" ? (
+                              <span className="mt-1 inline-flex rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
+                                Urgente
+                              </span>
+                            ) : null}
+                          </div>
+                          <button
+                            type="button"
+                            title={`Imprimir ${item.folio}`}
+                            aria-label={`Imprimir ${item.folio}`}
+                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void onPrintFolios([item]);
+                            }}
+                          >
+                            <Printer className="size-3.5" />
+                          </button>
+                        </div>
                       </td>
                       <td className="px-3 py-3">
                         <p>{requisitionOriginFolio(item) || "—"}</p>
@@ -649,7 +711,7 @@ export function ServiceRequisitionsPanel({
             <p className="text-sm text-muted-foreground">
               {canFulfill
                 ? "Elige una solicitud y luego otra de la misma persona. El mismo código aparece una sola vez. El visto del grupo marca todas las de esa persona."
-                : "Selecciona una solicitud para ver su avance o imprimirla."}
+                : "Selecciona una solicitud para ver su avance o imprimirla por folio."}
             </p>
           ) : (
             <>
@@ -696,13 +758,42 @@ export function ServiceRequisitionsPanel({
                     </>
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Se recogen juntas: el mismo código suma en una sola cantidad. Al imprimir sale una hoja por solicitud.
+                      Se recogen juntas: el mismo código suma en una sola cantidad. La suma es solo para verificar; cada folio se imprime aparte.
                     </p>
                   )}
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => void onPrint()}>
-                  <Printer className="size-3.5" /> Imprimir
-                </Button>
+                <div className="flex shrink-0 flex-col gap-1.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={Boolean(printBusy)}
+                    onClick={() => void onPrintSum()}
+                  >
+                    {printBusy === "suma" ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Printer className="size-3.5" />
+                    )}
+                    Imprimir suma
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={Boolean(printBusy)}
+                    onClick={() => void onPrintFolios()}
+                  >
+                    {printBusy === "folios" ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Printer className="size-3.5" />
+                    )}
+                    {selectedItems.length > 1
+                      ? `Imprimir ${selectedItems.length} folios`
+                      : "Imprimir folio"}
+                  </Button>
+                </div>
               </div>
 
               {samePersonOpen.length > selectedOpen.length && canFulfill ? (
