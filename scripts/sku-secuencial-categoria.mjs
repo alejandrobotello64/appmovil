@@ -82,7 +82,7 @@ async function fetchAll(base, key) {
       base,
       key,
       "GET",
-      `/rest/v1/inventory_items?select=id,sku,name,category,item_kind,part_number,created_at&order=created_at.asc&offset=${from}&limit=${PAGE}`,
+      `/rest/v1/inventory_items?select=id,sku,name,category,item_kind,part_number,created_at&order=created_at.asc,id.asc&offset=${from}&limit=${PAGE}`,
       null,
       { Range: `${from}-${to}`, Prefer: "count=exact" }
     );
