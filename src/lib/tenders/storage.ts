@@ -1,4 +1,8 @@
 import { supabase } from "@/lib/supabase/client";
+import {
+  removeStorageObject,
+  uploadStorageObject,
+} from "@/lib/storage/upload-file";
 import { createInventoryHold } from "@/lib/holds/storage";
 import type { InventoryHold } from "@/lib/holds/types";
 import type {
@@ -410,14 +414,11 @@ export async function uploadTenderDocument(input: {
   const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
   const path = `${input.tenderId}/${Date.now()}-${safeName}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("tender-documents")
-    .upload(path, input.file, { upsert: false });
-  if (uploadError) throw new Error(uploadError.message);
-
-  const { data: publicData } = supabase.storage
-    .from("tender-documents")
-    .getPublicUrl(path);
+  const uploaded = await uploadStorageObject({
+    bucket: "tender-documents",
+    path,
+    file: input.file,
+  });
 
   const { data, error } = await db
     .from("tender_documents")
@@ -425,8 +426,8 @@ export async function uploadTenderDocument(input: {
       tender_id: input.tenderId,
       doc_type: input.docType,
       name: input.name.trim() || input.file.name,
-      file_path: path,
-      file_url: publicData.publicUrl,
+      file_path: uploaded.path,
+      file_url: uploaded.publicUrl,
       notes: (input.notes ?? "").trim(),
       uploaded_by: (input.uploadedBy ?? "").trim(),
     })
@@ -446,7 +447,7 @@ export async function uploadTenderDocument(input: {
 
 export async function deleteTenderDocument(doc: TenderDocument): Promise<void> {
   if (doc.filePath) {
-    await supabase.storage.from("tender-documents").remove([doc.filePath]);
+    await removeStorageObject("tender-documents", doc.filePath);
   }
   const { error } = await db.from("tender_documents").delete().eq("id", doc.id);
   if (error) throw new Error(error.message);

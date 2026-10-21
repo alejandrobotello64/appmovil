@@ -38,7 +38,9 @@ import { mostCommon, normalizeKey } from "@/lib/equipment-grouping";
 import { daysUntilExpiry } from "@/lib/inventory/expiry";
 import {
   CATALOG_MAX_FILE_BYTES,
+  CATALOG_MAX_FILE_LABEL,
   deleteCatalogDocument,
+  getCatalogDocumentFile,
   getCatalogDocuments,
   updateCatalogDocument,
   uploadCatalogDocument,
@@ -503,19 +505,28 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
     setEditingGroup(null);
   }
 
-  function openDocument(doc: CatalogDocument) {
+  async function openDocument(doc: CatalogDocument) {
     if (fileKind(doc) === "image") {
       setPreviewIndex(imageDocs.findIndex((item) => item.id === doc.id));
       return;
     }
-    window.open(doc.fileUrl, "_blank", "noopener,noreferrer");
+    if (!doc.fileUrl.includes("manifest.json")) {
+      window.open(doc.fileUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    try {
+      const blob = await getCatalogDocumentFile(doc);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo abrir el archivo.");
+    }
   }
 
   async function handleDownload(doc: CatalogDocument) {
     try {
-      const response = await fetch(doc.fileUrl);
-      if (!response.ok) throw new Error();
-      const url = URL.createObjectURL(await response.blob());
+      const blob = await getCatalogDocumentFile(doc);
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = doc.fileName || doc.title;
@@ -1533,7 +1544,7 @@ function CatalogDocumentForm({
     const accepted = incoming.filter((file) => file.size <= CATALOG_MAX_FILE_BYTES);
     setError(
       tooBig.length
-        ? `Se omitieron ${tooBig.length} archivo(s) de más de 50 MB: ${tooBig.map((f) => f.name).join(", ")}`
+        ? `Se omitieron ${tooBig.length} archivo(s) de más de ${CATALOG_MAX_FILE_LABEL}: ${tooBig.map((f) => f.name).join(", ")}`
         : ""
     );
     const next = [...files];
@@ -1575,7 +1586,19 @@ function CatalogDocumentForm({
         const title =
           files.length === 1 && form.title.trim() ? form.title : titleFromFile(file.name);
         saved.push(
-          await uploadCatalogDocument({ ...toInput(form), area, title, file, uploadedBy })
+          await uploadCatalogDocument({
+            ...toInput(form),
+            area,
+            title,
+            file,
+            uploadedBy,
+            onProgress: (uploaded, total) => {
+              const pct = total ? Math.round((uploaded / total) * 100) : 0;
+              setProgress(
+                `Subiendo ${index + 1} de ${files.length}: ${file.name} (${pct}%)`
+              );
+            },
+          })
         );
       }
       onSaved(saved, false);
@@ -1595,7 +1618,7 @@ function CatalogDocumentForm({
       description={
         editing
           ? `${editing.fileName} · ${formatFileSize(editing.fileSize)}`
-          : "PDF, imágenes, Office o video, hasta 50 MB por archivo. Puedes subir varios a la vez."
+          : `PDF, imágenes, Office, video o ZIP, hasta ${CATALOG_MAX_FILE_LABEL} por archivo. Los manuales grandes se suben por partes.`
       }
       headerAction={
         <button

@@ -144,6 +144,18 @@ drop policy if exists supply_kit_lines_all on public.supply_kit_lines;
 create policy supply_kit_lines_all on public.supply_kit_lines
   for all using (true) with check (true);
 
+-- Manuales y documentos de catálogo (hasta 2 GB por archivo).
+
+do $$
+begin
+  if to_regclass('storage.buckets') is null then
+    return;
+  end if;
+  update storage.buckets
+  set file_size_limit = 2147483648
+  where id = 'sales-catalog';
+end $$;
+
 -- Fotos de producto (bucket público).
 
 do $$

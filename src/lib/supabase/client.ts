@@ -14,6 +14,14 @@ if (!configuredUrl || !supabaseAnonKey) {
 const publicUrl: string = configuredUrl;
 const anonKey: string = supabaseAnonKey;
 
+export function getConfiguredSupabaseUrl() {
+  return publicUrl;
+}
+
+export function getSupabaseAnonKey() {
+  return anonKey;
+}
+
 function isLoopbackUrl(url: string) {
   try {
     const host = new URL(url).hostname;
@@ -22,6 +30,8 @@ function isLoopbackUrl(url: string) {
     return true;
   }
 }
+
+export { isLoopbackUrl };
 
 function resolveSupabaseUrl() {
   // Local/preview: el navegador habla con el mismo origen y Next.js

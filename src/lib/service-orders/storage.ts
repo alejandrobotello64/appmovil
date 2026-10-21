@@ -1,4 +1,8 @@
 import { supabase } from "@/lib/supabase/client";
+import {
+  removeStorageObject,
+  uploadStorageObject,
+} from "@/lib/storage/upload-file";
 import { normalizeRole } from "@/lib/auth/permissions";
 import { listStaffMembers } from "@/lib/users/staff";
 import {
@@ -1734,17 +1738,12 @@ export async function uploadServiceOrderDocument(input: {
     input.file.type ||
     (isPdfFile(input.file) ? "application/pdf" : "application/octet-stream");
 
-  const { error: uploadError } = await supabase.storage
-    .from(MEDIA_BUCKET)
-    .upload(path, input.file, {
-      upsert: false,
-      contentType,
-    });
-  if (uploadError) throw new Error(uploadError.message);
-
-  const { data: publicData } = supabase.storage
-    .from(MEDIA_BUCKET)
-    .getPublicUrl(path);
+  const uploaded = await uploadStorageObject({
+    bucket: MEDIA_BUCKET,
+    path,
+    file: input.file,
+    contentType,
+  });
 
   const title =
     (input.title ?? "").trim() || defaultDocumentTitle(docType, input.file.name);
@@ -1752,8 +1751,8 @@ export async function uploadServiceOrderDocument(input: {
     service_order_id: input.orderId,
     doc_type: docType,
     title,
-    file_path: path,
-    file_url: publicData.publicUrl,
+    file_path: uploaded.path,
+    file_url: uploaded.publicUrl,
     file_name: input.file.name,
     uploaded_by: (input.uploadedBy ?? "").trim(),
   };
@@ -1795,7 +1794,7 @@ export async function deleteServiceOrderDocument(
 ): Promise<void> {
   await ensureOrderUnlocked(doc.serviceOrderId);
   if (doc.filePath) {
-    await supabase.storage.from(MEDIA_BUCKET).remove([doc.filePath]);
+    await removeStorageObject(MEDIA_BUCKET, doc.filePath);
   }
   const { error } = await db
     .from("service_order_documents")

@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase/client";
 import {
+  downloadStorageObject,
+  removeStorageObject,
+  uploadStorageObject,
+} from "@/lib/storage/upload-file";
+import {
   isDocArea,
   type CatalogDocType,
   type CatalogDocument,
@@ -11,7 +16,9 @@ import {
 const db = supabase as any;
 
 const CATALOG_BUCKET = "sales-catalog";
-export const CATALOG_MAX_FILE_BYTES = 50 * 1024 * 1024;
+/** Manuales de servicio y PDFs escaneados suelen pasar de 50 MB. */
+export const CATALOG_MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
+export const CATALOG_MAX_FILE_LABEL = "2 GB";
 
 function mapDocument(row: Record<string, unknown>): CatalogDocument {
   return {
@@ -68,33 +75,33 @@ export async function uploadCatalogDocument(
     area: DocArea;
     file: File;
     uploadedBy?: string;
+    onProgress?: (uploaded: number, total: number) => void;
   }
 ): Promise<CatalogDocument> {
   if (input.file.size > CATALOG_MAX_FILE_BYTES) {
-    throw new Error("El archivo supera el límite de 50 MB.");
+    throw new Error(
+      `El archivo supera el límite de ${CATALOG_MAX_FILE_LABEL}.`
+    );
   }
   const safeName = input.file.name.replace(/[^\w.\-]+/g, "_");
   const path = `${input.area}/${input.docType}/${Date.now()}-${safeName}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from(CATALOG_BUCKET)
-    .upload(path, input.file, {
-      upsert: false,
-      contentType: input.file.type || undefined,
-    });
-  if (uploadError) throw new Error(uploadError.message);
-
-  const { data: publicData } = supabase.storage
-    .from(CATALOG_BUCKET)
-    .getPublicUrl(path);
+  const uploaded = await uploadStorageObject({
+    bucket: CATALOG_BUCKET,
+    path,
+    file: input.file,
+    contentType: input.file.type || undefined,
+    onProgress: (progress) =>
+      input.onProgress?.(progress.uploaded, progress.total),
+  });
 
   const { data, error } = await db
     .from("sales_catalog_documents")
     .insert({
       ...mapInput({ ...input, title: input.title.trim() || input.file.name }),
       area: input.area,
-      file_path: path,
-      file_url: publicData.publicUrl,
+      file_path: uploaded.path,
+      file_url: uploaded.publicUrl,
       file_name: input.file.name,
       file_size: input.file.size,
       mime_type: input.file.type || "",
@@ -103,7 +110,7 @@ export async function uploadCatalogDocument(
     .select("*")
     .single();
   if (error) {
-    await supabase.storage.from(CATALOG_BUCKET).remove([path]);
+    await removeStorageObject(CATALOG_BUCKET, uploaded.path);
     throw new Error(error.message);
   }
   return mapDocument(data);
@@ -124,9 +131,19 @@ export async function updateCatalogDocument(
   return mapDocument(data);
 }
 
+export async function getCatalogDocumentFile(
+  doc: CatalogDocument
+): Promise<Blob> {
+  return downloadStorageObject({
+    bucket: CATALOG_BUCKET,
+    path: doc.filePath,
+    fileUrl: doc.fileUrl,
+  });
+}
+
 export async function deleteCatalogDocument(doc: CatalogDocument): Promise<void> {
   if (doc.filePath) {
-    await supabase.storage.from(CATALOG_BUCKET).remove([doc.filePath]);
+    await removeStorageObject(CATALOG_BUCKET, doc.filePath);
   }
   const { error } = await db
     .from("sales_catalog_documents")
