@@ -38,6 +38,12 @@ type InventoryFormProps = {
   canEditPrices?: boolean;
 };
 
+function numberFromInput(value: string) {
+  if (value.trim() === "") return 0;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
 function emptyForm(
   kind: ItemKind,
   lockedCategory?: SupplyCategoryId
@@ -402,7 +408,7 @@ export function InventoryForm({
             value={form.quantity}
             disabled={Boolean(item) || isEquipment}
             onChange={(event) =>
-              handleChange("quantity", Number(event.target.value))
+              handleChange("quantity", numberFromInput(event.target.value))
             }
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none disabled:opacity-60"
           />
@@ -431,7 +437,7 @@ export function InventoryForm({
               min={0}
               value={form.minStock}
               onChange={(event) =>
-                handleChange("minStock", Number(event.target.value))
+                handleChange("minStock", numberFromInput(event.target.value))
               }
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             />
@@ -596,7 +602,7 @@ export function InventoryForm({
                 value={form.costPrice}
                 disabled={!canEditPrices}
                 onChange={(event) =>
-                  handleChange("costPrice", Number(event.target.value))
+                  handleChange("costPrice", numberFromInput(event.target.value))
                 }
                 className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none disabled:opacity-60"
               />
@@ -613,7 +619,7 @@ export function InventoryForm({
                 value={form.unitPrice}
                 disabled={!canEditPrices}
                 onChange={(event) =>
-                  handleChange("unitPrice", Number(event.target.value))
+                  handleChange("unitPrice", numberFromInput(event.target.value))
                 }
                 className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none disabled:opacity-60"
               />

@@ -494,13 +494,13 @@ export function InventoryPanel({
       setError("");
       const saved = await setInventoryItemColor(item.id, "");
       setItems((current) =>
-        current.map((row) => (row.id === saved.id ? { ...row, colorTag: "" } : row))
+        current.map((row) => (row.id === saved.id ? saved : row))
       );
       setViewingItem((current) =>
-        current?.id === saved.id ? { ...current, colorTag: "" } : current
+        current?.id === saved.id ? saved : current
       );
       setEditingItem((current) =>
-        current?.id === saved.id ? { ...current, colorTag: "" } : current
+        current?.id === saved.id ? saved : current
       );
     } catch (err) {
       setError(

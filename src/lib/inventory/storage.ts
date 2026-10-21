@@ -83,11 +83,6 @@ function parseItemNotes(notes: string): ItemNoteMeta {
   };
 }
 
-function splitColorNote(notes: string) {
-  const parsed = parseItemNotes(notes);
-  return { notes: parsed.notes, color: parsed.color };
-}
-
 function withItemNotes(
   notes: string,
   meta: {
@@ -114,22 +109,22 @@ function withItemNotes(
   return next;
 }
 
-function withColorNote(notes: string, color: string) {
-  return withItemNotes(notes, { color, useColorMarker: true });
-}
-
 function mapRowToItem(row: InventoryRow): InventoryItem {
   const category = row.category as InventoryCategoryId;
   const inferredKind: ItemKind =
     row.item_kind === "equipo" || category === "equipos" ? "equipo" : "producto";
   const parsedNotes = parseItemNotes(row.notes ?? "");
   const extra = row as InventoryRow & {
-    color_tag?: string;
+    color_tag?: string | null;
     cost_price?: number | null;
     stock_alerts_enabled?: boolean | null;
   };
+  // If color_tag exists (even ""), it is the source of truth. Falling back to
+  // notes when the column is empty re-applied <!--mas-color:…--> after clear.
   const colorTag =
-    normalizeProductColor(extra.color_tag) || parsedNotes.color;
+    extra.color_tag != null
+      ? normalizeProductColor(extra.color_tag)
+      : parsedNotes.color;
   const costPrice =
     extra.cost_price != null ? Number(extra.cost_price) : parsedNotes.costPrice;
   const stockAlertsEnabled =
@@ -179,11 +174,21 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
   };
 }
 
+function finiteNumber(value: unknown, fallback = 0) {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function finiteNonNegative(value: unknown, fallback = 0) {
+  return Math.max(0, finiteNumber(value, fallback));
+}
+
 function mapInputToRow(input: InventoryItemInput): InventoryInsert {
   const itemKind: ItemKind =
     input.itemKind === "equipo" || input.category === "equipos"
       ? "equipo"
       : "producto";
+  const minStock = Math.round(finiteNonNegative(input.minStock));
 
   return {
     sku: input.sku.trim(),
@@ -192,15 +197,15 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     item_kind: itemKind,
     description: input.description ?? "",
     quantity: 0,
-    min_stock: input.minStock,
+    min_stock: minStock,
     unit: input.unit,
     location: input.location ?? "",
     brand: input.brand ?? "",
     color_tag: normalizeProductColor(input.colorTag),
     model: input.model ?? "",
     serial_number: input.serialNumber ?? "",
-    unit_price: input.unitPrice,
-    cost_price: input.costPrice ?? 0,
+    unit_price: finiteNonNegative(input.unitPrice),
+    cost_price: finiteNonNegative(input.costPrice ?? 0),
     stock_alerts_enabled: input.stockAlertsEnabled !== false,
     supplier: input.supplier ?? "",
     expiry_date: input.expiryDate ? input.expiryDate : null,
@@ -217,14 +222,22 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     tracks_lot: Boolean(input.tracksLot),
     tracks_serial: input.tracksSerial || itemKind === "equipo",
     tracks_expiry: Boolean(input.tracksExpiry),
-    max_stock: input.maxStock ?? 0,
-    reorder_point: input.reorderPoint || input.minStock,
+    max_stock: Math.round(finiteNonNegative(input.maxStock ?? 0)),
+    reorder_point: Math.round(
+      finiteNonNegative(input.reorderPoint || minStock)
+    ),
     part_number: input.partNumber ?? "",
     manufacturer: input.manufacturer ?? "",
     subcategory: input.subcategory ?? "",
     image_path: input.imagePath ?? "",
     image_url: input.imageUrl ?? "",
   };
+}
+
+function withoutQuantity(payload: InventoryInsert): InventoryInsert {
+  const next = { ...payload };
+  delete next.quantity;
+  return next;
 }
 
 function isMissingColumnError(
@@ -279,16 +292,13 @@ async function ensureInventoryExtraColumns() {
   }
 }
 
-async function ensureColorColumn() {
-  await ensureInventoryExtraColumns();
-  return colorColumnReady;
-}
-
 function payloadForWrite(
   payload: InventoryInsert,
   input: Pick<InventoryItemInput, "colorTag" | "costPrice" | "stockAlertsEnabled" | "notes">
 ): InventoryInsert {
-  const useColorMarker = colorColumnReady === false;
+  // Always keep notes in sync with color so clearing "Sin color" actually sticks,
+  // even on rows that still have a leftover <!--mas-color:…--> marker.
+  const useColorMarker = true;
   const useCostMarker = costColumnReady === false;
   const useAlertMarker = alertsColumnReady === false;
   const next: InventoryInsert = {
@@ -302,7 +312,7 @@ function payloadForWrite(
       useAlertMarker,
     }),
   };
-  if (useColorMarker) delete (next as { color_tag?: string }).color_tag;
+  if (colorColumnReady === false) delete (next as { color_tag?: string }).color_tag;
   if (useCostMarker) delete (next as { cost_price?: number }).cost_price;
   if (useAlertMarker) {
     delete (next as { stock_alerts_enabled?: boolean }).stock_alerts_enabled;
@@ -310,7 +320,30 @@ function payloadForWrite(
   return next;
 }
 
-function inventoryWriteMessage(error: { message?: string }) {
+function isUniqueSkuError(message: string) {
+  const text = message.toLowerCase();
+  return (
+    text.includes("duplicate") ||
+    text.includes("unique") ||
+    text.includes("inventory_items_sku")
+  );
+}
+
+function inventoryWriteMessage(error: { message?: string; code?: string }) {
+  const message = error.message || "";
+  const text = message.toLowerCase();
+  if (
+    text.includes("existencia no se edita") ||
+    text.includes("protect_item_quantity")
+  ) {
+    return "No se pudo guardar: la existencia no se cambia desde la ficha del producto. Usa una entrada, salida o ajuste.";
+  }
+  if (isUniqueSkuError(message)) {
+    return "Ese SKU ya pertenece a otro producto. Deja el n.º de parte o usa un SKU distinto.";
+  }
+  if (text.includes("color_tag") && (text.includes("check") || text.includes("violates"))) {
+    return "El color no es válido. Elige uno de la lista o Sin color.";
+  }
   if (
     isMissingColorTagError(error) ||
     isMissingColumnError(error, "cost_price") ||
@@ -318,7 +351,7 @@ function inventoryWriteMessage(error: { message?: string }) {
   ) {
     return "No se pudo guardar el producto en Supabase.";
   }
-  return error.message || "No se pudo guardar el producto en Supabase.";
+  return message || "No se pudo guardar el producto en Supabase.";
 }
 
 /** Asigna SKU secuencial: EQUIPO-000001, ACCESORIOS-000001, etc. */
@@ -517,8 +550,7 @@ export async function updateInventoryItem(
 ): Promise<InventoryItem> {
   await ensureInventoryExtraColumns();
   const mapped = mapInputToRow(input);
-  let payload = payloadForWrite(mapped, input);
-  delete payload.quantity;
+  let payload = withoutQuantity(payloadForWrite(mapped, input));
   if (input.imagePath === undefined) delete payload.image_path;
   if (input.imageUrl === undefined) delete payload.image_url;
 
@@ -538,8 +570,7 @@ export async function updateInventoryItem(
     if (isMissingColorTagError(error)) colorColumnReady = false;
     if (isMissingColumnError(error, "cost_price")) costColumnReady = false;
     if (isMissingColumnError(error, "stock_alerts_enabled")) alertsColumnReady = false;
-    payload = payloadForWrite(mapped, input);
-    delete payload.quantity;
+    payload = withoutQuantity(payloadForWrite(mapped, input));
     if (input.imagePath === undefined) delete payload.image_path;
     if (input.imageUrl === undefined) delete payload.image_url;
     const retry = await supabase
@@ -564,18 +595,30 @@ export async function updateInventoryItem(
   return mapRowToItem(data);
 }
 
+function notesForColorUpdate(current: InventoryItem, color: string) {
+  return withItemNotes(current.notes, {
+    color,
+    costPrice: current.costPrice,
+    stockAlertsEnabled: current.stockAlertsEnabled,
+    useColorMarker: true,
+    useCostMarker: costColumnReady === false,
+    useAlertMarker: alertsColumnReady === false,
+  });
+}
+
 export async function setInventoryItemColor(
   id: string,
   colorTag: string | null | undefined
 ): Promise<InventoryItem> {
   const color = normalizeProductColor(colorTag);
-  await ensureColorColumn();
+  await ensureInventoryExtraColumns();
+  const current = await fetchInventoryItem(id);
+  const notes = notesForColorUpdate(current, color);
 
   if (colorColumnReady === false) {
-    const current = await fetchInventoryItem(id);
     const { data, error } = await supabase
       .from("inventory_items")
-      .update({ notes: withColorNote(current.notes, color) })
+      .update({ notes })
       .eq("id", id)
       .select("*")
       .single();
@@ -587,7 +630,7 @@ export async function setInventoryItemColor(
 
   const { data, error } = await supabase
     .from("inventory_items")
-    .update({ color_tag: color })
+    .update({ color_tag: color, notes })
     .eq("id", id)
     .select("*")
     .single();
@@ -599,7 +642,9 @@ export async function setInventoryItemColor(
 
   if (error || !data) {
     console.error("Error updating inventory item color:", error?.message);
-    throw new Error(error?.message || "No se pudo actualizar el color.");
+    throw new Error(
+      inventoryWriteMessage(error ?? {}) || "No se pudo actualizar el color."
+    );
   }
 
   return mapRowToItem(data);
@@ -619,7 +664,7 @@ export async function setInventoryStockAlertsEnabled(
         notes: withItemNotes(current.notes, {
           stockAlertsEnabled: enabled,
           useAlertMarker: true,
-          useColorMarker: colorColumnReady === false,
+          useColorMarker: true,
           useCostMarker: costColumnReady === false,
           color: current.colorTag,
           costPrice: current.costPrice,
@@ -665,15 +710,6 @@ export async function deleteInventoryItem(
     console.error("Error deactivating inventory item:", error.message);
     throw new Error(error.message);
   }
-}
-
-function isUniqueSkuError(message: string) {
-  const text = message.toLowerCase();
-  return (
-    text.includes("duplicate") ||
-    text.includes("unique") ||
-    text.includes("inventory_items_sku")
-  );
 }
 
 export async function bulkImportInventoryItems(
