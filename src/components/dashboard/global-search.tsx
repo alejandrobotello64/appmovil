@@ -42,7 +42,7 @@ export function GlobalSearch() {
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => window.setTimeout(() => setOpen(false), 150)}
-          placeholder="Código MAS, serie, lote, marca..."
+          placeholder="SKU, n.º de parte, nombre, marca..."
           className="h-9 w-full rounded-lg border border-input bg-background pr-3 pl-8 text-sm outline-none focus:border-[#3B46A5]"
         />
       </label>
@@ -69,7 +69,12 @@ export function GlobalSearch() {
                   >
                     <span className="text-sm font-medium">{hit.title}</span>
                     <span className="text-xs text-muted-foreground">
-                      {hit.kind} · {hit.subtitle || "Sin detalle"}
+                      {hit.kind}
+                      {" · "}
+                      {hit.partNumber
+                        ? `n.º ${hit.partNumber}`
+                        : "Sin n.º de parte"}
+                      {hit.subtitle ? ` · ${hit.subtitle}` : ""}
                     </span>
                   </button>
                 </li>

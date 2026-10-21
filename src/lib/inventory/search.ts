@@ -6,6 +6,7 @@ export type GlobalSearchHit = {
   kind: "producto" | "equipo" | "serie";
   title: string;
   subtitle: string;
+  partNumber: string;
   href: string;
 };
 
@@ -40,10 +41,13 @@ export async function searchCatalog(query: string): Promise<GlobalSearchHit[]> {
               ? `&categoria=${row.category}`
               : ""
           }`;
+    const sku = String(row.sku ?? "").trim();
+    const part = String(row.part_number ?? "").trim();
     return {
       id: row.id,
       kind: row.item_kind === "equipo" ? "equipo" : "producto",
-      title: `${row.sku} · ${row.name}`,
+      title: `${sku} · ${row.name}`,
+      partNumber: part,
       subtitle: [row.brand, row.model, row.serial_number, row.location]
         .filter(Boolean)
         .join(" · "),
