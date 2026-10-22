@@ -6,6 +6,7 @@ import {
   drawSealImage,
   loadCompanySealDataUrl,
 } from "@/lib/brand/pdf";
+import { deliverPdf } from "@/lib/print/open-pdf";
 import { biomedicalInstrumentTypeLabel } from "@/lib/biomedical-instruments/types";
 import { findStaffProfile, type StaffProfile } from "@/lib/users/staff";
 import {
@@ -817,7 +818,7 @@ export async function downloadServiceQuotePdf(order: ServiceOrder) {
   await drawCompanySealBlock(doc, y + 8);
 
   drawBrandedFooter(doc);
-  doc.save(`${order.folio}-cotizacion.pdf`);
+  await deliverPdf(doc, `${order.folio}-cotizacion.pdf`, "download");
 }
 
 /** Orden de trabajo / reporte técnico para calidad. */
@@ -902,7 +903,7 @@ export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
   await drawCompanySealBlock(doc, y);
 
   drawBrandedFooter(doc);
-  doc.save(`${order.folio}-orden-trabajo.pdf`);
+  await deliverPdf(doc, `${order.folio}-orden-trabajo.pdf`, "download");
 }
 
 /** Acta de entrega / conformidad para el cliente. */
@@ -1000,7 +1001,7 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
   await drawStampsSection(doc, y, "Sello del cliente / institución");
 
   drawBrandedFooter(doc);
-  doc.save(`${order.folio}-entrega.pdf`);
+  await deliverPdf(doc, `${order.folio}-entrega.pdf`, "download");
 }
 
 /** Orden de servicio para el hospital: sin importes y firmas en blanco. */
@@ -1084,5 +1085,5 @@ export async function downloadServiceHospitalPdf(order: ServiceOrder) {
   await drawStampsSection(doc, y, "Sello del hospital / institución");
 
   drawBrandedFooter(doc);
-  doc.save(`${order.folio}-orden.pdf`);
+  await deliverPdf(doc, `${order.folio}-orden.pdf`, "download");
 }

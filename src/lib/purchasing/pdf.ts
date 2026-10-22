@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import { deliverPdf } from "@/lib/print/open-pdf";
 import {
   PDF_INK,
   PDF_MARGIN,
@@ -149,5 +150,5 @@ export async function downloadPurchaseRequestPdf(request: PurchaseRequest) {
   ]);
 
   drawBrandedFooter(doc);
-  doc.save(`${request.folio}-solicitud-compra.pdf`);
+  await deliverPdf(doc, `${request.folio}-solicitud-compra.pdf`, "download");
 }

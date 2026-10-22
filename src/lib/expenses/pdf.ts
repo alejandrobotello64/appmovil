@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
 import { summarize, type ExpenseEntry } from "./summary";
 import {
   balanceLabel,
@@ -19,7 +20,7 @@ import {
   type ExpenseReport,
 } from "./types";
 
-export type PdfOutput = "download" | "print";
+export type PdfOutput = PdfIntent;
 
 const MARGIN = 14;
 const BOTTOM = 18;
@@ -191,14 +192,8 @@ function signatures(doc: jsPDF, y: number, labels: string[]) {
   return y + 24;
 }
 
-function finish(doc: jsPDF, fileName: string, output: PdfOutput) {
-  if (output === "print") {
-    doc.autoPrint();
-    const url = doc.output("bloburl");
-    window.open(url, "_blank");
-    return;
-  }
-  doc.save(fileName);
+async function finish(doc: jsPDF, fileName: string, output: PdfOutput) {
+  await deliverPdf(doc, fileName, output);
 }
 
 /** Comprobación de un registro: datos generales, gastos, resumen por categoría y saldo. */
@@ -314,7 +309,7 @@ export async function buildExpenseReportPdf(report: ExpenseReport) {
 }
 
 export async function exportExpenseReportPdf(report: ExpenseReport, output: PdfOutput = "download") {
-  finish(await buildExpenseReportPdf(report), `${report.folio}-comprobacion-gastos.pdf`, output);
+  await finish(await buildExpenseReportPdf(report), `${report.folio}-comprobacion-gastos.pdf`, output);
 }
 
 export type SummaryPdfOptions = {
@@ -327,7 +322,7 @@ export type SummaryPdfOptions = {
 };
 
 export async function exportExpenseSummaryPdf(options: SummaryPdfOptions) {
-  finish(await buildExpenseSummaryPdf(options), "resumen-gastos.pdf", options.output ?? "download");
+  await finish(await buildExpenseSummaryPdf(options), "resumen-gastos.pdf", options.output ?? "download");
 }
 
 /** Resumen general de gastos: totales por tipo, categoría, colaborador y registro. */

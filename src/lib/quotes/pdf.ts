@@ -4,6 +4,7 @@ import {
   drawBrandedHeader,
   drawCompanySealBlock,
 } from "@/lib/brand/pdf";
+import { deliverPdf } from "@/lib/print/open-pdf";
 import {
   lineAmount,
   lineDiscountAmount,
@@ -211,5 +212,5 @@ export async function downloadQuotePdf(quote: Quote) {
     "Documento generado desde MAS · Cotización sujeta a disponibilidad y confirmación."
   );
 
-  doc.save(`${quote.folio}.pdf`);
+  await deliverPdf(doc, `${quote.folio}.pdf`, "download");
 }

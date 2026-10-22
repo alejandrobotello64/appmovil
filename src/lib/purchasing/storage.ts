@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { getProductAvailableQty } from "@/lib/holds/storage";
+import { getProductsAvailableQty } from "@/lib/holds/storage";
 import { requisitionLinePending, type ServiceOrderRequisition } from "@/lib/service-orders/requisitions";
 import { findStaffProfile } from "@/lib/users/staff";
 import { cancelPurchaseOrder, createPurchaseOrder } from "@/lib/warehouse/orders";
@@ -555,12 +555,14 @@ export async function getRequisitionShortages(
     }
   }
   const pendingLines = requisition.lines.filter((line) => requisitionLinePending(line) > 0);
-  const available = await Promise.all(
-    pendingLines.map((line) => (line.productId ? getProductAvailableQty(line.productId).catch(() => 0) : 0))
-  );
-  return pendingLines.map((line, index) => {
+  const stockByProduct = await getProductsAvailableQty(
+    pendingLines.map((line) => line.productId ?? "")
+  ).catch(() => new Map<string, number>());
+  return pendingLines.map((line) => {
     const pending = requisitionLinePending(line);
-    const stock = Math.max(0, available[index]);
+    const stock = line.productId
+      ? Math.max(0, stockByProduct.get(line.productId) ?? 0)
+      : 0;
     const inPurchase = inPurchaseByLine.get(line.id) ?? 0;
     return {
       lineId: line.id,

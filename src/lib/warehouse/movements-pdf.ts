@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
 import {
   PDF_INK,
   PDF_MARGIN,
@@ -24,7 +25,7 @@ import {
 } from "./movements";
 import type { Warehouse } from "./stock";
 
-export type PdfOutput = "print" | "download";
+export type PdfOutput = PdfIntent;
 
 type KindDocument = {
   title: string;
@@ -127,13 +128,8 @@ const REPORT_COLUMNS: PdfColumn[] = [
 
 const MOVE_KINDS: MovementKind[] = ["traspaso", "cambio_ubicacion"];
 
-function finish(doc: jsPDF, fileName: string, output: PdfOutput) {
-  if (output === "print") {
-    doc.autoPrint();
-    window.open(doc.output("bloburl"), "_blank");
-    return;
-  }
-  doc.save(fileName);
+async function finish(doc: jsPDF, fileName: string, output: PdfOutput) {
+  await deliverPdf(doc, fileName, output);
 }
 
 function unique(values: string[]) {
@@ -269,7 +265,7 @@ export async function downloadMovementVoucherPdf(
   );
 
   drawBrandedFooter(doc);
-  finish(doc, `${folios[0] || "movimiento"}-${first.kind}.pdf`, options.output ?? "download");
+  await finish(doc, `${folios[0] || "movimiento"}-${first.kind}.pdf`, options.output ?? "download");
 }
 
 export type MovementReportFilters = {
@@ -351,5 +347,5 @@ export async function downloadMovementsReportPdf(
   ]);
 
   drawBrandedFooter(doc);
-  finish(doc, `reporte-movimientos-${now.toISOString().slice(0, 10)}.pdf`, options.output ?? "download");
+  await finish(doc, `reporte-movimientos-${now.toISOString().slice(0, 10)}.pdf`, options.output ?? "download");
 }

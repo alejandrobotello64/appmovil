@@ -149,8 +149,7 @@ export function ServiceRequisitionsPanel({
   const [availableByProduct, setAvailableByProduct] = useState<Map<string, number> | null>(null);
   const [availableLoading, setAvailableLoading] = useState(false);
   const [purchaseForm, setPurchaseForm] = useState<{
-    requisition: ServiceOrderRequisition;
-    shortages: RequisitionShortage[];
+    jobs: { requisition: ServiceOrderRequisition; shortages: RequisitionShortage[] }[];
   } | null>(null);
 
   useEffect(() => {
@@ -540,24 +539,23 @@ export function ServiceRequisitionsPanel({
   }
 
   async function onRequestPurchase() {
-    const target = selectedOpen[0];
-    if (!target) return;
-    if (selectedOpen.length > 1) {
-      setError("Para pedir faltantes a compras deja una sola solicitud seleccionada.");
-      return;
-    }
+    if (!selectedOpen.length) return;
     setBusy(true);
     setError("");
     try {
-      const shortages = await getRequisitionShortages(
-        target,
-        purchasesByRequisition.get(target.id) ?? []
-      );
-      if (!shortages.length) {
-        setError("Esta solicitud ya no tiene material pendiente de surtir.");
+      const jobs = [];
+      for (const target of selectedOpen) {
+        const shortages = await getRequisitionShortages(
+          target,
+          purchasesByRequisition.get(target.id) ?? []
+        );
+        if (shortages.length) jobs.push({ requisition: target, shortages });
+      }
+      if (!jobs.length) {
+        setError("Las solicitudes elegidas ya no tienen material pendiente de surtir.");
         return;
       }
-      setPurchaseForm({ requisition: target, shortages });
+      setPurchaseForm({ jobs });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo calcular el faltante.");
     } finally {
@@ -1078,6 +1076,11 @@ export function ServiceRequisitionsPanel({
               <div className="flex flex-wrap gap-2">
                 {canFulfillSelection && canFulfill ? (
                   <>
+                    {error ? (
+                      <p className="w-full rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                        {error}
+                      </p>
+                    ) : null}
                     <Button
                       type="button"
                       disabled={busy || availableLoading}
@@ -1113,14 +1116,19 @@ export function ServiceRequisitionsPanel({
       {purchaseForm ? (
         <PurchaseRequestForm
           mode="faltantes"
-          requisition={purchaseForm.requisition}
-          shortages={purchaseForm.shortages}
+          jobs={purchaseForm.jobs}
           onClose={() => setPurchaseForm(null)}
           onCreated={(created) => {
             setPurchaseForm(null);
-            setMessage(`Solicitud de compra ${created.folio} enviada a compras por los faltantes de ${created.requisitionFolio}.`);
+            const folios = created.map((item) => item.folio).join(", ");
+            const origins = [...new Set(created.map((item) => item.requisitionFolio).filter(Boolean))];
+            setMessage(
+              created.length === 1
+                ? `Solicitud de compra ${folios} enviada a compras por los faltantes de ${origins[0] || "la solicitud"}.`
+                : `Se enviaron ${created.length} solicitudes de compra (${folios}) por los faltantes.`
+            );
             setData((current) =>
-              current ? { ...current, purchases: [created, ...current.purchases] } : current
+              current ? { ...current, purchases: [...created, ...current.purchases] } : current
             );
           }}
         />

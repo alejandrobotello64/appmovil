@@ -22,6 +22,8 @@ import { formatQty } from "./purchasing-shared";
 type DraftLine = {
   key: string;
   include: boolean;
+  requisitionId: string | null;
+  requisitionFolio: string;
   requisitionLineId: string | null;
   productId: string | null;
   productSku: string;
@@ -42,43 +44,62 @@ function originRef(requisition: ServiceOrderRequisition) {
     : `OS ${requisition.serviceOrderFolio || "—"}`;
 }
 
-function linesFromShortages(shortages: RequisitionShortage[]): DraftLine[] {
-  return shortages.map((item) => ({
-    key: item.lineId,
-    include: item.shortage > 0,
-    requisitionLineId: item.lineId,
-    productId: item.productId,
-    productSku: item.productSku,
-    productName: item.description,
-    description: item.description,
-    unit: item.unit,
-    quantity: formatQty(item.shortage > 0 ? item.shortage : Math.max(0, item.pending - item.inPurchase)),
-    stockAtRequest: item.available,
-    shortage: item,
-  }));
+function linesFromJobs(
+  jobs: { requisition: ServiceOrderRequisition; shortages: RequisitionShortage[] }[]
+): DraftLine[] {
+  const hasShortage = jobs.some((job) => job.shortages.some((item) => item.shortage > 0));
+  return jobs.flatMap((job) =>
+    job.shortages.map((item) => {
+      const buyQty =
+        item.shortage > 0 ? item.shortage : Math.max(0, item.pending - item.inPurchase);
+      return {
+        key: item.lineId,
+        include: hasShortage ? item.shortage > 0 : buyQty > 0,
+        requisitionId: job.requisition.id,
+        requisitionFolio: job.requisition.folio,
+        requisitionLineId: item.lineId,
+        productId: item.productId,
+        productSku: item.productSku,
+        productName: item.description,
+        description: item.description,
+        unit: item.unit,
+        quantity: formatQty(buyQty),
+        stockAtRequest: item.available,
+        shortage: item,
+      };
+    })
+  );
 }
+
+export type PurchaseShortageJob = {
+  requisition: ServiceOrderRequisition;
+  shortages: RequisitionShortage[];
+};
 
 export type PurchaseRequestFormProps = {
   onClose: () => void;
-  onCreated: (request: PurchaseRequest) => void;
+  onCreated: (requests: PurchaseRequest[]) => void;
 } & (
   | { mode: "manual" }
-  | { mode: "faltantes"; requisition: ServiceOrderRequisition; shortages: RequisitionShortage[] }
+  | { mode: "faltantes"; jobs: PurchaseShortageJob[] }
 );
 
 export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
   const { session } = useSessionAccess();
   const fromRequisition = props.mode === "faltantes";
+  const jobs = props.mode === "faltantes" ? props.jobs : [];
+  const primaryRequisition = jobs[0]?.requisition ?? null;
   const [lines, setLines] = useState<DraftLine[]>(() =>
-    props.mode === "faltantes" ? linesFromShortages(props.shortages) : []
+    props.mode === "faltantes" ? linesFromJobs(props.jobs) : []
   );
   const [priority, setPriority] = useState<PurchasePriority>("normal");
   const [neededBy, setNeededBy] = useState("");
-  const [justification, setJustification] = useState(
-    props.mode === "faltantes"
-      ? `Material faltante para surtir ${props.requisition.folio} (${originRef(props.requisition)}).`
-      : ""
-  );
+  const [justification, setJustification] = useState(() => {
+    if (props.mode !== "faltantes") return "";
+    const folios = props.jobs.map((job) => job.requisition.folio).join(", ");
+    const origin = primaryRequisition ? originRef(primaryRequisition) : "";
+    return `Material faltante para surtir ${folios}${origin ? ` (${origin})` : ""}.`;
+  });
   const [notes, setNotes] = useState("");
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
@@ -118,6 +139,8 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
       {
         key: nextKey(),
         include: true,
+        requisitionId: null,
+        requisitionFolio: "",
         requisitionLineId: null,
         productId: item.id,
         productSku: item.sku,
@@ -137,6 +160,8 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
       {
         key: nextKey(),
         include: true,
+        requisitionId: null,
+        requisitionFolio: "",
         requisitionLineId: null,
         productId: null,
         productSku: "",
@@ -165,24 +190,35 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
     setSaving(true);
     setError("");
     try {
-      const created = await createPurchaseRequest({
-        requisitionId: props.mode === "faltantes" ? props.requisition.id : null,
-        priority,
-        neededBy,
-        justification,
-        notes,
-        requester: { username: session.username, fullName: session.fullName ?? null },
-        lines: selectedLines.map((line) => ({
-          requisitionLineId: line.requisitionLineId,
-          productId: line.productId,
-          productSku: line.productSku,
-          productName: line.productName,
-          description: line.description,
-          unit: line.unit,
-          quantity: Number(line.quantity),
-          stockAtRequest: line.stockAtRequest,
-        })),
-      });
+      const requester = { username: session.username, fullName: session.fullName ?? null };
+      const groups = new Map<string, DraftLine[]>();
+      for (const line of selectedLines) {
+        const key = line.requisitionId || "manual";
+        groups.set(key, [...(groups.get(key) ?? []), line]);
+      }
+      const created: PurchaseRequest[] = [];
+      for (const [key, group] of groups) {
+        created.push(
+          await createPurchaseRequest({
+            requisitionId: key === "manual" ? null : key,
+            priority,
+            neededBy,
+            justification,
+            notes,
+            requester,
+            lines: group.map((line) => ({
+              requisitionLineId: line.requisitionLineId,
+              productId: line.productId,
+              productSku: line.productSku,
+              productName: line.productName,
+              description: line.description,
+              unit: line.unit,
+              quantity: Number(line.quantity),
+              stockAtRequest: line.stockAtRequest,
+            })),
+          })
+        );
+      }
       props.onCreated(created);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear la solicitud de compra.");
@@ -195,8 +231,10 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
     <ModalShell
       title={fromRequisition ? "Solicitar compra de faltantes" : "Nueva solicitud de compra"}
       description={
-        props.mode === "faltantes"
-          ? `${props.requisition.folio} · ${originRef(props.requisition)} · ${props.requisition.clientName || "Sin cliente"}`
+        props.mode === "faltantes" && primaryRequisition
+          ? jobs.length > 1
+            ? `${jobs.length} solicitudes · ${jobs.map((job) => job.requisition.folio).join(" · ")}`
+            : `${primaryRequisition.folio} · ${originRef(primaryRequisition)} · ${primaryRequisition.clientName || "Sin cliente"}`
           : "Material que se necesita comprar aunque no venga de una orden de surtimiento."
       }
       className="max-w-4xl"
@@ -204,6 +242,22 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
         <Button type="button" variant="ghost" size="icon" onClick={props.onClose} aria-label="Cerrar">
           <X className="size-4" />
         </Button>
+      }
+      footer={
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="outline" onClick={props.onClose}>
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            className={primaryButtonClass}
+            disabled={saving || !selectedLines.length}
+            onClick={() => void onSubmit()}
+          >
+            <ShoppingCart className="size-4" />
+            {saving ? "Enviando…" : `Enviar a compras (${selectedLines.length})`}
+          </Button>
+        </div>
       }
     >
       <div className="space-y-4">
@@ -213,6 +267,9 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
           <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
             El faltante es lo pendiente de surtir menos lo disponible en almacén y lo que ya está en otra compra
             abierta. Puedes ajustar la cantidad antes de enviarla a compras.
+            {lines.some((line) => line.include && (line.shortage?.shortage ?? 0) <= 0)
+              ? " Si hay existencia, igual puedes marcar lo que quieras comprar."
+              : ""}
           </p>
         ) : (
           <div className="space-y-2">
@@ -257,6 +314,7 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
                 {fromRequisition ? <th className="w-10 px-3 py-2" /> : null}
+                {fromRequisition && jobs.length > 1 ? <th className="px-3 py-2">Folio</th> : null}
                 <th className="px-3 py-2">Material</th>
                 {fromRequisition ? (
                   <>
@@ -275,7 +333,7 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
             <tbody>
               {lines.length === 0 ? (
                 <tr>
-                  <td colSpan={fromRequisition ? 7 : 5} className="px-3 py-6 text-center text-muted-foreground">
+                  <td colSpan={fromRequisition ? (jobs.length > 1 ? 8 : 7) : 5} className="px-3 py-6 text-center text-muted-foreground">
                     {fromRequisition ? "Esta solicitud no tiene material pendiente." : "Busca un producto o agrega material fuera de catálogo."}
                   </td>
                 </tr>
@@ -291,6 +349,11 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
                           onChange={(e) => updateLine(line.key, { include: e.target.checked })}
                           aria-label={`Incluir ${line.description}`}
                         />
+                      </td>
+                    ) : null}
+                    {fromRequisition && jobs.length > 1 ? (
+                      <td className="px-3 py-2 text-xs font-medium text-[#3B46A5]">
+                        {line.requisitionFolio}
                       </td>
                     ) : null}
                     <td className="min-w-56 px-3 py-2">
@@ -388,20 +451,6 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
           <textarea className={textareaClass} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
 
-        <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
-          <Button type="button" variant="outline" onClick={props.onClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            className={primaryButtonClass}
-            disabled={saving || !selectedLines.length}
-            onClick={() => void onSubmit()}
-          >
-            <ShoppingCart className="size-4" />
-            {saving ? "Enviando…" : `Enviar a compras (${selectedLines.length})`}
-          </Button>
-        </div>
       </div>
     </ModalShell>
   );

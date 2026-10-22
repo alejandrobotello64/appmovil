@@ -4,6 +4,7 @@ import {
   drawBrandedHeader,
   drawCompanySealBlock,
 } from "@/lib/brand/pdf";
+import { deliverPdf } from "@/lib/print/open-pdf";
 import {
   vehicleServiceStatusLabel,
   vehicleServiceTypeLabel,
@@ -148,5 +149,5 @@ export async function downloadVehicleServicePdf(service: VehicleService) {
   await drawCompanySealBlock(doc, y + 10);
 
   drawBrandedFooter(doc);
-  doc.save(`${service.folio}-servicio-flotilla.pdf`);
+  await deliverPdf(doc, `${service.folio}-servicio-flotilla.pdf`, "download");
 }

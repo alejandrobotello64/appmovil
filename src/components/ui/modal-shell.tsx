@@ -10,6 +10,7 @@ type ModalShellProps = {
   children: ReactNode;
   className?: string;
   headerAction?: ReactNode;
+  footer?: ReactNode;
 };
 
 export function ModalShell({
@@ -18,6 +19,7 @@ export function ModalShell({
   children,
   className,
   headerAction,
+  footer,
 }: ModalShellProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -63,6 +65,11 @@ export function ModalShell({
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
             {children}
           </div>
+          {footer ? (
+            <div className="shrink-0 border-t border-border px-4 py-3 sm:px-5">
+              {footer}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>,

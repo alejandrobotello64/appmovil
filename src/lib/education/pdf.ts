@@ -4,6 +4,7 @@ import {
   drawBrandedHeader,
   drawCompanySealBlock,
 } from "@/lib/brand/pdf";
+import { deliverPdf } from "@/lib/print/open-pdf";
 import {
   trainingShiftLabel,
   type EducationTraining,
@@ -201,5 +202,5 @@ export async function downloadTrainingPdf(training: EducationTraining) {
   await drawCompanySealBlock(doc, y + 24);
 
   drawBrandedFooter(doc);
-  doc.save(`${training.folio || "capacitacion"}-asistencia.pdf`);
+  await deliverPdf(doc, `${training.folio || "capacitacion"}-asistencia.pdf`, "download");
 }

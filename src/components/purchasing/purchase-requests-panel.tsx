@@ -208,9 +208,14 @@ function useDetailAndForm(data: ReturnType<typeof usePurchaseRequestsData>) {
           mode="manual"
           onClose={() => setFormOpen(false)}
           onCreated={(created) => {
-            data.replace(created);
+            const request = created[0];
+            if (request) data.replace(request);
             setFormOpen(false);
-            setMessage(`Solicitud de compra ${created.folio} enviada a compras.`);
+            setMessage(
+              created.length > 1
+                ? `Se enviaron ${created.length} solicitudes de compra (${created.map((item) => item.folio).join(", ")}).`
+                : `Solicitud de compra ${request?.folio ?? ""} enviada a compras.`
+            );
           }}
         />
       ) : null}

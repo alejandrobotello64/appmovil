@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import { deliverPdf } from "@/lib/print/open-pdf";
 import {
   PDF_BLUE as BLUE,
   PDF_INK as INK,
@@ -335,7 +336,7 @@ export async function downloadToolsCustodyPdf(requests: ToolRequest[], now: Date
   }
 
   drawBrandedFooter(doc);
-  doc.save(`resguardo-herramientas-${today}.pdf`);
+  await deliverPdf(doc, `resguardo-herramientas-${today}.pdf`, "download");
 }
 
 /** Vale de préstamo de herramientas con entrega y devoluciones en el mismo folio. */
@@ -405,5 +406,5 @@ export async function downloadToolRequestPdf(request: ToolRequest) {
   drawSignatures(cursor, request);
 
   drawBrandedFooter(doc);
-  doc.save(`${request.folio}-vale-herramientas.pdf`);
+  await deliverPdf(doc, `${request.folio}-vale-herramientas.pdf`, "download");
 }

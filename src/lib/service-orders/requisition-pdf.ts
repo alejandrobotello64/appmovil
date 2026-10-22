@@ -20,6 +20,7 @@ import { getPurchaseRequests } from "@/lib/purchasing/storage";
 import { isPurchaseOpen, purchaseStatusLabel, type PurchaseRequest } from "@/lib/purchasing/types";
 import { supabase } from "@/lib/supabase/client";
 import { loadStaffProfileLookup, type StaffProfile } from "@/lib/users/staff";
+import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
 import { getRequisitionFulfillments } from "./requisition-storage";
 import {
   groupRequisitionLines,
@@ -47,7 +48,7 @@ const COLUMNS: PdfColumn[] = [
   { key: "buy", label: "Estatus / compra", width: 36 },
 ];
 
-export type PdfOutput = "print" | "download";
+export type PdfOutput = PdfIntent;
 
 export type RequisitionPrintOptions = {
   /** Usuario que imprime; si es de almacén y aún no hay surtido, aparece como quien surte. */
@@ -58,14 +59,9 @@ export type RequisitionPrintOptions = {
   quantities?: Record<string, number>;
 };
 
-function finishPdf(doc: jsPDF, fileName: string, output: PdfOutput = "print", note?: string) {
+async function finishPdf(doc: jsPDF, fileName: string, output: PdfOutput = "print", note?: string) {
   drawBrandedFooter(doc, note);
-  if (output === "print") {
-    doc.autoPrint();
-    window.open(doc.output("bloburl"), "_blank");
-    return;
-  }
-  doc.save(fileName);
+  await deliverPdf(doc, fileName, output);
 }
 
 function compactSection(cursor: PdfCursor, title: string) {
@@ -314,7 +310,7 @@ export async function downloadRequisitionsPdf(
     packed.length > 1
       ? `surtimiento-${packed.length}-folios.pdf`
       : `${first.requisition.folio}-orden-surtimiento.pdf`;
-  finishPdf(doc, filename, options.output ?? "print");
+  await finishPdf(doc, filename, options.output ?? "print");
 }
 
 const PICK_COLUMNS: PdfColumn[] = [
@@ -468,7 +464,7 @@ export async function downloadRequisitionPickListPdf(
     { title: "Recoge", name: requesterNames[0] ?? "", empty: "Solicitante" },
   ]);
 
-  finishPdf(
+  await finishPdf(
     doc,
     folios.length === 1
       ? `${folios[0]}-suma-surtir.pdf`
