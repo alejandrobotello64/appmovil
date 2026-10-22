@@ -145,12 +145,6 @@ function ProductThumb({
   );
 }
 
-function brandWithPartNumber(item: InventoryItem) {
-  return [item.brand, item.partNumber ? `n.º ${item.partNumber}` : "", item.model]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 function getCategoryLabel(category: InventoryCategoryId) {
   return (
     INVENTORY_CATEGORIES.find((item) => item.id === category)?.label ?? category
@@ -1078,7 +1072,7 @@ export function InventoryPanel({
                     <span className="min-w-0 truncate">{item.name}</span>
                   </span>
                 ),
-                subtitle: `${item.sku} · ${brandWithPartNumber(item) || "Sin marca"}`,
+                subtitle: `${item.sku}${item.partNumber ? ` · n.º ${item.partNumber}` : ""} · ${item.brand || "Sin marca"}`,
                 badge:
                   item.itemKind === "equipo" ? (
                     <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs">
@@ -1098,6 +1092,10 @@ export function InventoryPanel({
                     </span>
                   ),
                 fields: [
+                  {
+                    label: "N.º de parte",
+                    value: item.partNumber || "—",
+                  },
                   {
                     label: "Color",
                     value: renderColorTag(item),
@@ -1228,6 +1226,7 @@ export function InventoryPanel({
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">SKU</th>
+                  <th className="px-4 py-3 font-medium">N.º de parte</th>
                   <th className="px-4 py-3 font-medium">Foto</th>
                   <th className="px-4 py-3 font-medium">Color</th>
                   <th className="px-4 py-3 font-medium">
@@ -1258,7 +1257,7 @@ export function InventoryPanel({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isEquipment ? 10 : 11}
+                      colSpan={isEquipment ? 11 : 12}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {hasActiveFilters
@@ -1286,6 +1285,9 @@ export function InventoryPanel({
                         <td className="px-4 py-3 font-mono text-xs">
                           {item.sku}
                         </td>
+                        <td className="px-4 py-3 font-mono text-xs">
+                          {item.partNumber || "—"}
+                        </td>
                         <td className="px-4 py-3">
                           {item.imageUrl ? (
                             <ProductThumb item={item} className="size-12" />
@@ -1298,11 +1300,11 @@ export function InventoryPanel({
                           <p className="font-medium text-foreground">
                             {item.name}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.partNumber
-                              ? `n.º ${item.partNumber}${item.model ? ` · ${item.model}` : ""}`
-                              : item.model || "—"}
-                          </p>
+                          {item.model ? (
+                            <p className="text-xs text-muted-foreground">
+                              {item.model}
+                            </p>
+                          ) : null}
                           {canViewPrices ? (
                             <p className="mt-1 text-xs text-muted-foreground">
                               Costo {formatCurrency(item.costPrice)}
@@ -1548,7 +1550,13 @@ export function InventoryPanel({
                 </p>
                 <h3 className="text-lg font-semibold">{viewingItem.name}</h3>
                 <p className="font-mono text-sm text-muted-foreground">
-                  {viewingItem.sku}
+                  SKU {viewingItem.sku}
+                </p>
+                <p className="text-sm font-medium">
+                  N.º de parte{" "}
+                  <span className="font-mono">
+                    {viewingItem.partNumber || "—"}
+                  </span>
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1677,9 +1685,9 @@ export function InventoryPanel({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
+                  ["N.º de parte", viewingItem.partNumber || "—"],
                   ["Color", renderColorTag(viewingItem)],
                   ["Marca", viewingItem.brand || "—"],
-                  ["N.º de parte", viewingItem.partNumber || "—"],
                   ["Categoría", getCategoryLabel(viewingItem.category)],
                   ["Modelo", viewingItem.model || "—"],
                   [
