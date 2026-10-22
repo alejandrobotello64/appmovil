@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
@@ -39,6 +40,7 @@ import {
 import { SortableTable } from "@/components/ui/sortable-table";
 
 type ReceiveDraft = {
+  id: string;
   lineId: string;
   receiveNow: number;
   lotNumber: string;
@@ -46,6 +48,18 @@ type ReceiveDraft = {
   manufacturedAt: string;
   serialNumber: string;
 };
+
+function emptyLot(lineId: string, receiveNow = 0): ReceiveDraft {
+  return {
+    id: crypto.randomUUID(),
+    lineId,
+    receiveNow,
+    lotNumber: "",
+    expiryDate: "",
+    manufacturedAt: "",
+    serialNumber: "",
+  };
+}
 
 function pendingQty(line: PurchaseOrderItem) {
   return Math.max(line.quantity - line.receivedQuantity, 0);
@@ -176,22 +190,32 @@ export function OrdersPanel() {
     setError("");
     setReceiving(order);
     setAuthorizeOverReceipt(false);
-    setReceiveDrafts(
-      order.items.map((line) => ({
-        lineId: line.id,
-        receiveNow: pendingQty(line),
-        lotNumber: "",
-        expiryDate: "",
-        manufacturedAt: "",
-        serialNumber: "",
-      }))
-    );
+    setReceiveDrafts(order.items.map((line) => emptyLot(line.id, pendingQty(line))));
   }
 
-  function updateDraft(lineId: string, patch: Partial<ReceiveDraft>) {
-    setReceiveDrafts((current) =>
-      current.map((row) => (row.lineId === lineId ? { ...row, ...patch } : row))
-    );
+  function updateDraft(id: string, patch: Partial<ReceiveDraft>) {
+    setReceiveDrafts((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }
+
+  function addLot(lineId: string) {
+    if (!receiving) return;
+    const line = receiving.items.find((item) => item.id === lineId);
+    if (!line) return;
+    const used = receiveDrafts
+      .filter((row) => row.lineId === lineId)
+      .reduce((sum, row) => sum + row.receiveNow, 0);
+    const remaining = Math.max(pendingQty(line) - used, 0);
+    setReceiveDrafts((current) => [...current, emptyLot(lineId, remaining)]);
+  }
+
+  function removeLot(id: string) {
+    setReceiveDrafts((current) => {
+      const target = current.find((row) => row.id === id);
+      if (!target) return current;
+      const sameLine = current.filter((row) => row.lineId === target.lineId);
+      if (sameLine.length <= 1) return current;
+      return current.filter((row) => row.id !== id);
+    });
   }
 
   async function handleReceive(event: FormEvent) {
@@ -484,7 +508,8 @@ export function OrdersPanel() {
             <div className="border-b border-border px-4 py-4 sm:px-5">
               <h3 className="text-lg font-semibold">Recibir {receiving.orderNumber}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Recibe línea por línea. El pendiente se calcula contra lo ya ingresado.
+                Recibe línea por línea. Si un producto llega en más de un lote, agrega un lote por cada uno y reparte la
+                cantidad. El pendiente se calcula contra lo ya ingresado.
               </p>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
@@ -519,99 +544,138 @@ export function OrdersPanel() {
                 </label>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-border">
-                <SortableTable className="min-w-[720px] w-full text-sm">
-                  <thead className="bg-muted/50 text-left text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">Producto</th>
-                      <th className="px-3 py-2 font-medium">Pedido</th>
-                      <th className="px-3 py-2 font-medium">Recibido</th>
-                      <th className="px-3 py-2 font-medium">Recibir ahora</th>
-                      <th className="px-3 py-2 font-medium">Pendiente</th>
-                      <th className="px-3 py-2 font-medium">Lote / caducidad / serie</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {receiving.items.map((line) => {
-                      const draft = receiveDrafts.find((item) => item.lineId === line.id);
-                      const pending = pendingQty(line);
-                      const receiveNow = draft?.receiveNow ?? 0;
-                      return (
-                        <tr key={line.id} className="border-t border-border/70 align-top">
-                          <td className="px-3 py-2">
-                            <p className="font-medium">{line.itemName}</p>
-                            <p className="font-mono text-xs text-muted-foreground">{line.itemSku}</p>
-                            {!line.itemId ? (
-                              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                                Fuera de catálogo · se registra recibido sin entrar a inventario
+              <div className="space-y-3">
+                {receiving.items.map((line) => {
+                  const drafts = receiveDrafts.filter((item) => item.lineId === line.id);
+                  const pending = pendingQty(line);
+                  const receiveNow = drafts.reduce((sum, item) => sum + item.receiveNow, 0);
+                  const leftover = Math.max(pending - receiveNow, 0);
+                  const product = products.find((item) => item.id === line.itemId);
+                  return (
+                    <section key={line.id} className="rounded-xl border border-border p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium">{line.itemName}</p>
+                          <p className="font-mono text-xs text-muted-foreground">{line.itemSku}</p>
+                          {!line.itemId ? (
+                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                              Fuera de catálogo · se registra recibido sin entrar a inventario
+                            </p>
+                          ) : product?.tracksLot ? (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Este producto controla lote: captura cada lote que llegó.
+                            </p>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Pedido {line.quantity} · Recibido {line.receivedQuantity} · Queda {leftover}
+                        </p>
+                      </div>
+
+                      <div className="mt-3 space-y-3">
+                        {drafts.map((draft, index) => (
+                          <div
+                            key={draft.id}
+                            className="rounded-lg border border-border bg-muted/20 p-3"
+                          >
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                              <p className="text-xs font-medium">
+                                Lote {index + 1}
+                                {drafts.length > 1 ? ` de ${drafts.length}` : ""}
                               </p>
-                            ) : null}
-                          </td>
-                          <td className="px-3 py-2">{line.quantity}</td>
-                          <td className="px-3 py-2">{line.receivedQuantity}</td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              min={0}
-                              value={receiveNow}
-                              onChange={(event) =>
-                                updateDraft(line.id, {
-                                  receiveNow: Number(event.target.value),
-                                })
-                              }
-                              className="h-9 w-24 rounded-lg border border-input bg-background px-2 text-sm"
-                            />
-                          </td>
-                          <td className="px-3 py-2">{Math.max(pending - receiveNow, 0)}</td>
-                          <td className="px-3 py-2">
-                            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                              <input
-                                value={draft?.lotNumber ?? ""}
-                                onChange={(event) =>
-                                  updateDraft(line.id, { lotNumber: event.target.value })
-                                }
-                                placeholder="Lote"
-                                className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
-                              />
-                              <input
-                                type="date"
-                                value={draft?.manufacturedAt ?? ""}
-                                onChange={(event) =>
-                                  updateDraft(line.id, {
-                                    manufacturedAt: event.target.value,
-                                  })
-                                }
-                                title="Fecha de fabricación (opcional)"
-                                aria-label="Fecha de fabricación opcional"
-                                className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
-                              />
-                              <input
-                                type="date"
-                                value={draft?.expiryDate ?? ""}
-                                onChange={(event) =>
-                                  updateDraft(line.id, {
-                                    expiryDate: event.target.value,
-                                  })
-                                }
-                                title="Fecha de caducidad (opcional)"
-                                aria-label="Fecha de caducidad opcional"
-                                className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
-                              />
-                              <input
-                                value={draft?.serialNumber ?? ""}
-                                onChange={(event) =>
-                                  updateDraft(line.id, { serialNumber: event.target.value })
-                                }
-                                placeholder="Serie"
-                                className="h-9 rounded-lg border border-input bg-background px-2 text-sm"
-                              />
+                              {drafts.length > 1 ? (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2 text-destructive"
+                                  onClick={() => removeLot(draft.id)}
+                                >
+                                  <Trash2 className="size-3.5" /> Quitar
+                                </Button>
+                              ) : null}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </SortableTable>
+                            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                              <label className="space-y-1">
+                                <span className="text-xs text-muted-foreground">Recibir ahora</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={draft.receiveNow}
+                                  aria-label={`Cantidad del lote ${index + 1} de ${line.itemName}`}
+                                  onChange={(event) =>
+                                    updateDraft(draft.id, { receiveNow: Number(event.target.value) })
+                                  }
+                                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                                />
+                              </label>
+                              <label className="space-y-1">
+                                <span className="text-xs text-muted-foreground">Lote</span>
+                                <input
+                                  value={draft.lotNumber}
+                                  onChange={(event) =>
+                                    updateDraft(draft.id, { lotNumber: event.target.value })
+                                  }
+                                  placeholder="Lote"
+                                  aria-label={`Número de lote ${index + 1} de ${line.itemName}`}
+                                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                                />
+                              </label>
+                              <label className="space-y-1">
+                                <span className="text-xs text-muted-foreground">Fabricación</span>
+                                <input
+                                  type="date"
+                                  value={draft.manufacturedAt}
+                                  onChange={(event) =>
+                                    updateDraft(draft.id, { manufacturedAt: event.target.value })
+                                  }
+                                  title="Fecha de fabricación (opcional)"
+                                  aria-label={`Fecha de fabricación del lote ${index + 1}`}
+                                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                                />
+                              </label>
+                              <label className="space-y-1">
+                                <span className="text-xs text-muted-foreground">Caducidad</span>
+                                <input
+                                  type="date"
+                                  value={draft.expiryDate}
+                                  onChange={(event) =>
+                                    updateDraft(draft.id, { expiryDate: event.target.value })
+                                  }
+                                  title="Fecha de caducidad (opcional)"
+                                  aria-label={`Fecha de caducidad del lote ${index + 1}`}
+                                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                                />
+                              </label>
+                              <label className="space-y-1">
+                                <span className="text-xs text-muted-foreground">Serie</span>
+                                <input
+                                  value={draft.serialNumber}
+                                  onChange={(event) =>
+                                    updateDraft(draft.id, { serialNumber: event.target.value })
+                                  }
+                                  placeholder="Serie"
+                                  aria-label={`Serie del lote ${index + 1} de ${line.itemName}`}
+                                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => addLot(line.id)}
+                      >
+                        <Plus className="size-3.5" /> Agregar otro lote
+                      </Button>
+                    </section>
+                  );
+                })}
               </div>
 
               <label className="mt-4 flex items-start gap-2 text-sm">

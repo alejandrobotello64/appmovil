@@ -209,43 +209,59 @@ export async function receivePurchaseOrderLines(
 
   const { applyStockMovement } = await import("@/lib/warehouse/stock");
 
+  const splitsByLine = new Map<string, typeof lines>();
   for (const input of lines) {
-    if (input.receiveNow <= 0) continue;
-    const line = order.items.find((item) => item.id === input.lineId);
+    if (!(input.receiveNow > 0)) continue;
+    const list = splitsByLine.get(input.lineId) ?? [];
+    list.push(input);
+    splitsByLine.set(input.lineId, list);
+  }
+
+  for (const [lineId, splits] of splitsByLine) {
+    const line = order.items.find((item) => item.id === lineId);
     if (!line) continue;
 
+    const totalNow = splits.reduce((sum, item) => sum + item.receiveNow, 0);
     const pending = line.quantity - line.receivedQuantity;
-    if (input.receiveNow > pending && !input.authorizeOverReceipt) {
+    const authorize = splits.some((item) => item.authorizeOverReceipt);
+    if (totalNow > pending && !authorize) {
       throw new Error(
-        `No puedes recibir ${input.receiveNow} de ${line.itemName}: pendiente ${pending}. Marca autorización de sobre-recibo.`
+        `No puedes recibir ${totalNow} de ${line.itemName}: pendiente ${pending}. Marca autorización de sobre-recibo.`
       );
     }
 
-    // Fuera de catálogo: se registra lo recibido pero no entra a inventario; almacén lo entrega directo.
-    if (input.itemId) await applyStockMovement({
-      productId: input.itemId,
-      movementType: "entrada",
-      quantity: input.receiveNow,
-      createdBy,
-      reason: "recepcion_oc",
-      note: `Recepción ${order.orderNumber}${
-        input.authorizeOverReceipt && input.receiveNow > pending
-          ? " (sobre-recibo autorizado)"
-          : ""
-      }`,
-      purchaseOrderId: order.id,
-      supplierName: order.supplierName,
-      warehouseId: destination?.warehouseId ?? null,
-      locationId: destination?.locationId ?? null,
-      lotNumber: input.lotNumber || null,
-      expiryDate: input.expiryDate || null,
-      manufacturedAt: input.manufacturedAt || null,
-      serialNumber: input.serialNumber || null,
-    });
+    for (const [index, input] of splits.entries()) {
+      const lotLabel = input.lotNumber?.trim()
+        ? ` · lote ${input.lotNumber.trim()}`
+        : splits.length > 1
+          ? ` · partida ${index + 1}`
+          : "";
+      // Fuera de catálogo: se registra lo recibido pero no entra a inventario; almacén lo entrega directo.
+      if (input.itemId) {
+        await applyStockMovement({
+          productId: input.itemId,
+          movementType: "entrada",
+          quantity: input.receiveNow,
+          createdBy,
+          reason: "recepcion_oc",
+          note: `Recepción ${order.orderNumber}${lotLabel}${
+            authorize && totalNow > pending ? " (sobre-recibo autorizado)" : ""
+          }`,
+          purchaseOrderId: order.id,
+          supplierName: order.supplierName,
+          warehouseId: destination?.warehouseId ?? null,
+          locationId: destination?.locationId ?? null,
+          lotNumber: input.lotNumber || null,
+          expiryDate: input.expiryDate || null,
+          manufacturedAt: input.manufacturedAt || null,
+          serialNumber: input.serialNumber || null,
+        });
+      }
+    }
 
     await supabase
       .from("purchase_order_items")
-      .update({ received_quantity: line.receivedQuantity + input.receiveNow })
+      .update({ received_quantity: line.receivedQuantity + totalNow })
       .eq("id", line.id);
   }
 

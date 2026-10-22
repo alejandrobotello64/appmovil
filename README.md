@@ -63,7 +63,7 @@ El catálogo se puede **exportar e importar en Excel** (.xlsx o .csv) junto a Nu
 
 En **Almacén → Surtimientos** se elige una solicitud y luego otra de la **misma persona** (aunque vengan de distintas OS o cotizaciones). El mismo código suma en una sola cantidad y se muestra cuánto hay **disponible en almacén** (existencia menos apartados). Si el pendiente supera el stock, la cantidad a surtir se ajusta a lo disponible. Al surtir se descuenta de la **ubicación y lote donde sí hay piezas**, no de la ubicación genérica de categoría. El inventario se descuenta de las elegidas y al imprimir sale **una hoja por solicitud**; la suma de verificación también trae la columna Disp. El visto del grupo marca todas las de esa persona.
 
-La recepción de pedidos puede ser **parcial**. Entradas y salidas piden almacén, ubicación, lote/caducidad/serie cuando el producto lo exige. Los roles (`administrador`, `almacén`, `compras`, `ventas`, `servicio`, `dirección`) filtran el menú y bloquean escritura.
+La recepción de pedidos puede ser **parcial**. Si el mismo producto llega en **más de un lote**, se captura un lote por cada uno (cantidad, caducidad y serie) y cada lote entra aparte al inventario. Entradas y salidas piden almacén, ubicación, lote/caducidad/serie cuando el producto lo exige. Los roles (`administrador`, `almacén`, `compras`, `ventas`, `servicio`, `dirección`) filtran el menú y bloquean escritura.
 
 Migración: `supabase/migrations/20260916000000_inventory_core_structure.sql` (aditiva; no borra `inventory_items` ni datos).
 
