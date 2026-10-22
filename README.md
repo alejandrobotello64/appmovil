@@ -108,7 +108,7 @@ Un `git push` a `main` en GitHub dispara el deploy. Framework: Next.js, Node 24.
 
 En **Biomédica → Documentos**, **Ventas → Catálogo** y **Almacén → Registros sanitarios** se pueden subir manuales, fichas y PDF grandes (hasta **2 GB** por archivo). Si pesan más de 40 MB se parten solos en Storage (el plan Free de Supabase no admite un solo objeto de más de 50 MB). La descarga los vuelve a unir.
 
-La clave `anon` **no puede** crear columnas ni buckets. Si faltan `color_tag`, kits, `quote_lines.brand` / `part_number`, `cost_price`, `stock_alerts_enabled` o el bucket `inventory-media`, pega `scripts/apply-cloud-online-schema.sql` (o el corto `scripts/apply-inventory-prices-schema.sql`) en el [SQL Editor](https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new) y dale Run. No borra existencias ni códigos. El tope de 2 GB de manuales también está en ese SQL (`sales-catalog`).
+La clave `anon` **no puede** crear columnas ni buckets. Lo que hoy falta en la nube (recepción agendada de OC, columnas extra de solicitudes de compra y los buckets `inventory-media` / `sales-catalog`) se pega con `scripts/apply-cloud-pending.sql` en el [SQL Editor](https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new) y se da Run. El archivo largo `scripts/apply-cloud-online-schema.sql` incluye eso más color, kits, marca/referencia y costos. No borra existencias ni códigos. El tope de 2 GB de manuales también está en ese SQL (`sales-catalog`).
 
 
 | Script | Qué hace |
