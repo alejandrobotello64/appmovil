@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  Eye,
   Hand,
   Plus,
   RefreshCw,
@@ -17,15 +18,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { Notice, StatCard, fieldClass, formatDate, primaryButtonClass } from "@/components/tools/tools-shared";
-import { usePermissions } from "@/lib/auth/use-permissions";
-import { getPurchaseRequests } from "@/lib/purchasing/storage";
+import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
+import { getPurchaseRequests, takePurchaseRequests } from "@/lib/purchasing/storage";
 import {
   PURCHASE_REQUEST_STATUSES,
+  groupPurchaseRequestLines,
   isPurchaseOpen,
   type PurchaseRequest,
   type PurchaseRequestStatus,
 } from "@/lib/purchasing/types";
 import { cn } from "@/lib/utils";
+import { PurchaseRequestBatch } from "./purchase-request-batch";
 import { PurchaseRequestDetail } from "./purchase-request-detail";
 import { PurchaseRequestForm } from "./purchase-request-form";
 import { PurchasePriorityBadge, PurchaseStatusBadge, formatQty } from "./purchasing-shared";
@@ -82,15 +85,20 @@ function usePurchaseRequestsData() {
   }
 
   function replace(updated: PurchaseRequest) {
+    replaceMany([updated]);
+  }
+
+  function replaceMany(updated: PurchaseRequest[]) {
     setItems((current) => {
-      if (!current) return [updated];
-      return current.some((item) => item.id === updated.id)
-        ? current.map((item) => (item.id === updated.id ? updated : item))
-        : [updated, ...current];
+      if (!current) return updated;
+      const byId = new Map(updated.map((item) => [item.id, item]));
+      const next = current.map((item) => byId.get(item.id) ?? item);
+      const extras = updated.filter((item) => !current.some((row) => row.id === item.id));
+      return extras.length ? [...extras, ...next] : next;
     });
   }
 
-  return { items, loadedAt, error, setError, refresh, refreshing, replace };
+  return { items, loadedAt, error, setError, refresh, refreshing, replace, replaceMany };
 }
 
 function RequestsTable({
@@ -98,17 +106,39 @@ function RequestsTable({
   loading,
   onOpen,
   emptyText,
+  selectedIds,
+  onToggle,
+  onToggleAll,
 }: {
   items: PurchaseRequest[];
   loading: boolean;
   onOpen: (id: string) => void;
   emptyText: string;
+  selectedIds?: string[];
+  onToggle?: (id: string) => void;
+  onToggleAll?: (ids: string[], selected: boolean) => void;
 }) {
+  const selectable = Boolean(onToggle);
+  const selectedSet = new Set(selectedIds ?? []);
+  const allSelected = items.length > 0 && items.every((item) => selectedSet.has(item.id));
+  const colSpan = selectable ? 7 : 6;
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
       <SortableTable className="min-w-full text-sm">
         <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
           <tr>
+            {selectable ? (
+              <th className="px-3 py-3">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-[#3B46A5]"
+                  checked={allSelected}
+                  aria-label="Seleccionar todas las solicitudes visibles"
+                  onChange={() => onToggleAll?.(items.map((item) => item.id), !allSelected)}
+                />
+              </th>
+            ) : null}
             <th className="px-3 py-3">Folio</th>
             <th className="px-3 py-3">Origen</th>
             <th className="px-3 py-3">Material</th>
@@ -120,63 +150,99 @@ function RequestsTable({
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={6} className="px-3 py-6 text-muted-foreground">
+              <td colSpan={colSpan} className="px-3 py-6 text-muted-foreground">
                 Cargando…
               </td>
             </tr>
           ) : items.length === 0 ? (
             <tr>
-              <td colSpan={6} className="px-3 py-6 text-muted-foreground">
+              <td colSpan={colSpan} className="px-3 py-6 text-muted-foreground">
                 {emptyText}
               </td>
             </tr>
           ) : (
-            items.map((item) => (
-              <tr
-                key={item.id}
-                onClick={() => onOpen(item.id)}
-                className="cursor-pointer border-t border-border align-top hover:bg-muted/30"
-              >
-                <td className="px-3 py-3">
-                  <p className="font-medium">{item.folio}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(item.requestedAt)}</p>
-                </td>
-                <td className="px-3 py-3">
-                  {item.source === "surtimiento" ? (
-                    <>
-                      <p>{item.requisitionFolio || "Surtimiento"}</p>
-                      <p className="text-xs text-muted-foreground">
-                        OS {item.serviceOrderFolio || "—"} · {item.clientName || "Sin cliente"}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground">Compra directa</p>
+            items.map((item) => {
+              const checked = selectedSet.has(item.id);
+              return (
+                <tr
+                  key={item.id}
+                  onClick={() => (onToggle ? onToggle(item.id) : onOpen(item.id))}
+                  className={cn(
+                    "cursor-pointer border-t border-border align-top hover:bg-muted/30",
+                    checked && "bg-muted/40"
                   )}
-                </td>
-                <td className="max-w-72 px-3 py-3">
-                  <p className="truncate">{item.lines.map((line) => line.description || line.productName).join(", ")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.lines.length} partida(s) · {formatQty(item.lines.reduce((acc, line) => acc + line.quantity, 0))} u.
-                  </p>
-                </td>
-                <td className="px-3 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    <PurchaseStatusBadge status={item.status} />
-                    <PurchasePriorityBadge priority={item.priority} />
-                  </div>
-                  {item.purchaseOrderNumber ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {item.purchaseOrderNumber} · {item.supplierName}
-                    </p>
+                >
+                  {selectable ? (
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-[#3B46A5]"
+                        checked={checked}
+                        aria-label={`Seleccionar ${item.folio}`}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={() => onToggle?.(item.id)}
+                      />
+                    </td>
                   ) : null}
-                </td>
-                <td className="px-3 py-3 text-xs">
-                  <p>{item.requester.name || "—"}</p>
-                  <p className="text-muted-foreground">{item.requester.department || item.requester.jobTitle}</p>
-                </td>
-                <td className="px-3 py-3 text-xs">{item.neededBy ? formatDate(item.neededBy) : "—"}</td>
-              </tr>
-            ))
+                  <td className="px-3 py-3">
+                    <div className="flex items-start gap-1.5">
+                      <div className="min-w-0">
+                        <p className="font-medium">{item.folio}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(item.requestedAt)}</p>
+                      </div>
+                      {selectable ? (
+                        <button
+                          type="button"
+                          title={`Ver ficha de ${item.folio}`}
+                          aria-label={`Ver ficha de ${item.folio}`}
+                          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onOpen(item.id);
+                          }}
+                        >
+                          <Eye className="size-3.5" />
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3">
+                    {item.source === "surtimiento" ? (
+                      <>
+                        <p>{item.requisitionFolio || "Surtimiento"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          OS {item.serviceOrderFolio || "—"} · {item.clientName || "Sin cliente"}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground">Compra directa</p>
+                    )}
+                  </td>
+                  <td className="max-w-72 px-3 py-3">
+                    <p className="truncate">{item.lines.map((line) => line.description || line.productName).join(", ")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.lines.length} partida(s) · {formatQty(item.lines.reduce((acc, line) => acc + line.quantity, 0))} u.
+                    </p>
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      <PurchaseStatusBadge status={item.status} />
+                      <PurchasePriorityBadge priority={item.priority} />
+                    </div>
+                    {item.purchaseOrderNumber ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {item.purchaseOrderNumber} · {item.supplierName}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-3 text-xs">
+                    <p>{item.requester.name || "—"}</p>
+                    <p className="text-muted-foreground">{item.requester.department || item.requester.jobTitle}</p>
+                  </td>
+                  <td className="px-3 py-3 text-xs">{item.neededBy ? formatDate(item.neededBy) : "—"}</td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </SortableTable>
@@ -222,17 +288,22 @@ function useDetailAndForm(data: ReturnType<typeof usePurchaseRequestsData>) {
     </>
   );
 
-  return { setOpenId, setFormOpen, message, modals };
+  return { setOpenId, setFormOpen, setMessage, message, modals };
 }
 
 export function PurchaseRequestsPanel() {
   const perms = usePermissions("solicitudes_compra");
+  const { session } = useSessionAccess();
+  const actor = session?.fullName || session?.username || "usuario";
   const searchParams = useSearchParams();
   const data = usePurchaseRequestsData();
   const ui = useDetailAndForm(data);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => normalizeFilter(searchParams.get("estado")));
   const [sourceFilter, setSourceFilter] = useState<"todas" | "surtimiento" | "manual">("todas");
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -259,6 +330,54 @@ export function PurchaseRequestsPanel() {
       .sort((a, b) => (statusFilter === "abiertas" ? attentionOrder(a, b) : b.requestedAt.localeCompare(a.requestedAt)));
   }, [data.items, statusFilter, sourceFilter, search]);
 
+  const selectedItems = useMemo(
+    () => selectedIds.map((id) => (data.items ?? []).find((item) => item.id === id)).filter(Boolean) as PurchaseRequest[],
+    [data.items, selectedIds]
+  );
+  const productGroups = useMemo(() => groupPurchaseRequestLines(selectedItems), [selectedItems]);
+  const pendingGroups = productGroups.filter((group) => group.pendingQuantity > 0);
+  const pendientes = selectedItems.filter((item) => item.status === "pendiente");
+  const canAttend =
+    perms.canEdit &&
+    selectedItems.some(
+      (item) => item.status === "pendiente" || item.status === "en_proceso" || item.status === "ordenada"
+    );
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  function toggleAll(ids: string[], selected: boolean) {
+    setSelectedIds((current) => {
+      if (!selected) return current.filter((id) => !ids.includes(id));
+      const next = new Set(current);
+      for (const id of ids) next.add(id);
+      return [...next];
+    });
+  }
+
+  async function onTakeSelected() {
+    if (!pendientes.length || !perms.canEdit) return;
+    setBusy(true);
+    data.setError("");
+    try {
+      const updated = await takePurchaseRequests(
+        pendientes.map((item) => item.id),
+        actor
+      );
+      data.replaceMany(updated);
+      ui.setMessage(
+        pendientes.length === 1
+          ? `${pendientes[0].folio} en proceso.`
+          : `${pendientes.length} solicitudes tomadas juntas (${pendientes.map((item) => item.folio).join(", ")}). Ya puedes generar la orden de compra.`
+      );
+    } catch (err) {
+      data.setError(err instanceof Error ? err.message : "No se pudieron tomar las solicitudes.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="space-y-4">
       {!perms.canWrite ? (
@@ -268,7 +387,8 @@ export function PurchaseRequestsPanel() {
         <div>
           <h2 className="text-lg font-semibold text-[#3B46A5]">Solicitudes de compra</h2>
           <p className="text-sm text-muted-foreground">
-            Faltantes que almacén no pudo surtir y compras directas. Genera la orden de compra desde cada solicitud.
+            Elige una solicitud y luego otra para tomarlas juntas. El mismo código se suma en una sola cantidad al
+            generar la orden, para que almacén reciba el material y pueda surtir.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -316,13 +436,100 @@ export function PurchaseRequestsPanel() {
       <Notice tone="error">{data.error}</Notice>
       <Notice tone="success">{ui.message}</Notice>
 
-      <RequestsTable
-        items={filtered}
-        loading={data.items === null && !data.error}
-        onOpen={ui.setOpenId}
-        emptyText="No hay solicitudes de compra con estos filtros."
-      />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <RequestsTable
+          items={filtered}
+          loading={data.items === null && !data.error}
+          onOpen={ui.setOpenId}
+          onToggle={toggleSelected}
+          onToggleAll={toggleAll}
+          selectedIds={selectedIds}
+          emptyText="No hay solicitudes de compra con estos filtros."
+        />
+        <aside className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          {!selectedItems.length ? (
+            <p className="text-sm text-muted-foreground">
+              {perms.canEdit
+                ? "Elige una solicitud y luego otra. El mismo código aparece una sola vez al comprarlas juntas."
+                : "Selecciona una solicitud para ver su ficha."}
+            </p>
+          ) : (
+            <>
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  {selectedItems.length > 1 ? `${selectedItems.length} solicitudes` : "Solicitud"}
+                </p>
+                <h3 className="text-base font-semibold">{selectedItems.map((item) => item.folio).join(" · ")}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {productGroups.length} código{productGroups.length === 1 ? "" : "s"} ·{" "}
+                  {formatQty(productGroups.reduce((sum, group) => sum + group.quantity, 0))} u.
+                  {pendingGroups.length
+                    ? ` · ${pendingGroups.length} pendiente${pendingGroups.length === 1 ? "" : "s"} de OC`
+                    : ""}
+                </p>
+              </div>
+              <ul className="space-y-2">
+                {productGroups.slice(0, 8).map((group) => (
+                  <li key={group.key} className="rounded-xl border border-border bg-background px-3 py-2">
+                    <p className="text-sm font-medium">
+                      {group.productSku ? `${group.productSku} · ` : ""}
+                      {group.description}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatQty(group.quantity)} {group.unit}
+                      {group.sources.length > 1
+                        ? ` · ${group.sources.length} solicitudes`
+                        : ` · ${group.sources[0]?.request.folio}`}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {productGroups.length > 8 ? (
+                <p className="text-xs text-muted-foreground">+{productGroups.length - 8} código(s) más</p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {perms.canEdit && pendientes.length > 0 ? (
+                  <Button type="button" className={primaryButtonClass} disabled={busy} onClick={() => void onTakeSelected()}>
+                    <Hand className="size-4" />{" "}
+                    {pendientes.length > 1 ? `Tomar ${pendientes.length} solicitudes` : "Tomar solicitud"}
+                  </Button>
+                ) : null}
+                {canAttend ? (
+                  <Button type="button" variant={pendientes.length ? "outline" : "default"} className={pendientes.length ? undefined : primaryButtonClass} onClick={() => setBatchOpen(true)}>
+                    <ShoppingBag className="size-4" /> Generar órdenes
+                  </Button>
+                ) : null}
+                {selectedItems.length === 1 ? (
+                  <Button type="button" variant="outline" onClick={() => ui.setOpenId(selectedItems[0].id)}>
+                    <Eye className="size-4" /> Ver ficha
+                  </Button>
+                ) : null}
+                <Button type="button" variant="outline" onClick={() => setSelectedIds([])}>
+                  Limpiar
+                </Button>
+              </div>
+              {pendientes.length > 0 && pendientes.length < selectedItems.length ? (
+                <p className="text-xs text-muted-foreground">
+                  {pendientes.length} pendiente{pendientes.length === 1 ? "" : "s"} se pueden tomar ahora; el resto ya
+                  está en proceso o ordenada.
+                </p>
+              ) : null}
+            </>
+          )}
+        </aside>
+      </div>
       {ui.modals}
+      {batchOpen && selectedItems.length ? (
+        <PurchaseRequestBatch
+          key={selectedItems.map((item) => item.id).join("|")}
+          requests={selectedItems}
+          onClose={() => setBatchOpen(false)}
+          onChanged={(updated, text) => {
+            data.replaceMany(updated);
+            ui.setMessage(text);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

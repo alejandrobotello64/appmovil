@@ -153,3 +153,65 @@ export function purchaseRequestOrderIds(request: Pick<PurchaseRequest, "lines" |
   if (request.purchaseOrderId) ids.add(request.purchaseOrderId);
   return [...ids];
 }
+
+/** Junta el mismo código (producto / SKU) entre varias solicitudes de compra. */
+export function purchaseLineProductKey(
+  line: Pick<PurchaseRequestLine, "productId" | "productSku" | "productName" | "description">
+) {
+  if (line.productId) return `id:${line.productId}`;
+  const sku = line.productSku.trim().toLowerCase();
+  if (sku) return `sku:${sku}`;
+  return `name:${(line.description || line.productName).trim().toLowerCase()}`;
+}
+
+export type GroupedPurchaseLineSource = {
+  request: PurchaseRequest;
+  line: PurchaseRequestLine;
+};
+
+export type GroupedPurchaseLine = {
+  key: string;
+  productId: string | null;
+  productSku: string;
+  productName: string;
+  description: string;
+  unit: string;
+  quantity: number;
+  pendingQuantity: number;
+  sources: GroupedPurchaseLineSource[];
+};
+
+export function groupPurchaseRequestLines(requests: PurchaseRequest[]): GroupedPurchaseLine[] {
+  const order: string[] = [];
+  const map = new Map<string, GroupedPurchaseLine>();
+  for (const request of requests) {
+    for (const line of request.lines) {
+      const key = purchaseLineProductKey(line);
+      const existing = map.get(key);
+      const pending = line.purchaseOrderId ? 0 : line.quantity;
+      if (existing) {
+        existing.quantity += line.quantity;
+        existing.pendingQuantity += pending;
+        existing.sources.push({ request, line });
+        if (!existing.productSku && line.productSku) existing.productSku = line.productSku;
+        if (!existing.description && (line.description || line.productName)) {
+          existing.description = line.description || line.productName;
+        }
+        continue;
+      }
+      order.push(key);
+      map.set(key, {
+        key,
+        productId: line.productId,
+        productSku: line.productSku,
+        productName: line.productName,
+        description: line.description || line.productName,
+        unit: line.unit,
+        quantity: line.quantity,
+        pendingQuantity: pending,
+        sources: [{ request, line }],
+      });
+    }
+  }
+  return order.map((key) => map.get(key)!);
+}

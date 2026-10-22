@@ -240,10 +240,11 @@ async function hydrate(rows: Row[]): Promise<PurchaseRequest[]> {
   return rows.map((row) => mapRequest(row, linesBy.get(str(row.id)) ?? [], eventsBy.get(str(row.id)) ?? []));
 }
 
-async function selectRequests(filters?: { requisitionId?: string; id?: string }) {
+async function selectRequests(filters?: { requisitionId?: string; id?: string; ids?: string[] }) {
   let query = db.from("purchase_requests").select("*").order("requested_at", { ascending: false });
   if (filters?.requisitionId) query = query.eq("requisition_id", filters.requisitionId);
   if (filters?.id) query = query.eq("id", filters.id);
+  if (filters?.ids?.length) query = query.in("id", filters.ids);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as Row[];
@@ -259,6 +260,18 @@ export async function getPurchaseRequest(id: string): Promise<PurchaseRequest> {
   const [request] = await hydrate(await selectRequests({ id }));
   if (!request) throw new Error("Solicitud de compra no encontrada.");
   return request;
+}
+
+export async function getPurchaseRequestsByIds(ids: string[]): Promise<PurchaseRequest[]> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (!unique.length) return [];
+  const hydrated = await hydrate(await selectRequests({ ids: unique }));
+  const byId = new Map(hydrated.map((item) => [item.id, item]));
+  return unique.map((id) => {
+    const request = byId.get(id);
+    if (!request) throw new Error("Una de las solicitudes de compra ya no existe.");
+    return request;
+  });
 }
 
 async function nextFolio() {
@@ -400,14 +413,39 @@ async function requireStatus(id: string, allowed: PurchaseRequestStatus[], messa
 }
 
 export async function takePurchaseRequest(id: string, actor: string, notes = ""): Promise<PurchaseRequest> {
-  await requireStatus(id, ["pendiente"], "Solo se pueden tomar solicitudes pendientes.");
+  const [updated] = await takePurchaseRequests([id], actor, notes);
+  return updated;
+}
+
+export async function takePurchaseRequests(ids: string[], actor: string, notes = ""): Promise<PurchaseRequest[]> {
+  const requests = await getPurchaseRequestsByIds(ids);
+  if (!requests.length) throw new Error("Elige al menos una solicitud de compra.");
+  const pendientes = requests.filter((item) => item.status === "pendiente");
+  if (!pendientes.length) {
+    throw new Error("Ninguna de las solicitudes seleccionadas está pendiente.");
+  }
+
+  const patch: Record<string, unknown> = { status: "en_proceso", assigned_to: actor };
+  if (notes.trim()) patch.purchasing_notes = notes.trim();
   const { error } = await db
     .from("purchase_requests")
-    .update({ status: "en_proceso", assigned_to: actor, ...(notes.trim() ? { purchasing_notes: notes.trim() } : {}) })
-    .eq("id", id);
+    .update(patch)
+    .in(
+      "id",
+      pendientes.map((item) => item.id)
+    )
+    .eq("status", "pendiente");
   if (error) throw new Error(error.message);
-  await logEvent(id, "en_proceso", `${actor} tomó la solicitud para cotizar y comprar.`, actor);
-  return getPurchaseRequest(id);
+
+  const folios = pendientes.map((item) => item.folio).join(", ");
+  const message =
+    pendientes.length > 1
+      ? `${actor} tomó ${pendientes.length} solicitudes juntas (${folios}) para cotizar y comprar.`
+      : `${actor} tomó la solicitud para cotizar y comprar.`;
+  for (const request of pendientes) {
+    await logEvent(request.id, "en_proceso", message, actor);
+  }
+  return getPurchaseRequestsByIds(requests.map((item) => item.id));
 }
 
 export async function savePurchasingNotes(id: string, notes: string, actor: string): Promise<PurchaseRequest> {
@@ -417,18 +455,45 @@ export async function savePurchasingNotes(id: string, notes: string, actor: stri
   return getPurchaseRequest(id);
 }
 
+function purchaseOrderItemKey(line: PurchaseRequestLine) {
+  if (line.productId) return `id:${line.productId}`;
+  const sku = line.productSku.trim().toLowerCase();
+  if (sku) return `sku:${sku}`;
+  return `name:${(line.productName || line.description).trim().toLowerCase()}`;
+}
+
 export async function createPurchaseOrdersFromRequest(
   id: string,
   input: PurchaseOrdersFromRequestInput
 ): Promise<PurchaseRequest> {
-  const request = await requireStatus(
-    id,
-    ["pendiente", "en_proceso"],
-    "Solo se pueden generar órdenes de compra de solicitudes pendientes o en proceso."
-  );
+  const [updated] = await createPurchaseOrdersFromRequests([id], input);
+  return updated;
+}
+
+export async function createPurchaseOrdersFromRequests(
+  ids: string[],
+  input: PurchaseOrdersFromRequestInput
+): Promise<PurchaseRequest[]> {
+  const requests = await getPurchaseRequestsByIds(ids);
+  if (!requests.length) throw new Error("Elige al menos una solicitud de compra.");
+
   const groups = input.orders.filter((group) => group.lineIds.length > 0);
   if (!groups.length) throw new Error("Asigna un proveedor al menos a un material.");
 
+  const lineById = new Map(requests.flatMap((request) => request.lines.map((line) => [line.id, { request, line }])));
+  const involved = new Set<string>();
+  for (const group of groups) {
+    for (const lineId of group.lineIds) {
+      const found = lineById.get(lineId);
+      if (found) involved.add(found.request.id);
+    }
+  }
+  for (const request of requests) {
+    if (!involved.has(request.id)) continue;
+    if (request.status !== "pendiente" && request.status !== "en_proceso") {
+      throw new Error(`Solo se pueden generar órdenes de compra de ${request.folio} si está pendiente o en proceso.`);
+    }
+  }
   const seenLines = new Set<string>();
   const seenSuppliers = new Set<string>();
   for (const group of groups) {
@@ -440,10 +505,10 @@ export async function createPurchaseOrdersFromRequest(
     }
     seenSuppliers.add(supplierKey);
     for (const lineId of group.lineIds) {
-      const line = request.lines.find((item) => item.id === lineId);
-      if (!line) throw new Error("Uno de los materiales ya no existe en la solicitud.");
-      const label = line.description || line.productName;
-      if (line.purchaseOrderId) throw new Error(`${label} ya tiene orden de compra.`);
+      const found = lineById.get(lineId);
+      if (!found) throw new Error("Uno de los materiales ya no existe en las solicitudes seleccionadas.");
+      const label = found.line.description || found.line.productName;
+      if (found.line.purchaseOrderId) throw new Error(`${label} ya tiene orden de compra.`);
       if (seenLines.has(lineId)) throw new Error(`${label} está asignado a dos proveedores.`);
       seenLines.add(lineId);
       const price = input.unitPrices[lineId] ?? 0;
@@ -451,32 +516,59 @@ export async function createPurchaseOrdersFromRequest(
     }
   }
 
+  const requestFolios = [...new Set(requests.map((item) => item.folio))];
+  const requisitionFolios = [...new Set(requests.map((item) => item.requisitionFolio).filter(Boolean))];
+  const serviceOrderFolios = [...new Set(requests.map((item) => item.serviceOrderFolio).filter(Boolean))];
   const notes = [
-    `Solicitud de compra ${request.folio}`,
-    request.requisitionFolio && `Surtimiento ${request.requisitionFolio}`,
-    request.serviceOrderFolio && `OS ${request.serviceOrderFolio}`,
+    requestFolios.length === 1
+      ? `Solicitud de compra ${requestFolios[0]}`
+      : `Solicitudes de compra ${requestFolios.join(", ")}`,
+    requisitionFolios.length ? `Surtimiento ${requisitionFolios.join(", ")}` : "",
+    serviceOrderFolios.length ? `OS ${serviceOrderFolios.join(", ")}` : "",
     input.notes.trim(),
   ]
     .filter(Boolean)
     .join(" · ");
 
   let createdCount = 0;
+  const touched = new Set<string>();
   try {
     for (const group of groups) {
-      const lines = request.lines.filter((line) => group.lineIds.includes(line.id));
+      const lines = group.lineIds.map((lineId) => lineById.get(lineId)!);
+      const consolidated = new Map<
+        string,
+        { itemId: string | null; itemSku: string; itemName: string; quantity: number; unitPrice: number }
+      >();
+      for (const { line } of lines) {
+        const key = purchaseOrderItemKey(line);
+        const existing = consolidated.get(key);
+        const price = input.unitPrices[line.id] ?? 0;
+        if (existing) {
+          existing.quantity += line.quantity;
+          if (price > 0) existing.unitPrice = price;
+          continue;
+        }
+        consolidated.set(key, {
+          itemId: line.productId,
+          itemSku: line.productSku,
+          itemName: line.productName || line.description,
+          quantity: line.quantity,
+          unitPrice: price,
+        });
+      }
+
+      const items = [...consolidated.values()]
+        .map((item) => ({ ...item, quantity: Math.ceil(item.quantity) }))
+        .filter((item) => item.quantity > 0);
+      if (!items.length) throw new Error("No hay cantidades para generar la orden de compra.");
+
       const order = await createPurchaseOrder({
         supplierId: group.supplierId,
         supplierName: group.supplierName.trim(),
         expectedDate: input.expectedDate,
         notes,
         createdBy: input.actor,
-        items: lines.map((line) => ({
-          itemId: line.productId,
-          itemSku: line.productSku,
-          itemName: line.productName || line.description,
-          quantity: Math.ceil(line.quantity),
-          unitPrice: input.unitPrices[line.id] ?? 0,
-        })),
+        items,
       });
       const { error } = await db
         .from("purchase_request_lines")
@@ -487,31 +579,82 @@ export async function createPurchaseOrdersFromRequest(
         throw new Error(error.message);
       }
       createdCount += 1;
-      await logEvent(
-        id,
-        "ordenada",
-        `Orden de compra ${order.orderNumber} generada con ${order.supplierName} · ${lines.length} material(es).`,
-        input.actor
-      );
+
+      const byRequest = new Map<string, { folio: string; count: number }>();
+      for (const { request } of lines) {
+        const current = byRequest.get(request.id);
+        if (current) current.count += 1;
+        else byRequest.set(request.id, { folio: request.folio, count: 1 });
+        touched.add(request.id);
+      }
+      const together =
+        requests.length > 1
+          ? ` Junto con ${requestFolios.filter((folio) => folio !== lines[0]?.request.folio).join(", ")}.`
+          : "";
+      for (const [requestId, info] of byRequest) {
+        await logEvent(
+          requestId,
+          "ordenada",
+          `Orden de compra ${order.orderNumber} generada con ${order.supplierName} · ${info.count} material(es).${together}`,
+          input.actor
+        );
+      }
     }
   } finally {
     if (createdCount) {
-      await db.from("purchase_requests").update({ assigned_to: request.assignedTo || input.actor }).eq("id", id);
-      await refreshOrderSummary(id);
+      const assignedIds = [...touched].filter((id) => {
+        const request = requests.find((item) => item.id === id);
+        return request && !request.assignedTo;
+      });
+      if (assignedIds.length) {
+        await db.from("purchase_requests").update({ assigned_to: input.actor }).in("id", assignedIds);
+      }
+      for (const id of touched) {
+        await refreshOrderSummary(id);
+      }
     }
   }
-  return getPurchaseRequest(id);
+  return getPurchaseRequestsByIds(requests.map((item) => item.id));
 }
 
 export async function markPurchaseRequestReceived(id: string, actor: string, notes = ""): Promise<PurchaseRequest> {
-  await requireStatus(id, ["en_proceso", "ordenada"], "Solo se pueden cerrar compras en proceso u ordenadas.");
+  const [updated] = await markPurchaseRequestsReceived([id], actor, notes);
+  return updated;
+}
+
+export async function markPurchaseRequestsReceived(
+  ids: string[],
+  actor: string,
+  notes = ""
+): Promise<PurchaseRequest[]> {
+  const requests = await getPurchaseRequestsByIds(ids);
+  if (!requests.length) throw new Error("Elige al menos una solicitud de compra.");
+  const eligible = requests.filter((item) => item.status === "en_proceso" || item.status === "ordenada");
+  if (!eligible.length) {
+    throw new Error("Ninguna de las solicitudes seleccionadas está en proceso u ordenada.");
+  }
+
+  const now = new Date().toISOString();
   const { error } = await db
     .from("purchase_requests")
-    .update({ status: "recibida", received_at: new Date().toISOString(), closed_by: actor })
-    .eq("id", id);
+    .update({ status: "recibida", received_at: now, closed_by: actor })
+    .in(
+      "id",
+      eligible.map((item) => item.id)
+    )
+    .in("status", ["en_proceso", "ordenada"]);
   if (error) throw new Error(error.message);
-  await logEvent(id, "recibida", notes.trim() ? `Marcada como recibida: ${notes.trim()}` : "Marcada como recibida.", actor);
-  return getPurchaseRequest(id);
+
+  const folios = eligible.map((item) => item.folio).join(", ");
+  const message = notes.trim()
+    ? `Marcada como recibida: ${notes.trim()}`
+    : eligible.length > 1
+      ? `Marcadas como recibidas junto con ${folios}.`
+      : "Marcada como recibida.";
+  for (const request of eligible) {
+    await logEvent(request.id, "recibida", message, actor);
+  }
+  return getPurchaseRequestsByIds(requests.map((item) => item.id));
 }
 
 export async function closePurchaseRequest(
