@@ -9,7 +9,9 @@ import {
   Clock,
   Eye,
   Hand,
+  Loader2,
   Plus,
+  Printer,
   RefreshCw,
   Search,
   ShoppingBag,
@@ -19,6 +21,11 @@ import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { Notice, StatCard, fieldClass, formatDate, primaryButtonClass } from "@/components/tools/tools-shared";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
+import {
+  downloadPurchaseRequestPdf,
+  downloadPurchaseRequestPickListPdf,
+  downloadPurchaseRequestsPdf,
+} from "@/lib/purchasing/pdf";
 import { getPurchaseRequests, takePurchaseRequests } from "@/lib/purchasing/storage";
 import {
   PURCHASE_REQUEST_STATUSES,
@@ -109,6 +116,8 @@ function RequestsTable({
   selectedIds,
   onToggle,
   onToggleAll,
+  onPrint,
+  printBusy,
 }: {
   items: PurchaseRequest[];
   loading: boolean;
@@ -117,6 +126,8 @@ function RequestsTable({
   selectedIds?: string[];
   onToggle?: (id: string) => void;
   onToggleAll?: (ids: string[], selected: boolean) => void;
+  onPrint?: (item: PurchaseRequest) => void;
+  printBusy?: boolean;
 }) {
   const selectable = Boolean(onToggle);
   const selectedSet = new Set(selectedIds ?? []);
@@ -190,6 +201,21 @@ function RequestsTable({
                         <p className="font-medium">{item.folio}</p>
                         <p className="text-xs text-muted-foreground">{formatDate(item.requestedAt)}</p>
                       </div>
+                      {onPrint ? (
+                        <button
+                          type="button"
+                          title={`Imprimir ${item.folio}`}
+                          aria-label={`Imprimir ${item.folio}`}
+                          disabled={printBusy}
+                          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onPrint(item);
+                          }}
+                        >
+                          <Printer className="size-3.5" />
+                        </button>
+                      ) : null}
                       {selectable ? (
                         <button
                           type="button"
@@ -304,6 +330,7 @@ export function PurchaseRequestsPanel() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [batchOpen, setBatchOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [printBusy, setPrintBusy] = useState<"folios" | "suma" | "">("");
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -356,6 +383,32 @@ export function PurchaseRequestsPanel() {
     });
   }
 
+  async function onPrintFolios(items = selectedItems) {
+    if (!items.length) return;
+    setPrintBusy("folios");
+    data.setError("");
+    try {
+      await downloadPurchaseRequestsPdf(items);
+    } catch (err) {
+      data.setError(err instanceof Error ? err.message : "No se pudieron imprimir las solicitudes.");
+    } finally {
+      setPrintBusy("");
+    }
+  }
+
+  async function onPrintSum(items = selectedItems) {
+    if (!items.length) return;
+    setPrintBusy("suma");
+    data.setError("");
+    try {
+      await downloadPurchaseRequestPickListPdf(items);
+    } catch (err) {
+      data.setError(err instanceof Error ? err.message : "No se pudo imprimir la suma de productos.");
+    } finally {
+      setPrintBusy("");
+    }
+  }
+
   async function onTakeSelected() {
     if (!pendientes.length || !perms.canEdit) return;
     setBusy(true);
@@ -387,8 +440,8 @@ export function PurchaseRequestsPanel() {
         <div>
           <h2 className="text-lg font-semibold text-[#3B46A5]">Solicitudes de compra</h2>
           <p className="text-sm text-muted-foreground">
-            Elige una solicitud y luego otra para tomarlas juntas. El mismo código se suma en una sola cantidad al
-            generar la orden, para que almacén reciba el material y pueda surtir.
+            Elige una solicitud y luego otra para tomarlas juntas. El mismo código se suma en una sola cantidad.
+            Imprime la suma para verificar productos, o cada solicitud por su folio.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -444,6 +497,8 @@ export function PurchaseRequestsPanel() {
           onToggle={toggleSelected}
           onToggleAll={toggleAll}
           selectedIds={selectedIds}
+          onPrint={(item) => void onPrintFolios([item])}
+          printBusy={Boolean(printBusy)}
           emptyText="No hay solicitudes de compra con estos filtros."
         />
         <aside className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -455,18 +510,42 @@ export function PurchaseRequestsPanel() {
             </p>
           ) : (
             <>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {selectedItems.length > 1 ? `${selectedItems.length} solicitudes` : "Solicitud"}
-                </p>
-                <h3 className="text-base font-semibold">{selectedItems.map((item) => item.folio).join(" · ")}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {productGroups.length} código{productGroups.length === 1 ? "" : "s"} ·{" "}
-                  {formatQty(productGroups.reduce((sum, group) => sum + group.quantity, 0))} u.
-                  {pendingGroups.length
-                    ? ` · ${pendingGroups.length} pendiente${pendingGroups.length === 1 ? "" : "s"} de OC`
-                    : ""}
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">
+                    {selectedItems.length > 1 ? `${selectedItems.length} solicitudes` : "Solicitud"}
+                  </p>
+                  <h3 className="text-base font-semibold">{selectedItems.map((item) => item.folio).join(" · ")}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {productGroups.length} código{productGroups.length === 1 ? "" : "s"} ·{" "}
+                    {formatQty(productGroups.reduce((sum, group) => sum + group.quantity, 0))} u.
+                    {pendingGroups.length
+                      ? ` · ${pendingGroups.length} pendiente${pendingGroups.length === 1 ? "" : "s"} de OC`
+                      : ""}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col gap-1.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={Boolean(printBusy)}
+                    onClick={() => void onPrintSum()}
+                  >
+                    {printBusy === "suma" ? <Loader2 className="size-3.5 animate-spin" /> : <Printer className="size-3.5" />}
+                    Imprimir suma
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={Boolean(printBusy)}
+                    onClick={() => void onPrintFolios()}
+                  >
+                    {printBusy === "folios" ? <Loader2 className="size-3.5 animate-spin" /> : <Printer className="size-3.5" />}
+                    {selectedItems.length > 1 ? `Imprimir ${selectedItems.length} folios` : "Imprimir folio"}
+                  </Button>
+                </div>
               </div>
               <ul className="space-y-2">
                 {productGroups.slice(0, 8).map((group) => (
@@ -608,6 +687,11 @@ export function PurchasingDashboard() {
           items={stats.attention}
           loading={loading}
           onOpen={ui.setOpenId}
+          onPrint={(item) => {
+            void downloadPurchaseRequestPdf(item).catch((err) => {
+              data.setError(err instanceof Error ? err.message : "No se pudo imprimir la solicitud.");
+            });
+          }}
           emptyText="No hay solicitudes pendientes de atender."
         />
       </div>
@@ -615,7 +699,17 @@ export function PurchasingDashboard() {
       {stats.inTransit.length ? (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">Material en camino</h3>
-          <RequestsTable items={stats.inTransit} loading={false} onOpen={ui.setOpenId} emptyText="" />
+          <RequestsTable
+            items={stats.inTransit}
+            loading={false}
+            onOpen={ui.setOpenId}
+            onPrint={(item) => {
+              void downloadPurchaseRequestPdf(item).catch((err) => {
+                data.setError(err instanceof Error ? err.message : "No se pudo imprimir la solicitud.");
+              });
+            }}
+            emptyText=""
+          />
         </div>
       ) : null}
       {ui.modals}

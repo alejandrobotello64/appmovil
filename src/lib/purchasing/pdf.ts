@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
-import { deliverPdf } from "@/lib/print/open-pdf";
+import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
 import {
   PDF_INK,
   PDF_MARGIN,
@@ -16,7 +16,13 @@ import {
   type PdfColumn,
 } from "@/lib/brand/pdf-layout";
 import { loadStaffProfileLookup, type StaffProfile } from "@/lib/users/staff";
-import { purchasePriorityLabel, purchaseRequestUnits, purchaseStatusLabel, type PurchaseRequest } from "./types";
+import {
+  groupPurchaseRequestLines,
+  purchasePriorityLabel,
+  purchaseRequestUnits,
+  purchaseStatusLabel,
+  type PurchaseRequest,
+} from "./types";
 
 const COLUMNS: PdfColumn[] = [
   { key: "n", label: "#", width: 7, align: "center" },
@@ -27,6 +33,20 @@ const COLUMNS: PdfColumn[] = [
   { key: "stock", label: "Stock al pedir", width: 36, align: "center" },
 ];
 
+const PICK_COLUMNS: PdfColumn[] = [
+  { key: "ok", label: "✓", width: 8, align: "center" },
+  { key: "n", label: "#", width: 8, align: "center" },
+  { key: "sku", label: "SKU", width: 26 },
+  { key: "desc", label: "Material", width: 70 },
+  { key: "unit", label: "Unidad", width: 16, align: "center" },
+  { key: "qty", label: "A comprar", width: 18, align: "center" },
+  { key: "from", label: "Folios", width: 36 },
+];
+
+export type PurchasePrintOptions = {
+  output?: PdfIntent;
+};
+
 function rowsFor(profile: StaffProfile | null, extra: [string, string][]): [string, string][] {
   return [
     ["Puesto", profile?.jobTitle ?? ""],
@@ -36,12 +56,11 @@ function rowsFor(profile: StaffProfile | null, extra: [string, string][]): [stri
   ];
 }
 
-export async function downloadPurchaseRequestPdf(request: PurchaseRequest) {
-  const lookup = await loadStaffProfileLookup();
+type StaffLookup = (name: string) => StaffProfile | null;
+
+async function renderRequestPage(doc: jsPDF, request: PurchaseRequest, lookup: StaffLookup) {
   const requester = lookup(request.requester.username) ?? lookup(request.requester.name);
   const buyer = request.assignedTo ? lookup(request.assignedTo) : null;
-
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
   const start = await drawBrandedHeader(doc, {
     title: "Solicitud de compra",
     folio: request.folio,
@@ -148,7 +167,145 @@ export async function downloadPurchaseRequestPdf(request: PurchaseRequest) {
     { title: "Autoriza (compras)", name: buyer?.fullName || request.assignedTo },
     { title: "Recibe material (almacén)", name: "" },
   ]);
+}
 
+/** Una hoja por cada solicitud de compra. */
+export async function downloadPurchaseRequestsPdf(
+  requests: PurchaseRequest[],
+  options: PurchasePrintOptions = {}
+) {
+  if (!requests.length) throw new Error("Selecciona al menos una solicitud de compra para imprimir.");
+  const lookup = await loadStaffProfileLookup();
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  for (let index = 0; index < requests.length; index++) {
+    if (index > 0) doc.addPage();
+    await renderRequestPage(doc, requests[index], lookup);
+  }
   drawBrandedFooter(doc);
-  await deliverPdf(doc, `${request.folio}-solicitud-compra.pdf`, "download");
+  const fileName =
+    requests.length === 1
+      ? `${requests[0].folio}-solicitud-compra.pdf`
+      : `solicitudes-compra-${requests.length}-folios.pdf`;
+  await deliverPdf(doc, fileName, options.output ?? "print");
+}
+
+export async function downloadPurchaseRequestPdf(
+  request: PurchaseRequest,
+  options: PurchasePrintOptions = {}
+) {
+  await downloadPurchaseRequestsPdf([request], options);
+}
+
+/** Suma agrupada por código para verificar lo que se va a comprar. */
+export async function downloadPurchaseRequestPickListPdf(
+  requests: PurchaseRequest[],
+  options: PurchasePrintOptions = {}
+) {
+  if (!requests.length) throw new Error("Selecciona al menos una solicitud de compra para imprimir la suma.");
+  const groups = groupPurchaseRequestLines(requests);
+  if (!groups.length) throw new Error("No hay materiales para imprimir.");
+
+  const lookup = await loadStaffProfileLookup();
+  const folios = requests.map((item) => item.folio);
+  const origins = [
+    ...new Set(
+      requests
+        .map((item) =>
+          item.requisitionFolio
+            ? `Surtimiento ${item.requisitionFolio}`
+            : item.serviceOrderFolio
+              ? `OS ${item.serviceOrderFolio}`
+              : item.source === "manual"
+                ? "Compra directa"
+                : ""
+        )
+        .filter(Boolean)
+    ),
+  ];
+  const requesters = [
+    ...new Set(
+      requests.map((item) => {
+        const profile = lookup(item.requester.username) ?? lookup(item.requester.name);
+        return profile?.fullName || item.requester.name;
+      })
+    ),
+  ];
+  const buyers = [
+    ...new Set(requests.map((item) => item.assignedTo).filter(Boolean)),
+  ].map((name) => lookup(name)?.fullName || name);
+  const totalQty = groups.reduce((sum, group) => sum + group.quantity, 0);
+
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const start = await drawBrandedHeader(doc, {
+    title: "Lista de verificación · suma a comprar",
+    folio: folios.length === 1 ? folios[0] : `${folios.length} FOLIOS`,
+    rightLines: [
+      "SOLO REFERENCIA",
+      `${groups.length} código${groups.length === 1 ? "" : "s"} · ${formatPdfQty(totalQty)} pzas`,
+    ],
+  });
+  const cursor = new PdfCursor(doc, start);
+
+  drawParagraph(
+    cursor,
+    "Uso",
+    "Agrupa el mismo código en una sola cantidad para comprobar lo que se va a comprar. No sustituye la solicitud por folio: esa hoja sí se entrega y se firma."
+  );
+  drawFieldRow(cursor, [
+    ["Solicitudes", folios.join(" · ")],
+    ["Origen", origins.join(" · ")],
+    ["Solicita", requesters.join(" · ")],
+    ["Atiende", buyers.join(" · ") || "Compras"],
+  ]);
+
+  cursor.sectionTitle("Material a comprar (cantidades juntas)");
+  drawTable(
+    cursor,
+    PICK_COLUMNS,
+    groups.map((group, index) => {
+      const from = [
+        ...new Set(group.sources.map((source) => source.request.folio)),
+      ].join(", ");
+      return {
+        cells: {
+          ok: "",
+          n: String(index + 1),
+          sku: group.productSku || "—",
+          desc: group.description || group.productName,
+          unit: group.unit,
+          qty: formatPdfQty(group.quantity),
+          from,
+        },
+        styles: { qty: "bold" },
+      };
+    })
+  );
+
+  cursor.ensure(8);
+  cursor.doc.setFont("helvetica", "bold");
+  cursor.doc.setFontSize(9);
+  cursor.doc.setTextColor(...PDF_INK);
+  cursor.doc.text(
+    `Total a comprar: ${groups.length} código${groups.length === 1 ? "" : "s"} · ${formatPdfQty(totalQty)} unidades`,
+    PDF_MARGIN + cursor.contentW,
+    cursor.y + 3,
+    { align: "right" }
+  );
+  cursor.y += 10;
+
+  drawSignatures(cursor, [
+    { title: "Prepara / verifica", name: buyers[0] ?? "" },
+    { title: "Autoriza (compras)", name: buyers[0] ?? "" },
+    { title: "Recibe material (almacén)", name: "" },
+  ]);
+
+  drawBrandedFooter(
+    doc,
+    "Suma de verificación. Imprime también cada solicitud por su folio."
+  );
+  const fileName =
+    folios.length === 1
+      ? `${folios[0]}-suma-compra.pdf`
+      : `solicitudes-compra-suma-${folios.length}.pdf`;
+  await deliverPdf(doc, fileName, options.output ?? "print");
 }

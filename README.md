@@ -71,7 +71,7 @@ Migración: `supabase/migrations/20260916000000_inventory_core_structure.sql` (a
 
 El módulo **Compras** vive aparte de Almacén (`/dashboard/compras`): dashboard, solicitudes de almacén, pedidos y proveedores.
 
-Cuando almacén no puede surtir un producto (solicitud de OS o reabasto), genera una orden `SC-YYYY-####` hacia Compras. En **Compras → Solicitudes** se elige una solicitud y luego otra: el mismo código suma en una sola cantidad. Compras las toma juntas, arma una orden de compra por proveedor (cantidades consolidadas) y almacén recibe el material para poder surtir. El estatus recorre *pendiente → en proceso → ordenada → recibida*.
+Cuando almacén no puede surtir un producto (solicitud de OS o reabasto), genera una orden `SC-YYYY-####` hacia Compras. En **Compras → Solicitudes** se elige una solicitud y luego otra: el mismo código suma en una sola cantidad. Se puede **imprimir la suma** para verificar productos y **cada folio** en su propia hoja. Compras las toma juntas, arma una orden de compra por proveedor (cantidades consolidadas) y almacén recibe el material para poder surtir. El estatus recorre *pendiente → en proceso → ordenada → recibida*.
 
 Si las tablas `purchase_requests` aún no están en la nube, o si existen pero les faltan columnas (`source_type`, `quantity_requested`, etc.), aplica en el [SQL Editor](https://supabase.com/dashboard/project/iqfareiwiadqsauejaaf/sql/new):
 

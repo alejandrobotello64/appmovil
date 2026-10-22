@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardCheck, Hand, PackageCheck, Plus, ShoppingBag, X } from "lucide-react";
+import { ClipboardCheck, Hand, PackageCheck, Plus, Printer, ShoppingBag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { Notice, fieldClass, formatDate, primaryButtonClass, textareaClass } from "@/components/tools/tools-shared";
 import { formatMoney } from "@/components/warehouse/purchase-order-invoices";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
+import {
+  downloadPurchaseRequestPickListPdf,
+  downloadPurchaseRequestsPdf,
+} from "@/lib/purchasing/pdf";
 import {
   createPurchaseOrdersFromRequests,
   markPurchaseRequestsReceived,
@@ -175,6 +179,19 @@ export function PurchaseRequestBatch({
       onChanged(updated, message);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo completar la acción.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPrint(kind: "suma" | "folios") {
+    setBusy(true);
+    setError("");
+    try {
+      if (kind === "suma") await downloadPurchaseRequestPickListPdf(requests);
+      else await downloadPurchaseRequestsPdf(requests);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo imprimir.");
     } finally {
       setBusy(false);
     }
@@ -469,6 +486,13 @@ export function PurchaseRequestBatch({
 
         {panel === "none" ? (
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
+            <Button type="button" variant="outline" disabled={busy} onClick={() => void onPrint("suma")}>
+              <Printer className="size-4" /> Imprimir suma
+            </Button>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => void onPrint("folios")}>
+              <Printer className="size-4" />{" "}
+              {requests.length > 1 ? `Imprimir ${requests.length} folios` : "Imprimir folio"}
+            </Button>
             {canReceive ? (
               <Button type="button" variant="outline" onClick={() => setPanel("recibida")}>
                 <PackageCheck className="size-4" /> Marcar recibidas

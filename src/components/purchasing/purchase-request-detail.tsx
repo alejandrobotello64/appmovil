@@ -5,8 +5,8 @@ import {
   Ban,
   CheckCircle2,
   ClipboardCheck,
-  FileDown,
   Hand,
+  Printer,
   PackageCheck,
   Plus,
   Receipt,
@@ -229,7 +229,7 @@ export function PurchaseRequestDetail({
     try {
       await downloadPurchaseRequestPdf(request);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo generar el PDF.");
+      setError(err instanceof Error ? err.message : "No se pudo imprimir la solicitud.");
     }
   }
 
@@ -543,7 +543,7 @@ export function PurchaseRequestDetail({
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
             {perms.canExport ? (
               <Button type="button" variant="outline" onClick={() => void onPdf()}>
-                <FileDown className="size-4" /> PDF
+                <Printer className="size-4" /> Imprimir
               </Button>
             ) : null}
             {canClose ? (
