@@ -40,7 +40,7 @@ export function LoginCarousel() {
   }, []);
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div aria-hidden className="login-backdrop">
       {LOGIN_SLIDES.map((slide, index) => {
         const isActive = index === active;
         return (
@@ -58,7 +58,7 @@ export function LoginCarousel() {
               priority={index === 0}
               sizes="100vw"
               className={cn(
-                "object-cover transition-transform duration-[6500ms] ease-out",
+                "object-cover object-center transition-transform duration-[6500ms] ease-out",
                 isActive ? "scale-105" : "scale-100"
               )}
             />

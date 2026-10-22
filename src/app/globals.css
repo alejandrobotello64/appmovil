@@ -184,6 +184,30 @@
     padding-left: 1.25rem;
     padding-right: 1.25rem;
   }
+
+  /*
+    html { zoom } agranda el formulario y recorta la foto. El fondo se
+    deshace el zoom y cubre la pantalla real (100vw / 100dvh).
+  */
+  .login-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    overflow: hidden;
+    width: calc(100vw / var(--mas-zoom, 1));
+    height: calc(100dvh / var(--mas-zoom, 1));
+    min-width: 100%;
+    min-height: 100%;
+    pointer-events: none;
+  }
+}
+
+@supports not (zoom: 1) {
+  .login-backdrop {
+    width: 100vw;
+    height: 100dvh;
+  }
 }
 
 @media (min-width: 640px) {

@@ -11,17 +11,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { QuoteFulfillmentSection } from "@/components/sales/quote-fulfillment";
+import {
+  QuoteLineStockHint,
+  QuoteProductSearch,
+} from "@/components/sales/quote-product-search";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { getClients } from "@/lib/clients/storage";
 import type { Client } from "@/lib/clients/types";
+import { getReservedQuantities } from "@/lib/holds/storage";
 import { getInventoryItems } from "@/lib/inventory/storage";
-import {
-  INVENTORY_CATEGORIES,
-  type InventoryCategoryId,
-  type InventoryItem,
-} from "@/lib/inventory/types";
+import { type InventoryItem } from "@/lib/inventory/types";
 import { MEXICO_STATES } from "@/lib/location/mexico-states";
 import { daysUntilExpiry } from "@/lib/inventory/expiry";
 import { downloadQuotePdf } from "@/lib/quotes/pdf";
@@ -58,7 +59,6 @@ const fieldClass =
 
 type DraftLine = QuoteLineInput & {
   key: string;
-  categoryFilter: InventoryCategoryId | "all";
   discountMode?: "amount" | "percent";
 };
 
@@ -86,20 +86,10 @@ function emptyDraftLine(): DraftLine {
     quantity: 1,
     unitPrice: 0,
     unit: "pza",
-    categoryFilter: "all",
     productId: null,
     brand: "",
     partNumber: "",
   };
-}
-
-function productOptionLabel(item: InventoryItem) {
-  const extra = [item.brand, item.partNumber ? `Ref. ${item.partNumber}` : ""]
-    .filter(Boolean)
-    .join(" · ");
-  return extra
-    ? `${item.sku} — ${item.name} · ${extra}`
-    : `${item.sku} — ${item.name}`;
 }
 
 const EMPTY: QuoteInput = {
@@ -128,6 +118,9 @@ export function QuotesPanel() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [availableById, setAvailableById] = useState<Map<string, number>>(
+    () => new Map()
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -162,6 +155,17 @@ export function QuotesPanel() {
       setQuotes(quoteRows);
       setClients(clientRows.filter((client) => client.isActive));
       setItems(catalog);
+      const reserved = await getReservedQuantities().catch(
+        () => new Map<string, number>()
+      );
+      setAvailableById(
+        new Map(
+          catalog.map((item) => [
+            item.id,
+            Math.max(0, item.quantity - (reserved.get(item.id) ?? 0)),
+          ])
+        )
+      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -277,9 +281,19 @@ export function QuotesPanel() {
     );
   }
 
-  function itemsForLine(line: DraftLine) {
-    if (line.categoryFilter === "all") return items;
-    return items.filter((item) => item.category === line.categoryFilter);
+  function applyProductToLine(line: DraftLine, product: InventoryItem | null): DraftLine {
+    if (!product) {
+      return { ...line, productId: null };
+    }
+    return {
+      ...line,
+      productId: product.id,
+      description: line.description || product.name,
+      unit: product.unit || line.unit,
+      unitPrice: product.unitPrice || line.unitPrice,
+      brand: product.brand,
+      partNumber: product.partNumber,
+    };
   }
 
   function openCreate() {
@@ -336,7 +350,6 @@ export function QuotesPanel() {
                 ? ("amount" as const)
                 : ("percent" as const),
             notes: line.notes,
-            categoryFilter: "all" as const,
           }))
         : [emptyDraftLine()]
     );
@@ -779,83 +792,30 @@ export function QuotesPanel() {
                 Partida
               </Button>
             </div>
-            {lines.map((line, index) => (
+            {lines.map((line, index) => {
+              const catalogItem = items.find((item) => item.id === line.productId) ?? null;
+              const available = catalogItem
+                ? (availableById.get(catalogItem.id) ?? catalogItem.quantity)
+                : 0;
+              return (
               <div
                 key={line.key}
                 className="grid gap-2 rounded-xl border border-border bg-muted/20 p-3 lg:grid-cols-6"
               >
-                <label className="space-y-1">
-                  <span className="text-xs text-muted-foreground">
-                    Tipo inventario
-                  </span>
-                  <select
-                    value={line.categoryFilter}
-                    onChange={(e) => {
-                      const next =
-                        e.target.value === "all"
-                          ? "all"
-                          : (e.target.value as InventoryCategoryId);
+                <div className="lg:col-span-3">
+                  <QuoteProductSearch
+                    items={items}
+                    availableById={availableById}
+                    selectedId={line.productId ?? null}
+                    onSelect={(product) =>
                       setLines((current) =>
                         current.map((row, i) =>
-                          i === index
-                            ? {
-                                ...row,
-                                categoryFilter: next,
-                                productId: null,
-                              }
-                            : row
+                          i === index ? applyProductToLine(row, product) : row
                         )
-                      );
-                    }}
-                    className={fieldClass}
-                  >
-                    <option value="all">Todos</option>
-                    {INVENTORY_CATEGORIES.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="space-y-1 lg:col-span-2">
-                  <span className="text-xs text-muted-foreground">
-                    Producto / equipo
-                  </span>
-                  <select
-                    value={line.productId ?? ""}
-                    onChange={(e) => {
-                      const product = items.find(
-                        (item) => item.id === e.target.value
-                      );
-                      setLines((current) =>
-                        current.map((row, i) =>
-                          i === index
-                            ? {
-                                ...row,
-                                productId: e.target.value || null,
-                                description:
-                                  row.description || product?.name || "",
-                                unit: product?.unit || row.unit,
-                                unitPrice: product?.unitPrice ?? row.unitPrice,
-                                brand: product ? product.brand : row.brand ?? "",
-                                partNumber: product
-                                  ? product.partNumber
-                                  : row.partNumber ?? "",
-                              }
-                            : row
-                        )
-                      );
-                    }}
-                    className={fieldClass}
-                  >
-                    <option value="">Libre</option>
-                    {itemsForLine(line).map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {productOptionLabel(item)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                      )
+                    }
+                  />
+                </div>
                 <label className="space-y-1 lg:col-span-3">
                   <span className="text-xs text-muted-foreground">
                     Descripción *
@@ -926,6 +886,11 @@ export function QuotesPanel() {
                       )
                     }
                     className={fieldClass}
+                  />
+                  <QuoteLineStockHint
+                    item={catalogItem}
+                    available={available}
+                    requested={line.quantity}
                   />
                 </label>
                 <label className="space-y-1">
@@ -1029,7 +994,8 @@ export function QuotesPanel() {
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
             <div className="rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm">
               {draftTotals.lineDiscounts > 0 ? (
                 <>

@@ -69,14 +69,14 @@ export function LoginForm() {
   }
 
   return (
-    <div className="login-shell relative flex min-h-dvh flex-1 items-center justify-center overflow-hidden">
+    <div className="login-shell relative z-10 flex min-h-dvh flex-1 items-center justify-center overflow-x-hidden overflow-y-auto">
       <LoginCarousel />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.22),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.28),transparent_45%)]"
+        className="login-backdrop z-[1] bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.22),transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(59,70,165,0.28),transparent_45%)]"
       />
 
-      <div className="relative w-full max-w-[420px] px-4">
+      <div className="relative z-10 w-full max-w-[420px] px-4">
         <div className="mb-6 flex justify-end gap-2">
           <ZoomControls showPercent="always" className="bg-card/80 backdrop-blur" />
           <ThemeToggle className="touch-target bg-card/80 shadow-sm backdrop-blur" />
