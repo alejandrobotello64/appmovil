@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CalendarClock, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, Loader2, Plus, Printer, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { SearchInput } from "@/components/ui/search-input";
@@ -33,6 +33,7 @@ import {
   type PurchaseOrder,
   type PurchaseOrderItem,
 } from "@/lib/warehouse/orders";
+import { downloadPurchaseOrderReceivePdf } from "@/lib/warehouse/orders-pdf";
 import {
   getWarehouseLocations,
   getWarehouses,
@@ -166,6 +167,7 @@ export function OrdersPanel() {
   const [scheduleTime, setScheduleTime] = useState("");
   const [scheduleNote, setScheduleNote] = useState("");
   const [schedulingNow, setSchedulingNow] = useState(false);
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
   async function refresh() {
     const [orderList, productList, supplierList, warehouseList] = await Promise.all([
@@ -240,6 +242,18 @@ export function OrdersPanel() {
       setError(err instanceof Error ? err.message : "No se pudo agendar la recepción");
     } finally {
       setSchedulingNow(false);
+    }
+  }
+
+  async function handlePrint(order: PurchaseOrder) {
+    setPrintingId(order.id);
+    setError("");
+    try {
+      await downloadPurchaseOrderReceivePdf(order);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo imprimir la recepción");
+    } finally {
+      setPrintingId(null);
     }
   }
 
@@ -339,6 +353,22 @@ export function OrdersPanel() {
           >
             <CalendarClock className="size-3.5" />
             {order.scheduledReceiveAt ? "Reagendar" : "Agendar recepción"}
+          </Button>
+        ) : null}
+        {order.status !== "cancelado" ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9"
+            disabled={printingId === order.id}
+            onClick={() => void handlePrint(order)}
+          >
+            {printingId === order.id ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Printer className="size-3.5" />
+            )}
+            Imprimir
           </Button>
         ) : null}
         <Button
@@ -499,7 +529,8 @@ export function OrdersPanel() {
           <div>
             <h2 className="text-lg font-semibold">Pedidos de compra</h2>
             <p className="text-sm text-muted-foreground">
-              Órdenes de Compras. Recibe parcial o total contra la OC y actualiza el surtimiento.
+              Órdenes de Compras. Agenda la recepción en el calendario, imprime la hoja de trabajo
+              y captura la entrada parcial o total contra la OC.
             </p>
           </div>
           {canWrite ? (
@@ -777,7 +808,21 @@ export function OrdersPanel() {
                 </span>
               </label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-border px-4 py-3 sm:px-5">
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border px-4 py-3 sm:px-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="sm:mr-auto"
+                disabled={receivingNow || printingId === receiving.id}
+                onClick={() => void handlePrint(receiving)}
+              >
+                {printingId === receiving.id ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Printer className="size-3.5" />
+                )}
+                Imprimir documento
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -844,11 +889,24 @@ export function OrdersPanel() {
               />
             </label>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                className="sm:mr-auto"
+                disabled={schedulingNow || printingId === scheduling.id}
+                onClick={() => void handlePrint(scheduling)}
+              >
+                {printingId === scheduling.id ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Printer className="size-3.5" />
+                )}
+                Imprimir documento
+              </Button>
               {scheduling.scheduledReceiveAt ? (
                 <Button
                   type="button"
                   variant="outline"
-                  className="sm:mr-auto"
                   disabled={schedulingNow}
                   onClick={() => void handleClearSchedule()}
                 >

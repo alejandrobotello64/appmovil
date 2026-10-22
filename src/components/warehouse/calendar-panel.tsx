@@ -52,7 +52,8 @@ import { getInventoryItems } from "@/lib/inventory/storage";
 import { listServiceOrderCalendarItems } from "@/lib/service-orders/storage";
 import { buildTenderCalendarItems, getTenders } from "@/lib/tenders/storage";
 import { getMaintenances } from "@/lib/warehouse/maintenances";
-import { listPurchaseOrderReceiveCalendarItems } from "@/lib/warehouse/orders";
+import { getPurchaseOrders, listPurchaseOrderReceiveCalendarItems } from "@/lib/warehouse/orders";
+import { downloadPurchaseOrderReceivePdf } from "@/lib/warehouse/orders-pdf";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
@@ -821,12 +822,34 @@ export function CalendarPanel() {
                       </Link>
                     ) : null}
                     {item.kind === "recepcion" && item.sourceId ? (
-                      <Link
-                        href="/dashboard/compras?tab=ordenes"
-                        className="shrink-0 text-[11px] font-medium text-[#3B46A5] hover:underline"
-                      >
-                        Abrir pedido
-                      </Link>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <Link
+                          href="/dashboard/compras?tab=ordenes"
+                          className="text-[11px] font-medium text-[#3B46A5] hover:underline"
+                        >
+                          Abrir pedido
+                        </Link>
+                        <button
+                          type="button"
+                          className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            void getPurchaseOrders([item.sourceId!])
+                              .then(([order]) => {
+                                if (!order) throw new Error("Pedido no encontrado.");
+                                return downloadPurchaseOrderReceivePdf(order);
+                              })
+                              .catch((err) =>
+                                setError(
+                                  err instanceof Error
+                                    ? err.message
+                                    : "No se pudo imprimir la recepción"
+                                )
+                              );
+                          }}
+                        >
+                          Imprimir
+                        </button>
+                      </div>
                     ) : null}
                     {item.kind === "cumpleanos" && item.sourceId ? (
                       <PersonCelebrateActions
