@@ -117,6 +117,8 @@ export type PurchaseOrdersFromRequestInput = {
   expectedDate: string;
   notes: string;
   unitPrices: Record<string, number>;
+  /** Cantidad a comprar por línea; si es mayor a lo solicitado, el extra entra a almacén. */
+  buyQuantities?: Record<string, number>;
   actor: string;
 };
 

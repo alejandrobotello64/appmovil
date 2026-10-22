@@ -23,7 +23,7 @@ import {
 } from "@/lib/purchasing/types";
 import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
-import { PurchasePriorityBadge, PurchaseStatusBadge, formatQty } from "./purchasing-shared";
+import { PurchasePriorityBadge, PurchaseStatusBadge, formatQty, orderBuyQty } from "./purchasing-shared";
 import { SortableTable } from "@/components/ui/sortable-table";
 
 const CUSTOM_PREFIX = "custom:";
@@ -76,6 +76,7 @@ export function PurchaseRequestBatch({
   const [expectedDate, setExpectedDate] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [prices, setPrices] = useState<Record<string, string>>({});
+  const [buyQty, setBuyQty] = useState<Record<string, string>>({});
 
   const productGroups = useMemo(() => groupPurchaseRequestLines(requests), [requests]);
   const pendingGroups = productGroups.filter((group) => group.pendingQuantity > 0);
@@ -128,7 +129,8 @@ export function PurchaseRequestBatch({
     const pending = pendingSources(group);
     bucket.groups.push(group);
     bucket.lineIds.push(...pending.map((source) => source.line.id));
-    bucket.total += Math.ceil(group.pendingQuantity) * (Number(prices[group.key]) || 0);
+    bucket.total +=
+      Math.ceil(orderBuyQty(group.pendingQuantity, buyQty[group.key])) * (Number(prices[group.key]) || 0);
   }
   const unassignedCount = pendingGroups.filter((group) => !groupSuppliers[group.key]).length;
 
@@ -211,9 +213,19 @@ export function PurchaseRequestBatch({
 
   function onCreateOrders() {
     const unitPrices: Record<string, number> = {};
+    const buyQuantities: Record<string, number> = {};
+    let extraCount = 0;
     for (const group of pendingGroups) {
       const price = Number(prices[group.key]) || 0;
-      for (const source of pendingSources(group)) unitPrices[source.line.id] = price;
+      const pending = pendingSources(group);
+      const requested = pending.reduce((sum, source) => sum + source.line.quantity, 0);
+      const buy = Math.max(requested, orderBuyQty(requested, buyQty[group.key]));
+      const extra = buy - requested;
+      if (extra > 0.0001) extraCount += 1;
+      pending.forEach((source, index) => {
+        unitPrices[source.line.id] = price;
+        buyQuantities[source.line.id] = source.line.quantity + (index === 0 ? extra : 0);
+      });
     }
     const count = orderGroups.length;
     const folios = requests.map((item) => item.folio).join(", ");
@@ -230,12 +242,13 @@ export function PurchaseRequestBatch({
             expectedDate,
             notes: orderNotes,
             unitPrices,
+            buyQuantities,
             actor,
           }
         ),
       `${count === 1 ? "Orden de compra generada" : `${count} órdenes de compra generadas (una por proveedor)`} para ${folios}.${
-        unassignedCount ? ` ${unassignedCount} código(s) siguen sin proveedor.` : ""
-      } Almacén las verá en Órdenes de compra para recibirlas y luego surtir.`
+        extraCount ? ` ${extraCount} código(s) van con cantidad extra para almacén.` : ""
+      }${unassignedCount ? ` ${unassignedCount} código(s) siguen sin proveedor.` : ""} Almacén las verá en Órdenes de compra para recibirlas y luego surtir.`
     );
   }
 
@@ -305,7 +318,8 @@ export function PurchaseRequestBatch({
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
                 <th className="px-3 py-2">Material</th>
-                <th className="px-3 py-2 text-center">Cantidad</th>
+                <th className="px-3 py-2 text-center">Solicitado</th>
+                {panel === "orden" ? <th className="px-3 py-2 text-center">A comprar</th> : null}
                 {panel === "orden" ? <th className="px-3 py-2">Proveedor</th> : null}
                 {panel === "orden" ? <th className="px-3 py-2">Precio unitario</th> : null}
               </tr>
@@ -332,6 +346,38 @@ export function PurchaseRequestBatch({
                         </p>
                       ) : null}
                     </td>
+                    {panel === "orden" ? (
+                      <td className="px-3 py-2 text-center">
+                        {pending.length ? (
+                          <>
+                            <input
+                              type="number"
+                              min={group.pendingQuantity}
+                              step="1"
+                              className={`${fieldClass} mx-auto h-9 w-24 text-center`}
+                              value={buyQty[group.key] ?? formatQty(group.pendingQuantity)}
+                              aria-label={`Cantidad a comprar de ${group.description}`}
+                              onChange={(e) => setBuyQty((current) => ({ ...current, [group.key]: e.target.value }))}
+                              onBlur={(e) => {
+                                const next = orderBuyQty(group.pendingQuantity, e.target.value);
+                                setBuyQty((current) => ({
+                                  ...current,
+                                  [group.key]: formatQty(Math.max(group.pendingQuantity, next)),
+                                }));
+                              }}
+                            />
+                            {orderBuyQty(group.pendingQuantity, buyQty[group.key]) >
+                            group.pendingQuantity + 0.0001 ? (
+                              <p className="mt-1 text-[11px] text-[#3B46A5]">
+                                +{formatQty(orderBuyQty(group.pendingQuantity, buyQty[group.key]) - group.pendingQuantity)} extra
+                              </p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <span className="tabular-nums text-xs text-muted-foreground">{formatQty(group.quantity)}</span>
+                        )}
+                      </td>
+                    ) : null}
                     {panel === "orden" ? (
                       <td className="px-3 py-2">
                         {pending.length ? (
@@ -379,8 +425,8 @@ export function PurchaseRequestBatch({
             <div>
               <h4 className="text-sm font-semibold">Generar órdenes de compra por proveedor</h4>
               <p className="text-xs text-muted-foreground">
-                El mismo código de todas las solicitudes se junta en una sola partida. Se genera una orden por
-                proveedor para que almacén reciba el material y pueda surtir.
+                El mismo código de todas las solicitudes se junta en una sola partida. En A comprar puedes subir la
+                cantidad para dejar extra en almacén. Se genera una orden por proveedor.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -436,7 +482,7 @@ export function PurchaseRequestBatch({
               </ul>
             ) : null}
             <p className="text-xs text-muted-foreground">
-              Las cantidades se redondean hacia arriba en la orden.
+              Las cantidades se redondean hacia arriba. Lo extra entra a existencia cuando almacén reciba la orden.
               {unassignedCount ? ` ${unassignedCount} código(s) sin proveedor quedarán pendientes.` : ""}
             </p>
             <div className="flex flex-wrap justify-end gap-2">

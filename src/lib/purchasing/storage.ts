@@ -513,6 +513,12 @@ export async function createPurchaseOrdersFromRequests(
       seenLines.add(lineId);
       const price = input.unitPrices[lineId] ?? 0;
       if (!(price >= 0)) throw new Error(`Precio inválido en ${label}.`);
+      const buy = input.buyQuantities?.[lineId] ?? found.line.quantity;
+      if (!(buy >= found.line.quantity - 0.0001)) {
+        throw new Error(
+          `${label}: la cantidad a comprar (${buy}) no puede ser menor a lo solicitado (${found.line.quantity}).`
+        );
+      }
     }
   }
 
@@ -537,14 +543,23 @@ export async function createPurchaseOrdersFromRequests(
       const lines = group.lineIds.map((lineId) => lineById.get(lineId)!);
       const consolidated = new Map<
         string,
-        { itemId: string | null; itemSku: string; itemName: string; quantity: number; unitPrice: number }
+        {
+          itemId: string | null;
+          itemSku: string;
+          itemName: string;
+          requested: number;
+          quantity: number;
+          unitPrice: number;
+        }
       >();
       for (const { line } of lines) {
         const key = purchaseOrderItemKey(line);
         const existing = consolidated.get(key);
         const price = input.unitPrices[line.id] ?? 0;
+        const buy = input.buyQuantities?.[line.id] ?? line.quantity;
         if (existing) {
-          existing.quantity += line.quantity;
+          existing.requested += line.quantity;
+          existing.quantity += buy;
           if (price > 0) existing.unitPrice = price;
           continue;
         }
@@ -552,13 +567,25 @@ export async function createPurchaseOrdersFromRequests(
           itemId: line.productId,
           itemSku: line.productSku,
           itemName: line.productName || line.description,
-          quantity: line.quantity,
+          requested: line.quantity,
+          quantity: buy,
           unitPrice: price,
         });
       }
 
+      const extras = [...consolidated.values()]
+        .filter((item) => item.quantity > item.requested + 0.0001)
+        .map((item) => `${item.itemSku || item.itemName} +${Math.ceil(item.quantity) - Math.ceil(item.requested)}`);
+      const orderNotes = extras.length ? `${notes} · Extra almacén: ${extras.join(", ")}` : notes;
+
       const items = [...consolidated.values()]
-        .map((item) => ({ ...item, quantity: Math.ceil(item.quantity) }))
+        .map((item) => ({
+          itemId: item.itemId,
+          itemSku: item.itemSku,
+          itemName: item.itemName,
+          quantity: Math.ceil(item.quantity),
+          unitPrice: item.unitPrice,
+        }))
         .filter((item) => item.quantity > 0);
       if (!items.length) throw new Error("No hay cantidades para generar la orden de compra.");
 
@@ -566,7 +593,7 @@ export async function createPurchaseOrdersFromRequests(
         supplierId: group.supplierId,
         supplierName: group.supplierName.trim(),
         expectedDate: input.expectedDate,
-        notes,
+        notes: orderNotes,
         createdBy: input.actor,
         items,
       });
@@ -591,11 +618,12 @@ export async function createPurchaseOrdersFromRequests(
         requests.length > 1
           ? ` Junto con ${requestFolios.filter((folio) => folio !== lines[0]?.request.folio).join(", ")}.`
           : "";
+      const extraNote = extras.length ? ` Incluye extra: ${extras.join(", ")}.` : "";
       for (const [requestId, info] of byRequest) {
         await logEvent(
           requestId,
           "ordenada",
-          `Orden de compra ${order.orderNumber} generada con ${order.supplierName} · ${info.count} material(es).${together}`,
+          `Orden de compra ${order.orderNumber} generada con ${order.supplierName} · ${info.count} material(es).${together}${extraNote}`,
           input.actor
         );
       }

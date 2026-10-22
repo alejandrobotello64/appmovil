@@ -32,3 +32,10 @@ export function PurchasePriorityBadge({ priority }: { priority: PurchasePriority
 export function formatQty(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, "");
 }
+
+/** Cantidad a comprar al armar la OC; vacío = lo solicitado. */
+export function orderBuyQty(requested: number, raw: string | undefined) {
+  if (raw == null || raw.trim() === "") return requested;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : requested;
+}

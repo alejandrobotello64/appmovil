@@ -41,7 +41,7 @@ import {
 import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
 import { getPurchaseOrders, purchaseOrderTotal, type PurchaseOrder } from "@/lib/warehouse/orders";
-import { PurchasePriorityBadge, PurchaseStatusBadge, formatQty } from "./purchasing-shared";
+import { PurchasePriorityBadge, PurchaseStatusBadge, formatQty, orderBuyQty } from "./purchasing-shared";
 import { SortableTable } from "@/components/ui/sortable-table";
 
 const CUSTOM_PREFIX = "custom:";
@@ -81,6 +81,7 @@ export function PurchaseRequestDetail({
   const [expectedDate, setExpectedDate] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [prices, setPrices] = useState<Record<string, string>>({});
+  const [buyQty, setBuyQty] = useState<Record<string, string>>({});
   const [linkedOrders, setLinkedOrders] = useState<PurchaseOrder[]>([]);
   const [invoicesOrderId, setInvoicesOrderId] = useState<string | null>(null);
 
@@ -146,7 +147,7 @@ export function PurchaseRequestDetail({
       orderGroups.push(group);
     }
     group.lines.push(line);
-    group.total += Math.ceil(line.quantity) * (Number(prices[line.id]) || 0);
+    group.total += Math.ceil(orderBuyQty(line.quantity, buyQty[line.id])) * (Number(prices[line.id]) || 0);
   }
   const unassignedCount = pendingLines.length - orderGroups.reduce((sum, group) => sum + group.lines.length, 0);
 
@@ -204,7 +205,12 @@ export function PurchaseRequestDetail({
 
   function onCreateOrders() {
     const unitPrices: Record<string, number> = {};
-    for (const line of pendingLines) unitPrices[line.id] = Number(prices[line.id]) || 0;
+    const buyQuantities: Record<string, number> = {};
+    for (const line of pendingLines) {
+      unitPrices[line.id] = Number(prices[line.id]) || 0;
+      buyQuantities[line.id] = orderBuyQty(line.quantity, buyQty[line.id]);
+    }
+    const extraCount = pendingLines.filter((line) => buyQuantities[line.id] > line.quantity + 0.0001).length;
     const count = orderGroups.length;
     void run(
       () =>
@@ -217,11 +223,12 @@ export function PurchaseRequestDetail({
           expectedDate,
           notes: orderNotes,
           unitPrices,
+          buyQuantities,
           actor,
         }),
       `${count === 1 ? "Orden de compra generada" : `${count} órdenes de compra generadas (una por proveedor)`} para ${request.folio}.${
-        unassignedCount ? ` ${unassignedCount} material(es) siguen sin proveedor.` : ""
-      } Almacén las verá en Órdenes de compra para recibirlas.`
+        extraCount ? ` ${extraCount} material(es) van con cantidad extra para almacén.` : ""
+      }${unassignedCount ? ` ${unassignedCount} material(es) siguen sin proveedor.` : ""} Almacén las verá en Órdenes de compra para recibirlas.`
     );
   }
 
@@ -281,7 +288,8 @@ export function PurchaseRequestDetail({
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
                 <th className="px-3 py-2">Material</th>
-                <th className="px-3 py-2 text-center">Cantidad</th>
+                <th className="px-3 py-2 text-center">Solicitado</th>
+                {panel === "orden" ? <th className="px-3 py-2 text-center">A comprar</th> : null}
                 <th className="px-3 py-2 text-center">Stock al pedir</th>
                 {panel === "orden" || linkedOrders.length ? (
                   <th className="px-3 py-2">{panel === "orden" ? "Proveedor" : "Orden de compra"}</th>
@@ -301,6 +309,37 @@ export function PurchaseRequestDetail({
                     <td className="px-3 py-2 text-center tabular-nums">
                       {formatQty(line.quantity)} {line.unit}
                     </td>
+                    {panel === "orden" ? (
+                      <td className="px-3 py-2 text-center">
+                        {line.purchaseOrderId ? (
+                          <span className="tabular-nums">{formatQty(line.quantity)}</span>
+                        ) : (
+                          <>
+                            <input
+                              type="number"
+                              min={line.quantity}
+                              step="1"
+                              className={`${fieldClass} mx-auto h-9 w-24 text-center`}
+                              value={buyQty[line.id] ?? formatQty(line.quantity)}
+                              aria-label={`Cantidad a comprar de ${line.description || line.productName}`}
+                              onChange={(e) => setBuyQty((current) => ({ ...current, [line.id]: e.target.value }))}
+                              onBlur={(e) => {
+                                const next = orderBuyQty(line.quantity, e.target.value);
+                                setBuyQty((current) => ({
+                                  ...current,
+                                  [line.id]: formatQty(Math.max(line.quantity, next)),
+                                }));
+                              }}
+                            />
+                            {orderBuyQty(line.quantity, buyQty[line.id]) > line.quantity + 0.0001 ? (
+                              <p className="mt-1 text-[11px] text-[#3B46A5]">
+                                +{formatQty(orderBuyQty(line.quantity, buyQty[line.id]) - line.quantity)} extra
+                              </p>
+                            ) : null}
+                          </>
+                        )}
+                      </td>
+                    ) : null}
                     <td className="px-3 py-2 text-center tabular-nums">{line.productId ? formatQty(line.stockAtRequest) : "—"}</td>
                     {panel === "orden" || linkedOrders.length ? (
                       <td className="px-3 py-2">
@@ -352,8 +391,8 @@ export function PurchaseRequestDetail({
             <div>
               <h4 className="text-sm font-semibold">Generar órdenes de compra por proveedor</h4>
               <p className="text-xs text-muted-foreground">
-                Elige el proveedor de cada material en la tabla. Se genera una orden de compra por proveedor; los
-                materiales sin asignar quedan pendientes para después.
+                Elige el proveedor de cada material. En <strong>A comprar</strong> puedes subir la cantidad para dejar
+                extra en almacén; no puede bajar de lo solicitado. Se genera una orden por proveedor.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -409,7 +448,8 @@ export function PurchaseRequestDetail({
               </ul>
             ) : null}
             <p className="text-xs text-muted-foreground">
-              Las cantidades con decimales se redondean hacia arriba en la orden.
+              Las cantidades con decimales se redondean hacia arriba. Lo extra entra a existencia cuando almacén reciba
+              la orden.
               {unassignedCount ? ` ${unassignedCount} material(es) sin proveedor quedarán pendientes.` : ""}
             </p>
             <div className="flex flex-wrap justify-end gap-2">
