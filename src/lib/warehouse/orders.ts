@@ -37,6 +37,9 @@ export type PurchaseOrder = {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  scheduledReceiveAt: string;
+  scheduledReceiveTime: string;
+  scheduledReceiveNote: string;
   items: PurchaseOrderItem[];
   invoices: PurchaseOrderInvoice[];
 };
@@ -85,9 +88,25 @@ function mapOrder(
     createdBy: row.created_by ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    scheduledReceiveAt: (row.scheduled_receive_at ?? "").slice(0, 10),
+    scheduledReceiveTime: (row.scheduled_receive_time ?? "").slice(0, 5),
+    scheduledReceiveNote: row.scheduled_receive_note ?? "",
     items,
     invoices,
   };
+}
+
+function isMissingColumnError(error: { message?: string; code?: string; details?: string; hint?: string } | null) {
+  if (!error) return false;
+  const code = String(error.code ?? "");
+  const text = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    text.includes("does not exist") ||
+    text.includes("schema cache") ||
+    text.includes("could not find")
+  );
 }
 
 export function purchaseOrderTotal(order: Pick<PurchaseOrder, "items">) {
@@ -320,4 +339,98 @@ export async function cancelPurchaseOrder(orderId: string): Promise<void> {
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
+}
+
+export type PurchaseOrderReceiveScheduleInput = {
+  date: string;
+  time?: string;
+  note?: string;
+};
+
+export async function schedulePurchaseOrderReceive(
+  orderId: string,
+  input: PurchaseOrderReceiveScheduleInput | null
+): Promise<PurchaseOrder> {
+  const [order] = await getPurchaseOrders([orderId]);
+  if (!order) throw new Error("Pedido no encontrado.");
+  if (order.status === "cancelado") {
+    throw new Error("No se puede agendar un pedido cancelado.");
+  }
+  if (order.status === "recibido") {
+    throw new Error("Este pedido ya está recibido.");
+  }
+
+  const payload =
+    input === null
+      ? {
+          scheduled_receive_at: null,
+          scheduled_receive_time: "",
+          scheduled_receive_note: "",
+        }
+      : {
+          scheduled_receive_at: input.date.trim().slice(0, 10) || null,
+          scheduled_receive_time: (input.time ?? "").trim().slice(0, 5),
+          scheduled_receive_note: (input.note ?? "").trim(),
+        };
+
+  if (input && !payload.scheduled_receive_at) {
+    throw new Error("Elige la fecha de recepción.");
+  }
+
+  const { data, error } = await supabase
+    .from("purchase_orders")
+    .update(payload)
+    .eq("id", orderId)
+    .select("*")
+    .single();
+
+  if (error) {
+    if (isMissingColumnError(error)) {
+      throw new Error(
+        "Falta aplicar la columna de recepción agendada en la base de datos."
+      );
+    }
+    throw new Error(error.message);
+  }
+
+  return mapOrder(data, order.items, order.invoices);
+}
+
+export type PurchaseOrderReceiveCalendarHit = {
+  id: string;
+  date: string;
+  time: string;
+  orderNumber: string;
+  supplierName: string;
+  note: string;
+  status: PurchaseOrderStatus;
+};
+
+export async function listPurchaseOrderReceiveCalendarItems(): Promise<
+  PurchaseOrderReceiveCalendarHit[]
+> {
+  const { data, error } = await supabase
+    .from("purchase_orders")
+    .select(
+      "id, order_number, supplier_name, status, scheduled_receive_at, scheduled_receive_time, scheduled_receive_note"
+    )
+    .not("scheduled_receive_at", "is", null)
+    .in("status", ["borrador", "enviado", "parcial"]);
+
+  if (error) {
+    if (isMissingColumnError(error)) return [];
+    throw new Error(error.message);
+  }
+
+  return (data ?? [])
+    .map((row) => ({
+      id: row.id,
+      date: (row.scheduled_receive_at ?? "").slice(0, 10),
+      time: (row.scheduled_receive_time ?? "").slice(0, 5),
+      orderNumber: row.order_number,
+      supplierName: row.supplier_name,
+      note: row.scheduled_receive_note ?? "",
+      status: row.status as PurchaseOrderStatus,
+    }))
+    .filter((row) => Boolean(row.date));
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { CalendarClock, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ModalShell } from "@/components/ui/modal-shell";
 import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
 import {
@@ -28,6 +29,7 @@ import {
   getPurchaseOrders,
   purchaseOrderTotal,
   receivePurchaseOrderLines,
+  schedulePurchaseOrderReceive,
   type PurchaseOrder,
   type PurchaseOrderItem,
 } from "@/lib/warehouse/orders";
@@ -71,6 +73,21 @@ function supplierKey(order: PurchaseOrder) {
 
 function invoicedTotal(order: PurchaseOrder) {
   return order.invoices.reduce((sum, invoice) => sum + invoice.total, 0);
+}
+
+function todayKey() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function formatReceiveAppointment(order: PurchaseOrder) {
+  if (!order.scheduledReceiveAt) return "";
+  const [year, month, day] = order.scheduledReceiveAt.split("-");
+  const dateLabel = year && month && day ? `${day}/${month}/${year}` : order.scheduledReceiveAt;
+  return order.scheduledReceiveTime ? `${dateLabel} ${order.scheduledReceiveTime}` : dateLabel;
 }
 
 export function OrdersPanel() {
@@ -144,6 +161,11 @@ export function OrdersPanel() {
   const [warehouseId, setWarehouseId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [receivingNow, setReceivingNow] = useState(false);
+  const [scheduling, setScheduling] = useState<PurchaseOrder | null>(null);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [scheduleNote, setScheduleNote] = useState("");
+  const [schedulingNow, setSchedulingNow] = useState(false);
 
   async function refresh() {
     const [orderList, productList, supplierList, warehouseList] = await Promise.all([
@@ -191,6 +213,49 @@ export function OrdersPanel() {
     setReceiving(order);
     setAuthorizeOverReceipt(false);
     setReceiveDrafts(order.items.map((line) => emptyLot(line.id, pendingQty(line))));
+  }
+
+  function openSchedule(order: PurchaseOrder) {
+    setError("");
+    setScheduling(order);
+    setScheduleDate(order.scheduledReceiveAt || order.expectedDate || todayKey());
+    setScheduleTime(order.scheduledReceiveTime);
+    setScheduleNote(order.scheduledReceiveNote);
+  }
+
+  async function handleSchedule(event: FormEvent) {
+    event.preventDefault();
+    if (!scheduling) return;
+    setSchedulingNow(true);
+    setError("");
+    try {
+      await schedulePurchaseOrderReceive(scheduling.id, {
+        date: scheduleDate,
+        time: scheduleTime,
+        note: scheduleNote,
+      });
+      setScheduling(null);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo agendar la recepción");
+    } finally {
+      setSchedulingNow(false);
+    }
+  }
+
+  async function handleClearSchedule() {
+    if (!scheduling) return;
+    setSchedulingNow(true);
+    setError("");
+    try {
+      await schedulePurchaseOrderReceive(scheduling.id, null);
+      setScheduling(null);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo quitar la cita");
+    } finally {
+      setSchedulingNow(false);
+    }
   }
 
   function updateDraft(id: string, patch: Partial<ReceiveDraft>) {
@@ -265,6 +330,17 @@ export function OrdersPanel() {
             Recibir
           </Button>
         ) : null}
+        {open ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9"
+            onClick={() => openSchedule(order)}
+          >
+            <CalendarClock className="size-3.5" />
+            {order.scheduledReceiveAt ? "Reagendar" : "Agendar recepción"}
+          </Button>
+        ) : null}
         <Button
           size="sm"
           variant="outline"
@@ -330,6 +406,10 @@ export function OrdersPanel() {
                 label: "Pendiente",
                 value: order.items.reduce((sum, line) => sum + pendingQty(line), 0),
               },
+              {
+                label: "Recepción",
+                value: formatReceiveAppointment(order) || "Sin agendar",
+              },
               { label: "Factura", value: invoiceCell(order) },
             ],
             actions: orderActions(order),
@@ -359,7 +439,14 @@ export function OrdersPanel() {
               ) : (
                 list.map((order) => (
                   <tr key={order.id} className="border-t border-border/70">
-                    <td className="px-4 py-3 font-medium">{order.orderNumber}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <p>{order.orderNumber}</p>
+                      {order.scheduledReceiveAt ? (
+                        <p className="mt-0.5 text-xs font-normal text-orange-700 dark:text-orange-300">
+                          Recepción {formatReceiveAppointment(order)}
+                        </p>
+                      ) : null}
+                    </td>
                     <td className="px-4 py-3">{order.supplierName}</td>
                     <td className="px-4 py-3 capitalize">{order.status}</td>
                     <td className="px-4 py-3 tabular-nums whitespace-nowrap">
@@ -385,7 +472,7 @@ export function OrdersPanel() {
   return (
     <div className="space-y-6">
       <ReadOnlyBanner visible={!canWrite} />
-      {!formOpen && error ? (
+      {!formOpen && !scheduling && error ? (
         <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
@@ -709,6 +796,86 @@ export function OrdersPanel() {
             </div>
           </form>
         </div>
+      ) : null}
+
+      {scheduling ? (
+        <ModalShell
+          title={`Agendar recepción · ${scheduling.orderNumber}`}
+          description="La cita aparece en el calendario operativo para almacén y compras. No cambia la fecha esperada del proveedor."
+        >
+          <form className="space-y-4" onSubmit={(event) => void handleSchedule(event)}>
+            {error ? (
+              <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
+            <p className="text-sm text-muted-foreground">
+              {scheduling.supplierName || "Sin proveedor"}
+              {scheduling.expectedDate ? ` · llegada estimada ${scheduling.expectedDate}` : ""}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm font-medium">
+                Fecha
+                <input
+                  required
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(event) => setScheduleDate(event.target.value)}
+                  className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                Hora
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(event) => setScheduleTime(event.target.value)}
+                  className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                />
+              </label>
+            </div>
+            <label className="block text-sm font-medium">
+              Nota para almacén
+              <textarea
+                value={scheduleNote}
+                onChange={(event) => setScheduleNote(event.target.value)}
+                className="mt-1 min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Andén, tarimas, horario de descarga..."
+              />
+            </label>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              {scheduling.scheduledReceiveAt ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="sm:mr-auto"
+                  disabled={schedulingNow}
+                  onClick={() => void handleClearSchedule()}
+                >
+                  Quitar del calendario
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                disabled={schedulingNow}
+                onClick={() => {
+                  setScheduling(null);
+                  setError("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={schedulingNow}
+                className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
+              >
+                {schedulingNow ? "Guardando..." : "Guardar en calendario"}
+              </Button>
+            </div>
+          </form>
+        </ModalShell>
       ) : null}
 
       {invoicesOrder ? (

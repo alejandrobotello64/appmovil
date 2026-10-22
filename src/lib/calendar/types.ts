@@ -44,6 +44,7 @@ export type CalendarReminder = {
 export type CalendarItemKind =
   | "mantenimiento"
   | "servicio"
+  | "recepcion"
   | "cumpleanos"
   | "aniversario"
   | "evento"

@@ -333,6 +333,9 @@ export type Database = {
           created_by: string;
           created_at: string;
           updated_at: string;
+          scheduled_receive_at: string | null;
+          scheduled_receive_time: string;
+          scheduled_receive_note: string;
         };
         Insert: {
           id?: string;
@@ -345,6 +348,9 @@ export type Database = {
           created_by?: string;
           created_at?: string;
           updated_at?: string;
+          scheduled_receive_at?: string | null;
+          scheduled_receive_time?: string;
+          scheduled_receive_note?: string;
         };
         Update: {
           id?: string;
@@ -357,6 +363,9 @@ export type Database = {
           created_by?: string;
           created_at?: string;
           updated_at?: string;
+          scheduled_receive_at?: string | null;
+          scheduled_receive_time?: string;
+          scheduled_receive_note?: string;
         };
         Relationships: [];
       };

@@ -12,6 +12,7 @@ import {
   Gavel,
   Mail,
   MapPin,
+  Package,
   Plus,
   Stethoscope,
   Trash2,
@@ -51,6 +52,7 @@ import { getInventoryItems } from "@/lib/inventory/storage";
 import { listServiceOrderCalendarItems } from "@/lib/service-orders/storage";
 import { buildTenderCalendarItems, getTenders } from "@/lib/tenders/storage";
 import { getMaintenances } from "@/lib/warehouse/maintenances";
+import { listPurchaseOrderReceiveCalendarItems } from "@/lib/warehouse/orders";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
@@ -74,6 +76,7 @@ const MONTHS = [
 const KIND_LABEL: Record<CalendarItemKind, string> = {
   mantenimiento: "Mantenimiento",
   servicio: "Próximo servicio",
+  recepcion: "Recepción de material",
   cumpleanos: "Cumpleaños",
   aniversario: "Aniversario",
   evento: "Evento",
@@ -85,6 +88,7 @@ const KIND_LABEL: Record<CalendarItemKind, string> = {
 const KIND_CLASS: Record<CalendarItemKind, string> = {
   mantenimiento: "bg-sky-500/15 text-sky-800 dark:text-sky-200",
   servicio: "bg-cyan-500/15 text-cyan-800 dark:text-cyan-200",
+  recepcion: "bg-orange-500/15 text-orange-800 dark:text-orange-200",
   cumpleanos: "bg-rose-500/15 text-rose-800 dark:text-rose-200",
   aniversario: "bg-amber-500/15 text-amber-800 dark:text-amber-200",
   evento: "bg-violet-500/15 text-violet-800 dark:text-violet-200",
@@ -238,6 +242,7 @@ export function CalendarPanel() {
       equipment,
       tenderRows,
       serviceHits,
+      receiveHits,
     ] = await Promise.all([
       getCalendarEvents(),
       getMaintenances(),
@@ -246,6 +251,7 @@ export function CalendarPanel() {
       getInventoryItems({ kind: "equipo", includeInactive: true }),
       getTenders().catch(() => []),
       listServiceOrderCalendarItems().catch(() => []),
+      listPurchaseOrderReceiveCalendarItems().catch(() => []),
     ]);
 
     const names = new Map(equipment.map((item) => [item.id, item.name]));
@@ -294,6 +300,16 @@ export function CalendarPanel() {
           .join(" · "),
         time: "",
         areas: ["servicio"],
+        sourceId: row.id,
+      })),
+      ...receiveHits.map((row) => ({
+        id: `recepcion-${row.id}`,
+        kind: "recepcion" as const,
+        date: row.date,
+        title: `Recepción · ${row.orderNumber}`,
+        subtitle: [row.supplierName, row.note].filter(Boolean).join(" · "),
+        time: row.time,
+        areas: ["almacen", "compras"],
         sourceId: row.id,
       })),
     ];
@@ -567,10 +583,10 @@ export function CalendarPanel() {
           <div>
             <h2 className="text-lg font-semibold">Calendario operativo</h2>
             <p className="text-sm text-muted-foreground">
-              Mantenimientos, próximos servicios de órdenes, cumpleaños,
-              aniversarios, fiestas patrias, días de descanso obligatorio (LFT),
-              hitos de licitaciones CompraMX y eventos con aviso por correo o
-              WhatsApp.
+              Mantenimientos, próximos servicios de órdenes, recepciones de
+              material, cumpleaños, aniversarios, fiestas patrias, días de
+              descanso obligatorio (LFT), hitos de licitaciones CompraMX y
+              eventos con aviso por correo o WhatsApp.
             </p>
           </div>
           {canWrite ? (
@@ -590,6 +606,7 @@ export function CalendarPanel() {
               ["todos", "Todos"],
               ["mantenimiento", "Mantenimientos"],
               ["servicio", "Próx. servicio"],
+              ["recepcion", "Recepciones"],
               ["cumpleanos", "Cumpleaños"],
               ["aniversario", "Aniversarios"],
               ["descanso", "Descansos LFT"],
@@ -617,7 +634,7 @@ export function CalendarPanel() {
         <SearchInput
           value={query}
           onChange={setQuery}
-          placeholder="Buscar evento, equipo, cliente, colaborador, licitación..."
+          placeholder="Buscar evento, recepción, equipo, cliente, colaborador, licitación..."
           className="mt-3"
         />
       </section>
@@ -803,6 +820,14 @@ export function CalendarPanel() {
                         Abrir orden
                       </Link>
                     ) : null}
+                    {item.kind === "recepcion" && item.sourceId ? (
+                      <Link
+                        href="/dashboard/compras?tab=ordenes"
+                        className="shrink-0 text-[11px] font-medium text-[#3B46A5] hover:underline"
+                      >
+                        Abrir pedido
+                      </Link>
+                    ) : null}
                     {item.kind === "cumpleanos" && item.sourceId ? (
                       <PersonCelebrateActions
                         kind="cumpleanos"
@@ -862,6 +887,8 @@ export function CalendarPanel() {
                         <Wrench className="mt-0.5 size-4 text-sky-600" />
                       ) : item.kind === "servicio" ? (
                         <Stethoscope className="mt-0.5 size-4 text-cyan-600" />
+                      ) : item.kind === "recepcion" ? (
+                        <Package className="mt-0.5 size-4 text-orange-600" />
                       ) : item.kind === "cumpleanos" ? (
                         <Cake className="mt-0.5 size-4 text-rose-600" />
                       ) : item.kind === "aniversario" ? (
