@@ -35,6 +35,8 @@ export type ServiceOrderRequisitionLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  /** Número de parte del catálogo, o el capturado en la cotización si no hay producto. */
+  partNumber: string;
   description: string;
   quantityRequested: number;
   quantityFulfilled: number;
@@ -179,6 +181,7 @@ export type GroupedRequisitionLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  partNumber: string;
   description: string;
   unit: string;
   quantityRequested: number;
@@ -214,6 +217,7 @@ export function groupRequisitionLines(
         existing.sources.push({ requisition, line });
         existing.lineStatus = groupedLineStatus(existing.sources.map((source) => source.line));
         if (!existing.productSku && line.productSku) existing.productSku = line.productSku;
+        if (!existing.partNumber && line.partNumber) existing.partNumber = line.partNumber;
         if (!existing.description && line.description) existing.description = line.description;
         continue;
       }
@@ -223,6 +227,7 @@ export function groupRequisitionLines(
         productId: line.productId,
         productSku: line.productSku,
         productName: line.productName,
+        partNumber: line.partNumber,
         description: line.description,
         unit: line.unit,
         quantityRequested: line.quantityRequested,

@@ -86,6 +86,7 @@ type DraftLine = {
   quoteLineId: string;
   productId: string | null;
   sku: string;
+  partNumber: string;
   description: string;
   unit: string;
   quoted: number;
@@ -109,6 +110,7 @@ function buildDraft(quote: Quote, requisitions: ServiceOrderRequisition[]): Draf
         quoteLineId: line.id,
         productId: line.productId,
         sku: line.productSku,
+        partNumber: line.partNumber,
         description,
         unit: line.unit || "pza",
         quoted: line.quantity,
@@ -466,6 +468,9 @@ function RequisitionCard({
             <li key={line.id} className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-1.5 text-xs">
               <span className="min-w-0 flex-1">
                 <span className="font-medium">{line.description}</span>
+                {line.partNumber.trim() ? (
+                  <span className="font-mono text-muted-foreground"> · N.º {line.partNumber.trim()}</span>
+                ) : null}
                 {line.productSku ? <span className="text-muted-foreground"> · {line.productSku}</span> : null}
                 {!line.productId ? (
                   <span className="ml-1.5">
@@ -694,6 +699,9 @@ function QuoteFulfillmentDialog({
                     </td>
                     <td className="min-w-56 px-3 py-2">
                       <p className="font-medium">{line.description}</p>
+                      {line.partNumber.trim() ? (
+                        <p className="font-mono text-xs text-muted-foreground">N.º de parte {line.partNumber.trim()}</p>
+                      ) : null}
                       {line.productId ? (
                         <p className="text-xs text-muted-foreground">{line.sku || "Sin SKU"}</p>
                       ) : (

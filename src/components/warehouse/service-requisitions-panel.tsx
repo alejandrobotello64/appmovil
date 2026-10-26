@@ -317,6 +317,7 @@ export function ServiceRequisitionsPanel({
             ...item.lines.flatMap((line) => [
               line.productSku,
               line.productName,
+              line.partNumber,
               line.description,
             ]),
           ]) &&
@@ -958,6 +959,11 @@ export function ServiceRequisitionsPanel({
                         {group.productSku ? `${group.productSku} · ` : ""}
                         {group.description}
                       </p>
+                      {group.partNumber.trim() ? (
+                        <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                          N.º de parte {group.partNumber.trim()}
+                        </p>
+                      ) : null}
                       {group.offCatalog ? (
                         <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                           Fuera de catálogo · se compra y se entrega directo, sin descontar inventario
@@ -1046,7 +1052,18 @@ export function ServiceRequisitionsPanel({
                         <PurchaseStatusBadge status={purchase.status} />
                       </div>
                       <p className="text-muted-foreground">
-                        {purchase.lines.map((line) => `${formatQty(line.quantity)} ${line.unit} ${line.description}`).join(" · ")}
+                        {purchase.lines
+                          .map((line) => {
+                            const part = (
+                              line.requisitionLineId
+                                ? selectedItems
+                                    .flatMap((item) => item.lines)
+                                    .find((reqLine) => reqLine.id === line.requisitionLineId)?.partNumber
+                                : ""
+                            )?.trim();
+                            return `${formatQty(line.quantity)} ${line.unit}${part ? ` · n.º ${part}` : ""} ${line.description}`;
+                          })
+                          .join(" · ")}
                       </p>
                       {purchase.purchaseOrderNumber ? (
                         <p className="text-muted-foreground">

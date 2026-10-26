@@ -38,14 +38,15 @@ type Row = Record<string, unknown>;
 const str = (value: unknown) => (value === null || value === undefined ? "" : String(value));
 
 const COLUMNS: PdfColumn[] = [
-  { key: "n", label: "#", width: 7, align: "center" },
-  { key: "sku", label: "SKU", width: 24 },
-  { key: "desc", label: "Material", width: 58 },
+  { key: "n", label: "#", width: 6, align: "center" },
+  { key: "sku", label: "SKU", width: 20 },
+  { key: "part", label: "N.º parte", width: 24 },
+  { key: "desc", label: "Material", width: 46 },
   { key: "unit", label: "Unidad", width: 14, align: "center" },
-  { key: "req", label: "Solic.", width: 14, align: "center" },
-  { key: "ful", label: "Surtido", width: 15, align: "center" },
-  { key: "pend", label: "Pend.", width: 14, align: "center" },
-  { key: "buy", label: "Estatus / compra", width: 36 },
+  { key: "req", label: "Solic.", width: 13, align: "center" },
+  { key: "ful", label: "Surtido", width: 14, align: "center" },
+  { key: "pend", label: "Pend.", width: 13, align: "center" },
+  { key: "buy", label: "Estatus / compra", width: 32 },
 ];
 
 export type PdfOutput = PdfIntent;
@@ -315,13 +316,14 @@ export async function downloadRequisitionsPdf(
 
 const PICK_COLUMNS: PdfColumn[] = [
   { key: "ok", label: "✓", width: 8, align: "center" },
-  { key: "n", label: "#", width: 8, align: "center" },
-  { key: "sku", label: "SKU", width: 24 },
-  { key: "desc", label: "Producto", width: 64 },
-  { key: "unit", label: "Unidad", width: 16, align: "center" },
-  { key: "qty", label: "A surtir", width: 16, align: "center" },
-  { key: "disp", label: "Disp.", width: 16, align: "center" },
-  { key: "from", label: "Folios", width: 24 },
+  { key: "n", label: "#", width: 7, align: "center" },
+  { key: "sku", label: "SKU", width: 20 },
+  { key: "part", label: "N.º parte", width: 24 },
+  { key: "desc", label: "Producto", width: 52 },
+  { key: "unit", label: "Unidad", width: 14, align: "center" },
+  { key: "qty", label: "A surtir", width: 15, align: "center" },
+  { key: "disp", label: "Disp.", width: 14, align: "center" },
+  { key: "from", label: "Folios", width: 28 },
 ];
 
 function pickQtyForGroup(
@@ -332,22 +334,6 @@ function pickQtyForGroup(
   if (Number.isFinite(override) && (override as number) > 0) return override as number;
   if (group.pending > 0) return group.pending;
   return group.quantityRequested;
-}
-
-async function partNumbersByProductId(productIds: string[]) {
-  const ids = [...new Set(productIds.filter(Boolean))];
-  const map = new Map<string, string>();
-  if (!ids.length) return map;
-  const { data, error } = await supabase
-    .from("inventory_items")
-    .select("id, part_number")
-    .in("id", ids);
-  if (error || !data) return map;
-  for (const row of data) {
-    const part = String(row.part_number ?? "").trim();
-    if (part) map.set(String(row.id), part);
-  }
-  return map;
 }
 
 /** Suma agrupada de lo que se va a recoger. Solo referencia para verificar productos. */
@@ -367,7 +353,6 @@ export async function downloadRequisitionPickListPdf(
   const catalogIds = rowsToPrint.flatMap((row) =>
     row.group.sources.map((source) => source.line.productId ?? "")
   );
-  const parts = await partNumbersByProductId(catalogIds);
   const stock = await getProductsAvailableQty(catalogIds).catch(
     () => new Map<string, number>()
   );
@@ -414,12 +399,6 @@ export async function downloadRequisitionPickListPdf(
 
   compactSection(cursor, "Productos a surtir (cantidades juntas)");
   const rows: PdfRow[] = rowsToPrint.map((row, index) => {
-    const part =
-      (row.group.productId && parts.get(row.group.productId)) ||
-      row.group.sources
-        .map((source) => parts.get(source.line.productId ?? ""))
-        .find(Boolean) ||
-      "";
     const from = [
       ...new Set(row.group.sources.map((source) => source.requisition.folio)),
     ].join(", ");
@@ -432,10 +411,8 @@ export async function downloadRequisitionPickListPdf(
         ok: "",
         n: String(index + 1),
         sku: row.group.productSku || "—",
-        desc: [
-          row.group.description || row.group.productName,
-          part ? `n.º ${part}` : "",
-        ].filter(Boolean),
+        part: row.group.partNumber.trim() || "—",
+        desc: row.group.description || row.group.productName,
         unit: row.group.unit,
         qty: formatPdfQty(row.qty),
         disp:
@@ -540,6 +517,7 @@ function drawRequisitionBody(
       cells: {
         n: String(index + 1),
         sku: group.productSku || "—",
+        part: group.partNumber.trim() || "—",
         desc: [group.description || group.productName, ...notes.map((note) => `Nota: ${note}`)],
         unit: group.unit,
         req: formatPdfQty(group.quantityRequested),
@@ -587,8 +565,13 @@ function drawRequisitionBody(
       doc.setTextColor(...PDF_MUTED);
       doc.text(formatPdfDate(item.createdAt, true), PDF_MARGIN, cursor.y);
       doc.setTextColor(...PDF_INK);
+      const part = line?.partNumber.trim();
       doc.text(
-        `${formatPdfQty(item.quantity)} × ${line ? `${line.productSku ? `${line.productSku} · ` : ""}${line.description}` : "Material"}`,
+        `${formatPdfQty(item.quantity)} × ${
+          line
+            ? `${line.productSku ? `${line.productSku} · ` : ""}${part ? `n.º ${part} · ` : ""}${line.description}`
+            : "Material"
+        }`,
         PDF_MARGIN + 32,
         cursor.y,
         { maxWidth: 100 }
@@ -624,7 +607,13 @@ function drawRequisitionBody(
       cursor.y += 4.2;
       doc.setFontSize(7.5);
       doc.setTextColor(...PDF_MUTED);
-      const items = purchase.lines.map((line) => `${formatPdfQty(line.quantity)} ${line.unit} ${line.description}`).join(" · ");
+      const partByLine = new Map(requisition.lines.map((line) => [line.id, line.partNumber.trim()]));
+      const items = purchase.lines
+        .map((line) => {
+          const part = line.requisitionLineId ? partByLine.get(line.requisitionLineId) : "";
+          return `${formatPdfQty(line.quantity)} ${line.unit}${part ? ` · n.º ${part}` : ""} ${line.description}`;
+        })
+        .join(" · ");
       const wrapped = doc.splitTextToSize(items, cursor.contentW - 28) as string[];
       cursor.ensure(wrapped.length * 3.6);
       doc.text(wrapped, PDF_MARGIN + 28, cursor.y);

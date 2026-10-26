@@ -21,7 +21,7 @@ const db = supabase as any;
 
 function mapLine(
   row: Record<string, unknown>,
-  product?: { sku?: string; name?: string }
+  product?: { sku?: string; name?: string; partNumber?: string }
 ): ServiceOrderRequisitionLine {
   return {
     id: String(row.id),
@@ -33,6 +33,7 @@ function mapLine(
     productId: row.product_id ? String(row.product_id) : null,
     productSku: String(product?.sku ?? ""),
     productName: String(product?.name ?? ""),
+    partNumber: String(product?.partNumber ?? "").trim(),
     description: String(row.description ?? ""),
     quantityRequested: Number(row.quantity_requested ?? 0),
     quantityFulfilled: Number(row.quantity_fulfilled ?? 0),
@@ -100,7 +101,7 @@ async function hydrateRequisitions(
   const [linesRes, ordersRes] = await Promise.all([
     db
       .from("service_order_requisition_lines")
-      .select("*, product:inventory_items(sku, name)")
+      .select("*, product:inventory_items(sku, name, part_number), quote_line:quote_lines(part_number)")
       .in("requisition_id", ids),
     orderIds.length
       ? db
@@ -122,10 +123,13 @@ async function hydrateRequisitions(
   for (const row of linesRes.data ?? []) {
     const rid = String(row.requisition_id);
     const list = linesBy.get(rid) ?? [];
+    const catalogPart = String(row.product?.part_number ?? "").trim();
+    const quotePart = String(row.quote_line?.part_number ?? "").trim();
     list.push(
       mapLine(row, {
         sku: row.product?.sku,
         name: row.product?.name,
+        partNumber: catalogPart || quotePart,
       })
     );
     linesBy.set(rid, list);
