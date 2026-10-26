@@ -119,6 +119,8 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     color_tag?: string | null;
     cost_price?: number | null;
     stock_alerts_enabled?: boolean | null;
+    pieces_per_unit?: number | null;
+    piece_product_id?: string | null;
   };
   // If color_tag exists (even ""), it is the source of truth. Falling back to
   // notes when the column is empty re-applied <!--mas-color:…--> after clear.
@@ -170,6 +172,8 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     imagePath: row.image_path ?? "",
     imageUrl: row.image_url ?? "",
     galleryImages: parseGallery(row.gallery_images),
+    piecesPerUnit: Number(extra.pieces_per_unit ?? 0) || 0,
+    pieceProductId: extra.piece_product_id ? String(extra.piece_product_id) : "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

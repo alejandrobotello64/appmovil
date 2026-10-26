@@ -201,6 +201,10 @@ export type InventoryItem = {
   imageUrl: string;
   /** Imágenes adicionales; la principal sigue en imagePath/imageUrl. */
   galleryImages: InventoryGalleryImage[];
+  /** Piezas que salen al abrir una caja. Cero si aún no se ha capturado. */
+  piecesPerUnit?: number;
+  /** Artículo en piezas que recibe la existencia al abrir la caja. */
+  pieceProductId?: string;
   createdAt: string;
   updatedAt: string;
 };

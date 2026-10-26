@@ -69,6 +69,13 @@ export const WAREHOUSE_TABS = [
     href: "/dashboard/almacen?tab=movimientos",
   },
   {
+    id: "apertura_caja",
+    label: "Apertura de caja",
+    description:
+      "Abre artículos en caja y pasa la existencia a su presentación en piezas",
+    href: "/dashboard/almacen?tab=apertura_caja",
+  },
+  {
     id: "kardex",
     label: "Kardex",
     description: "Historial inalterable de existencias",
@@ -142,6 +149,9 @@ export function warehouseTabIsVisible(
       INVENTORY_TAB_MODULES.some((module) => canView(module)) ||
       canView("ordenes_servicio")
     );
+  }
+  if (tabId === "apertura_caja") {
+    return canView("movimientos");
   }
   return canView(tabId as WarehouseModule);
 }

@@ -9,6 +9,7 @@ import { StockMovementPanel } from "@/components/warehouse/stock-movement-panel"
 import { HoldsPanel } from "@/components/warehouse/holds-panel";
 import { ServiceRequisitionsPanel } from "@/components/warehouse/service-requisitions-panel";
 import { MovementsPanel } from "@/components/warehouse/movements-panel";
+import { BoxOpeningPanel } from "@/components/warehouse/box-opening-panel";
 import { PurchaseRequestsPanel } from "@/components/compras/purchase-requests-panel";
 import { MaintenancesPanel } from "@/components/warehouse/maintenances-panel";
 import { ReportPanel } from "@/components/warehouse/report-panel";
@@ -121,6 +122,8 @@ export function WarehousePage() {
             ) : null}
 
             {activeTab === "movimientos" ? <MovementsPanel /> : null}
+
+            {activeTab === "apertura_caja" ? <BoxOpeningPanel /> : null}
 
             {activeTab === "kardex" ? <KardexPanel /> : null}
 
