@@ -108,7 +108,7 @@ export function DocumentPreviewHost() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[140] flex flex-col bg-background"
+      className="fixed inset-0 z-[2147483646] flex flex-col bg-background"
       role="dialog"
       aria-modal="true"
       aria-label={`Vista previa de ${preview.title}`}
