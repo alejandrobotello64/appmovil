@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { FileCode2, FileText, Receipt, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { Notice, fieldClass, formatDate, primaryButtonClass, textareaClass } from "@/components/tools/tools-shared";
 import {
@@ -231,6 +232,16 @@ export function PurchaseOrderInvoicesModal({
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2 text-xs hover:bg-muted"
+                        onClick={(event) =>
+                          openStoredFileOnMobile(event, {
+                            url: invoice.pdfUrl,
+                            title: invoice.invoiceNumber
+                              ? `Factura ${invoice.invoiceNumber}`
+                              : "Factura",
+                            fileName: `${invoice.invoiceNumber || "factura"}.pdf`,
+                            mime: "application/pdf",
+                          })
+                        }
                       >
                         <FileText className="size-3.5" /> PDF
                       </a>
@@ -241,6 +252,16 @@ export function PurchaseOrderInvoicesModal({
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2 text-xs hover:bg-muted"
+                        onClick={(event) =>
+                          openStoredFileOnMobile(event, {
+                            url: invoice.xmlUrl,
+                            title: invoice.invoiceNumber
+                              ? `XML ${invoice.invoiceNumber}`
+                              : "XML de factura",
+                            fileName: `${invoice.invoiceNumber || "cfdi"}.xml`,
+                            mime: "application/xml",
+                          })
+                        }
                       >
                         <FileCode2 className="size-3.5" /> XML
                       </a>

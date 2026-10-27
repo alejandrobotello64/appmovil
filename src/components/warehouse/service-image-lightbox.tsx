@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer, X } from "lucide-react";
+import { printDocumentPreview } from "@/lib/print/document-preview";
 import { IMAGE_STAGES, type ServiceOrderImage } from "@/lib/service-orders/types";
 
 type ServiceImageLightboxProps = {
@@ -96,10 +97,27 @@ export function ServiceImageLightbox({
           alt={image.caption || stage}
           className="max-h-[min(82vh,920px)] max-w-[min(96vw,1200px)] rounded-lg object-contain shadow-2xl"
         />
-        <figcaption className="max-w-[min(96vw,720px)] text-center text-sm text-white/90">
-          {stage}
-          {image.caption ? ` · ${image.caption}` : ""}
-          {images.length > 1 ? ` · ${index + 1} de ${images.length}` : ""}
+        <figcaption className="flex max-w-[min(96vw,720px)] flex-col items-center gap-2 text-center text-sm text-white/90">
+          <span>
+            {stage}
+            {image.caption ? ` · ${image.caption}` : ""}
+            {images.length > 1 ? ` · ${index + 1} de ${images.length}` : ""}
+          </span>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-black"
+            onClick={() =>
+              void printDocumentPreview({
+                url: image.fileUrl,
+                title: image.caption || stage,
+                fileName: "foto-servicio.jpg",
+                mime: "image/jpeg",
+              })
+            }
+          >
+            <Printer className="size-4" />
+            Imprimir
+          </button>
         </figcaption>
       </figure>
     </div>,

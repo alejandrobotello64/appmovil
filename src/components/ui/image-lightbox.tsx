@@ -9,10 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { printDocumentPreview } from "@/lib/print/document-preview";
 import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Printer,
   RotateCcw,
   X,
   ZoomIn,
@@ -275,6 +277,22 @@ export function ImageLightbox({
             title="Restablecer (0)"
           >
             <RotateCcw className="size-5" />
+          </button>
+          <button
+            type="button"
+            className="rounded-full p-2 hover:bg-white/15"
+            aria-label="Imprimir imagen"
+            title="Imprimir"
+            onClick={() =>
+              void printDocumentPreview({
+                url: image.src,
+                title: image.caption || image.alt || "Imagen",
+                fileName: image.alt || "imagen.jpg",
+                mime: "image/jpeg",
+              })
+            }
+          >
+            <Printer className="size-5" />
           </button>
           <a
             href={image.src}

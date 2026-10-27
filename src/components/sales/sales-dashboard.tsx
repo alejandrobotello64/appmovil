@@ -27,6 +27,7 @@ import {
   catalogDocTypeLabel,
   type CatalogDocument,
 } from "@/lib/sales-catalog/types";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { cn } from "@/lib/utils";
 
 const CLOSED_STATUSES = ["aceptada", "rechazada", "vencida", "cancelada"];
@@ -484,6 +485,14 @@ export function SalesDashboard() {
                         target="_blank"
                         rel="noreferrer"
                         className="font-medium hover:text-[#3B46A5] hover:underline"
+                        onClick={(event) =>
+                          openStoredFileOnMobile(event, {
+                            url: doc.fileUrl,
+                            title: doc.title,
+                            fileName: doc.fileName,
+                            mime: doc.mimeType,
+                          })
+                        }
                       >
                         {doc.title}
                       </a>

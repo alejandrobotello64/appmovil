@@ -91,6 +91,7 @@ import {
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
 import { downloadRequisitionPdf } from "@/lib/service-orders/requisition-pdf";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { ApplySupplyKitBar } from "@/components/warehouse/apply-supply-kit";
 import {
   ServiceCatalogPicker,
@@ -2888,6 +2889,13 @@ export function ServiceOrdersPanel({
                                   target="_blank"
                                   rel="noreferrer"
                                   className="shrink-0"
+                                  onClick={(event) =>
+                                    openStoredFileOnMobile(event, {
+                                      url: doc.fileUrl,
+                                      title: doc.title || doc.fileName,
+                                      fileName: doc.fileName,
+                                    })
+                                  }
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
@@ -2905,6 +2913,13 @@ export function ServiceOrdersPanel({
                                   target="_blank"
                                   rel="noreferrer"
                                   className="font-medium text-[#3B46A5] hover:underline"
+                                  onClick={(event) =>
+                                    openStoredFileOnMobile(event, {
+                                      url: doc.fileUrl,
+                                      title: doc.title || doc.fileName,
+                                      fileName: doc.fileName,
+                                    })
+                                  }
                                 >
                                   {doc.title || doc.fileName}
                                 </a>
@@ -2977,6 +2992,14 @@ export function ServiceOrdersPanel({
                                 target="_blank"
                                 rel="noreferrer"
                                 className="font-medium text-[#3B46A5] hover:underline"
+                                onClick={(event) =>
+                                  openStoredFileOnMobile(event, {
+                                    url: doc.fileUrl,
+                                    title: doc.title || doc.fileName,
+                                    fileName: doc.fileName,
+                                    mime: "application/pdf",
+                                  })
+                                }
                               >
                                 {doc.title || doc.fileName}
                               </a>

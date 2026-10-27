@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { FileDown, FileText, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportExpenseSummaryPdf, type PdfOutput } from "@/lib/expenses/pdf";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { filterEntries, summarize, type SummaryFilters } from "@/lib/expenses/summary";
 import {
   EXPENSE_CATEGORIES,
@@ -380,6 +381,14 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 text-[#3B46A5] hover:underline"
+                              onClick={(event) =>
+                                openStoredFileOnMobile(event, {
+                                  url: item.pdfUrl,
+                                  title: "Factura",
+                                  fileName: "factura.pdf",
+                                  mime: "application/pdf",
+                                })
+                              }
                             >
                               <FileText className="size-3.5" />
                               Ver

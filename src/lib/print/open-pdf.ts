@@ -1,4 +1,5 @@
 import type { jsPDF } from "jspdf";
+import { openDocumentPreview } from "@/lib/print/document-preview";
 
 export type PdfIntent = "print" | "download";
 
@@ -25,44 +26,32 @@ function triggerAnchor(url: string, fileName: string) {
   anchor.remove();
 }
 
-async function sharePdf(file: File) {
-  const nav = navigator as Navigator & {
-    canShare?: (data: ShareData) => boolean;
-  };
-  if (!nav.share || !nav.canShare?.({ files: [file] })) return false;
-  try {
-    await nav.share({
-      files: [file],
-      title: file.name,
-      text: file.name.replace(/\.pdf$/i, ""),
-    });
-    return true;
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") return true;
-    return false;
-  }
-}
-
 /**
- * Entrega un PDF generado: en escritorio abre impresión; en móvil comparte o
- * descarga para que el visor del teléfono sí deje imprimir.
+ * Entrega un PDF generado. En escritorio abre el cuadro de impresión.
+ * En celular muestra la vista previa y desde ahí se imprime.
  */
 export async function deliverPdf(
   doc: jsPDF,
   fileName: string,
   intent: PdfIntent = "print"
 ) {
-  if (intent === "print" && !isMobilePdfClient()) {
+  const mobile = isMobilePdfClient();
+  if (intent === "print" && !mobile) {
     doc.autoPrint();
   }
   const blob = doc.output("blob") as Blob;
   const file = new File([blob], fileName, { type: "application/pdf" });
 
-  if (isMobilePdfClient()) {
-    if (await sharePdf(file)) return;
+  if (mobile) {
     const url = URL.createObjectURL(blob);
-    triggerAnchor(url, fileName);
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    openDocumentPreview({
+      title: fileName.replace(/\.pdf$/i, ""),
+      fileName,
+      url,
+      mime: "application/pdf",
+      revoke: true,
+      blob: file,
+    });
     return;
   }
 
@@ -79,4 +68,20 @@ export async function deliverPdf(
   const url = URL.createObjectURL(blob);
   triggerAnchor(url, fileName);
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/** En celular abre la vista previa del archivo y cancela la navegación del enlace. */
+export function openStoredFileOnMobile(
+  event: { preventDefault(): void },
+  file: { url: string; title: string; fileName?: string; mime?: string }
+) {
+  if (!file.url || !isMobilePdfClient()) return false;
+  event.preventDefault();
+  openDocumentPreview({
+    title: file.title,
+    fileName: file.fileName || file.title,
+    url: file.url,
+    mime: file.mime,
+  });
+  return true;
 }

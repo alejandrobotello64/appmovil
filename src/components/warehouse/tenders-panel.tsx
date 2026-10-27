@@ -11,6 +11,7 @@ import {
   BookmarkPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -1349,6 +1350,13 @@ export function TendersPanel() {
                             target="_blank"
                             rel="noreferrer"
                             className="rounded-lg border border-border px-2 py-1 text-xs"
+                            onClick={(event) =>
+                              openStoredFileOnMobile(event, {
+                                url: doc.fileUrl,
+                                title: doc.name,
+                                fileName: doc.name,
+                              })
+                            }
                           >
                             Ver
                           </a>

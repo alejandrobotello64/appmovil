@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { exportExpenseReportPdf, type PdfOutput } from "@/lib/expenses/pdf";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { deleteExpenseItem, setExpenseReportStatus } from "@/lib/expenses/storage";
 import {
   balanceLabel,
@@ -315,13 +316,43 @@ export function ExpenseReportDetail({
                         </p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                           {item.pdfUrl ? (
-                            <a href={item.pdfUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md bg-[#3B46A5]/10 px-2 py-0.5 font-medium text-[#3B46A5] hover:underline">
+                            <a
+                              href={item.pdfUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 rounded-md bg-[#3B46A5]/10 px-2 py-0.5 font-medium text-[#3B46A5] hover:underline"
+                              onClick={(event) =>
+                                openStoredFileOnMobile(event, {
+                                  url: item.pdfUrl,
+                                  title: item.invoiceNumber
+                                    ? `Comprobante ${item.invoiceNumber}`
+                                    : "Comprobante",
+                                  fileName: `${item.invoiceNumber || "comprobante"}.pdf`,
+                                  mime: "application/pdf",
+                                })
+                              }
+                            >
                               <FileText className="size-3.5" />
                               Comprobante
                             </a>
                           ) : null}
                           {item.xmlUrl ? (
-                            <a href={item.xmlUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md bg-[#00BFFF]/10 px-2 py-0.5 font-medium text-sky-700 hover:underline dark:text-sky-300">
+                            <a
+                              href={item.xmlUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 rounded-md bg-[#00BFFF]/10 px-2 py-0.5 font-medium text-sky-700 hover:underline dark:text-sky-300"
+                              onClick={(event) =>
+                                openStoredFileOnMobile(event, {
+                                  url: item.xmlUrl,
+                                  title: item.invoiceNumber
+                                    ? `XML ${item.invoiceNumber}`
+                                    : "XML del comprobante",
+                                  fileName: `${item.invoiceNumber || "cfdi"}.xml`,
+                                  mime: "application/xml",
+                                })
+                              }
+                            >
                               <FileCode2 className="size-3.5" />
                               XML
                             </a>

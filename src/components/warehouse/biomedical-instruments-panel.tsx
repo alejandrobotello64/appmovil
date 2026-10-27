@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -563,6 +564,14 @@ export function BiomedicalInstrumentsPanel() {
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-[#3B46A5] hover:underline"
+                    onClick={(event) =>
+                      openStoredFileOnMobile(event, {
+                        url: item.certificateUrl,
+                        title: item.certificateName || "Certificado",
+                        fileName: item.certificateName || "certificado.pdf",
+                        mime: "application/pdf",
+                      })
+                    }
                   >
                     <FileText className="size-3.5" />
                     {item.certificateName || "Ver certificado PDF"}

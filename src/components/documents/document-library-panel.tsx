@@ -32,6 +32,8 @@ import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
+import { isMobilePdfClient } from "@/lib/print/open-pdf";
+import { openDocumentPreview } from "@/lib/print/document-preview";
 import type { WarehouseModule } from "@/lib/auth/permissions";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { mostCommon, normalizeKey } from "@/lib/equipment-grouping";
@@ -508,6 +510,33 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
   async function openDocument(doc: CatalogDocument) {
     if (fileKind(doc) === "image") {
       setPreviewIndex(imageDocs.findIndex((item) => item.id === doc.id));
+      return;
+    }
+    if (isMobilePdfClient()) {
+      try {
+        if (!doc.fileUrl.includes("manifest.json")) {
+          openDocumentPreview({
+            title: doc.title,
+            fileName: doc.fileName || doc.title,
+            url: doc.fileUrl,
+            mime: doc.mimeType,
+          });
+          return;
+        }
+        setMessage("Preparando vista previa…");
+        const blob = await getCatalogDocumentFile(doc);
+        openDocumentPreview({
+          title: doc.title,
+          fileName: doc.fileName || doc.title,
+          url: URL.createObjectURL(blob),
+          mime: blob.type || doc.mimeType,
+          revoke: true,
+          blob,
+        });
+        setMessage("");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No se pudo abrir el archivo.");
+      }
       return;
     }
     if (!doc.fileUrl.includes("manifest.json")) {

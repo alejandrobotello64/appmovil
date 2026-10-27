@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import Script from "next/script";
+import { DocumentPreviewHost } from "@/components/print/document-preview-host";
 import { ThemeProvider, themeInitScript } from "@/components/theme-provider";
 import { ZoomProvider, zoomInitScript } from "@/components/zoom-provider";
 import "./globals.css";
@@ -73,7 +74,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: zoomInitScript }}
         />
         <ThemeProvider>
-          <ZoomProvider>{children}</ZoomProvider>
+          <ZoomProvider>
+            {children}
+            <DocumentPreviewHost />
+          </ZoomProvider>
         </ThemeProvider>
       </body>
     </html>
