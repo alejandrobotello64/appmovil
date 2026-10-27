@@ -36,28 +36,33 @@ function looseName(name: string) {
     .trim();
 }
 
-/** Cuántas piezas trae la caja, si el nombre lo dice (10/caja, 20 bolsa/caja, 25 uds). */
+/** Cuántas piezas trae la caja o el paquete, si el nombre lo dice. */
 export function piecesPerBoxFromName(name: string): number | null {
   const match =
     name.match(/(\d+)\s*bolsas?\s*\/\s*caja/i) ||
+    name.match(/(\d+)\s*pz(?:as?)?\s*\/\s*caja/i) ||
     name.match(/(\d+)\s*\/\s*caja/i) ||
-    name.match(/(\d+)\s*(?:uds?\.?|unidades|piezas)\b/i);
+    name.match(/(\d+)\s*pz(?:as?)?\s*\/\s*bolsa/i) ||
+    name.match(/(\d+)\s*\/\s*case/i) ||
+    name.match(/(\d+)\s*(?:uds?\.?|unidades|piezas|pzas?)\b/i);
   if (!match) return null;
   const value = Number(match[1]);
   if (!Number.isInteger(value) || value <= 0 || value > 100000) return null;
   return value;
 }
 
-/** Nombre de la ficha en piezas a partir del nombre de la caja. */
+/** Nombre de la ficha en piezas: quita el empaque y deja la palabra pieza. */
 export function piecePresentationName(name: string) {
   const trimmed = name.trim().replace(/\s+/g, " ");
   const replaced = trimmed
     .replace(/\s*\d+\s*bolsas?\s*\/\s*caja\b/i, " pieza")
+    .replace(/\s*\d+\s*pz(?:as?)?\s*\/\s*caja\b/i, " pieza")
     .replace(/\s*\d+\s*\/\s*caja\b/i, " pieza")
+    .replace(/\s*\d+\s*pz(?:as?)?\s*\/\s*bolsa\b/i, " pieza")
     .replace(/\s+/g, " ")
     .trim();
   if (replaced !== trimmed) return replaced;
-  if (/\bpiezas?\b/i.test(trimmed)) return trimmed;
+  if (/\bpiezas?\s*$/i.test(trimmed)) return trimmed;
   return `${trimmed} pieza`;
 }
 
