@@ -131,6 +131,195 @@ export async function openBoxToPieces(input: {
   };
 }
 
+export type QuickOpenTarget = {
+  productId: string;
+  partNumber: string;
+  unit: string;
+  pending: number;
+  available: number;
+};
+
+export type QuickOpenBalance = {
+  id: string;
+  warehouseId: string;
+  warehouseCode: string;
+  warehouseName: string;
+  locationId: string;
+  locationName: string;
+  lotNumber: string;
+  expiryDate: string;
+  available: number;
+};
+
+export type QuickOpenBox = {
+  boxId: string;
+  sku: string;
+  name: string;
+  partNumber: string;
+  piecesPerUnit: number | null;
+  pieceId: string;
+  pieceSku: string;
+  pieceName: string;
+  /** Piezas que aún faltan del pedido, descontando lo ya disponible. */
+  shortage: number;
+  balances: QuickOpenBalance[];
+};
+
+function isPieceUnit(unit: string) {
+  const value = unit.trim().toLowerCase();
+  return value === "pieza" || value === "pza" || value === "piezas";
+}
+
+/** Cuántas cajas abren el faltante sin pasar la existencia de esa ubicación. */
+export function suggestedBoxCount(shortage: number, perBox: number, available: number) {
+  const cap = Math.max(0, Math.floor(available));
+  if (cap <= 0) return 0;
+  if (!Number.isInteger(perBox) || perBox <= 0) return 1;
+  const need = shortage > 0 ? Math.ceil(shortage / perBox) : 1;
+  return Math.min(cap, Math.max(1, need));
+}
+
+type BoxRow = {
+  id?: string;
+  sku?: string;
+  name?: string;
+  part_number?: string;
+  pieces_per_unit?: number | null;
+  piece_product_id?: string | null;
+};
+
+/** Cajas con existencia que alimentan las piezas pedidas en el surtimiento. */
+export async function listQuickOpenBoxes(targets: QuickOpenTarget[]): Promise<QuickOpenBox[]> {
+  const pieces = targets.filter((target) => target.productId && isPieceUnit(target.unit));
+  const pieceIds = [...new Set(pieces.map((target) => target.productId))];
+  const parts = [
+    ...new Set(pieces.map((target) => target.partNumber.trim()).filter(Boolean)),
+  ];
+  if (!pieceIds.length && !parts.length) return [];
+
+  const boxQuery = db
+    .from("inventory_items")
+    .select("id, sku, name, part_number, pieces_per_unit, piece_product_id")
+    .eq("unit", "caja")
+    .eq("is_active", true);
+  const [linkedRes, partRes] = await Promise.all([
+    pieceIds.length ? boxQuery.in("piece_product_id", pieceIds) : Promise.resolve({ data: [], error: null }),
+    parts.length
+      ? db
+          .from("inventory_items")
+          .select("id, sku, name, part_number, pieces_per_unit, piece_product_id")
+          .eq("unit", "caja")
+          .eq("is_active", true)
+          .in("part_number", parts)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (linkedRes.error) throw new Error(linkedRes.error.message);
+  if (partRes.error) throw new Error(partRes.error.message);
+
+  const byId = new Map<string, BoxRow>();
+  for (const row of [...(linkedRes.data ?? []), ...(partRes.data ?? [])] as BoxRow[]) {
+    if (row.id) byId.set(String(row.id), row);
+  }
+  const boxes = [...byId.values()];
+  if (!boxes.length) return [];
+
+  const destinationIds = [
+    ...new Set(
+      boxes.flatMap((row) => {
+        const linked = row.piece_product_id ? String(row.piece_product_id) : "";
+        if (linked && pieceIds.includes(linked)) return [linked];
+        const part = String(row.part_number ?? "").trim().toLowerCase();
+        const match = pieces.find((target) => target.partNumber.trim().toLowerCase() === part);
+        return match ? [match.productId] : [];
+      })
+    ),
+  ];
+  const boxIds = boxes.map((row) => String(row.id));
+  const [piecesRes, balancesRes] = await Promise.all([
+    destinationIds.length
+      ? db.from("inventory_items").select("id, sku, name").in("id", destinationIds)
+      : Promise.resolve({ data: [], error: null }),
+    db
+      .from("inventory_balances")
+      .select(
+        "id, product_id, qty_on_hand, qty_reserved, warehouse:warehouses(id, code, name), location:locations(id, name), lot:lots(lot_number, expiry_date)"
+      )
+      .in("product_id", boxIds)
+      .gt("qty_on_hand", 0),
+  ]);
+  if (piecesRes.error) throw new Error(piecesRes.error.message);
+  if (balancesRes.error) throw new Error(balancesRes.error.message);
+
+  const pieceById = new Map<string, { sku: string; name: string }>();
+  for (const row of piecesRes.data ?? []) {
+    pieceById.set(String(row.id), { sku: String(row.sku ?? ""), name: String(row.name ?? "") });
+  }
+
+  const balancesByBox = new Map<string, QuickOpenBalance[]>();
+  for (const row of (balancesRes.data ?? []) as Record<string, unknown>[]) {
+    const warehouse = (row.warehouse ?? {}) as Record<string, unknown>;
+    const location = (row.location ?? {}) as Record<string, unknown>;
+    const lot = (row.lot ?? {}) as Record<string, unknown>;
+    const available = Math.max(0, Number(row.qty_on_hand ?? 0) - Number(row.qty_reserved ?? 0));
+    if (available <= 0) continue;
+    const productId = String(row.product_id ?? "");
+    const list = balancesByBox.get(productId) ?? [];
+    list.push({
+      id: String(row.id),
+      warehouseId: String(warehouse.id ?? ""),
+      warehouseCode: String(warehouse.code ?? ""),
+      warehouseName: String(warehouse.name ?? ""),
+      locationId: String(location.id ?? ""),
+      locationName: String(location.name ?? ""),
+      lotNumber: String(lot.lot_number ?? ""),
+      expiryDate: String(lot.expiry_date ?? ""),
+      available,
+    });
+    balancesByBox.set(productId, list);
+  }
+
+  const result: QuickOpenBox[] = [];
+  for (const row of boxes) {
+    const boxId = String(row.id);
+    const balances = (balancesByBox.get(boxId) ?? []).sort(
+      (a, b) =>
+        a.warehouseCode.localeCompare(b.warehouseCode) ||
+        a.locationName.localeCompare(b.locationName) ||
+        (a.expiryDate || "9999").localeCompare(b.expiryDate || "9999")
+    );
+    if (!balances.length) continue;
+    const part = String(row.part_number ?? "").trim().toLowerCase();
+    const linked = row.piece_product_id ? String(row.piece_product_id) : "";
+    const pieceId = pieceIds.includes(linked)
+      ? linked
+      : !linked
+        ? pieces.find((target) => target.partNumber.trim().toLowerCase() === part)?.productId ?? ""
+        : "";
+    if (!pieceId || pieceId === boxId) continue;
+    const piece = pieceById.get(pieceId);
+    if (!piece) continue;
+    const pending = pieces
+      .filter((target) => target.productId === pieceId)
+      .reduce((sum, target) => sum + target.pending, 0);
+    const onHand = pieces.find((target) => target.productId === pieceId)?.available ?? 0;
+    const per = Number(row.pieces_per_unit ?? 0);
+    result.push({
+      boxId,
+      sku: String(row.sku ?? ""),
+      name: String(row.name ?? ""),
+      partNumber: String(row.part_number ?? ""),
+      piecesPerUnit: per > 0 ? per : null,
+      pieceId,
+      pieceSku: piece.sku,
+      pieceName: piece.name,
+      shortage: Math.max(0, pending - onHand),
+      balances,
+    });
+  }
+  result.sort((a, b) => b.shortage - a.shortage || a.name.localeCompare(b.name, "es"));
+  return result;
+}
+
 export async function listRecentBoxOpenings(): Promise<BoxOpeningRecord[]> {
   const { data, error } = await db
     .from("inventory_movements")

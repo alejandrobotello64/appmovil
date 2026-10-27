@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Loader2, PackageCheck, Printer, RefreshCw, ShoppingCart, XCircle } from "lucide-react";
+import { QuickBoxOpenButton } from "@/components/warehouse/quick-box-open";
 import { Button } from "@/components/ui/button";
 import { PurchaseRequestForm } from "@/components/purchasing/purchase-request-form";
 import { PurchaseStatusBadge, formatQty } from "@/components/purchasing/purchasing-shared";
@@ -148,6 +149,8 @@ export function ServiceRequisitionsPanel({
   const [printBusy, setPrintBusy] = useState<"folios" | "suma" | "">("");
   const [availableByProduct, setAvailableByProduct] = useState<Map<string, number> | null>(null);
   const [availableLoading, setAvailableLoading] = useState(false);
+  const [stockEpoch, setStockEpoch] = useState(0);
+  const raisedPieces = useRef(new Set<string>());
   const [purchaseForm, setPurchaseForm] = useState<{
     jobs: { requisition: ServiceOrderRequisition; shortages: RequisitionShortage[] }[];
   } | null>(null);
@@ -223,6 +226,8 @@ export function ServiceRequisitionsPanel({
       .then((map) => {
         if (!active) return;
         setAvailableByProduct(map);
+        const raised = raisedPieces.current;
+        raisedPieces.current = new Set();
         setQtyDraft((current) => {
           const next = { ...current };
           let changed = false;
@@ -233,6 +238,20 @@ export function ServiceRequisitionsPanel({
               (sum, source) => sum + Number(current[source.line.id] || 0),
               0
             );
+            if (raised.has(group.productId)) {
+              const allocated = allocateFulfillmentQty(
+                group.sources.map((source) => source.line),
+                cap
+              );
+              for (const [lineId, qty] of Object.entries(allocated)) {
+                const value = formatQty(qty);
+                if (next[lineId] !== value) {
+                  next[lineId] = value;
+                  changed = true;
+                }
+              }
+              continue;
+            }
             if (currentQty <= cap + 0.0001) continue;
             const allocated = allocateFulfillmentQty(
               group.sources.map((source) => source.line),
@@ -254,6 +273,11 @@ export function ServiceRequisitionsPanel({
           for (const group of pickGroups) {
             if (!group.productId || group.offCatalog || group.pending <= 0) continue;
             const cap = Math.min(group.pending, Math.max(0, map.get(group.productId) ?? 0));
+            if (raised.has(group.productId)) {
+              nextGroups[group.key] = formatQty(cap);
+              changed = true;
+              continue;
+            }
             const raw = currentGroups[group.key];
             const parsed = raw != null && raw.trim() !== "" ? Number(raw) : group.pending;
             if (!Number.isFinite(parsed) || parsed <= cap + 0.0001) continue;
@@ -277,7 +301,7 @@ export function ServiceRequisitionsPanel({
     };
     // pickGroups se alinea con la selección y los códigos cargados.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pickStockKey, selectedIds, reloadKey]);
+  }, [pickStockKey, selectedIds, reloadKey, stockEpoch]);
 
   const pickAvailableUnits = pickGroups.reduce((sum, group) => {
     if (group.offCatalog || !group.productId) return sum;
@@ -1112,6 +1136,22 @@ export function ServiceRequisitionsPanel({
                     <Button type="button" variant="outline" disabled={busy} onClick={() => void onRequestPurchase()}>
                       <ShoppingCart className="size-4" /> Solicitar compra de faltantes
                     </Button>
+                    <QuickBoxOpenButton
+                      disabled={busy}
+                      targets={pickGroups
+                        .filter((group) => group.productId)
+                        .map((group) => ({
+                          productId: group.productId as string,
+                          partNumber: group.partNumber,
+                          unit: group.unit,
+                          pending: group.pending,
+                          available: Math.max(0, availableByProduct?.get(group.productId as string) ?? 0),
+                        }))}
+                      onOpened={(pieceId) => {
+                        raisedPieces.current.add(pieceId);
+                        setStockEpoch((epoch) => epoch + 1);
+                      }}
+                    />
                   </>
                 ) : null}
                 {selectedItems.length === 1 && selected.status === "solicitada" && canCancel ? (
