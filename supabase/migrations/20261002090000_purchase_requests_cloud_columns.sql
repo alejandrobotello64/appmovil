@@ -18,17 +18,7 @@ alter table public.purchase_requests
 alter table public.purchase_requests
   add column if not exists compras_notes text not null default '';
 
-do $$
-begin
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public' and table_name = 'purchase_requests' and column_name = 'notes'
-  ) then
-    update public.purchase_requests
-    set warehouse_notes = notes
-    where coalesce(warehouse_notes, '') = '' and coalesce(notes, '') <> '';
-  end if;
-end $$;
+-- La app lee notes, justification, quantity y description. No se copian a las columnas nuevas.
 
 alter table public.purchase_request_lines
   add column if not exists source_line_id uuid;
@@ -38,27 +28,6 @@ alter table public.purchase_request_lines
   add column if not exists quantity_ordered numeric(14,2) not null default 0;
 alter table public.purchase_request_lines
   add column if not exists quantity_received numeric(14,2) not null default 0;
-
-do $$
-begin
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public' and table_name = 'purchase_request_lines' and column_name = 'quantity'
-  ) then
-    update public.purchase_request_lines
-    set quantity_requested = quantity
-    where quantity_requested is null;
-  end if;
-end $$;
-
-update public.purchase_request_lines
-set quantity_requested = 1
-where quantity_requested is null;
-
-alter table public.purchase_request_lines
-  alter column quantity_requested set default 1;
-alter table public.purchase_request_lines
-  alter column quantity_requested set not null;
 
 do $$
 begin

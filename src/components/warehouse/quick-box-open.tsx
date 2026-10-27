@@ -281,7 +281,7 @@ function QuickBoxOpenDialog({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={Boolean(busyId)}
+                    disabled={Boolean(busyId) || !Number.isInteger(count) || count <= 0}
                     onClick={() => void openOne(box)}
                     className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
                   >

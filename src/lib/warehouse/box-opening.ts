@@ -173,7 +173,7 @@ function isPieceUnit(unit: string) {
 /** Cuántas cajas abren el faltante sin pasar la existencia de esa ubicación. */
 export function suggestedBoxCount(shortage: number, perBox: number, available: number) {
   const cap = Math.max(0, Math.floor(available));
-  if (cap <= 0) return 0;
+  if (cap <= 0 || shortage <= 0) return 0;
   if (!Number.isInteger(perBox) || perBox <= 0) return 1;
   const need = shortage > 0 ? Math.ceil(shortage / perBox) : 1;
   return Math.min(cap, Math.max(1, need));
@@ -197,22 +197,37 @@ export async function listQuickOpenBoxes(targets: QuickOpenTarget[]): Promise<Qu
   ];
   if (!pieceIds.length && !parts.length) return [];
 
-  const boxQuery = db
-    .from("inventory_items")
-    .select("id, sku, name, part_number, pieces_per_unit, piece_product_id")
-    .eq("unit", "caja")
-    .eq("is_active", true);
-  const [linkedRes, partRes] = await Promise.all([
-    pieceIds.length ? boxQuery.in("piece_product_id", pieceIds) : Promise.resolve({ data: [], error: null }),
-    parts.length
-      ? db
-          .from("inventory_items")
-          .select("id, sku, name, part_number, pieces_per_unit, piece_product_id")
-          .eq("unit", "caja")
-          .eq("is_active", true)
-          .in("part_number", parts)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+  const boxColumns = "id, sku, name, part_number, pieces_per_unit, piece_product_id";
+  const boxColumnsLegacy = "id, sku, name, part_number";
+  async function loadBoxes(columns: string, linkPieces: boolean) {
+    const [linkedRes, partRes] = await Promise.all([
+      linkPieces && pieceIds.length
+        ? db
+            .from("inventory_items")
+            .select(columns)
+            .eq("unit", "caja")
+            .eq("is_active", true)
+            .in("piece_product_id", pieceIds)
+        : Promise.resolve({ data: [], error: null }),
+      parts.length
+        ? db
+            .from("inventory_items")
+            .select(columns)
+            .eq("unit", "caja")
+            .eq("is_active", true)
+            .in("part_number", parts)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    return [linkedRes, partRes] as const;
+  }
+  let [linkedRes, partRes] = await loadBoxes(boxColumns, true);
+  const columnError = linkedRes.error ?? partRes.error;
+  if (
+    columnError &&
+    /pieces_per_unit|piece_product_id/i.test(columnError.message ?? "")
+  ) {
+    [linkedRes, partRes] = await loadBoxes(boxColumnsLegacy, false);
+  }
   if (linkedRes.error) throw new Error(linkedRes.error.message);
   if (partRes.error) throw new Error(partRes.error.message);
 

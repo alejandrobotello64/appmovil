@@ -49,6 +49,8 @@ function statusTone(status: PurchaseRequestStatus) {
       return "bg-orange-500/15 text-orange-700 dark:text-orange-300";
     case "recibida":
       return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
+    case "rechazada":
+      return "bg-rose-500/15 text-rose-700 dark:text-rose-300";
     default:
       return "bg-muted text-muted-foreground";
   }

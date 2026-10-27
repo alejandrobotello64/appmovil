@@ -67,19 +67,65 @@ function newId() {
   return crypto.randomUUID();
 }
 
+function text(value: unknown) {
+  return String(value ?? "").trim();
+}
+
+/** La nube guarda el estatus histórico. La pantalla usa los nombres actuales. */
+const STORED_STATUS_TO_APP: Record<string, PurchaseRequestStatus> = {
+  pendiente: "solicitada",
+  en_proceso: "en_compra",
+  ordenada: "pedida",
+  solicitada: "solicitada",
+  en_compra: "en_compra",
+  pedida: "pedida",
+  parcial: "parcial",
+  recibida: "recibida",
+  cancelada: "cancelada",
+  rechazada: "rechazada",
+};
+
+const APP_STATUS_TO_STORED: Record<string, string> = {
+  solicitada: "pendiente",
+  en_compra: "en_proceso",
+  pedida: "ordenada",
+  parcial: "en_proceso",
+  recibida: "recibida",
+  cancelada: "cancelada",
+  rechazada: "rechazada",
+};
+
+function fromStoredStatus(value: unknown): PurchaseRequestStatus {
+  const status = text(value);
+  return STORED_STATUS_TO_APP[status] ?? "solicitada";
+}
+
+function toStoredStatus(status: string) {
+  return APP_STATUS_TO_STORED[status] ?? status;
+}
+
+function storedSource(sourceType: string) {
+  return sourceType === "manual" ? "manual" : "surtimiento";
+}
+
 function mapLine(row: Record<string, unknown>): PurchaseRequestLine {
+  const requested = row.quantity_requested ?? row.quantity ?? 0;
   return {
     id: String(row.id),
     requestId: String(row.request_id),
-    sourceLineId: row.source_line_id ? String(row.source_line_id) : null,
+    sourceLineId: row.source_line_id
+      ? String(row.source_line_id)
+      : row.requisition_line_id
+        ? String(row.requisition_line_id)
+        : null,
     productId: row.product_id ? String(row.product_id) : null,
-    productSku: String(row.product_sku ?? ""),
-    productName: String(row.product_name ?? ""),
-    quantityRequested: Number(row.quantity_requested ?? row.quantity ?? 0),
+    productSku: text(row.product_sku),
+    productName: text(row.product_name) || text(row.description),
+    quantityRequested: Number(requested),
     quantityOrdered: Number(row.quantity_ordered ?? 0),
     quantityReceived: Number(row.quantity_received ?? 0),
-    unit: String(row.unit ?? "pza"),
-    notes: String(row.notes ?? ""),
+    unit: text(row.unit) || "pza",
+    notes: text(row.notes),
   };
 }
 
@@ -87,22 +133,34 @@ function mapRequest(
   row: Record<string, unknown>,
   lines: PurchaseRequestLine[]
 ): PurchaseRequest {
+  const storedSourceType = text(row.source_type);
+  const legacySource = text(row.source);
+  const sourceType = (
+    storedSourceType && storedSourceType !== "manual"
+      ? storedSourceType
+      : legacySource && legacySource !== "manual"
+        ? legacySource
+        : storedSourceType || legacySource || "manual"
+  ) as PurchaseRequestSource;
+  const sourceId = row.source_id || row.requisition_id || row.service_order_id || null;
+  const sourceFolio =
+    text(row.source_folio) || text(row.requisition_folio) || text(row.service_order_folio);
   return {
     id: String(row.id),
     folio: String(row.folio),
-    status: String(row.status ?? "solicitada") as PurchaseRequestStatus,
-    sourceType: String(row.source_type ?? "manual") as PurchaseRequestSource,
-    sourceId: row.source_id ? String(row.source_id) : null,
-    sourceFolio: String(row.source_folio ?? ""),
-    reason: String(row.reason ?? "no_surtible") as PurchaseRequestReason,
-    requestedBy: String(row.requested_by ?? ""),
+    status: fromStoredStatus(row.status),
+    sourceType,
+    sourceId: sourceId ? String(sourceId) : null,
+    sourceFolio,
+    reason: (text(row.reason) || "no_surtible") as PurchaseRequestReason,
+    requestedBy: text(row.requested_by),
     requestedAt: String(row.requested_at ?? row.created_at ?? ""),
-    takenBy: String(row.taken_by ?? ""),
+    takenBy: text(row.taken_by) || text(row.assigned_to),
     takenAt: row.taken_at ? String(row.taken_at) : "",
-    warehouseNotes: String(row.warehouse_notes ?? row.notes ?? ""),
-    comprasNotes: String(row.compras_notes ?? ""),
+    warehouseNotes: text(row.warehouse_notes) || text(row.notes) || text(row.justification),
+    comprasNotes: text(row.compras_notes) || text(row.purchasing_notes),
     purchaseOrderId: row.purchase_order_id ? String(row.purchase_order_id) : null,
-    purchaseOrderNumber: String(row.purchase_order_number ?? ""),
+    purchaseOrderNumber: text(row.purchase_order_number),
     createdAt: String(row.created_at ?? ""),
     updatedAt: String(row.updated_at ?? ""),
     lines,
@@ -272,21 +330,34 @@ export async function createPurchaseRequest(
   }
 
   const folio = await nextRemoteFolio();
+  const sourceType = input.sourceType ?? "manual";
+  const sourceId = input.sourceId ?? null;
+  const sourceFolio = input.sourceFolio ?? "";
+  const warehouseNotes = input.warehouseNotes ?? "";
   const fullHeader = {
     folio,
-    status: "solicitada",
-    source_type: input.sourceType ?? "manual",
-    source_id: input.sourceId ?? null,
-    source_folio: input.sourceFolio ?? "",
+    status: toStoredStatus("solicitada"),
+    source: storedSource(sourceType),
+    source_type: sourceType,
+    source_id: sourceId,
+    source_folio: sourceFolio,
+    requisition_id: sourceType === "requisicion_os" ? sourceId : null,
+    requisition_folio: sourceType === "requisicion_os" ? sourceFolio : "",
     reason: input.reason ?? "no_surtible",
     requested_by: input.requestedBy,
-    warehouse_notes: input.warehouseNotes ?? "",
+    notes: warehouseNotes,
+    justification: warehouseNotes,
+    warehouse_notes: warehouseNotes,
   };
   const stubHeader = {
     folio,
-    status: "solicitada",
+    status: toStoredStatus("solicitada"),
+    source: storedSource(sourceType),
+    requisition_id: sourceType === "requisicion_os" ? sourceId : null,
+    requisition_folio: sourceType === "requisicion_os" ? sourceFolio : "",
     requested_by: input.requestedBy,
-    notes: input.warehouseNotes ?? "",
+    notes: warehouseNotes,
+    justification: warehouseNotes,
   };
 
   let headerInsert = await db
@@ -312,24 +383,31 @@ export async function createPurchaseRequest(
   }
 
   const header = headerInsert.data;
-  const fullLines = lines.map((line) => ({
+  const fullLines = lines.map((line, index) => ({
     request_id: header.id,
     source_line_id: line.sourceLineId ?? null,
+    requisition_line_id: sourceType === "requisicion_os" ? line.sourceLineId ?? null : null,
     product_id: line.productId,
     product_sku: line.productSku,
     product_name: line.productName,
+    description: line.productName,
+    quantity: line.quantity,
     quantity_requested: line.quantity,
     unit: line.unit ?? "pza",
     notes: line.notes ?? "",
+    sort_order: index,
   }));
-  const stubLines = lines.map((line) => ({
+  const stubLines = lines.map((line, index) => ({
     request_id: header.id,
+    requisition_line_id: sourceType === "requisicion_os" ? line.sourceLineId ?? null : null,
     product_id: line.productId,
     product_sku: line.productSku,
     product_name: line.productName,
+    description: line.productName,
     quantity: line.quantity,
     unit: line.unit ?? "pza",
     notes: line.notes ?? "",
+    sort_order: index,
   }));
 
   let linesInsert = await db
@@ -374,17 +452,22 @@ async function patchRequest(
   }
 
   const fullPatch = {
-    status: next.status,
+    status: toStoredStatus(next.status),
     taken_by: next.takenBy,
     taken_at: next.takenAt || null,
     warehouse_notes: next.warehouseNotes,
     compras_notes: next.comprasNotes,
+    notes: next.warehouseNotes,
+    justification: next.warehouseNotes,
+    purchasing_notes: next.comprasNotes,
     purchase_order_id: next.purchaseOrderId,
     purchase_order_number: next.purchaseOrderNumber,
   };
   const stubPatch = {
-    status: next.status,
-    notes: [next.warehouseNotes, next.comprasNotes].filter(Boolean).join("\n"),
+    status: toStoredStatus(next.status),
+    notes: next.warehouseNotes,
+    justification: next.warehouseNotes,
+    purchasing_notes: next.comprasNotes,
     purchase_order_id: next.purchaseOrderId,
     purchase_order_number: next.purchaseOrderNumber,
   };
@@ -418,10 +501,7 @@ async function patchRequest(
       if (lineUpdate.error && isMissingColumn(lineUpdate.error)) {
         lineUpdate = await db
           .from("purchase_request_lines")
-          .update({
-            quantity: line.quantityReceived || line.quantityRequested,
-            notes: line.notes,
-          })
+          .update({ notes: line.notes })
           .eq("id", line.id);
       }
       if (lineUpdate.error) throw new Error(lineUpdate.error.message);

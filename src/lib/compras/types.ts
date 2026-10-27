@@ -5,6 +5,7 @@ export const PURCHASE_REQUEST_STATUSES = [
   { id: "parcial", label: "Recepción parcial" },
   { id: "recibida", label: "Recibida" },
   { id: "cancelada", label: "Cancelada" },
+  { id: "rechazada", label: "Rechazada" },
 ] as const;
 
 export type PurchaseRequestStatus =
@@ -12,6 +13,7 @@ export type PurchaseRequestStatus =
 
 export const PURCHASE_REQUEST_SOURCES = [
   { id: "manual", label: "Almacén" },
+  { id: "surtimiento", label: "Surtimiento" },
   { id: "requisicion_os", label: "Solicitud de OS" },
   { id: "salida", label: "Salida" },
   { id: "apartado", label: "Apartado" },
