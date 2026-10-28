@@ -14,7 +14,9 @@ import { isPurchaseOpen, type PurchaseRequest, type RequisitionShortage } from "
 import {
   cancelServiceOrderRequisition,
   fulfillServiceOrderRequisitions,
+  getRequisitionOriginDetails,
   getServiceOrderRequisitions,
+  type RequisitionOriginDetails,
 } from "@/lib/service-orders/requisition-storage";
 import {
   downloadRequisitionPickListPdf,
@@ -42,6 +44,11 @@ import {
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
 import { listStaffMembers, type StaffMember } from "@/lib/users/staff";
+import {
+  fulfillmentLotKey,
+  listFulfillmentLots,
+  type FulfillmentLotOption,
+} from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
@@ -50,8 +57,34 @@ import { requisitionStatusTone as statusTone } from "@/components/sales/quote-fu
 
 function formatDay(value: string) {
   if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(value) && value.length > 10) {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString("es-MX", {
+        timeZone: "America/Mexico_City",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    }
+  }
   const date = new Date(`${value.slice(0, 10)}T12:00:00`);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("es-MX");
+}
+
+function lotCapFor(
+  group: GroupedRequisitionLine,
+  stock: Map<string, number> | null,
+  lots: Map<string, FulfillmentLotOption[]>,
+  choice: Record<string, string>
+) {
+  const totalCap = fulfillCap(group, stock);
+  if (!group.productId) return totalCap;
+  const options = lots.get(group.productId) ?? [];
+  if (!options.length) return totalCap;
+  const selected =
+    options.find((lot) => fulfillmentLotKey(lot) === choice[group.productId!]) ?? options[0];
+  return Math.min(totalCap, Math.max(0, selected.available));
 }
 
 function originPrefix(source: RequisitionSource) {
@@ -149,7 +182,14 @@ export function ServiceRequisitionsPanel({
   const [printBusy, setPrintBusy] = useState<"folios" | "suma" | "">("");
   const [availableByProduct, setAvailableByProduct] = useState<Map<string, number> | null>(null);
   const [availableLoading, setAvailableLoading] = useState(false);
+  const [lotsByProduct, setLotsByProduct] = useState<Map<string, FulfillmentLotOption[]>>(new Map());
+  const [lotChoice, setLotChoice] = useState<Record<string, string>>({});
+  const [origin, setOrigin] = useState<RequisitionOriginDetails | null>(null);
+  const [originLoading, setOriginLoading] = useState(false);
   const [stockEpoch, setStockEpoch] = useState(0);
+  const lotsRef = useRef(new Map<string, FulfillmentLotOption[]>());
+  const lotChoiceRef = useRef<Record<string, string>>({});
+  const lotsBump = useRef(false);
   const raisedPieces = useRef(new Set<string>());
   const [purchaseForm, setPurchaseForm] = useState<{
     jobs: { requisition: ServiceOrderRequisition; shortages: RequisitionShortage[] }[];
@@ -233,7 +273,7 @@ export function ServiceRequisitionsPanel({
           let changed = false;
           for (const group of pickGroups) {
             if (!group.productId || group.offCatalog || group.pending <= 0) continue;
-            const cap = Math.min(group.pending, Math.max(0, map.get(group.productId) ?? 0));
+            const cap = lotCapFor(group, map, lotsRef.current, lotChoiceRef.current);
             const currentQty = group.sources.reduce(
               (sum, source) => sum + Number(current[source.line.id] || 0),
               0
@@ -272,7 +312,7 @@ export function ServiceRequisitionsPanel({
           let changed = false;
           for (const group of pickGroups) {
             if (!group.productId || group.offCatalog || group.pending <= 0) continue;
-            const cap = Math.min(group.pending, Math.max(0, map.get(group.productId) ?? 0));
+            const cap = lotCapFor(group, map, lotsRef.current, lotChoiceRef.current);
             if (raised.has(group.productId)) {
               nextGroups[group.key] = formatQty(cap);
               changed = true;
@@ -302,6 +342,70 @@ export function ServiceRequisitionsPanel({
     // pickGroups se alinea con la selección y los códigos cargados.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pickStockKey, selectedIds, reloadKey, stockEpoch]);
+
+  useEffect(() => {
+    let active = true;
+    if (!pickProductIds.length) {
+      lotsRef.current = new Map();
+      setLotsByProduct(new Map());
+      return;
+    }
+    listFulfillmentLots(pickProductIds)
+      .then((map) => {
+        if (!active) return;
+        const nextChoice = { ...lotChoiceRef.current };
+        for (const [productId, lots] of map) {
+          const existing = nextChoice[productId];
+          if (existing && lots.some((lot) => fulfillmentLotKey(lot) === existing)) continue;
+          if (lots[0]) nextChoice[productId] = fulfillmentLotKey(lots[0]);
+        }
+        lotChoiceRef.current = nextChoice;
+        lotsRef.current = map;
+        setLotChoice(nextChoice);
+        setLotsByProduct(map);
+        if (lotsBump.current) {
+          lotsBump.current = false;
+          return;
+        }
+        lotsBump.current = true;
+        setStockEpoch((epoch) => epoch + 1);
+      })
+      .catch(() => {
+        if (!active) return;
+        lotsRef.current = new Map();
+        setLotsByProduct(new Map());
+      });
+    return () => {
+      active = false;
+    };
+  }, [pickStockKey, reloadKey, stockEpoch, pickProductIds]);
+
+  const originId = selectedItems.length === 1 ? selectedItems[0].id : "";
+  useEffect(() => {
+    const requisition = selectedItems.length === 1 ? selectedItems[0] : null;
+    if (!requisition) {
+      setOrigin(null);
+      setOriginLoading(false);
+      return;
+    }
+    let active = true;
+    setOriginLoading(true);
+    getRequisitionOriginDetails(requisition)
+      .then((details) => {
+        if (active) setOrigin(details);
+      })
+      .catch(() => {
+        if (active) setOrigin(null);
+      })
+      .finally(() => {
+        if (active) setOriginLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+    // La ficha se recarga al cambiar la solicitud elegida.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originId, reloadKey]);
 
   const pickAvailableUnits = pickGroups.reduce((sum, group) => {
     if (group.offCatalog || !group.productId) return sum;
@@ -342,6 +446,7 @@ export function ServiceRequisitionsPanel({
               line.productSku,
               line.productName,
               line.partNumber,
+              line.productModel,
               line.description,
             ]),
           ]) &&
@@ -467,12 +572,48 @@ export function ServiceRequisitionsPanel({
     if (kept.length) mergeDrafts(kept, true);
   }
 
+  function chosenLotFor(productId: string | null) {
+    if (!productId) return null;
+    const lots = lotsByProduct.get(productId) ?? [];
+    if (!lots.length) return null;
+    return lots.find((lot) => fulfillmentLotKey(lot) === lotChoice[productId]) ?? lots[0];
+  }
+
+  function writeGroupQty(group: GroupedRequisitionLine, quantity: number) {
+    const raw = formatQty(Math.max(0, quantity));
+    setGroupQtyDraft((current) => ({ ...current, [group.key]: raw }));
+    const allocated = allocateFulfillmentQty(
+      group.sources.map((source) => source.line),
+      Number(raw)
+    );
+    setQtyDraft((current) => {
+      const next = { ...current };
+      for (const [lineId, qty] of Object.entries(allocated)) {
+        next[lineId] = formatQty(qty);
+      }
+      return next;
+    });
+  }
+
   async function onFulfill() {
     if (!selectedOpen.length || !canFulfill) return;
     const jobs = selectedOpen.map((requisition) => ({
       requisitionId: requisition.id,
       fulfillments: requisition.lines
-        .map((line) => ({ lineId: line.id, quantity: Number(qtyDraft[line.id] || 0) }))
+        .map((line) => {
+          const chosen = chosenLotFor(line.productId);
+          return {
+            lineId: line.id,
+            quantity: Number(qtyDraft[line.id] || 0),
+            ...(chosen
+              ? {
+                  lotSpecified: true,
+                  lotNumber: chosen.lotNumber,
+                  expiryDate: chosen.expiryDate,
+                }
+              : {}),
+          };
+        })
         .filter((item) => item.quantity > 0),
     }));
     setBusy(true);
@@ -509,11 +650,20 @@ export function ServiceRequisitionsPanel({
   }
 
   function printOptions() {
+    const chosenLots: Record<string, { lotNumber: string; expiryDate: string }> = {};
+    for (const [productId, lots] of lotsByProduct) {
+      const chosen =
+        lots.find((lot) => fulfillmentLotKey(lot) === lotChoice[productId]) ?? lots[0];
+      if (chosen) {
+        chosenLots[productId] = { lotNumber: chosen.lotNumber, expiryDate: chosen.expiryDate };
+      }
+    }
     return {
       printedBy: session
         ? { username: session.username, fullName: session.fullName }
         : undefined,
       printedByWarehouse: canFulfill,
+      chosenLots,
     };
   }
 
@@ -862,22 +1012,8 @@ export function ServiceRequisitionsPanel({
                   </p>
                   {selectedItems.length === 1 ? (
                     <>
-                      <p className="text-sm text-muted-foreground">
-                        {selected.clientName || "Sin cliente"}
-                      </p>
-                      {selected.priority === "urgente" || selected.neededBy ? (
-                        <p className="text-xs text-muted-foreground">
-                          {selected.priority === "urgente" ? (
-                            <span className="font-medium text-destructive">Urgente</span>
-                          ) : null}
-                          {selected.priority === "urgente" && selected.neededBy ? " · " : ""}
-                          {selected.neededBy ? `Requerido para ${formatDay(selected.neededBy)}` : ""}
-                        </p>
-                      ) : null}
-                      {selected.deliveryAddress ? (
-                        <p className="text-xs text-muted-foreground">
-                          Entrega en: {selected.deliveryAddress}
-                        </p>
+                      {selected.priority === "urgente" ? (
+                        <p className="text-xs font-medium text-destructive">Urgente</p>
                       ) : null}
                       {selected.notes ? (
                         <p className="text-xs text-muted-foreground">Notas: {selected.notes}</p>
@@ -923,6 +1059,94 @@ export function ServiceRequisitionsPanel({
                 </div>
               </div>
 
+              {selectedItems.length === 1 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-border bg-background p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#3B46A5]">
+                      {selected.sourceType === "cotizacion" ? "Venta" : "Equipo"}
+                    </p>
+                    {originLoading && !origin ? (
+                      <p className="mt-2 text-sm text-muted-foreground">Cargando datos de la orden…</p>
+                    ) : (
+                      <dl className="mt-2 space-y-1.5 text-sm">
+                        {selected.sourceType === "cotizacion" ? (
+                          <>
+                            <div>
+                              <dt className="text-[11px] text-muted-foreground">Cotización</dt>
+                              <dd>{selected.quoteFolio || origin?.folio || "—"}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[11px] text-muted-foreground">Proyecto</dt>
+                              <dd>{origin?.title || "—"}</dd>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <dt className="text-[11px] text-muted-foreground">Equipo</dt>
+                              <dd>{origin?.equipmentName || selected.equipmentName || "—"}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[11px] text-muted-foreground">Marca</dt>
+                              <dd>{origin?.equipmentBrand || "—"}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[11px] text-muted-foreground">Modelo</dt>
+                              <dd>{origin?.equipmentModel || "—"}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[11px] text-muted-foreground">No. de serie</dt>
+                              <dd className="font-mono text-xs">{origin?.equipmentSerial || "—"}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[11px] text-muted-foreground">Ubicación</dt>
+                              <dd>{origin?.equipmentLocation || "—"}</dd>
+                            </div>
+                          </>
+                        )}
+                      </dl>
+                    )}
+                  </div>
+                  <div className="rounded-xl border border-border bg-background p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#3B46A5]">Cliente</p>
+                    {originLoading && !origin ? (
+                      <p className="mt-2 text-sm text-muted-foreground">Cargando cliente…</p>
+                    ) : (
+                      <dl className="mt-2 space-y-1.5 text-sm">
+                        <div>
+                          <dt className="text-[11px] text-muted-foreground">Cliente</dt>
+                          <dd>{origin?.clientName || selected.clientName || "Sin cliente"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[11px] text-muted-foreground">Dirección</dt>
+                          <dd>
+                            {[origin?.address, origin?.city].filter(Boolean).join(", ") ||
+                              selected.deliveryAddress ||
+                              "Sin dirección"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-[11px] text-muted-foreground">Estado</dt>
+                          <dd>{origin?.state || "Sin estado"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[11px] text-muted-foreground">
+                            {origin?.promiseLabel ||
+                              (selected.sourceType === "cotizacion" ? "Fecha requerida" : "Fecha promesa")}
+                          </dt>
+                          <dd>
+                            {formatDay(origin?.promisedAt || "") ||
+                              (selected.sourceType === "cotizacion" && selected.neededBy
+                                ? formatDay(selected.neededBy)
+                                : "Sin fecha")}
+                          </dd>
+                        </div>
+                      </dl>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
               {samePersonOpen.length > selectedOpen.length && canFulfill ? (
                 <Button type="button" variant="outline" size="sm" onClick={selectAllFromPerson}>
                   Incluir las demás abiertas de {selectedRequester || "esta persona"} (
@@ -963,7 +1187,9 @@ export function ServiceRequisitionsPanel({
                       requisitionLinePending(source.line) > 0
                   );
                   const hint = groupSourceHint(group);
-                  const cap = fulfillCap(group, availableByProduct);
+                  const lots = group.productId ? (lotsByProduct.get(group.productId) ?? []) : [];
+                  const selectedLot = chosenLotFor(group.productId);
+                  const cap = lotCapFor(group, availableByProduct, lotsByProduct, lotChoice);
                   const available = group.productId
                     ? availableByProduct?.get(group.productId)
                     : undefined;
@@ -974,15 +1200,19 @@ export function ServiceRequisitionsPanel({
                     groupQtyDraft[group.key] ?? formatQty(groupDraftQty(group, qtyDraft));
                   const overStock =
                     !group.offCatalog &&
-                    available != null &&
                     Number.isFinite(drafted) &&
-                    drafted > available + 0.0001;
+                    drafted > cap + 0.0001;
                   return (
                     <div key={group.key} className="rounded-xl border border-border bg-background p-3">
                       <p className="text-sm font-medium">
                         {group.productSku ? `${group.productSku} · ` : ""}
                         {group.description}
                       </p>
+                      {group.productModel.trim() ? (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Modelo: {group.productModel.trim()}
+                        </p>
+                      ) : null}
                       {group.partNumber.trim() ? (
                         <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                           N.º de parte {group.partNumber.trim()}
@@ -1019,6 +1249,74 @@ export function ServiceRequisitionsPanel({
                             ? "Sin existencia: no se puede surtir este código hasta que entre mercancía o se libere un apartado."
                             : `Stock insuficiente: se pueden surtir ${formatQty(available)} de ${formatQty(group.pending)} ${group.unit}.`}
                         </p>
+                      ) : null}
+                      {!group.offCatalog && group.productId ? (
+                        <div className="mt-2">
+                          <label className="block text-xs">
+                            Lotes y caducidades
+                            {lots.length ? (
+                              <select
+                                className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+                                value={selectedLot ? fulfillmentLotKey(selectedLot) : ""}
+                                disabled={!canFulfill || group.pending <= 0}
+                                onChange={(event) => {
+                                  const key = event.target.value;
+                                  const previous = selectedLot;
+                                  const nextChoice = {
+                                    ...lotChoiceRef.current,
+                                    [group.productId!]: key,
+                                  };
+                                  lotChoiceRef.current = nextChoice;
+                                  setLotChoice(nextChoice);
+                                  if (!canFulfill || group.pending <= 0) return;
+                                  const prevCap = Math.min(
+                                    group.pending,
+                                    previous?.available ?? group.pending
+                                  );
+                                  const nextCap = lotCapFor(
+                                    group,
+                                    availableByProduct,
+                                    lotsByProduct,
+                                    nextChoice
+                                  );
+                                  if (drafted > nextCap + 0.0001) writeGroupQty(group, nextCap);
+                                  else if (drafted + 0.0001 >= prevCap && nextCap > drafted + 0.0001) {
+                                    writeGroupQty(group, nextCap);
+                                  }
+                                }}
+                              >
+                                {lots.map((lot, index) => {
+                                  const when = formatDay(lot.expiryDate) || "sin caducidad";
+                                  const tag =
+                                    index === 0 ? "Sugerido, caduca antes" : "Caducidad mayor";
+                                  return (
+                                    <option key={fulfillmentLotKey(lot)} value={fulfillmentLotKey(lot)}>
+                                      {tag} · lote {lot.lotNumber.trim() || "sin número"} · caduca {when} ·{" "}
+                                      {formatQty(lot.available)} disp.
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            ) : (
+                              <span className="mt-1 block text-muted-foreground">
+                                Sin lotes con existencia para este producto.
+                              </span>
+                            )}
+                          </label>
+                          {lots.length > 1 ? (
+                            <p className="mt-1 text-[11px] text-muted-foreground">
+                              Si el cliente pide más vigencia, elige un lote con caducidad mayor. La cantidad se limita a lo que hay en el lote elegido.
+                            </p>
+                          ) : null}
+                          {selectedLot &&
+                          group.pending > 0 &&
+                          selectedLot.available + 0.0001 < group.pending &&
+                          (available ?? 0) > selectedLot.available + 0.0001 ? (
+                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                              Este lote alcanza para {formatQty(selectedLot.available)} {group.unit}. Hay más existencia en otro lote.
+                            </p>
+                          ) : null}
+                        </div>
                       ) : null}
                       {hint ? <p className="text-xs text-[#3B46A5]">{hint}</p> : null}
                       <p className="text-xs text-muted-foreground">

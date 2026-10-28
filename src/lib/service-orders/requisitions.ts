@@ -35,6 +35,8 @@ export type ServiceOrderRequisitionLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  /** Modelo del catálogo de almacén. */
+  productModel: string;
   /** Número de parte del catálogo, o el capturado en la cotización si no hay producto. */
   partNumber: string;
   description: string;
@@ -100,6 +102,10 @@ export type CreateQuoteRequisitionInput = {
 export type FulfillLineInput = {
   lineId: string;
   quantity: number;
+  /** Lote elegido en la solicitud. Vacío usa la caducidad más próxima. */
+  lotNumber?: string;
+  expiryDate?: string;
+  lotSpecified?: boolean;
 };
 
 export type RequisitionFulfillment = {
@@ -181,6 +187,7 @@ export type GroupedRequisitionLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  productModel: string;
   partNumber: string;
   description: string;
   unit: string;
@@ -217,6 +224,7 @@ export function groupRequisitionLines(
         existing.sources.push({ requisition, line });
         existing.lineStatus = groupedLineStatus(existing.sources.map((source) => source.line));
         if (!existing.productSku && line.productSku) existing.productSku = line.productSku;
+        if (!existing.productModel && line.productModel) existing.productModel = line.productModel;
         if (!existing.partNumber && line.partNumber) existing.partNumber = line.partNumber;
         if (!existing.description && line.description) existing.description = line.description;
         continue;
@@ -227,6 +235,7 @@ export function groupRequisitionLines(
         productId: line.productId,
         productSku: line.productSku,
         productName: line.productName,
+        productModel: line.productModel,
         partNumber: line.partNumber,
         description: line.description,
         unit: line.unit,

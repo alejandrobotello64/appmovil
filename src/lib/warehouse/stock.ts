@@ -333,6 +333,79 @@ type OutboundBin = {
   expiryDate: string;
 };
 
+export type FulfillmentLotOption = {
+  lotNumber: string;
+  expiryDate: string;
+  available: number;
+};
+
+function expiryKey(value: string) {
+  return value.slice(0, 10);
+}
+
+export function fulfillmentLotKey(lot: Pick<FulfillmentLotOption, "lotNumber" | "expiryDate">) {
+  return `${lot.lotNumber.trim()}\t${expiryKey(lot.expiryDate)}`;
+}
+
+function sameOutboundLot(
+  bin: Pick<OutboundBin, "lotNumber" | "expiryDate">,
+  lotNumber: string,
+  expiryDate: string
+) {
+  if ((bin.lotNumber ?? "").trim() !== lotNumber.trim()) return false;
+  if (!expiryDate) return true;
+  return expiryKey(bin.expiryDate) === expiryKey(expiryDate);
+}
+
+/** Lotes con existencia, del que caduca antes al que caduca después. */
+export async function listFulfillmentLots(
+  productIds: string[]
+): Promise<Map<string, FulfillmentLotOption[]>> {
+  const ids = [...new Set(productIds.filter(Boolean))];
+  const grouped = new Map<string, Map<string, FulfillmentLotOption>>();
+  if (!ids.length) return new Map();
+
+  const { data, error } = await db
+    .from("inventory_balances")
+    .select("product_id, qty_on_hand, qty_reserved, lot:lots(lot_number, expiry_date)")
+    .in("product_id", ids)
+    .gt("qty_on_hand", 0);
+  if (error) throw new Error(error.message);
+
+  for (const row of (data ?? []) as Record<string, unknown>[]) {
+    const productId = String(row.product_id ?? "");
+    if (!productId) continue;
+    const available = Math.max(
+      0,
+      Number(row.qty_on_hand ?? 0) - Number(row.qty_reserved ?? 0)
+    );
+    if (available <= 0) continue;
+    const lotRaw = row.lot;
+    const lot = ((Array.isArray(lotRaw) ? lotRaw[0] : lotRaw) ?? {}) as Record<string, unknown>;
+    const lotNumber = String(lot.lot_number ?? "").trim();
+    const expiryDate = expiryKey(String(lot.expiry_date ?? ""));
+    const key = `${lotNumber}\t${expiryDate}`;
+    const byProduct = grouped.get(productId) ?? new Map<string, FulfillmentLotOption>();
+    const current = byProduct.get(key) ?? { lotNumber, expiryDate, available: 0 };
+    current.available += available;
+    byProduct.set(key, current);
+    grouped.set(productId, byProduct);
+  }
+
+  const result = new Map<string, FulfillmentLotOption[]>();
+  for (const [productId, lots] of grouped) {
+    result.set(
+      productId,
+      [...lots.values()].sort(
+        (a, b) =>
+          (a.expiryDate || "9999").localeCompare(b.expiryDate || "9999") ||
+          b.available - a.available
+      )
+    );
+  }
+  return result;
+}
+
 async function listOutboundBins(productId: string): Promise<OutboundBin[]> {
   const { data, error } = await db
     .from("inventory_balances")
@@ -382,6 +455,8 @@ export async function applyOutboundStock(input: {
   createdBy: string;
   reason?: string;
   note?: string;
+  /** Si viene, solo se descuenta de ese lote y caducidad. */
+  preferredLot?: { lotNumber: string; expiryDate: string } | null;
 }): Promise<StockMovementResult> {
   const qty = Number(input.quantity);
   if (!Number.isFinite(qty) || qty <= 0) {
@@ -389,14 +464,28 @@ export async function applyOutboundStock(input: {
   }
 
   const bins = await listOutboundBins(input.productId);
-  const onHand = bins.reduce((sum, bin) => sum + bin.available, 0);
+  const pool = input.preferredLot
+    ? bins.filter((bin) =>
+        sameOutboundLot(bin, input.preferredLot!.lotNumber, input.preferredLot!.expiryDate)
+      )
+    : bins;
+  const onHand = pool.reduce((sum, bin) => sum + bin.available, 0);
   if (qty > onHand + 0.0001) {
+    if (input.preferredLot) {
+      const label = input.preferredLot.lotNumber || "sin número";
+      const expiry = input.preferredLot.expiryDate
+        ? ` con caducidad ${input.preferredLot.expiryDate}`
+        : "";
+      throw new Error(
+        `El lote ${label}${expiry} solo tiene ${onHand} disponibles. Elige otro lote o reduce la cantidad.`
+      );
+    }
     throw new Error(`No hay existencia disponible (${onHand}). Solicitado: ${qty}`);
   }
 
   let remaining = qty;
   let last: StockMovementResult | null = null;
-  for (const bin of bins) {
+  for (const bin of pool) {
     if (remaining <= 0) break;
     const take = Math.min(remaining, bin.available);
     if (take <= 0) continue;

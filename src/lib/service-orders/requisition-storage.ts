@@ -1,6 +1,10 @@
 import { supabase } from "@/lib/supabase/client";
 import { getProductAvailableQty } from "@/lib/holds/storage";
-import { applyOutboundStock } from "@/lib/warehouse/stock";
+import {
+  applyOutboundStock,
+  fulfillmentLotKey,
+  listFulfillmentLots,
+} from "@/lib/warehouse/stock";
 import {
   sameRequester,
   type CreateQuoteRequisitionInput,
@@ -21,7 +25,7 @@ const db = supabase as any;
 
 function mapLine(
   row: Record<string, unknown>,
-  product?: { sku?: string; name?: string; partNumber?: string }
+  product?: { sku?: string; name?: string; model?: string; partNumber?: string }
 ): ServiceOrderRequisitionLine {
   return {
     id: String(row.id),
@@ -33,6 +37,7 @@ function mapLine(
     productId: row.product_id ? String(row.product_id) : null,
     productSku: String(product?.sku ?? ""),
     productName: String(product?.name ?? ""),
+    productModel: String(product?.model ?? "").trim(),
     partNumber: String(product?.partNumber ?? "").trim(),
     description: String(row.description ?? ""),
     quantityRequested: Number(row.quantity_requested ?? 0),
@@ -101,7 +106,7 @@ async function hydrateRequisitions(
   const [linesRes, ordersRes] = await Promise.all([
     db
       .from("service_order_requisition_lines")
-      .select("*, product:inventory_items(sku, name, part_number), quote_line:quote_lines(part_number)")
+      .select("*, product:inventory_items(sku, name, model, part_number), quote_line:quote_lines(part_number)")
       .in("requisition_id", ids),
     orderIds.length
       ? db
@@ -129,6 +134,7 @@ async function hydrateRequisitions(
       mapLine(row, {
         sku: row.product?.sku,
         name: row.product?.name,
+        model: row.product?.model,
         partNumber: catalogPart || quotePart,
       })
     );
@@ -139,6 +145,139 @@ async function hydrateRequisitions(
     const order = orderById.get(String(row.service_order_id));
     return mapRequisition(row, linesBy.get(String(row.id)) ?? [], order);
   });
+}
+
+export type RequisitionOriginDetails = {
+  sourceType: RequisitionSource;
+  folio: string;
+  title: string;
+  serviceType: string;
+  priority: string;
+  clientName: string;
+  contactName: string;
+  contactPhone: string;
+  address: string;
+  city: string;
+  state: string;
+  promisedAt: string;
+  promiseLabel: string;
+  equipmentName: string;
+  equipmentBrand: string;
+  equipmentModel: string;
+  equipmentSerial: string;
+  equipmentLocation: string;
+  faultReported: string;
+  technician: string;
+  advisor: string;
+  salesperson: string;
+};
+
+function embeddedRecord(value: unknown): Record<string, unknown> {
+  const row = Array.isArray(value) ? value[0] : value;
+  return row && typeof row === "object" ? (row as Record<string, unknown>) : {};
+}
+
+/** Equipo a la izquierda y cliente, dirección, estado y fecha promesa a la derecha. */
+export async function getRequisitionOriginDetails(
+  requisition: Pick<
+    ServiceOrderRequisition,
+    | "sourceType"
+    | "serviceOrderId"
+    | "serviceOrderFolio"
+    | "quoteId"
+    | "quoteFolio"
+    | "clientName"
+    | "equipmentName"
+    | "neededBy"
+    | "deliveryAddress"
+  >
+): Promise<RequisitionOriginDetails> {
+  const empty: RequisitionOriginDetails = {
+    sourceType: requisition.sourceType,
+    folio:
+      requisition.sourceType === "cotizacion"
+        ? requisition.quoteFolio
+        : requisition.serviceOrderFolio,
+    title: "",
+    serviceType: "",
+    priority: "",
+    clientName: requisition.clientName,
+    contactName: "",
+    contactPhone: "",
+    address: requisition.deliveryAddress,
+    city: "",
+    state: "",
+    promisedAt: requisition.sourceType === "cotizacion" ? requisition.neededBy : "",
+    promiseLabel: requisition.sourceType === "cotizacion" ? "Fecha requerida" : "Fecha promesa",
+    equipmentName: requisition.equipmentName,
+    equipmentBrand: "",
+    equipmentModel: "",
+    equipmentSerial: "",
+    equipmentLocation: "",
+    faultReported: "",
+    technician: "",
+    advisor: "",
+    salesperson: "",
+  };
+
+  if (requisition.sourceType === "cotizacion") {
+    if (!requisition.quoteId) return empty;
+    const { data, error } = await db
+      .from("quotes")
+      .select(
+        "folio, title, client_name, contact_name, contact_phone, city, state, salesperson, client:clients(address, city, state)"
+      )
+      .eq("id", requisition.quoteId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    const row = (data ?? {}) as Record<string, unknown>;
+    const client = embeddedRecord(row.client);
+    return {
+      ...empty,
+      folio: String(row.folio ?? empty.folio),
+      title: String(row.title ?? ""),
+      clientName: String(row.client_name || empty.clientName),
+      contactName: String(row.contact_name ?? ""),
+      contactPhone: String(row.contact_phone ?? ""),
+      address: String(client.address || requisition.deliveryAddress || ""),
+      city: String(client.city || row.city || ""),
+      state: String(client.state || row.state || ""),
+      salesperson: String(row.salesperson ?? ""),
+    };
+  }
+
+  if (!requisition.serviceOrderId) return empty;
+  const { data, error } = await db
+    .from("service_orders")
+    .select(
+      "folio, priority, service_type, client_name, contact_name, contact_phone, equipment_name, equipment_brand, equipment_model, equipment_serial, equipment_location, technician, advisor, promised_at, fault_reported, client:clients(address, city, state)"
+    )
+    .eq("id", requisition.serviceOrderId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const row = (data ?? {}) as Record<string, unknown>;
+  const client = embeddedRecord(row.client);
+  return {
+    ...empty,
+    folio: String(row.folio ?? empty.folio),
+    serviceType: String(row.service_type ?? ""),
+    priority: String(row.priority ?? ""),
+    clientName: String(row.client_name || empty.clientName),
+    contactName: String(row.contact_name ?? ""),
+    contactPhone: String(row.contact_phone ?? ""),
+    address: String(client.address ?? ""),
+    city: String(client.city ?? ""),
+    state: String(client.state ?? ""),
+    promisedAt: row.promised_at ? String(row.promised_at) : "",
+    equipmentName: String(row.equipment_name || empty.equipmentName),
+    equipmentBrand: String(row.equipment_brand ?? ""),
+    equipmentModel: String(row.equipment_model ?? ""),
+    equipmentSerial: String(row.equipment_serial ?? ""),
+    equipmentLocation: String(row.equipment_location ?? ""),
+    faultReported: String(row.fault_reported ?? ""),
+    technician: String(row.technician ?? ""),
+    advisor: String(row.advisor ?? ""),
+  };
 }
 
 export async function getServiceOrderRequisitions(filters?: {
@@ -364,6 +503,62 @@ function lineStatusAfterFulfill(
   return "parcial";
 }
 
+type ChosenLotDemand = {
+  productId: string;
+  quantity: number;
+  lotNumber: string;
+  expiryDate: string;
+  label: string;
+};
+
+function chosenLotDemands(
+  lines: ServiceOrderRequisitionLine[],
+  fulfillments: FulfillLineInput[]
+): ChosenLotDemand[] {
+  return fulfillments.flatMap((item) => {
+    const line = lines.find((entry) => entry.id === item.lineId);
+    if (!line?.productId || !item.lotSpecified || !(Number(item.quantity) > 0)) return [];
+    return [
+      {
+        productId: line.productId,
+        quantity: Number(item.quantity),
+        lotNumber: item.lotNumber ?? "",
+        expiryDate: item.expiryDate ?? "",
+        label: line.productSku || line.description,
+      },
+    ];
+  });
+}
+
+async function assertChosenLots(items: ChosenLotDemand[]) {
+  if (!items.length) return;
+  const lots = await listFulfillmentLots(items.map((item) => item.productId));
+  const demand = new Map<string, ChosenLotDemand>();
+  for (const item of items) {
+    const lot = {
+      lotNumber: item.lotNumber.trim(),
+      expiryDate: item.expiryDate.slice(0, 10),
+    };
+    const key = `${item.productId}\t${fulfillmentLotKey(lot)}`;
+    const prev = demand.get(key);
+    if (prev) prev.quantity += item.quantity;
+    else demand.set(key, { ...item, ...lot });
+  }
+  for (const need of demand.values()) {
+    const match = (lots.get(need.productId) ?? []).find(
+      (option) => fulfillmentLotKey(option) === fulfillmentLotKey(need)
+    );
+    const available = match?.available ?? 0;
+    if (need.quantity > available + 0.0001) {
+      const lotLabel = need.lotNumber || "sin número";
+      const when = need.expiryDate ? ` con caducidad ${need.expiryDate}` : "";
+      throw new Error(
+        `El lote ${lotLabel}${when} de ${need.label} solo tiene ${available} disponibles. Elige otro lote o reduce la cantidad.`
+      );
+    }
+  }
+}
+
 function requisitionStatusFromLines(
   lines: Pick<
     ServiceOrderRequisitionLine,
@@ -420,6 +615,7 @@ export async function fulfillServiceOrderRequisition(
   }
 
   const fromQuote = req.sourceType === "cotizacion";
+  await assertChosenLots(chosenLotDemands(req.lines, toFulfill));
   for (const item of toFulfill) {
     const line = req.lines.find((l) => l.id === item.lineId)!;
     if (line.productId) {
@@ -431,15 +627,27 @@ export async function fulfillServiceOrderRequisition(
         note: [req.folio, fromQuote ? req.quoteFolio : req.serviceOrderFolio, fromQuote ? req.clientName : "", line.description]
           .filter(Boolean)
           .join(" · "),
+        preferredLot: item.lotSpecified
+          ? { lotNumber: item.lotNumber ?? "", expiryDate: item.expiryDate ?? "" }
+          : null,
       });
     }
 
+    const lotNote = item.lotSpecified
+      ? `Lote ${item.lotNumber?.trim() || "sin número"}${
+          item.expiryDate ? ` · caduca ${item.expiryDate.slice(0, 10)}` : ""
+        }`
+      : "";
     await db.from("service_order_requisition_fulfillments").insert({
       requisition_id: req.id,
       line_id: line.id,
       quantity: Number(item.quantity),
       fulfilled_by: fulfilledBy.trim(),
-      notes: [line.productId ? "" : "Entrega directa fuera de catálogo (sin inventario)", warehouseNotes.trim()]
+      notes: [
+        line.productId ? "" : "Entrega directa fuera de catálogo (sin inventario)",
+        lotNote,
+        warehouseNotes.trim(),
+      ]
         .filter(Boolean)
         .join(" · "),
     });
@@ -541,6 +749,7 @@ export async function fulfillServiceOrderRequisitions(
 
   const list = await getServiceOrderRequisitions();
   const needed = new Map<string, { quantity: number; label: string }>();
+  const lotDemands: ChosenLotDemand[] = [];
   let requester = "";
   for (const job of nonempty) {
     const req = list.find((item) => item.id === job.requisitionId);
@@ -573,7 +782,9 @@ export async function fulfillServiceOrderRequisitions(
         label: prev.label,
       });
     }
+    lotDemands.push(...chosenLotDemands(req.lines, job.fulfillments));
   }
+  await assertChosenLots(lotDemands);
 
   for (const [productId, info] of needed) {
     const available = await getProductAvailableQty(productId);

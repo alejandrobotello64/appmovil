@@ -18,24 +18,26 @@ import {
 import { getProductsAvailableQty } from "@/lib/holds/storage";
 import { getPurchaseRequests } from "@/lib/purchasing/storage";
 import { isPurchaseOpen, purchaseStatusLabel, type PurchaseRequest } from "@/lib/purchasing/types";
-import { supabase } from "@/lib/supabase/client";
 import { loadStaffProfileLookup, type StaffProfile } from "@/lib/users/staff";
 import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
-import { getRequisitionFulfillments } from "./requisition-storage";
+import {
+  getRequisitionFulfillments,
+  getRequisitionOriginDetails,
+  type RequisitionOriginDetails,
+} from "./requisition-storage";
 import {
   groupRequisitionLines,
-  requisitionLinePending,
   requisitionLineStatusLabel,
   requisitionStatusLabel,
+  type GroupedRequisitionLine,
   type ServiceOrderRequisition,
 } from "./requisitions";
 import { serviceTypeLabel } from "./types";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-type Row = Record<string, unknown>;
-const str = (value: unknown) => (value === null || value === undefined ? "" : String(value));
+import {
+  fulfillmentLotKey,
+  listFulfillmentLots,
+  type FulfillmentLotOption,
+} from "@/lib/warehouse/stock";
 
 const COLUMNS: PdfColumn[] = [
   { key: "n", label: "#", width: 6, align: "center" },
@@ -58,6 +60,8 @@ export type RequisitionPrintOptions = {
   output?: PdfOutput;
   /** Cantidad a recoger por grupo de código (lista de verificación). */
   quantities?: Record<string, number>;
+  /** Lote que almacén eligió por producto. Si falta, se marca el que caduca antes. */
+  chosenLots?: Record<string, { lotNumber: string; expiryDate: string }>;
 };
 
 async function finishPdf(doc: jsPDF, fileName: string, output: PdfOutput = "print", note?: string) {
@@ -133,25 +137,51 @@ function purchaseForLine(lineId: string, purchases: PurchaseRequest[]) {
   return purchases.filter((purchase) => purchase.lines.some((line) => line.requisitionLineId === lineId));
 }
 
-async function loadOrigin(requisition: ServiceOrderRequisition): Promise<Row> {
-  if (requisition.sourceType === "cotizacion") {
-    if (!requisition.quoteId) return {};
-    const { data } = await db
-      .from("quotes")
-      .select("folio, title, status, client_name, contact_name, contact_phone, contact_email, city, state, salesperson, quote_date")
-      .eq("id", requisition.quoteId)
-      .maybeSingle();
-    return (data ?? {}) as Row;
+function lotDetailLines(
+  lots: FulfillmentLotOption[],
+  chosen?: { lotNumber: string; expiryDate: string }
+) {
+  if (!lots.length) return ["Sin lote con existencia"];
+  const chosenKey = chosen ? fulfillmentLotKey(chosen) : "";
+  const suggestedKey = fulfillmentLotKey(lots[0]);
+  const lines = lots.map((lot, index) => {
+    const key = fulfillmentLotKey(lot);
+    const when = lot.expiryDate
+      ? formatPdfDate(lot.expiryDate.slice(0, 10))
+      : "sin caducidad";
+    const name = lot.lotNumber.trim() || "sin número";
+    const tag =
+      chosenKey && key === chosenKey
+        ? "a surtir"
+        : !chosenKey && key === suggestedKey
+          ? "a surtir · caduca antes"
+          : index === 0
+            ? "caduca antes"
+            : "caducidad mayor";
+    return `Lote ${name} · caduca ${when} · ${formatPdfQty(lot.available)} disp. · ${tag}`;
+  });
+  if (chosenKey && !lots.some((lot) => fulfillmentLotKey(lot) === chosenKey)) {
+    const when = chosen?.expiryDate
+      ? formatPdfDate(chosen.expiryDate.slice(0, 10))
+      : "sin caducidad";
+    lines.push(`A surtir: lote ${chosen?.lotNumber.trim() || "sin número"} · caduca ${when}`);
   }
-  if (!requisition.serviceOrderId) return {};
-  const { data } = await db
-    .from("service_orders")
-    .select(
-      "folio, status, priority, service_type, client_name, contact_name, contact_phone, equipment_name, equipment_brand, equipment_model, equipment_serial, equipment_location, technician, advisor, reception_at, promised_at, fault_reported"
-    )
-    .eq("id", requisition.serviceOrderId)
-    .maybeSingle();
-  return (data ?? {}) as Row;
+  return lines;
+}
+
+function materialCell(
+  group: GroupedRequisitionLine,
+  lots: FulfillmentLotOption[] | undefined,
+  chosen: { lotNumber: string; expiryDate: string } | undefined,
+  notes: string[] = []
+) {
+  const title = group.description || group.productName || "Material";
+  const extra = [
+    group.productModel.trim() ? `Modelo: ${group.productModel.trim()}` : "",
+    ...notes.map((note) => `Nota: ${note}`),
+    ...(group.productId ? lotDetailLines(lots ?? [], chosen) : []),
+  ].filter(Boolean);
+  return [title, ...extra];
 }
 
 /** Orden de surtimiento con su origen (OS o cotización), personas, surtidos y compras de faltantes. */
@@ -169,14 +199,19 @@ export async function downloadRequisitionsPdf(
 ) {
   if (!requisitions.length) throw new Error("Selecciona al menos una solicitud para imprimir.");
   const lookup = await loadStaffProfileLookup();
+  const lotsByProduct = await listFulfillmentLots(
+    requisitions.flatMap((requisition) =>
+      requisition.lines.map((line) => line.productId ?? "")
+    )
+  ).catch(() => new Map<string, FulfillmentLotOption[]>());
   const packed = await Promise.all(
     requisitions.map(async (requisition) => {
-      const [order, fulfillments, purchases] = await Promise.all([
-        loadOrigin(requisition),
+      const [origin, fulfillments, purchases] = await Promise.all([
+        getRequisitionOriginDetails(requisition),
         getRequisitionFulfillments(requisition.id).catch(() => []),
         getPurchaseRequests({ requisitionId: requisition.id }).catch(() => [] as PurchaseRequest[]),
       ]);
-      return { requisition, order, fulfillments, purchases };
+      return { requisition, origin, fulfillments, purchases };
     })
   );
   const nameOf = (profile: StaffProfile | null, raw: string) => profile?.fullName || raw;
@@ -200,8 +235,8 @@ export async function downloadRequisitionsPdf(
     }
 
     const requester = lookup(item.requisition.requestedBy);
-    const advisor = lookup(str(isQuote ? item.order.salesperson : item.order.advisor));
-    const technician = lookup(str(item.order.technician));
+    const advisor = lookup(isQuote ? item.origin.salesperson : item.origin.advisor);
+    const technician = lookup(item.origin.technician);
     const fulfiller = fulfillerKey ? lookup(fulfillerKey) : null;
 
     const start = await drawBrandedHeader(doc, {
@@ -220,8 +255,8 @@ export async function downloadRequisitionsPdf(
     });
     const cursor = new PdfCursor(doc, start);
 
-    if (isQuote) drawQuoteOrigin(cursor, item.requisition, item.order);
-    else drawServiceOrderOrigin(cursor, item.requisition, item.order);
+    if (isQuote) drawQuoteOrigin(cursor, item.requisition, item.origin);
+    else drawServiceOrderOrigin(cursor, item.requisition, item.origin);
 
     compactPeople(
       cursor,
@@ -230,7 +265,7 @@ export async function downloadRequisitionsPdf(
             { title: "Solicita", name: nameOf(requester, item.requisition.requestedBy) },
             {
               title: "Vendedor",
-              name: nameOf(advisor, str(item.order.salesperson)),
+              name: nameOf(advisor, item.origin.salesperson),
               empty: "Sin asignar",
             },
             {
@@ -243,12 +278,12 @@ export async function downloadRequisitionsPdf(
             { title: "Solicita", name: nameOf(requester, item.requisition.requestedBy) },
             {
               title: "Asesor",
-              name: nameOf(advisor, str(item.order.advisor)),
+              name: nameOf(advisor, item.origin.advisor),
               empty: "Sin asignar",
             },
             {
               title: "Técnico",
-              name: nameOf(technician, str(item.order.technician)),
+              name: nameOf(technician, item.origin.technician),
               empty: "Sin asignar",
             },
             {
@@ -264,7 +299,9 @@ export async function downloadRequisitionsPdf(
       item.requisition,
       item.fulfillments,
       item.purchases,
-      (key) => nameOf(lookup(key), key)
+      (key) => nameOf(lookup(key), key),
+      lotsByProduct,
+      options.chosenLots
     );
     drawParagraph(
       cursor,
@@ -285,7 +322,7 @@ export async function downloadRequisitionsPdf(
             {
               title: "Vo. Bo. ventas",
               name:
-                nameOf(advisor, str(item.order.salesperson)) ||
+                nameOf(advisor, item.origin.salesperson) ||
                 nameOf(requester, item.requisition.requestedBy),
             },
           ]
@@ -296,11 +333,11 @@ export async function downloadRequisitionsPdf(
             },
             {
               title: "Recibe material (técnico)",
-              name: nameOf(technician, str(item.order.technician)),
+              name: nameOf(technician, item.origin.technician),
             },
             {
               title: "Vo. Bo. asesor de servicio",
-              name: nameOf(advisor, str(item.order.advisor)),
+              name: nameOf(advisor, item.origin.advisor),
             },
           ]
     );
@@ -353,9 +390,10 @@ export async function downloadRequisitionPickListPdf(
   const catalogIds = rowsToPrint.flatMap((row) =>
     row.group.sources.map((source) => source.line.productId ?? "")
   );
-  const stock = await getProductsAvailableQty(catalogIds).catch(
-    () => new Map<string, number>()
-  );
+  const [stock, lotsByProduct] = await Promise.all([
+    getProductsAvailableQty(catalogIds).catch(() => new Map<string, number>()),
+    listFulfillmentLots(catalogIds).catch(() => new Map<string, FulfillmentLotOption[]>()),
+  ]);
   const lookup = await loadStaffProfileLookup();
   const requesterKeys = [...new Set(requisitions.map((item) => item.requestedBy).filter(Boolean))];
   const requesterNames = requesterKeys.map((key) => lookup(key)?.fullName || key);
@@ -412,7 +450,11 @@ export async function downloadRequisitionPickListPdf(
         n: String(index + 1),
         sku: row.group.productSku || "—",
         part: row.group.partNumber.trim() || "—",
-        desc: row.group.description || row.group.productName,
+        desc: materialCell(
+          row.group,
+          row.group.productId ? lotsByProduct.get(row.group.productId) : undefined,
+          row.group.productId ? options.chosenLots?.[row.group.productId] : undefined
+        ),
         unit: row.group.unit,
         qty: formatPdfQty(row.qty),
         disp:
@@ -451,49 +493,137 @@ export async function downloadRequisitionPickListPdf(
   );
 }
 
-function drawQuoteOrigin(cursor: PdfCursor, requisition: ServiceOrderRequisition, quote: Row) {
-  compactSection(cursor, "Venta / cotización");
-  compactFields(cursor, [
-    ["Cotización", requisition.quoteFolio || str(quote.folio)],
-    ["Proyecto", str(quote.title)],
-    ["Cliente", requisition.clientName || str(quote.client_name)],
-    ["Contacto", [str(quote.contact_name), str(quote.contact_phone)].filter(Boolean).join(" · ")],
-    ["Ciudad", [str(quote.city), str(quote.state)].filter(Boolean).join(", ")],
-    ["Solicitado", formatPdfDate(requisition.requestedAt, true)],
-    ["Requerido", formatPdfDate(requisition.neededBy)],
-    ["Entrega", requisition.deliveryAddress],
-  ]);
+function fieldBlockHeight(doc: jsPDF, fields: [string, string][], width: number) {
+  let height = 8;
+  for (const [, value] of fields) {
+    const lines = (doc.splitTextToSize(value.trim() || "—", width) as string[]).slice(0, 3);
+    height += 3.2 + lines.length * 3.15;
+  }
+  return height + 2.2;
 }
 
-function drawServiceOrderOrigin(cursor: PdfCursor, requisition: ServiceOrderRequisition, order: Row) {
-  compactSection(cursor, "Orden de servicio");
-  compactFields(cursor, [
-    ["Orden de servicio", requisition.serviceOrderFolio || str(order.folio)],
-    ["Tipo", order.service_type ? serviceTypeLabel(str(order.service_type)) : ""],
-    ["Cliente", requisition.clientName || str(order.client_name)],
-    ["Equipo", requisition.equipmentName || str(order.equipment_name)],
-    ["Marca / modelo", [str(order.equipment_brand), str(order.equipment_model)].filter(Boolean).join(" ")],
-    ["No. de serie", str(order.equipment_serial)],
-    ["Ubicación", str(order.equipment_location)],
-    ["Solicitado", formatPdfDate(requisition.requestedAt, true)],
-    ...(str(order.priority) === "urgente" ? ([["Prioridad", "Urgente"]] as [string, string][]) : []),
-    ["Contacto", [str(order.contact_name), str(order.contact_phone)].filter(Boolean).join(" · ")],
-  ]);
-  const fault = str(order.fault_reported).trim();
-  if (fault) {
-    const { doc } = cursor;
-    const lines = (doc.splitTextToSize(fault, cursor.contentW) as string[]).slice(0, 2);
-    cursor.ensure(4 + lines.length * 3.2);
+function drawInfoCard(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  title: string,
+  fields: [string, string][]
+) {
+  doc.setFillColor(246, 248, 253);
+  doc.setDrawColor(210, 216, 236);
+  doc.roundedRect(x, y, w, h, 1.2, 1.2, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...PDF_BLUE);
+  doc.text(title.toUpperCase(), x + 2.4, y + 4.2);
+  let cursorY = y + 8;
+  const inner = w - 4.8;
+  for (const [label, value] of fields) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(5.8);
     doc.setTextColor(...PDF_MUTED);
-    doc.text("Falla", PDF_MARGIN, cursor.y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
+    doc.text(label, x + 2.4, cursorY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.4);
     doc.setTextColor(...PDF_INK);
-    doc.text(lines, PDF_MARGIN, cursor.y + 3);
-    cursor.y += 3.4 + lines.length * 3.2;
+    const lines = (doc.splitTextToSize(value.trim() || "—", inner) as string[]).slice(0, 3);
+    doc.text(lines, x + 2.4, cursorY + 3.1);
+    cursorY += 3.2 + lines.length * 3.15;
   }
+}
+
+function drawOriginColumns(
+  cursor: PdfCursor,
+  leftTitle: string,
+  left: [string, string][],
+  rightTitle: string,
+  right: [string, string][]
+) {
+  const gap = 3;
+  const width = (cursor.contentW - gap) / 2;
+  const inner = width - 4.8;
+  const height = Math.max(
+    fieldBlockHeight(cursor.doc, left, inner),
+    fieldBlockHeight(cursor.doc, right, inner),
+    24
+  );
+  cursor.ensure(height + 2);
+  drawInfoCard(cursor.doc, PDF_MARGIN, cursor.y, width, height, leftTitle, left);
+  drawInfoCard(cursor.doc, PDF_MARGIN + width + gap, cursor.y, width, height, rightTitle, right);
+  cursor.y += height + 2.6;
+}
+
+function clientSide(origin: RequisitionOriginDetails): [string, string][] {
+  const address = [origin.address, origin.city].filter((part) => part.trim()).join(", ");
+  const contact = [origin.contactName, origin.contactPhone].filter((part) => part.trim()).join(" · ");
+  return [
+    ["Cliente", origin.clientName],
+    ["Dirección", address],
+    ["Estado", origin.state],
+    [origin.promiseLabel, origin.promisedAt ? formatPdfDate(origin.promisedAt) : ""],
+    ...(contact ? ([["Contacto", contact]] as [string, string][]) : []),
+  ];
+}
+
+function drawQuoteOrigin(
+  cursor: PdfCursor,
+  requisition: ServiceOrderRequisition,
+  origin: RequisitionOriginDetails
+) {
+  drawOriginColumns(
+    cursor,
+    "Venta",
+    [
+      ["Cotización", requisition.quoteFolio || origin.folio],
+      ["Proyecto", origin.title],
+      ["Solicitado", formatPdfDate(requisition.requestedAt, true)],
+      ...(requisition.deliveryAddress
+        ? ([["Entrega", requisition.deliveryAddress]] as [string, string][])
+        : []),
+    ],
+    "Cliente",
+    clientSide(origin)
+  );
+}
+
+function drawServiceOrderOrigin(
+  cursor: PdfCursor,
+  requisition: ServiceOrderRequisition,
+  origin: RequisitionOriginDetails
+) {
+  drawOriginColumns(
+    cursor,
+    "Equipo",
+    [
+      ["Orden de servicio", requisition.serviceOrderFolio || origin.folio],
+      ["Equipo", origin.equipmentName || requisition.equipmentName],
+      ["Marca", origin.equipmentBrand],
+      ["Modelo", origin.equipmentModel],
+      ["No. de serie", origin.equipmentSerial],
+      ["Ubicación", origin.equipmentLocation],
+      ...(origin.serviceType
+        ? ([["Tipo", serviceTypeLabel(origin.serviceType)]] as [string, string][])
+        : []),
+      ...(origin.priority === "urgente" ? ([["Prioridad", "Urgente"]] as [string, string][]) : []),
+    ],
+    "Cliente",
+    clientSide(origin)
+  );
+  const fault = origin.faultReported.trim();
+  if (!fault) return;
+  const { doc } = cursor;
+  const lines = (doc.splitTextToSize(fault, cursor.contentW) as string[]).slice(0, 2);
+  cursor.ensure(4 + lines.length * 3.2);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(5.8);
+  doc.setTextColor(...PDF_MUTED);
+  doc.text("Falla reportada", PDF_MARGIN, cursor.y);
+  doc.setFontSize(7);
+  doc.setTextColor(...PDF_INK);
+  doc.text(lines, PDF_MARGIN, cursor.y + 3);
+  cursor.y += 3.4 + lines.length * 3.2;
 }
 
 function drawRequisitionBody(
@@ -501,7 +631,9 @@ function drawRequisitionBody(
   requisition: ServiceOrderRequisition,
   fulfillments: Awaited<ReturnType<typeof getRequisitionFulfillments>>,
   purchases: PurchaseRequest[],
-  displayName: (key: string) => string
+  displayName: (key: string) => string,
+  lotsByProduct: Map<string, FulfillmentLotOption[]>,
+  chosenLots?: RequisitionPrintOptions["chosenLots"]
 ) {
   const doc = cursor.doc;
   compactSection(cursor, "Material solicitado");
@@ -518,7 +650,12 @@ function drawRequisitionBody(
         n: String(index + 1),
         sku: group.productSku || "—",
         part: group.partNumber.trim() || "—",
-        desc: [group.description || group.productName, ...notes.map((note) => `Nota: ${note}`)],
+        desc: materialCell(
+          group,
+          group.productId ? lotsByProduct.get(group.productId) : undefined,
+          group.productId ? chosenLots?.[group.productId] : undefined,
+          notes
+        ),
         unit: group.unit,
         req: formatPdfQty(group.quantityRequested),
         ful: formatPdfQty(group.quantityFulfilled),
@@ -559,17 +696,22 @@ function drawRequisitionBody(
     const lineById = new Map(requisition.lines.map((line) => [line.id, line]));
     for (const item of fulfillments) {
       const line = item.lineId ? lineById.get(item.lineId) : undefined;
-      cursor.ensure(5);
+      const note = item.notes.trim();
+      const noteLines = note
+        ? (doc.splitTextToSize(note, cursor.contentW - 32) as string[]).slice(0, 2)
+        : [];
+      cursor.ensure(5 + noteLines.length * 3.2);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(...PDF_MUTED);
       doc.text(formatPdfDate(item.createdAt, true), PDF_MARGIN, cursor.y);
       doc.setTextColor(...PDF_INK);
       const part = line?.partNumber.trim();
+      const model = line?.productModel.trim();
       doc.text(
         `${formatPdfQty(item.quantity)} × ${
           line
-            ? `${line.productSku ? `${line.productSku} · ` : ""}${part ? `n.º ${part} · ` : ""}${line.description}`
+            ? `${line.productSku ? `${line.productSku} · ` : ""}${model ? `modelo ${model} · ` : ""}${part ? `n.º ${part} · ` : ""}${line.description}`
             : "Material"
         }`,
         PDF_MARGIN + 32,
@@ -580,7 +722,12 @@ function drawRequisitionBody(
       doc.text(`Surtió: ${displayName(item.fulfilledBy)}`, PDF_MARGIN + cursor.contentW, cursor.y, {
         align: "right",
       });
-      cursor.y += 4.6;
+      cursor.y += 4.2;
+      if (noteLines.length) {
+        doc.setFontSize(7);
+        doc.text(noteLines, PDF_MARGIN + 32, cursor.y);
+        cursor.y += noteLines.length * 3.2;
+      }
     }
     cursor.y += 2;
   }
