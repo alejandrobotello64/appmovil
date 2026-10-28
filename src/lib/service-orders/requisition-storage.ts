@@ -513,22 +513,38 @@ type ChosenLotDemand = {
   label: string;
 };
 
+function slicesForFulfillment(item: FulfillLineInput) {
+  const listed = (item.lots ?? []).filter((slice) => Number(slice.quantity) > 0);
+  if (listed.length) return listed;
+  if (!item.lotSpecified || !(Number(item.quantity) > 0)) return [];
+  return [
+    {
+      lotNumber: item.lotNumber ?? "",
+      expiryDate: item.expiryDate ?? "",
+      quantity: Number(item.quantity),
+    },
+  ];
+}
+
+function lotSliceNote(slice: { lotNumber: string; expiryDate: string; quantity: number }) {
+  const when = slice.expiryDate ? ` · caduca ${slice.expiryDate.slice(0, 10)}` : "";
+  return `Lote ${slice.lotNumber.trim() || "sin número"}${when} · ${slice.quantity}`;
+}
+
 function chosenLotDemands(
   lines: ServiceOrderRequisitionLine[],
   fulfillments: FulfillLineInput[]
 ): ChosenLotDemand[] {
   return fulfillments.flatMap((item) => {
     const line = lines.find((entry) => entry.id === item.lineId);
-    if (!line?.productId || !item.lotSpecified || !(Number(item.quantity) > 0)) return [];
-    return [
-      {
-        productId: line.productId,
-        quantity: Number(item.quantity),
-        lotNumber: item.lotNumber ?? "",
-        expiryDate: item.expiryDate ?? "",
-        label: line.productSku || line.description,
-      },
-    ];
+    if (!line?.productId) return [];
+    return slicesForFulfillment(item).map((slice) => ({
+      productId: line.productId as string,
+      quantity: Number(slice.quantity),
+      lotNumber: slice.lotNumber ?? "",
+      expiryDate: slice.expiryDate ?? "",
+      label: line.productSku || line.description,
+    }));
   });
 }
 
@@ -620,26 +636,41 @@ export async function fulfillServiceOrderRequisition(
   await assertChosenLots(chosenLotDemands(req.lines, toFulfill));
   for (const item of toFulfill) {
     const line = req.lines.find((l) => l.id === item.lineId)!;
+    const slices = slicesForFulfillment(item);
     if (line.productId) {
-      await applyOutboundStock({
-        productId: line.productId,
-        quantity: item.quantity,
-        createdBy: fulfilledBy,
-        reason: fromQuote ? "Surtido a venta (cotización)" : "Surtido a orden de servicio",
-        note: [req.folio, fromQuote ? req.quoteFolio : req.serviceOrderFolio, fromQuote ? req.clientName : "", line.description]
-          .filter(Boolean)
-          .join(" · "),
-        preferredLot: item.lotSpecified
-          ? { lotNumber: item.lotNumber ?? "", expiryDate: item.expiryDate ?? "" }
-          : null,
-      });
+      const note = [req.folio, fromQuote ? req.quoteFolio : req.serviceOrderFolio, fromQuote ? req.clientName : "", line.description]
+        .filter(Boolean)
+        .join(" · ");
+      const reason = fromQuote ? "Surtido a venta (cotización)" : "Surtido a orden de servicio";
+      if (slices.length) {
+        const covered = slices.reduce((sum, slice) => sum + Number(slice.quantity), 0);
+        if (Math.abs(covered - Number(item.quantity)) > 0.0001) {
+          throw new Error(
+            `Los lotes de ${line.productSku || line.description} no cubren la cantidad a surtir.`
+          );
+        }
+        for (const slice of slices) {
+          await applyOutboundStock({
+            productId: line.productId,
+            quantity: slice.quantity,
+            createdBy: fulfilledBy,
+            reason,
+            note,
+            preferredLot: { lotNumber: slice.lotNumber, expiryDate: slice.expiryDate },
+          });
+        }
+      } else {
+        await applyOutboundStock({
+          productId: line.productId,
+          quantity: item.quantity,
+          createdBy: fulfilledBy,
+          reason,
+          note,
+        });
+      }
     }
 
-    const lotNote = item.lotSpecified
-      ? `Lote ${item.lotNumber?.trim() || "sin número"}${
-          item.expiryDate ? ` · caduca ${item.expiryDate.slice(0, 10)}` : ""
-        }`
-      : "";
+    const lotNote = slices.map(lotSliceNote).join("; ");
     await db.from("service_order_requisition_fulfillments").insert({
       requisition_id: req.id,
       line_id: line.id,

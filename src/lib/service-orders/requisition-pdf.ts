@@ -35,10 +35,10 @@ import {
 } from "./requisitions";
 import { serviceTypeLabel } from "./types";
 import {
-  fulfillmentLotKey,
-  fulfillmentLotRole,
+  allocateFulfillmentLots,
   listFulfillmentLots,
   type FulfillmentLotOption,
+  type FulfillmentLotSlice,
 } from "@/lib/warehouse/stock";
 
 const COLUMNS: PdfColumn[] = [
@@ -62,8 +62,8 @@ export type RequisitionPrintOptions = {
   output?: PdfOutput;
   /** Cantidad a recoger por grupo de código (lista de verificación). */
   quantities?: Record<string, number>;
-  /** Lote que almacén eligió por producto. Si falta, se marca el que caduca antes. */
-  chosenLots?: Record<string, { lotNumber: string; expiryDate: string }>;
+  /** Lotes que cubren cada línea. La hoja solo imprime estos, no el resto del inventario. */
+  lineLots?: Record<string, FulfillmentLotSlice[]>;
 };
 
 async function finishPdf(doc: jsPDF, fileName: string, output: PdfOutput = "print", note?: string) {
@@ -139,51 +139,55 @@ function purchaseForLine(lineId: string, purchases: PurchaseRequest[]) {
   return purchases.filter((purchase) => purchase.lines.some((line) => line.requisitionLineId === lineId));
 }
 
-function lotDetailLines(
-  lots: FulfillmentLotOption[],
-  chosen?: { lotNumber: string; expiryDate: string }
+function formatSlice(slice: FulfillmentLotSlice) {
+  const when = slice.expiryDate
+    ? `caduca ${formatPdfDate(slice.expiryDate.slice(0, 10))}`
+    : "sin caducidad";
+  const name = slice.lotNumber.trim() || "sin número";
+  return `Lote ${name} · ${when} · ${formatPdfQty(slice.quantity)}`;
+}
+
+function slicesForGroup(
+  group: GroupedRequisitionLine,
+  lots: FulfillmentLotOption[] | undefined,
+  lineLots: RequisitionPrintOptions["lineLots"],
+  quantity: number
 ) {
-  if (!lots.length) return ["Sin lote con existencia"];
-  const chosenKey = chosen ? fulfillmentLotKey(chosen) : "";
-  const suggestedKey = fulfillmentLotKey(lots[0]);
-  const lines = lots.map((lot, index) => {
-    const key = fulfillmentLotKey(lot);
-    const when = lot.expiryDate
-      ? formatPdfDate(lot.expiryDate.slice(0, 10))
-      : "sin caducidad";
-    const name = lot.lotNumber.trim() || "sin número";
-    const role = fulfillmentLotRole(lot, index, lots);
-    const roleLabel =
-      role === "later" ? "caducidad mayor" : role === "suggested" ? "caduca antes" : "otro lote";
-    const tag =
-      chosenKey && key === chosenKey
-        ? `a surtir · ${roleLabel}`
-        : !chosenKey && key === suggestedKey
-          ? `a surtir · ${roleLabel}`
-          : roleLabel;
-    return `Lote ${name} · caduca ${when} · ${formatPdfQty(lot.available)} disp. · ${tag}`;
-  });
-  if (chosenKey && !lots.some((lot) => fulfillmentLotKey(lot) === chosenKey)) {
-    const when = chosen?.expiryDate
-      ? formatPdfDate(chosen.expiryDate.slice(0, 10))
-      : "sin caducidad";
-    lines.push(`A surtir: lote ${chosen?.lotNumber.trim() || "sin número"} · caduca ${when}`);
+  const fromLines = group.sources.flatMap((source) => lineLots?.[source.line.id] ?? []);
+  if (fromLines.length) {
+    const merged = new Map<string, FulfillmentLotSlice>();
+    for (const slice of fromLines) {
+      const key = `${slice.lotNumber}\t${slice.expiryDate.slice(0, 10)}`;
+      const current = merged.get(key);
+      if (current) current.quantity += slice.quantity;
+      else merged.set(key, { ...slice });
+    }
+    return [...merged.values()];
   }
+  return allocateFulfillmentLots(lots ?? [], quantity);
+}
+
+function lotDetailLines(slices: FulfillmentLotSlice[], needed: number) {
+  if (!slices.length) return needed > 0 ? ["Sin lote con existencia"] : [];
+  const lines = slices.map(formatSlice);
+  if (slices.length > 1) lines.unshift(`Se surte en ${slices.length} lotes`);
   return lines;
 }
 
 function materialCell(
   group: GroupedRequisitionLine,
   lots: FulfillmentLotOption[] | undefined,
-  chosen: { lotNumber: string; expiryDate: string } | undefined,
+  lineLots: RequisitionPrintOptions["lineLots"],
+  quantity: number,
   notes: string[] = []
 ) {
   const title = group.description || group.productName || "Material";
+  const slices = group.productId ? slicesForGroup(group, lots, lineLots, quantity) : [];
   const extra = [
     group.productBrand.trim() ? `Marca: ${group.productBrand.trim()}` : "",
     group.productId ? `Modelo: ${group.productModel.trim() || "—"}` : "",
     ...notes.map((note) => `Nota: ${note}`),
-    ...(group.productId ? lotDetailLines(lots ?? [], chosen) : []),
+    ...(group.productId ? lotDetailLines(slices, quantity) : []),
   ].filter(Boolean);
   return [title, ...extra];
 }
@@ -305,7 +309,7 @@ export async function downloadRequisitionsPdf(
       item.purchases,
       (key) => nameOf(lookup(key), key),
       lotsByProduct,
-      options.chosenLots
+      options.lineLots
     );
     drawParagraph(
       cursor,
@@ -457,7 +461,8 @@ export async function downloadRequisitionPickListPdf(
         desc: materialCell(
           row.group,
           row.group.productId ? lotsByProduct.get(row.group.productId) : undefined,
-          row.group.productId ? options.chosenLots?.[row.group.productId] : undefined
+          options.lineLots,
+          row.qty
         ),
         unit: row.group.unit,
         qty: formatPdfQty(row.qty),
@@ -637,7 +642,7 @@ function drawRequisitionBody(
   purchases: PurchaseRequest[],
   displayName: (key: string) => string,
   lotsByProduct: Map<string, FulfillmentLotOption[]>,
-  chosenLots?: RequisitionPrintOptions["chosenLots"]
+  lineLots?: RequisitionPrintOptions["lineLots"]
 ) {
   const doc = cursor.doc;
   compactSection(cursor, "Material solicitado");
@@ -657,7 +662,8 @@ function drawRequisitionBody(
         desc: materialCell(
           group,
           group.productId ? lotsByProduct.get(group.productId) : undefined,
-          group.productId ? chosenLots?.[group.productId] : undefined,
+          lineLots,
+          group.pending > 0 ? group.pending : group.quantityRequested,
           notes
         ),
         unit: group.unit,

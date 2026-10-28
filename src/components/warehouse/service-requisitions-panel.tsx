@@ -46,10 +46,11 @@ import {
 } from "@/lib/service-orders/requisitions";
 import { listStaffMembers, type StaffMember } from "@/lib/users/staff";
 import {
-  fulfillmentLotKey,
-  fulfillmentLotRole,
+  allocateFulfillmentLots,
+  assignFulfillmentLots,
   listFulfillmentLots,
   type FulfillmentLotOption,
+  type FulfillmentLotSlice,
 } from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
@@ -72,21 +73,6 @@ function formatDay(value: string) {
   }
   const date = new Date(`${value.slice(0, 10)}T12:00:00`);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("es-MX");
-}
-
-function lotCapFor(
-  group: GroupedRequisitionLine,
-  stock: Map<string, number> | null,
-  lots: Map<string, FulfillmentLotOption[]>,
-  choice: Record<string, string>
-) {
-  const totalCap = fulfillCap(group, stock);
-  if (!group.productId) return totalCap;
-  const options = lots.get(group.productId) ?? [];
-  if (!options.length) return totalCap;
-  const selected =
-    options.find((lot) => fulfillmentLotKey(lot) === choice[group.productId!]) ?? options[0];
-  return Math.min(totalCap, Math.max(0, selected.available));
 }
 
 function originPrefix(source: RequisitionSource) {
@@ -185,13 +171,9 @@ export function ServiceRequisitionsPanel({
   const [availableByProduct, setAvailableByProduct] = useState<Map<string, number> | null>(null);
   const [availableLoading, setAvailableLoading] = useState(false);
   const [lotsByProduct, setLotsByProduct] = useState<Map<string, FulfillmentLotOption[]>>(new Map());
-  const [lotChoice, setLotChoice] = useState<Record<string, string>>({});
   const [origin, setOrigin] = useState<RequisitionOriginDetails | null>(null);
   const [originLoading, setOriginLoading] = useState(false);
   const [stockEpoch, setStockEpoch] = useState(0);
-  const lotsRef = useRef(new Map<string, FulfillmentLotOption[]>());
-  const lotChoiceRef = useRef<Record<string, string>>({});
-  const lotsBump = useRef(false);
   const raisedPieces = useRef(new Set<string>());
   const [purchaseForm, setPurchaseForm] = useState<{
     jobs: { requisition: ServiceOrderRequisition; shortages: RequisitionShortage[] }[];
@@ -275,7 +257,7 @@ export function ServiceRequisitionsPanel({
           let changed = false;
           for (const group of pickGroups) {
             if (!group.productId || group.offCatalog || group.pending <= 0) continue;
-            const cap = lotCapFor(group, map, lotsRef.current, lotChoiceRef.current);
+            const cap = fulfillCap(group, map);
             const currentQty = group.sources.reduce(
               (sum, source) => sum + Number(current[source.line.id] || 0),
               0
@@ -314,7 +296,7 @@ export function ServiceRequisitionsPanel({
           let changed = false;
           for (const group of pickGroups) {
             if (!group.productId || group.offCatalog || group.pending <= 0) continue;
-            const cap = lotCapFor(group, map, lotsRef.current, lotChoiceRef.current);
+            const cap = fulfillCap(group, map);
             if (raised.has(group.productId)) {
               nextGroups[group.key] = formatQty(cap);
               changed = true;
@@ -348,34 +330,15 @@ export function ServiceRequisitionsPanel({
   useEffect(() => {
     let active = true;
     if (!pickProductIds.length) {
-      lotsRef.current = new Map();
       setLotsByProduct(new Map());
       return;
     }
     listFulfillmentLots(pickProductIds)
       .then((map) => {
-        if (!active) return;
-        const nextChoice = { ...lotChoiceRef.current };
-        for (const [productId, lots] of map) {
-          const existing = nextChoice[productId];
-          if (existing && lots.some((lot) => fulfillmentLotKey(lot) === existing)) continue;
-          if (lots[0]) nextChoice[productId] = fulfillmentLotKey(lots[0]);
-        }
-        lotChoiceRef.current = nextChoice;
-        lotsRef.current = map;
-        setLotChoice(nextChoice);
-        setLotsByProduct(map);
-        if (lotsBump.current) {
-          lotsBump.current = false;
-          return;
-        }
-        lotsBump.current = true;
-        setStockEpoch((epoch) => epoch + 1);
+        if (active) setLotsByProduct(map);
       })
       .catch(() => {
-        if (!active) return;
-        lotsRef.current = new Map();
-        setLotsByProduct(new Map());
+        if (active) setLotsByProduct(new Map());
       });
     return () => {
       active = false;
@@ -575,44 +538,44 @@ export function ServiceRequisitionsPanel({
     if (kept.length) mergeDrafts(kept, true);
   }
 
-  function chosenLotFor(productId: string | null) {
-    if (!productId) return null;
-    const lots = lotsByProduct.get(productId) ?? [];
-    if (!lots.length) return null;
-    return lots.find((lot) => fulfillmentLotKey(lot) === lotChoice[productId]) ?? lots[0];
-  }
-
-  function writeGroupQty(group: GroupedRequisitionLine, quantity: number) {
-    const raw = formatQty(Math.max(0, quantity));
-    setGroupQtyDraft((current) => ({ ...current, [group.key]: raw }));
-    const allocated = allocateFulfillmentQty(
-      group.sources.map((source) => source.line),
-      Number(raw)
-    );
-    setQtyDraft((current) => {
-      const next = { ...current };
-      for (const [lineId, qty] of Object.entries(allocated)) {
-        next[lineId] = formatQty(qty);
+  function lineLotPlan(items = selectedOpen) {
+    const byProduct = new Map<string, { lineId: string; quantity: number }[]>();
+    for (const requisition of items) {
+      for (const line of requisition.lines) {
+        if (!line.productId) continue;
+        const quantity = Number(qtyDraft[line.id] || 0);
+        if (!(quantity > 0)) continue;
+        const list = byProduct.get(line.productId) ?? [];
+        list.push({ lineId: line.id, quantity });
+        byProduct.set(line.productId, list);
       }
-      return next;
-    });
+    }
+    const assigned = new Map<string, FulfillmentLotSlice[]>();
+    for (const [productId, lines] of byProduct) {
+      const plan = assignFulfillmentLots(lotsByProduct.get(productId) ?? [], lines);
+      for (const [lineId, slices] of plan) assigned.set(lineId, slices);
+    }
+    return assigned;
   }
 
   async function onFulfill() {
     if (!selectedOpen.length || !canFulfill) return;
+    const plan = lineLotPlan();
     const jobs = selectedOpen.map((requisition) => ({
       requisitionId: requisition.id,
       fulfillments: requisition.lines
         .map((line) => {
-          const chosen = chosenLotFor(line.productId);
+          const quantity = Number(qtyDraft[line.id] || 0);
+          const lots = plan.get(line.id) ?? [];
           return {
             lineId: line.id,
-            quantity: Number(qtyDraft[line.id] || 0),
-            ...(chosen
+            quantity,
+            ...(lots.length
               ? {
                   lotSpecified: true,
-                  lotNumber: chosen.lotNumber,
-                  expiryDate: chosen.expiryDate,
+                  lotNumber: lots[0].lotNumber,
+                  expiryDate: lots[0].expiryDate,
+                  lots,
                 }
               : {}),
           };
@@ -653,20 +616,16 @@ export function ServiceRequisitionsPanel({
   }
 
   function printOptions() {
-    const chosenLots: Record<string, { lotNumber: string; expiryDate: string }> = {};
-    for (const [productId, lots] of lotsByProduct) {
-      const chosen =
-        lots.find((lot) => fulfillmentLotKey(lot) === lotChoice[productId]) ?? lots[0];
-      if (chosen) {
-        chosenLots[productId] = { lotNumber: chosen.lotNumber, expiryDate: chosen.expiryDate };
-      }
+    const lineLots: Record<string, FulfillmentLotSlice[]> = {};
+    for (const [lineId, slices] of lineLotPlan(selectedItems)) {
+      if (slices.length) lineLots[lineId] = slices;
     }
     return {
       printedBy: session
         ? { username: session.username, fullName: session.fullName }
         : undefined,
       printedByWarehouse: canFulfill,
-      chosenLots,
+      lineLots,
     };
   }
 
@@ -1191,14 +1150,17 @@ export function ServiceRequisitionsPanel({
                   );
                   const hint = groupSourceHint(group);
                   const lots = group.productId ? (lotsByProduct.get(group.productId) ?? []) : [];
-                  const selectedLot = chosenLotFor(group.productId);
-                  const cap = lotCapFor(group, availableByProduct, lotsByProduct, lotChoice);
+                  const cap = fulfillCap(group, availableByProduct);
                   const available = group.productId
                     ? availableByProduct?.get(group.productId)
                     : undefined;
                   const drafted = Number(
                     groupQtyDraft[group.key] ?? formatQty(groupDraftQty(group, qtyDraft))
                   );
+                  const slices =
+                    !group.offCatalog && Number.isFinite(drafted) && drafted > 0
+                      ? allocateFulfillmentLots(lots, drafted)
+                      : [];
                   const inputValue =
                     groupQtyDraft[group.key] ?? formatQty(groupDraftQty(group, qtyDraft));
                   const overStock =
@@ -1255,88 +1217,33 @@ export function ServiceRequisitionsPanel({
                             : `Stock insuficiente: se pueden surtir ${formatQty(available)} de ${formatQty(group.pending)} ${group.unit}.`}
                         </p>
                       ) : null}
-                      {!group.offCatalog && group.productId ? (
-                        <div className="mt-2">
-                          <label className="block text-xs">
-                            Lotes y caducidades
-                            {lots.length ? (
-                              <select
-                                className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-                                value={selectedLot ? fulfillmentLotKey(selectedLot) : ""}
-                                disabled={!canFulfill || group.pending <= 0}
-                                onChange={(event) => {
-                                  const key = event.target.value;
-                                  const previous = selectedLot;
-                                  const nextChoice = {
-                                    ...lotChoiceRef.current,
-                                    [group.productId!]: key,
-                                  };
-                                  lotChoiceRef.current = nextChoice;
-                                  setLotChoice(nextChoice);
-                                  if (!canFulfill || group.pending <= 0) return;
-                                  const prevCap = Math.min(
-                                    group.pending,
-                                    previous?.available ?? group.pending
-                                  );
-                                  const nextCap = lotCapFor(
-                                    group,
-                                    availableByProduct,
-                                    lotsByProduct,
-                                    nextChoice
-                                  );
-                                  if (drafted > nextCap + 0.0001) writeGroupQty(group, nextCap);
-                                  else if (drafted + 0.0001 >= prevCap && nextCap > drafted + 0.0001) {
-                                    writeGroupQty(group, nextCap);
-                                  }
-                                }}
+                      {!group.offCatalog && group.productId && drafted > 0 ? (
+                        <div className="mt-2 space-y-1">
+                          <p className="text-xs font-medium text-[#3B46A5]">
+                            {slices.length > 1
+                              ? `Se surte en ${slices.length} lotes`
+                              : "Lote a surtir"}
+                          </p>
+                          {availableLoading && !slices.length ? (
+                            <p className="text-xs text-muted-foreground">Consultando lotes…</p>
+                          ) : slices.length ? (
+                            slices.map((slice) => (
+                              <p
+                                key={`${slice.lotNumber}\t${slice.expiryDate}`}
+                                className="text-xs text-foreground"
                               >
-                                {lots.map((lot, index) => {
-                                  const when = lot.expiryDate
-                                    ? `caduca ${formatDay(lot.expiryDate)}`
-                                    : "sin caducidad";
-                                  const role = fulfillmentLotRole(lot, index, lots);
-                                  const tag =
-                                    role === "suggested"
-                                      ? "Sugerido, caduca antes"
-                                      : role === "later"
-                                        ? "Caducidad mayor"
-                                        : "Otro lote";
-                                  return (
-                                    <option key={fulfillmentLotKey(lot)} value={fulfillmentLotKey(lot)}>
-                                      {tag} · lote {lot.lotNumber.trim() || "sin número"} · {when} ·{" "}
-                                      {formatQty(lot.available)} disp.
-                                    </option>
-                                  );
-                                })}
-                              </select>
-                            ) : (
-                              <span className="mt-1 block text-muted-foreground">
-                                Sin lotes con existencia para este producto.
-                              </span>
-                            )}
-                          </label>
-                          {selectedLot ? (
-                            <p className="mt-1 text-xs text-[#3B46A5]">
-                              A surtir: lote {selectedLot.lotNumber.trim() || "sin número"} ·{" "}
-                              {selectedLot.expiryDate
-                                ? `caduca ${formatDay(selectedLot.expiryDate)}`
-                                : "sin caducidad"}{" "}
-                              · {formatQty(selectedLot.available)} disp.
+                                Lote {slice.lotNumber.trim() || "sin número"} ·{" "}
+                                {slice.expiryDate
+                                  ? `caduca ${formatDay(slice.expiryDate)}`
+                                  : "sin caducidad"}{" "}
+                                · {formatQty(slice.quantity)} {group.unit}
+                              </p>
+                            ))
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              Sin lote con existencia para esta cantidad.
                             </p>
-                          ) : null}
-                          {lots.length > 1 ? (
-                            <p className="mt-1 text-[11px] text-muted-foreground">
-                              Si el cliente pide más vigencia, elige un lote con caducidad mayor. La cantidad se limita a lo que hay en el lote elegido.
-                            </p>
-                          ) : null}
-                          {selectedLot &&
-                          group.pending > 0 &&
-                          selectedLot.available + 0.0001 < group.pending &&
-                          (available ?? 0) > selectedLot.available + 0.0001 ? (
-                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                              Este lote alcanza para {formatQty(selectedLot.available)} {group.unit}. Hay más existencia en otro lote.
-                            </p>
-                          ) : null}
+                          )}
                         </div>
                       ) : null}
                       {hint ? <p className="text-xs text-[#3B46A5]">{hint}</p> : null}

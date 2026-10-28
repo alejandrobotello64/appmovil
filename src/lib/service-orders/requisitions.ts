@@ -107,6 +107,8 @@ export type FulfillLineInput = {
   lotNumber?: string;
   expiryDate?: string;
   lotSpecified?: boolean;
+  /** Lotes que cubren la cantidad. Solo estos se descuentan y se imprimen. */
+  lots?: { lotNumber: string; expiryDate: string; quantity: number }[];
 };
 
 export type RequisitionFulfillment = {

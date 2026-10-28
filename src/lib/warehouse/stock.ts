@@ -339,24 +339,59 @@ export type FulfillmentLotOption = {
   available: number;
 };
 
+export type FulfillmentLotSlice = {
+  lotNumber: string;
+  expiryDate: string;
+  quantity: number;
+};
+
+/** Reparte la cantidad entre los lotes que sí se van a tomar, del que caduca antes en adelante. */
+export function allocateFulfillmentLots(
+  lots: FulfillmentLotOption[],
+  quantity: number
+): FulfillmentLotSlice[] {
+  let left = Math.max(0, Number(quantity) || 0);
+  const slices: FulfillmentLotSlice[] = [];
+  for (const lot of lots) {
+    if (left <= 0.0001) break;
+    const take = Math.min(left, Math.max(0, lot.available));
+    if (take <= 0.0001) continue;
+    slices.push({
+      lotNumber: lot.lotNumber,
+      expiryDate: lot.expiryDate,
+      quantity: take,
+    });
+    left -= take;
+  }
+  return slices;
+}
+
+/** Reparte un mismo producto entre varias líneas sin usar dos veces la misma existencia. */
+export function assignFulfillmentLots(
+  lots: FulfillmentLotOption[],
+  lines: { lineId: string; quantity: number }[]
+): Map<string, FulfillmentLotSlice[]> {
+  const pool = lots.map((lot) => ({ ...lot }));
+  const assigned = new Map<string, FulfillmentLotSlice[]>();
+  for (const line of lines) {
+    const slices = allocateFulfillmentLots(pool, line.quantity);
+    for (const slice of slices) {
+      const source = pool.find(
+        (lot) => fulfillmentLotKey(lot) === fulfillmentLotKey(slice)
+      );
+      if (source) source.available = Math.max(0, source.available - slice.quantity);
+    }
+    assigned.set(line.lineId, slices);
+  }
+  return assigned;
+}
+
 function expiryKey(value: string) {
   return value.slice(0, 10);
 }
 
 export function fulfillmentLotKey(lot: Pick<FulfillmentLotOption, "lotNumber" | "expiryDate">) {
   return `${lot.lotNumber.trim()}\t${expiryKey(lot.expiryDate)}`;
-}
-
-/** suggested = el que caduca antes; later = hay una fecha posterior; other = otro lote sin fecha mayor. */
-export function fulfillmentLotRole(
-  lot: FulfillmentLotOption,
-  index: number,
-  lots: FulfillmentLotOption[]
-) {
-  if (index === 0) return "suggested" as const;
-  const first = lots[0]?.expiryDate ?? "";
-  if (lot.expiryDate && (!first || lot.expiryDate > first)) return "later" as const;
-  return "other" as const;
 }
 
 function sameOutboundLot(
