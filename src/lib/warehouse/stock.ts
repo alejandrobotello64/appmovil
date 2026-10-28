@@ -347,6 +347,18 @@ export function fulfillmentLotKey(lot: Pick<FulfillmentLotOption, "lotNumber" | 
   return `${lot.lotNumber.trim()}\t${expiryKey(lot.expiryDate)}`;
 }
 
+/** suggested = el que caduca antes; later = hay una fecha posterior; other = otro lote sin fecha mayor. */
+export function fulfillmentLotRole(
+  lot: FulfillmentLotOption,
+  index: number,
+  lots: FulfillmentLotOption[]
+) {
+  if (index === 0) return "suggested" as const;
+  const first = lots[0]?.expiryDate ?? "";
+  if (lot.expiryDate && (!first || lot.expiryDate > first)) return "later" as const;
+  return "other" as const;
+}
+
 function sameOutboundLot(
   bin: Pick<OutboundBin, "lotNumber" | "expiryDate">,
   lotNumber: string,

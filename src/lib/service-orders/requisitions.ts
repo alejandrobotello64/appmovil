@@ -143,6 +143,15 @@ export function requisitionSourceLabel(source: string) {
 }
 
 /** Folio del documento que originó la solicitud (OS o cotización). */
+/** Dirección del cliente sin repetir la ciudad si ya viene escrita en el domicilio. */
+export function formatClientAddress(address: string, city: string) {
+  const line = address.trim();
+  const town = city.trim();
+  if (!line) return town;
+  if (!town || line.toLocaleLowerCase("es").includes(town.toLocaleLowerCase("es"))) return line;
+  return `${line}, ${town}`;
+}
+
 export function requisitionOriginFolio(
   requisition: Pick<ServiceOrderRequisition, "sourceType" | "serviceOrderFolio" | "quoteFolio">
 ) {

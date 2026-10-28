@@ -26,6 +26,7 @@ import {
   type RequisitionOriginDetails,
 } from "./requisition-storage";
 import {
+  formatClientAddress,
   groupRequisitionLines,
   requisitionLineStatusLabel,
   requisitionStatusLabel,
@@ -35,6 +36,7 @@ import {
 import { serviceTypeLabel } from "./types";
 import {
   fulfillmentLotKey,
+  fulfillmentLotRole,
   listFulfillmentLots,
   type FulfillmentLotOption,
 } from "@/lib/warehouse/stock";
@@ -150,14 +152,15 @@ function lotDetailLines(
       ? formatPdfDate(lot.expiryDate.slice(0, 10))
       : "sin caducidad";
     const name = lot.lotNumber.trim() || "sin número";
+    const role = fulfillmentLotRole(lot, index, lots);
+    const roleLabel =
+      role === "later" ? "caducidad mayor" : role === "suggested" ? "caduca antes" : "otro lote";
     const tag =
       chosenKey && key === chosenKey
-        ? "a surtir"
+        ? `a surtir · ${roleLabel}`
         : !chosenKey && key === suggestedKey
-          ? "a surtir · caduca antes"
-          : index === 0
-            ? "caduca antes"
-            : "caducidad mayor";
+          ? `a surtir · ${roleLabel}`
+          : roleLabel;
     return `Lote ${name} · caduca ${when} · ${formatPdfQty(lot.available)} disp. · ${tag}`;
   });
   if (chosenKey && !lots.some((lot) => fulfillmentLotKey(lot) === chosenKey)) {
@@ -557,7 +560,7 @@ function drawOriginColumns(
 }
 
 function clientSide(origin: RequisitionOriginDetails): [string, string][] {
-  const address = [origin.address, origin.city].filter((part) => part.trim()).join(", ");
+  const address = formatClientAddress(origin.address, origin.city);
   const contact = [origin.contactName, origin.contactPhone].filter((part) => part.trim()).join(" · ");
   return [
     ["Cliente", origin.clientName],

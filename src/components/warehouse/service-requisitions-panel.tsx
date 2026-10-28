@@ -27,6 +27,7 @@ import {
   REQUISITION_STATUSES,
   allocateFulfillmentQty,
   canonicalRequester,
+  formatClientAddress,
   groupRequisitionLines,
   isOffCatalogLine,
   isRequisitionOpen,
@@ -46,6 +47,7 @@ import {
 import { listStaffMembers, type StaffMember } from "@/lib/users/staff";
 import {
   fulfillmentLotKey,
+  fulfillmentLotRole,
   listFulfillmentLots,
   type FulfillmentLotOption,
 } from "@/lib/warehouse/stock";
@@ -1121,7 +1123,7 @@ export function ServiceRequisitionsPanel({
                         <div>
                           <dt className="text-[11px] text-muted-foreground">Dirección</dt>
                           <dd>
-                            {[origin?.address, origin?.city].filter(Boolean).join(", ") ||
+                            {formatClientAddress(origin?.address ?? "", origin?.city ?? "") ||
                               selected.deliveryAddress ||
                               "Sin dirección"}
                           </dd>
@@ -1289,12 +1291,19 @@ export function ServiceRequisitionsPanel({
                                 }}
                               >
                                 {lots.map((lot, index) => {
-                                  const when = formatDay(lot.expiryDate) || "sin caducidad";
+                                  const when = lot.expiryDate
+                                    ? `caduca ${formatDay(lot.expiryDate)}`
+                                    : "sin caducidad";
+                                  const role = fulfillmentLotRole(lot, index, lots);
                                   const tag =
-                                    index === 0 ? "Sugerido, caduca antes" : "Caducidad mayor";
+                                    role === "suggested"
+                                      ? "Sugerido, caduca antes"
+                                      : role === "later"
+                                        ? "Caducidad mayor"
+                                        : "Otro lote";
                                   return (
                                     <option key={fulfillmentLotKey(lot)} value={fulfillmentLotKey(lot)}>
-                                      {tag} · lote {lot.lotNumber.trim() || "sin número"} · caduca {when} ·{" "}
+                                      {tag} · lote {lot.lotNumber.trim() || "sin número"} · {when} ·{" "}
                                       {formatQty(lot.available)} disp.
                                     </option>
                                   );
@@ -1306,6 +1315,15 @@ export function ServiceRequisitionsPanel({
                               </span>
                             )}
                           </label>
+                          {selectedLot ? (
+                            <p className="mt-1 text-xs text-[#3B46A5]">
+                              A surtir: lote {selectedLot.lotNumber.trim() || "sin número"} ·{" "}
+                              {selectedLot.expiryDate
+                                ? `caduca ${formatDay(selectedLot.expiryDate)}`
+                                : "sin caducidad"}{" "}
+                              · {formatQty(selectedLot.available)} disp.
+                            </p>
+                          ) : null}
                           {lots.length > 1 ? (
                             <p className="mt-1 text-[11px] text-muted-foreground">
                               Si el cliente pide más vigencia, elige un lote con caducidad mayor. La cantidad se limita a lo que hay en el lote elegido.
