@@ -5,6 +5,7 @@ import { Loader2, PackageOpen, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { getSession } from "@/lib/auth";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import {
   listQuickOpenBoxes,
   openBoxToPieces,
@@ -228,8 +229,9 @@ function QuickBoxOpenDialog({
                   {box.partNumber.trim() ? (
                     <p className="font-mono text-xs text-muted-foreground">N.º de parte {box.partNumber.trim()}</p>
                   ) : null}
+                  <p className="text-xs text-muted-foreground">{catalogModelLabel(box.model)}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Entran a {box.pieceSku} · {box.pieceName}
+                    Entran a {box.pieceSku} · {box.pieceName} · {catalogModelLabel(box.pieceModel)}
                     {box.shortage > 0 ? ` · faltan ${box.shortage} piezas` : ""}
                   </p>
                 </div>

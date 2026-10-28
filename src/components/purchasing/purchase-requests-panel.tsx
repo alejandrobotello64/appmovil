@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { Notice, StatCard, fieldClass, formatDate, primaryButtonClass } from "@/components/tools/tools-shared";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import {
   downloadPurchaseRequestPdf,
   downloadPurchaseRequestPickListPdf,
@@ -245,7 +246,14 @@ function RequestsTable({
                     )}
                   </td>
                   <td className="max-w-72 px-3 py-3">
-                    <p className="truncate">{item.lines.map((line) => line.description || line.productName).join(", ")}</p>
+                    <p className="truncate">
+                      {item.lines
+                        .map((line) => {
+                          const name = line.description || line.productName;
+                          return line.productId ? `${name} · ${catalogModelLabel(line.productModel)}` : name;
+                        })
+                        .join(", ")}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {item.lines.length} partida(s) · {formatQty(item.lines.reduce((acc, line) => acc + line.quantity, 0))} u.
                     </p>
@@ -348,7 +356,7 @@ export function PurchaseRequestsPanel() {
           item.requester.name,
           item.purchaseOrderNumber,
           item.supplierName,
-          ...item.lines.map((line) => `${line.productSku} ${line.description}`),
+          ...item.lines.map((line) => `${line.productSku} ${line.description} ${line.productModel}`),
         ]
           .join(" ")
           .toLowerCase();

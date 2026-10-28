@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/responsive-data-list";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getKardex, type KardexRow } from "@/lib/warehouse/stock";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
@@ -121,7 +122,7 @@ export function KardexPanel() {
         items={filtered.map((row) => ({
           key: row.id,
           title: row.productName,
-          subtitle: row.folio,
+          subtitle: `${row.productSku} · ${catalogModelLabel(row.productModel)} · ${row.folio}`,
           badge: (
             <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs">
               {TYPE_LABELS[row.movementType] ?? row.movementType}
@@ -200,8 +201,10 @@ export function KardexPanel() {
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{row.productName}</p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      {row.productSku}
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-mono">{row.productSku}</span>
+                      {" · "}
+                      {catalogModelLabel(row.productModel)}
                     </p>
                   </td>
                   <td className="px-4 py-3">{row.qtyIn || "—"}</td>

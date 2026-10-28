@@ -12,7 +12,7 @@ const db = supabase as any;
 
 function mapLine(
   row: Record<string, unknown>,
-  product?: { sku?: string; name?: string }
+  product?: { sku?: string; name?: string; model?: string }
 ): InventoryHoldLine {
   return {
     id: String(row.id),
@@ -20,6 +20,7 @@ function mapLine(
     productId: String(row.product_id),
     productSku: String(product?.sku ?? row.product_sku ?? ""),
     productName: String(product?.name ?? row.product_name ?? ""),
+    productModel: String(product?.model ?? ""),
     quantity: Number(row.quantity),
     notes: String(row.notes ?? ""),
   };
@@ -133,7 +134,7 @@ export async function getInventoryHolds(): Promise<InventoryHold[]> {
   const holdIds = holdRows.map((row: Record<string, unknown>) => row.id);
   const { data: lines, error: linesError } = await db
     .from("inventory_hold_lines")
-    .select("*, product:inventory_items(sku, name)")
+    .select("*, product:inventory_items(sku, name, model)")
     .in("hold_id", holdIds);
   if (linesError) throw new Error(linesError.message);
 
@@ -145,6 +146,7 @@ export async function getInventoryHolds(): Promise<InventoryHold[]> {
       mapLine(row, {
         sku: row.product?.sku,
         name: row.product?.name,
+        model: row.product?.model,
       })
     );
     linesByHold.set(holdId, list);
@@ -213,7 +215,7 @@ export async function createInventoryHold(
         notes: (line.notes ?? "").trim(),
       }))
     )
-    .select("*, product:inventory_items(sku, name)");
+    .select("*, product:inventory_items(sku, name, model)");
   if (linesError) {
     await db.from("inventory_holds").delete().eq("id", hold.id);
     throw new Error(linesError.message);
@@ -223,8 +225,9 @@ export async function createInventoryHold(
     hold,
     (lines ?? []).map((row: Record<string, unknown>) =>
       mapLine(row, {
-        sku: (row.product as { sku?: string } | undefined)?.sku,
+        sku: (row.product as { sku?: string; model?: string } | undefined)?.sku,
         name: (row.product as { name?: string } | undefined)?.name,
+        model: (row.product as { model?: string } | undefined)?.model,
       })
     )
   );

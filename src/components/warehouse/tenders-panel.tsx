@@ -17,6 +17,7 @@ import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { getClients } from "@/lib/clients/storage";
 import type { Client } from "@/lib/clients/types";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import {
   INVENTORY_CATEGORIES,
@@ -911,7 +912,7 @@ export function TendersPanel() {
                     <option value="">Sin vínculo</option>
                     {itemsForLine(line).map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.sku} — {item.name}
+                        {item.sku} — {item.name} · {catalogModelLabel(item.model)}
                       </option>
                     ))}
                   </select>
@@ -1296,7 +1297,7 @@ export function TendersPanel() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {line.productSku
-                            ? `${line.productSku} · ${line.productName}`
+                            ? `${line.productSku} · ${line.productName} · ${catalogModelLabel(line.productModel)}`
                             : "Sin SKU"}{" "}
                           · {line.quantity} {line.unit} ·{" "}
                           {TENDER_COMPLIANCE.find(

@@ -6,6 +6,7 @@ import { daysUntilExpiry } from "@/lib/inventory/expiry";
 import { INVENTORY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 import { matchesSearch } from "@/lib/search";
 import { MOVEMENT_KIND_LABELS, type MovementKind } from "@/lib/warehouse/movements";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
@@ -145,8 +146,8 @@ export function ProductPicker({
             {value.partNumber.trim() ? `${value.name} · n.º ${value.partNumber.trim()}` : value.name}
           </p>
           <p className="text-xs text-muted-foreground">
-            <span className="font-mono">{value.sku}</span> · {categoryLabel(value.category)} ·{" "}
-            {value.quantity} {value.unit} en total
+            <span className="font-mono">{value.sku}</span> · {catalogModelLabel(value.model)} ·{" "}
+            {categoryLabel(value.category)} · {value.quantity} {value.unit} en total
           </p>
         </div>
         <button
@@ -196,7 +197,8 @@ export function ProductPicker({
                       : item.name}
                   </span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    <span className="font-mono">{item.sku}</span> · {categoryLabel(item.category)}
+                    <span className="font-mono">{item.sku}</span> · {catalogModelLabel(item.model)} ·{" "}
+                    {categoryLabel(item.category)}
                   </span>
                 </span>
                 <span

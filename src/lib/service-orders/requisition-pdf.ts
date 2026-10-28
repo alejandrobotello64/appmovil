@@ -16,6 +16,7 @@ import {
   type PdfRow,
 } from "@/lib/brand/pdf-layout";
 import { getProductsAvailableQty } from "@/lib/holds/storage";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getPurchaseRequests } from "@/lib/purchasing/storage";
 import { isPurchaseOpen, purchaseStatusLabel, type PurchaseRequest } from "@/lib/purchasing/types";
 import { loadStaffProfileLookup, type StaffProfile } from "@/lib/users/staff";
@@ -769,7 +770,8 @@ function drawRequisitionBody(
       const items = purchase.lines
         .map((line) => {
           const part = line.requisitionLineId ? partByLine.get(line.requisitionLineId) : "";
-          return `${formatPdfQty(line.quantity)} ${line.unit}${part ? ` · n.º ${part}` : ""} ${line.description}`;
+          const model = line.productId ? ` · ${catalogModelLabel(line.productModel)}` : "";
+          return `${formatPdfQty(line.quantity)} ${line.unit}${part ? ` · n.º ${part}` : ""}${model} ${line.description}`;
         })
         .join(" · ");
       const wrapped = doc.splitTextToSize(items, cursor.contentW - 28) as string[];

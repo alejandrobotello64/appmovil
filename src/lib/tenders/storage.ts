@@ -26,7 +26,7 @@ function dateOrEmpty(value: unknown) {
 
 function mapLine(
   row: Record<string, unknown>,
-  product?: { sku?: string; name?: string }
+  product?: { sku?: string; name?: string; model?: string }
 ): TenderLine {
   return {
     id: String(row.id),
@@ -36,6 +36,7 @@ function mapLine(
     productId: row.product_id ? String(row.product_id) : null,
     productSku: String(product?.sku ?? row.product_sku ?? ""),
     productName: String(product?.name ?? row.product_name ?? ""),
+    productModel: String(product?.model ?? ""),
     quantity: Number(row.quantity ?? 0),
     unit: String(row.unit ?? "pza"),
     unitPrice: Number(row.unit_price ?? 0),
@@ -199,7 +200,7 @@ export async function getTenders(): Promise<Tender[]> {
   const [linesRes, eventsRes, docsRes] = await Promise.all([
     db
       .from("tender_lines")
-      .select("*, product:inventory_items(sku, name)")
+      .select("*, product:inventory_items(sku, name, model)")
       .in("tender_id", ids)
       .order("sort_order", { ascending: true }),
     db
@@ -226,6 +227,7 @@ export async function getTenders(): Promise<Tender[]> {
       mapLine(row, {
         sku: row.product?.sku,
         name: row.product?.name,
+        model: row.product?.model,
       })
     );
     linesBy.set(tenderId, list);

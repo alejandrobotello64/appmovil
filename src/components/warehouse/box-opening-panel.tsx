@@ -13,6 +13,7 @@ import {
 } from "@/components/warehouse/movements/movement-ui";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { createInventoryItem, getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
 import {
@@ -391,7 +392,7 @@ export function BoxOpeningPanel() {
                 onClick={() => setPiece(item)}
                 className="rounded-full border border-border px-3 py-1 text-left text-xs hover:bg-muted"
               >
-                <span className="font-mono">{item.sku}</span> · {item.name}
+                <span className="font-mono">{item.sku}</span> · {item.name} · {catalogModelLabel(item.model)}
               </button>
             ))}
           </div>

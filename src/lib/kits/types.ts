@@ -14,6 +14,7 @@ export type SupplyKitLine = {
   productId: string;
   productSku: string;
   productName: string;
+  productModel: string;
   productCategory: string;
   unit: string;
   unitPrice: number;

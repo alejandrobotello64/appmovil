@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Minus, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { createPurchaseRequest } from "@/lib/compras/storage";
 import {
   PURCHASE_REQUEST_REASONS,
@@ -242,7 +243,7 @@ export function NewPurchaseRequestForm({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{product.name}</p>
                     <p className="font-mono text-xs text-muted-foreground">
-                      {product.sku} · exist. {product.quantity} {product.unit}
+                      {product.sku} · {catalogModelLabel(product.model)} · exist. {product.quantity} {product.unit}
                     </p>
                   </div>
                   <Button
@@ -277,7 +278,7 @@ export function NewPurchaseRequestForm({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{line.itemName}</p>
                     <p className="font-mono text-xs text-muted-foreground">
-                      {line.itemSku}
+                      {line.itemSku} · {catalogModelLabel(products.find((item) => item.id === line.itemId)?.model)}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">

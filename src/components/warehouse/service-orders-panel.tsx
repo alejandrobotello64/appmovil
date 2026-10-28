@@ -31,6 +31,7 @@ import { getClientEquipment, getClients } from "@/lib/clients/storage";
 import { getServiceContracts } from "@/lib/contracts/storage";
 import { contractLabel, type ServiceContract } from "@/lib/contracts/types";
 import type { Client, ClientEquipment } from "@/lib/clients/types";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
 import {
@@ -2410,6 +2411,7 @@ export function ServiceOrdersPanel({
                                       <p className="font-mono text-[11px] text-muted-foreground">
                                         {product?.sku || "Catálogo"}
                                         {product?.brand ? ` · ${product.brand}` : ""}
+                                        {` · ${catalogModelLabel(product?.model)}`}
                                       </p>
                                     </>
                                   ) : (

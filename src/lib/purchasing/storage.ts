@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { catalogModelsById } from "@/lib/inventory/product-label";
 import { getProductsAvailableQty } from "@/lib/holds/storage";
 import { requisitionLinePending, type ServiceOrderRequisition } from "@/lib/service-orders/requisitions";
 import { findStaffProfile } from "@/lib/users/staff";
@@ -32,6 +33,7 @@ function mapLine(row: Row): PurchaseRequestLine {
     productId: row.product_id ? str(row.product_id) : null,
     productSku: str(row.product_sku),
     productName: str(row.product_name),
+    productModel: "",
     description: str(row.description),
     unit: str(row.unit) || "pza",
     quantity: num(row.quantity),
@@ -225,11 +227,17 @@ async function hydrate(rows: Row[]): Promise<PurchaseRequest[]> {
   ]);
   if (linesRes.error) throw new Error(linesRes.error.message);
   if (eventsRes.error) throw new Error(eventsRes.error.message);
+  const mappedLines = ((linesRes.data ?? []) as Row[]).map(mapLine);
+  const models = await catalogModelsById(mappedLines.map((line) => line.productId));
   const linesBy = new Map<string, PurchaseRequestLine[]>();
-  for (const row of (linesRes.data ?? []) as Row[]) {
-    const list = linesBy.get(str(row.request_id)) ?? [];
-    list.push(mapLine(row));
-    linesBy.set(str(row.request_id), list);
+  for (const line of mappedLines) {
+    const withModel = {
+      ...line,
+      productModel: line.productId ? models.get(line.productId) ?? "" : "",
+    };
+    const list = linesBy.get(withModel.requestId) ?? [];
+    list.push(withModel);
+    linesBy.set(withModel.requestId, list);
   }
   const eventsBy = new Map<string, PurchaseRequestEvent[]>();
   for (const row of (eventsRes.data ?? []) as Row[]) {

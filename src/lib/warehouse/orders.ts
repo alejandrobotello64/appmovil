@@ -1,3 +1,4 @@
+import { catalogModelsById } from "@/lib/inventory/product-label";
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 import {
@@ -21,6 +22,7 @@ export type PurchaseOrderItem = {
   itemId: string | null;
   itemSku: string;
   itemName: string;
+  itemModel: string;
   quantity: number;
   receivedQuantity: number;
   unitPrice: number;
@@ -66,10 +68,19 @@ function mapItem(row: OrderItemRow): PurchaseOrderItem {
     itemId: row.item_id,
     itemSku: row.item_sku,
     itemName: row.item_name,
+    itemModel: "",
     quantity: row.quantity,
     receivedQuantity: row.received_quantity,
     unitPrice: Number(row.unit_price),
   };
+}
+
+async function withItemModels(items: PurchaseOrderItem[]): Promise<PurchaseOrderItem[]> {
+  const models = await catalogModelsById(items.map((item) => item.itemId));
+  return items.map((item) => ({
+    ...item,
+    itemModel: item.itemId ? models.get(item.itemId) ?? "" : "",
+  }));
 }
 
 function mapOrder(
@@ -143,7 +154,7 @@ export async function getPurchaseOrders(ids?: string[]): Promise<PurchaseOrder[]
 
   if (itemsError) throw new Error(itemsError.message);
 
-  const mappedItems = (items ?? []).map(mapItem);
+  const mappedItems = await withItemModels((items ?? []).map(mapItem));
   return (orders ?? []).map((order) =>
     mapOrder(
       order,
@@ -199,7 +210,7 @@ export async function createPurchaseOrder(
     throw new Error(itemsError.message);
   }
 
-  return mapOrder(order, (items ?? []).map(mapItem));
+  return mapOrder(order, await withItemModels((items ?? []).map(mapItem)));
 }
 
 export async function receivePurchaseOrderLines(

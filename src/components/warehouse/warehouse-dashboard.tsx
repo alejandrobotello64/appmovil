@@ -20,6 +20,7 @@ import {
   itemShowsStockAlert,
 } from "@/lib/inventory/storage";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { SUPPLY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 import { getSuppliers } from "@/lib/suppliers/storage";
 import type { Supplier } from "@/lib/suppliers/types";
@@ -332,7 +333,7 @@ export function WarehouseDashboard() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {item.sku} · cad. {item.expiryDate}
+                      {item.sku} · {catalogModelLabel(item.model)} · cad. {item.expiryDate}
                     </p>
                   </div>
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
@@ -424,7 +425,7 @@ export function WarehouseDashboard() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {item.category} · {item.quantity} {item.unit}
+                      {item.category} · {catalogModelLabel(item.model)} · {item.quantity} {item.unit}
                     </p>
                   </div>
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-300">

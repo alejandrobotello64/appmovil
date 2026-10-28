@@ -19,6 +19,7 @@ import type {
   InventoryItemInput,
 } from "@/lib/inventory/types";
 import { CATALOG_CATEGORIES } from "@/lib/inventory/types";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getSession } from "@/lib/auth";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
 import {
@@ -120,9 +121,10 @@ function articleFields(item: InventoryItem) {
   ];
 }
 
-function withPartNumber(name: string, partNumber: string) {
+function withPartNumber(name: string, partNumber: string, model = "") {
   const part = partNumber.trim();
-  return part ? `${name} · n.º ${part}` : name;
+  const base = part ? `${name} · n.º ${part}` : name;
+  return `${base} · ${catalogModelLabel(model)}`;
 }
 
 function formatLotQty(quantity: number, unit: string) {
@@ -303,6 +305,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           row.productSku,
           row.productName,
           row.partNumber,
+          row.productModel,
           row.reason,
           row.note,
           row.createdBy,
@@ -706,7 +709,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     {itemOptions.map((item) => (
                       <option key={item.id} value={item.id}>
                         {categoryLabel(item)} · {item.sku} —{" "}
-                        {withPartNumber(item.name, item.partNumber)} (
+                        {withPartNumber(item.name, item.partNumber, item.model)} (
                         {item.quantity} {item.unit})
                       </option>
                     ))}
@@ -1191,7 +1194,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">
-                          {row.productSku} — {withPartNumber(row.productName, row.partNumber)}
+                          {row.productSku} — {withPartNumber(row.productName, row.partNumber, row.productModel)}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {row.folio}

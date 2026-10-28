@@ -6,6 +6,7 @@ import {
   drawSealImage,
   loadCompanySealDataUrl,
 } from "@/lib/brand/pdf";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { deliverPdf } from "@/lib/print/open-pdf";
 import { biomedicalInstrumentTypeLabel } from "@/lib/biomedical-instruments/types";
 import { findStaffProfile, type StaffProfile } from "@/lib/users/staff";
@@ -453,7 +454,9 @@ function drawLinesTable(
   order.lines.forEach((line, idx) => {
     y = ensureSpace(doc, y, 10);
     const desc = doc.splitTextToSize(
-      line.description || "—",
+      line.productId
+        ? `${line.description || "—"}\n${catalogModelLabel(line.productModel)}`
+        : line.description || "—",
       includePrices ? 70 : 110
     );
     doc.text(String(idx + 1), margin + 1, y);

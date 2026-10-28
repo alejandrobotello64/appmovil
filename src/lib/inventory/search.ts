@@ -1,3 +1,4 @@
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { supabase } from "@/lib/supabase/client";
 import { isSupplyCategory } from "@/lib/inventory/types";
 
@@ -48,7 +49,7 @@ export async function searchCatalog(query: string): Promise<GlobalSearchHit[]> {
       kind: row.item_kind === "equipo" ? "equipo" : "producto",
       title: `${sku} · ${row.name}`,
       partNumber: part,
-      subtitle: [row.brand, row.model, row.serial_number, row.location]
+      subtitle: [catalogModelLabel(String(row.model ?? "")), row.brand, row.serial_number, row.location]
         .filter(Boolean)
         .join(" · "),
       href,

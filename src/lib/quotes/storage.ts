@@ -20,6 +20,7 @@ type QuoteProductRef = {
   name?: string;
   brand?: string;
   part_number?: string;
+  model?: string;
 };
 
 const BRAND_NOTE_RE = /\n?<!--mas-qbrand:([^>]*)-->/;
@@ -115,6 +116,7 @@ function mapLine(
     partNumber: String(
       row.part_number || parsed.partNumber || product?.part_number || ""
     ),
+    model: String(product?.model ?? ""),
     description: String(row.description ?? ""),
     quantity: Number(row.quantity ?? 0),
     unit: String(row.unit ?? "pza"),
@@ -319,7 +321,7 @@ async function hydrateQuotes(quoteRows: Record<string, unknown>[]): Promise<Quot
   const [linesRes, eventsRes] = await Promise.all([
     db
       .from("quote_lines")
-      .select("*, product:inventory_items(sku, name, brand, part_number)")
+      .select("*, product:inventory_items(sku, name, brand, model, part_number)")
       .in("quote_id", ids)
       .order("sort_order", { ascending: true }),
     db
@@ -341,6 +343,7 @@ async function hydrateQuotes(quoteRows: Record<string, unknown>[]): Promise<Quot
         name: row.product?.name,
         brand: row.product?.brand,
         part_number: row.product?.part_number,
+        model: row.product?.model,
       })
     );
     linesBy.set(quoteId, list);

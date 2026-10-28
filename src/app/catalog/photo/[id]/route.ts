@@ -16,7 +16,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("inventory_items")
-    .select("sku, name, brand, part_number, category")
+    .select("sku, name, brand, model, part_number, category")
     .eq("id", id)
     .maybeSingle();
 
@@ -28,6 +28,7 @@ export async function GET(
     sku: data.sku,
     name: data.name,
     brand: data.brand,
+    model: data.model,
     partNumber: data.part_number,
     category: data.category,
   });

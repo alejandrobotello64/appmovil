@@ -2,6 +2,7 @@ export type CatalogPhotoItem = {
   sku: string;
   name: string;
   brand: string;
+  model: string;
   partNumber: string;
   category: string;
 };
@@ -75,7 +76,7 @@ export function catalogPhotoSvg(item: CatalogPhotoItem) {
   <path d="M28 28h148l-40 40H28z" fill="#e11d48"/>
   <text x="46" y="54" font-size="13" font-weight="800" fill="#ffffff">FOTO</text>
   ${pictogram(item.category)}
-  <text x="240" y="312" text-anchor="middle" font-size="15" font-weight="700" fill="#3B46A5">${xml(item.brand || "MAS")}</text>
+  <text x="240" y="312" text-anchor="middle" font-size="15" font-weight="700" fill="#3B46A5">${xml([item.brand || "MAS", item.model?.trim() ? `Modelo ${item.model.trim()}` : "Modelo —"].join(" · "))}</text>
   ${lineNodes}
   <rect x="96" y="430" width="288" height="36" rx="18" fill="#111827"/>
   <text x="240" y="453" text-anchor="middle" font-size="16" font-family="ui-monospace, monospace" fill="#ffffff">${xml(part)}</text>

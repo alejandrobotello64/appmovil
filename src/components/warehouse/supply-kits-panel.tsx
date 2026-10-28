@@ -13,6 +13,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
 import {
@@ -46,6 +47,7 @@ type DraftKitLine = SupplyKitLineInput & {
   key: string;
   sku: string;
   name: string;
+  model: string;
   category: string;
 };
 
@@ -57,6 +59,7 @@ function linesFromKit(kit: SupplyKit): DraftKitLine[] {
     notes: line.notes,
     sku: line.productSku,
     name: line.productName,
+    model: line.productModel,
     category: line.productCategory,
   }));
 }
@@ -151,7 +154,7 @@ export function SupplyKitsPanel() {
           kit.description,
           kitServiceTypeLabel(kit.serviceType),
           kitEquipmentKindLabel(kit.equipmentKind),
-          ...kit.lines.flatMap((line) => [line.productSku, line.productName]),
+          ...kit.lines.flatMap((line) => [line.productSku, line.productName, line.productModel]),
         ]);
       }),
     [kits, query, serviceFilter]
@@ -167,6 +170,7 @@ export function SupplyKitsPanel() {
           item.name,
           item.category,
           item.brand,
+          item.model,
           item.partNumber,
         ])
       )
@@ -183,6 +187,7 @@ export function SupplyKitsPanel() {
         notes: "",
         sku: product.sku,
         name: product.name,
+        model: product.model,
         category: product.category,
       },
     ]);
@@ -559,7 +564,7 @@ export function SupplyKitsPanel() {
                                 <td className="px-3 py-2">
                                   <p>{line.name}</p>
                                   <p className="text-[11px] text-muted-foreground">
-                                    {line.category}
+                                    {catalogModelLabel(line.model)} · {line.category}
                                   </p>
                                 </td>
                                 <td className="px-2 py-2">
@@ -645,6 +650,9 @@ export function SupplyKitsPanel() {
                                         {product.sku}
                                       </span>
                                       <span className="ml-2">{product.name}</span>
+                                      <span className="ml-2 text-xs text-muted-foreground">
+                                        {catalogModelLabel(product.model)}
+                                      </span>
                                     </span>
                                     <Plus className="size-3.5 shrink-0" />
                                   </button>

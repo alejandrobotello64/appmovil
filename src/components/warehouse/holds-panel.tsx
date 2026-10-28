@@ -12,6 +12,7 @@ import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { getClients } from "@/lib/clients/storage";
 import type { Client } from "@/lib/clients/types";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import {
   INVENTORY_CATEGORIES,
@@ -618,7 +619,7 @@ export function HoldsPanel() {
                       <option value="">Selecciona</option>
                       {filteredItems.map((item) => (
                         <option key={item.id} value={item.id}>
-                          {item.sku} — {item.name}
+                          {item.sku} — {item.name} · {catalogModelLabel(item.model)}
                           {item.itemKind === "equipo" && item.serialNumber
                             ? ` · S/N ${item.serialNumber}`
                             : ""}{" "}
@@ -827,8 +828,8 @@ export function HoldsPanel() {
                           <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
                             {hold.lines.map((line) => (
                               <li key={line.id}>
-                                {line.quantity} × {line.productSku}{" "}
-                                {line.productName}
+                                {line.quantity} × {line.productSku} {line.productName} ·{" "}
+                                {catalogModelLabel(line.productModel)}
                               </li>
                             ))}
                           </ul>

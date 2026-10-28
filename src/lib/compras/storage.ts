@@ -1,3 +1,4 @@
+import { catalogModelsById } from "@/lib/inventory/product-label";
 import { supabase } from "@/lib/supabase/client";
 import type { PurchaseOrder, PurchaseOrderStatus } from "@/lib/warehouse/orders";
 import type {
@@ -121,6 +122,7 @@ function mapLine(row: Record<string, unknown>): PurchaseRequestLine {
     productId: row.product_id ? String(row.product_id) : null,
     productSku: text(row.product_sku),
     productName: text(row.product_name) || text(row.description),
+    productModel: "",
     quantityRequested: Number(requested),
     quantityOrdered: Number(row.quantity_ordered ?? 0),
     quantityReceived: Number(row.quantity_received ?? 0),
@@ -227,9 +229,22 @@ async function hydrateRemote(
   );
 }
 
+async function withLineModels(requests: PurchaseRequest[]): Promise<PurchaseRequest[]> {
+  const models = await catalogModelsById(
+    requests.flatMap((request) => request.lines.map((line) => line.productId))
+  );
+  return requests.map((request) => ({
+    ...request,
+    lines: request.lines.map((line) => ({
+      ...line,
+      productModel: line.productId ? models.get(line.productId) ?? "" : "",
+    })),
+  }));
+}
+
 export async function getPurchaseRequests(): Promise<PurchaseRequest[]> {
   if (useLocal) {
-    return readLocal().sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+    return withLineModels(readLocal().sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)));
   }
 
   const { data, error } = await db
@@ -240,15 +255,15 @@ export async function getPurchaseRequests(): Promise<PurchaseRequest[]> {
   if (error) {
     if (isMissingRelation(error)) {
       useLocal = true;
-      return readLocal().sort((a, b) =>
-        b.requestedAt.localeCompare(a.requestedAt)
+      return withLineModels(
+        readLocal().sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))
       );
     }
     throw new Error(error.message);
   }
 
   useLocal = false;
-  return hydrateRemote((data ?? []) as Record<string, unknown>[]);
+  return withLineModels(await hydrateRemote((data ?? []) as Record<string, unknown>[]));
 }
 
 export async function getPurchaseRequest(
@@ -318,6 +333,7 @@ export async function createPurchaseRequest(
         productId: line.productId,
         productSku: line.productSku,
         productName: line.productName,
+        productModel: "",
         quantityRequested: line.quantity,
         quantityOrdered: 0,
         quantityReceived: 0,
@@ -326,7 +342,8 @@ export async function createPurchaseRequest(
       })),
     };
     writeLocal([request, ...existing]);
-    return request;
+    const [withModel] = await withLineModels([request]);
+    return withModel;
   }
 
   const folio = await nextRemoteFolio();
@@ -423,10 +440,10 @@ export async function createPurchaseRequest(
   }
 
   if (linesInsert.error) throw new Error(linesInsert.error.message);
-  return mapRequest(
-    header,
-    ((linesInsert.data ?? []) as Record<string, unknown>[]).map(mapLine)
-  );
+  const [withModel] = await withLineModels([
+    mapRequest(header, ((linesInsert.data ?? []) as Record<string, unknown>[]).map(mapLine)),
+  ]);
+  return withModel;
 }
 
 async function patchRequest(

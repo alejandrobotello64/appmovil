@@ -13,6 +13,7 @@ import {
   INVENTORY_CATEGORIES,
   type InventoryItem,
 } from "@/lib/inventory/types";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { matchesSearch } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
@@ -209,6 +210,7 @@ export function ServiceCatalogPicker({
                       <span className="font-mono text-foreground">{item.sku}</span>
                       <span>{categoryLabel(item.category)}</span>
                       {item.brand ? <span>{item.brand}</span> : null}
+                      <span>{catalogModelLabel(item.model)}</span>
                       {item.partNumber ? <span>Ref. {item.partNumber}</span> : null}
                       <ServiceStockBadge item={item} />
                     </span>

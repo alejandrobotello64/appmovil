@@ -6,6 +6,7 @@ import { Minus, PackagePlus, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getStockStatus } from "@/lib/inventory/storage";
 import {
   SUPPLY_CATEGORIES,
@@ -473,6 +474,7 @@ export function NewOrderForm({
                           <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">
                             {product.sku}
                             {product.brand ? ` · ${product.brand}` : ""}
+                            {` · ${catalogModelLabel(product.model)}`}
                           </span>
                         </span>
                         <span className="shrink-0 text-right">
@@ -534,7 +536,7 @@ export function NewOrderForm({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{line.itemName}</p>
                         <p className="font-mono text-xs text-muted-foreground">
-                          {line.itemSku}
+                          {line.itemSku} · {catalogModelLabel(products.find((item) => item.id === line.itemId)?.model)}
                         </p>
                       </div>
                       <button
@@ -646,7 +648,7 @@ export function NewOrderForm({
                         <td className="px-3 py-2">
                           <p className="font-medium">{line.itemName}</p>
                           <p className="font-mono text-xs text-muted-foreground">
-                            {line.itemSku}
+                            {line.itemSku} · {catalogModelLabel(products.find((item) => item.id === line.itemId)?.model)}
                           </p>
                         </td>
                         {suppliers.length > 0 ? (

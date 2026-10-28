@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { ServiceStockBadge } from "@/components/service-orders/service-catalog-picker";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { INVENTORY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 import { matchesSearch } from "@/lib/search";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,7 @@ export function QuoteProductSearch({
                 <span className="font-mono text-foreground">{selected.sku}</span>
                 <span>{categoryLabel(selected.category)}</span>
                 {selected.brand ? <span>{selected.brand}</span> : null}
+                <span>{catalogModelLabel(selected.model)}</span>
                 {selected.partNumber ? <span>Ref. {selected.partNumber}</span> : null}
               </p>
             </div>
@@ -151,6 +153,7 @@ export function QuoteProductSearch({
                         <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
                           <span className="font-mono text-foreground">{item.sku}</span>
                           {item.brand ? <span>{item.brand}</span> : null}
+                          <span>{catalogModelLabel(item.model)}</span>
                           {item.partNumber ? <span>Ref. {item.partNumber}</span> : null}
                           <ServiceStockBadge item={withQty(item, qty)} />
                         </span>

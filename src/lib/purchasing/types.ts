@@ -28,6 +28,7 @@ export type PurchaseRequestLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  productModel: string;
   description: string;
   unit: string;
   quantity: number;
@@ -176,6 +177,7 @@ export type GroupedPurchaseLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  productModel: string;
   description: string;
   unit: string;
   quantity: number;
@@ -199,6 +201,7 @@ export function groupPurchaseRequestLines(requests: PurchaseRequest[]): GroupedP
         if (!existing.description && (line.description || line.productName)) {
           existing.description = line.description || line.productName;
         }
+        if (!existing.productModel && line.productModel) existing.productModel = line.productModel;
         continue;
       }
       order.push(key);
@@ -207,6 +210,7 @@ export function groupPurchaseRequestLines(requests: PurchaseRequest[]): GroupedP
         productId: line.productId,
         productSku: line.productSku,
         productName: line.productName,
+        productModel: line.productModel,
         description: line.description || line.productName,
         unit: line.unit,
         quantity: line.quantity,

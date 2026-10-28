@@ -7,6 +7,7 @@ import { DesktopTable, ResponsiveDataList } from "@/components/ui/responsive-dat
 import { SearchInput } from "@/components/ui/search-input";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { getSession } from "@/lib/auth";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { matchesSearch } from "@/lib/search";
 import {
   MOVEMENT_KIND_LABELS,
@@ -69,6 +70,7 @@ function downloadCsv(rows: MovementRecord[]) {
     "SKU",
     "Producto",
     "N.º de parte",
+    "Modelo",
     "Cantidad",
     "Origen",
     "Destino",
@@ -87,6 +89,7 @@ function downloadCsv(rows: MovementRecord[]) {
       row.productSku,
       row.productName,
       row.partNumber,
+      row.productModel,
       row.quantity,
       placeLabel(row.from),
       placeLabel(row.to),
@@ -182,6 +185,7 @@ export function MovementHistory({ warehouses, refreshKey }: Props) {
             movement.productSku,
             movement.productName,
             movement.partNumber,
+            movement.productModel,
             MOVEMENT_KIND_LABELS[movement.kind],
             placeLabel(movement.from),
             placeLabel(movement.to),
@@ -375,7 +379,7 @@ export function MovementHistory({ warehouses, refreshKey }: Props) {
           title: movement.partNumber.trim()
             ? `${movement.productName} · n.º ${movement.partNumber.trim()}`
             : movement.productName,
-          subtitle: `${movement.productSku} · ${movement.folio || "sin folio"}`,
+          subtitle: `${movement.productSku} · ${catalogModelLabel(movement.productModel)} · ${movement.folio || "sin folio"}`,
           badge: <KindBadge kind={movement.kind} />,
           fields: [
             { label: "Fecha", value: formatDateTime(movement.occurredAt) },
@@ -435,7 +439,11 @@ export function MovementHistory({ warehouses, refreshKey }: Props) {
                         ? `${movement.productName} · n.º ${movement.partNumber.trim()}`
                         : movement.productName}
                     </p>
-                    <p className="font-mono text-xs text-muted-foreground">{movement.productSku}</p>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-mono">{movement.productSku}</span>
+                      {" · "}
+                      {catalogModelLabel(movement.productModel)}
+                    </p>
                   </td>
                   <td className="px-4 py-3 text-right font-medium" data-sort={movement.quantity}>
                     {movement.kind === "salida" ? "−" : movement.kind === "entrada" ? "+" : ""}

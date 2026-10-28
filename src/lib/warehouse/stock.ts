@@ -39,6 +39,7 @@ export type KardexRow = {
   note: string;
   createdBy: string;
   partNumber: string;
+  productModel: string;
   evidenceImages: InventoryGalleryImage[];
 };
 
@@ -676,34 +677,40 @@ function mapKardexRow(row: Record<string, unknown>): KardexRow {
     note: String(row.note ?? ""),
     createdBy: String(row.created_by ?? ""),
     partNumber: "",
+    productModel: "",
     evidenceImages: parseGalleryImages(row.evidence_images),
   };
 }
 
-async function partNumbersByProduct(
+type CatalogIdentity = { partNumber: string; model: string };
+
+async function catalogIdentityByProduct(
   rows: Array<Record<string, unknown>>
-): Promise<{ byId: Map<string, string>; bySku: Map<string, string> }> {
+): Promise<{ byId: Map<string, CatalogIdentity>; bySku: Map<string, CatalogIdentity> }> {
   const ids = [
     ...new Set(rows.map((row) => String(row.product_id ?? "")).filter(Boolean)),
   ];
   const skus = [
     ...new Set(rows.map((row) => String(row.product_sku ?? "")).filter(Boolean)),
   ];
-  const byId = new Map<string, string>();
-  const bySku = new Map<string, string>();
+  const byId = new Map<string, CatalogIdentity>();
+  const bySku = new Map<string, CatalogIdentity>();
 
   async function read(column: "id" | "sku", values: string[]) {
     if (!values.length) return;
     const { data, error } = await db
       .from("inventory_items")
-      .select("id, sku, part_number")
+      .select("id, sku, part_number, model")
       .in(column, values);
     if (error) throw new Error(error.message);
     for (const row of (data ?? []) as Array<Record<string, unknown>>) {
-      const partNumber = String(row.part_number ?? "");
-      byId.set(String(row.id ?? ""), partNumber);
+      const identity = {
+        partNumber: String(row.part_number ?? ""),
+        model: String(row.model ?? ""),
+      };
+      byId.set(String(row.id ?? ""), identity);
       const sku = String(row.sku ?? "");
-      if (sku) bySku.set(sku, partNumber);
+      if (sku) bySku.set(sku, identity);
     }
   }
 
@@ -715,6 +722,23 @@ async function partNumbersByProduct(
   return { byId, bySku };
 }
 
+async function withCatalogIdentity(
+  raw: Array<Record<string, unknown>>,
+  mapped: KardexRow[]
+): Promise<KardexRow[]> {
+  const { byId, bySku } = await catalogIdentityByProduct(raw);
+  return mapped.map((row, index) => {
+    const source = raw[index];
+    const productId = String(source?.product_id ?? "");
+    const identity = (productId && byId.get(productId)) || bySku.get(row.productSku);
+    return {
+      ...row,
+      partNumber: identity?.partNumber ?? "",
+      productModel: identity?.model ?? "",
+    };
+  });
+}
+
 export async function getKardex(productId?: string): Promise<KardexRow[]> {
   let query = db
     .from("inventory_movements")
@@ -724,7 +748,8 @@ export async function getKardex(productId?: string): Promise<KardexRow[]> {
   if (productId) query = query.eq("product_id", productId);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data ?? []).map(mapKardexRow);
+  const raw = (data ?? []) as Array<Record<string, unknown>>;
+  return withCatalogIdentity(raw, raw.map(mapKardexRow));
 }
 
 /** Historial reciente solo de entradas o salidas (para el panel lateral). */
@@ -740,14 +765,5 @@ export async function getEntryExitHistory(
     .limit(limit);
   if (error) throw new Error(error.message);
   const raw = (data ?? []) as Array<Record<string, unknown>>;
-  const mapped = raw.map(mapKardexRow);
-  const { byId, bySku } = await partNumbersByProduct(raw);
-  return mapped.map((row, index) => {
-    const source = raw[index];
-    const productId = String(source?.product_id ?? "");
-    return {
-      ...row,
-      partNumber: (productId && byId.get(productId)) || bySku.get(row.productSku) || "",
-    };
-  });
+  return withCatalogIdentity(raw, raw.map(mapKardexRow));
 }

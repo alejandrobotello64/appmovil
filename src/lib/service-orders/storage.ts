@@ -283,7 +283,7 @@ function mapTemplatePoint(row: Record<string, unknown>): ChecklistTemplatePoint 
 
 function mapLine(
   row: Record<string, unknown>,
-  product?: { sku?: string; name?: string }
+  product?: { sku?: string; name?: string; model?: string }
 ): ServiceOrderLine {
   return {
     id: String(row.id),
@@ -292,6 +292,7 @@ function mapLine(
     productId: row.product_id ? String(row.product_id) : null,
     productSku: String(product?.sku ?? ""),
     productName: String(product?.name ?? ""),
+    productModel: String(product?.model ?? ""),
     description: String(row.description ?? ""),
     quantity: Number(row.quantity ?? 0),
     unit: String(row.unit ?? "pza"),
@@ -987,7 +988,7 @@ async function hydrateOrders(
     await Promise.all([
     db
       .from("service_order_lines")
-      .select("*, product:inventory_items(sku, name)")
+      .select("*, product:inventory_items(sku, name, model)")
       .in("service_order_id", ids)
       .order("sort_order", { ascending: true }),
     db
@@ -1038,6 +1039,7 @@ async function hydrateOrders(
       mapLine(row, {
         sku: row.product?.sku,
         name: row.product?.name,
+        model: row.product?.model,
       })
     );
     linesBy.set(oid, list);

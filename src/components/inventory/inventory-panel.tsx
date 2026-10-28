@@ -17,6 +17,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { InventoryStats } from "@/components/inventory/inventory-stats";
 import { Button } from "@/components/ui/button";
 import {
@@ -1072,7 +1073,7 @@ export function InventoryPanel({
                     <span className="min-w-0 truncate">{item.name}</span>
                   </span>
                 ),
-                subtitle: `${item.sku}${item.partNumber ? ` · n.º ${item.partNumber}` : ""} · ${item.brand || "Sin marca"}`,
+                subtitle: `${item.sku}${item.partNumber ? ` · n.º ${item.partNumber}` : ""} · ${catalogModelLabel(item.model)} · ${item.brand || "Sin marca"}`,
                 badge:
                   item.itemKind === "equipo" ? (
                     <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs">
@@ -1103,6 +1104,10 @@ export function InventoryPanel({
                   {
                     label: "Marca",
                     value: item.brand || "Sin marca",
+                  },
+                  {
+                    label: "Modelo",
+                    value: item.model.trim() || "—",
                   },
                   {
                     label: isEquipment ? "Serie" : "Categoría",
@@ -1233,6 +1238,7 @@ export function InventoryPanel({
                     {isCatalog ? "Artículo" : isEquipment ? "Equipo" : "Producto"}
                   </th>
                   <th className="px-4 py-3 font-medium">Marca</th>
+                  <th className="px-4 py-3 font-medium">Modelo</th>
                   <th className="px-4 py-3 font-medium">
                     {isEquipment && !isCatalog ? "Serie" : "Categoría"}
                   </th>
@@ -1257,7 +1263,7 @@ export function InventoryPanel({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isEquipment ? 11 : 12}
+                      colSpan={isEquipment ? 12 : 13}
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {hasActiveFilters
@@ -1300,11 +1306,6 @@ export function InventoryPanel({
                           <p className="font-medium text-foreground">
                             {item.name}
                           </p>
-                          {item.model ? (
-                            <p className="text-xs text-muted-foreground">
-                              {item.model}
-                            </p>
-                          ) : null}
                           {canViewPrices ? (
                             <p className="mt-1 text-xs text-muted-foreground">
                               Costo {formatCurrency(item.costPrice)}
@@ -1324,6 +1325,9 @@ export function InventoryPanel({
                           ) : (
                             <span className="text-xs text-muted-foreground">Sin marca</span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {item.model.trim() || "—"}
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
@@ -1557,6 +1561,9 @@ export function InventoryPanel({
                   <span className="font-mono">
                     {viewingItem.partNumber || "—"}
                   </span>
+                </p>
+                <p className="text-sm font-medium">
+                  {catalogModelLabel(viewingItem.model)}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">

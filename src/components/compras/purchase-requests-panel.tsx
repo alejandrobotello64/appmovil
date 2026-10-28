@@ -15,6 +15,7 @@ import { NewOrderForm } from "@/components/warehouse/new-order-form";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import {
   cancelPurchaseRequest,
@@ -387,6 +388,7 @@ export function PurchaseRequestsPanel({
                     <p className="text-sm font-medium">
                       {line.productSku ? `${line.productSku} · ` : ""}
                       {line.productName}
+                      {line.productId ? ` · ${catalogModelLabel(line.productModel)}` : ""}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       Pedido: {line.quantityRequested} {line.unit} · En OC:{" "}

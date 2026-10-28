@@ -63,6 +63,7 @@ export type TenderLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  productModel: string;
   quantity: number;
   unit: string;
   unitPrice: number;

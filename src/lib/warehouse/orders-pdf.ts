@@ -14,6 +14,7 @@ import {
   formatPdfQty,
   type PdfColumn,
 } from "@/lib/brand/pdf-layout";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
 import { supabase } from "@/lib/supabase/client";
 import { loadStaffProfileLookup } from "@/lib/users/staff";
@@ -218,7 +219,7 @@ export async function downloadPurchaseOrderReceivePdf(
           sku: line.itemSku || "—",
           desc: [
             line.itemName,
-            !line.itemId ? "Fuera de catálogo · no entra a inventario" : "",
+            line.itemId ? catalogModelLabel(line.itemModel) : "Fuera de catálogo · no entra a inventario",
             pending > 0 && line.receivedQuantity > 0
               ? `Aún pendiente: ${formatPdfQty(pending)}`
               : "",

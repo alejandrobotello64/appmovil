@@ -42,7 +42,7 @@ export function GlobalSearch() {
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => window.setTimeout(() => setOpen(false), 150)}
-          placeholder="SKU, n.º de parte, nombre, marca..."
+          placeholder="SKU, n.º de parte, nombre, marca, modelo..."
           className="h-9 w-full rounded-lg border border-input bg-background pr-3 pl-8 text-sm outline-none focus:border-[#3B46A5]"
         />
       </label>

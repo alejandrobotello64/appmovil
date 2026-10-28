@@ -17,6 +17,7 @@ type ProductRef = {
   id: string;
   sku: string;
   name: string;
+  model: string;
   category: string;
   unit: string;
   unit_price: number;
@@ -32,6 +33,7 @@ function mapLine(
     productId: String(row.product_id),
     productSku: String(product?.sku ?? ""),
     productName: String(product?.name ?? ""),
+    productModel: String(product?.model ?? ""),
     productCategory: String(product?.category ?? ""),
     unit: String(product?.unit ?? "pieza"),
     unitPrice: Number(product?.unit_price ?? 0),
@@ -73,7 +75,7 @@ async function loadProductsById(ids: string[]): Promise<Map<string, ProductRef>>
   if (!unique.length) return map;
   const { data, error } = await db
     .from("inventory_items")
-    .select("id, sku, name, category, unit, unit_price")
+    .select("id, sku, name, model, category, unit, unit_price")
     .in("id", unique);
   if (error) throw new Error(error.message);
   for (const row of data ?? []) {
@@ -81,6 +83,7 @@ async function loadProductsById(ids: string[]): Promise<Map<string, ProductRef>>
       id: String(row.id),
       sku: String(row.sku ?? ""),
       name: String(row.name ?? ""),
+      model: String(row.model ?? ""),
       category: String(row.category ?? ""),
       unit: String(row.unit ?? "pieza"),
       unit_price: Number(row.unit_price ?? 0),

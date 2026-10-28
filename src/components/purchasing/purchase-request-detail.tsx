@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { Notice, fieldClass, formatDate, primaryButtonClass, textareaClass } from "@/components/tools/tools-shared";
 import {
@@ -304,7 +305,10 @@ export function PurchaseRequestDetail({
                   <tr key={line.id} className="border-t border-border align-top">
                     <td className="px-3 py-2">
                       <p className="font-medium">{line.description || line.productName}</p>
-                      <p className="text-xs text-muted-foreground">{line.productSku || "Fuera de catálogo"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {line.productSku || "Fuera de catálogo"}
+                        {line.productId ? ` · ${catalogModelLabel(line.productModel)}` : ""}
+                      </p>
                     </td>
                     <td className="px-3 py-2 text-center tabular-nums">
                       {formatQty(line.quantity)} {line.unit}

@@ -1,3 +1,5 @@
+import { catalogModelLabel } from "@/lib/inventory/product-label";
+
 export const QUOTE_STATUSES = [
   { id: "borrador", label: "Borrador" },
   { id: "enviada", label: "Enviada" },
@@ -27,6 +29,7 @@ export type QuoteLine = {
   productName: string;
   brand: string;
   partNumber: string;
+  model: string;
   description: string;
   quantity: number;
   unit: string;
@@ -93,17 +96,20 @@ export type QuoteLineInput = {
   notes?: string;
 };
 
-/** Marca, n.º de parte y SKU para el alta, el detalle y el PDF. */
+/** Marca, modelo, n.º de parte y SKU para el alta, el detalle y el PDF. */
 export function quoteLineIdentity(line: {
   brand?: string;
   partNumber?: string;
   productSku?: string;
+  model?: string;
+  productId?: string | null;
 }) {
   const parts: string[] = [];
   const brand = (line.brand ?? "").trim();
   const partNumber = (line.partNumber ?? "").trim();
   const sku = (line.productSku ?? "").trim();
   if (brand) parts.push(`Marca ${brand}`);
+  if (line.productId || sku || (line.model ?? "").trim()) parts.push(catalogModelLabel(line.model));
   if (partNumber) parts.push(`Ref. ${partNumber}`);
   if (sku) parts.push(sku);
   return parts.join(" · ");

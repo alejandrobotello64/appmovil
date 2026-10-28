@@ -15,6 +15,7 @@ import {
   formatPdfQty,
   type PdfColumn,
 } from "@/lib/brand/pdf-layout";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { loadStaffProfileLookup, type StaffProfile } from "@/lib/users/staff";
 import {
   groupPurchaseRequestLines,
@@ -114,7 +115,11 @@ async function renderRequestPage(doc: jsPDF, request: PurchaseRequest, lookup: S
       cells: {
         n: String(index + 1),
         sku: line.productSku || "—",
-        desc: [line.description || line.productName, line.notes ? `Nota: ${line.notes}` : ""],
+        desc: [
+          line.description || line.productName,
+          line.productId ? catalogModelLabel(line.productModel) : "",
+          line.notes ? `Nota: ${line.notes}` : "",
+        ],
         unit: line.unit,
         qty: formatPdfQty(line.quantity),
         stock: request.source === "surtimiento" ? formatPdfQty(line.stockAtRequest) : "—",
@@ -271,7 +276,10 @@ export async function downloadPurchaseRequestPickListPdf(
           ok: "",
           n: String(index + 1),
           sku: group.productSku || "—",
-          desc: group.description || group.productName,
+          desc: [
+            group.description || group.productName,
+            group.productId ? catalogModelLabel(group.productModel) : "",
+          ],
           unit: group.unit,
           qty: formatPdfQty(group.quantity),
           from,

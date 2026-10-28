@@ -15,6 +15,7 @@ import {
   type PdfColumn,
   type PdfPersonCard,
 } from "@/lib/brand/pdf-layout";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { loadStaffProfileLookup } from "@/lib/users/staff";
 import {
   MOVEMENT_KIND_LABELS,
@@ -223,7 +224,7 @@ export async function downloadMovementVoucherPdf(
       cells: {
         n: String(index + 1),
         sku: record.productSku || "—",
-        product: record.productName,
+        product: `${record.productName} · ${catalogModelLabel(record.productModel)}`,
         lot: record.lotNumber || "—",
         expiry: formatPdfDate(record.lotExpiry),
         serials: record.serials || "—",
@@ -328,7 +329,7 @@ export async function downloadMovementsReportPdf(
         date: formatPdfDate(record.occurredAt, true),
         folio: record.folio || "—",
         kind: MOVEMENT_KIND_LABELS[record.kind] ?? record.kind,
-        product: [record.productName, record.productSku],
+        product: [record.productName, catalogModelLabel(record.productModel), record.productSku],
         qty: `${record.kind === "salida" ? "-" : record.kind === "entrada" ? "+" : ""}${formatPdfQty(record.quantity)}`,
         from: placeLabel(record.from) || "Externo",
         to: placeLabel(record.to) || "Externo",

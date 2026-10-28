@@ -39,6 +39,7 @@ export type PurchaseRequestLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  productModel: string;
   quantityRequested: number;
   quantityOrdered: number;
   quantityReceived: number;

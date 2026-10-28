@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { Notice, fieldClass, primaryButtonClass, textareaClass } from "@/components/tools/tools-shared";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
 import { createPurchaseRequest } from "@/lib/purchasing/storage";
@@ -28,6 +29,7 @@ type DraftLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  productModel: string;
   description: string;
   unit: string;
   quantity: string;
@@ -61,6 +63,8 @@ function linesFromJobs(
         productId: item.productId,
         productSku: item.productSku,
         productName: item.description,
+        productModel:
+          job.requisition.lines.find((line) => line.id === item.lineId)?.productModel ?? "",
         description: item.description,
         unit: item.unit,
         quantity: formatQty(buyQty),
@@ -145,6 +149,7 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
         productId: item.id,
         productSku: item.sku,
         productName: item.name,
+        productModel: item.model,
         description: item.name,
         unit: item.unit,
         quantity: String(Math.max(1, item.minStock - item.quantity)),
@@ -166,6 +171,7 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
         productId: null,
         productSku: "",
         productName: "",
+        productModel: "",
         description: "",
         unit: "pieza",
         quantity: "1",
@@ -294,7 +300,7 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
                       <span className="min-w-0">
                         <span className="block truncate font-medium">{item.name}</span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {item.sku} · Stock {formatQty(item.quantity)} {item.unit} · Mín. {formatQty(item.minStock)}
+                          {item.sku} · {catalogModelLabel(item.model)} · Stock {formatQty(item.quantity)} {item.unit} · Mín. {formatQty(item.minStock)}
                         </span>
                       </span>
                       <Plus className="size-4 shrink-0 text-[#3B46A5]" />
@@ -360,7 +366,9 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
                       {line.productId ? (
                         <>
                           <p className="font-medium">{line.description}</p>
-                          <p className="text-xs text-muted-foreground">{line.productSku || "Sin SKU"}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {line.productSku || "Sin SKU"} · {catalogModelLabel(line.productModel)}
+                          </p>
                         </>
                       ) : (
                         <input

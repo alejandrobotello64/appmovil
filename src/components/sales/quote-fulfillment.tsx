@@ -17,6 +17,7 @@ import { ModalShell } from "@/components/ui/modal-shell";
 import { PurchaseStatusBadge, formatQty } from "@/components/purchasing/purchasing-shared";
 import { Notice, fieldClass, primaryButtonClass, textareaClass } from "@/components/tools/tools-shared";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getProductAvailableQty } from "@/lib/holds/storage";
 import { createPurchaseRequest, getPurchaseRequests } from "@/lib/purchasing/storage";
 import type { PurchaseRequest } from "@/lib/purchasing/types";
@@ -87,6 +88,7 @@ type DraftLine = {
   productId: string | null;
   sku: string;
   partNumber: string;
+  model: string;
   description: string;
   unit: string;
   quoted: number;
@@ -111,6 +113,7 @@ function buildDraft(quote: Quote, requisitions: ServiceOrderRequisition[]): Draf
         productId: line.productId,
         sku: line.productSku,
         partNumber: line.partNumber,
+        model: line.model,
         description,
         unit: line.unit || "pza",
         quoted: line.quantity,
@@ -471,6 +474,9 @@ function RequisitionCard({
                 {line.partNumber.trim() ? (
                   <span className="font-mono text-muted-foreground"> · N.º {line.partNumber.trim()}</span>
                 ) : null}
+                {line.productId ? (
+                  <span className="text-muted-foreground"> · {catalogModelLabel(line.productModel)}</span>
+                ) : null}
                 {line.productSku ? <span className="text-muted-foreground"> · {line.productSku}</span> : null}
                 {!line.productId ? (
                   <span className="ml-1.5">
@@ -703,7 +709,9 @@ function QuoteFulfillmentDialog({
                         <p className="font-mono text-xs text-muted-foreground">N.º de parte {line.partNumber.trim()}</p>
                       ) : null}
                       {line.productId ? (
-                        <p className="text-xs text-muted-foreground">{line.sku || "Sin SKU"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {line.sku || "Sin SKU"} · {catalogModelLabel(line.model)}
+                        </p>
                       ) : (
                         <OffCatalogTag />
                       )}

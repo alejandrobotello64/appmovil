@@ -203,6 +203,7 @@ export type ServiceOrderLine = {
   productId: string | null;
   productSku: string;
   productName: string;
+  productModel: string;
   description: string;
   quantity: number;
   unit: string;

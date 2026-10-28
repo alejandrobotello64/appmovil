@@ -13,6 +13,7 @@ export type InventoryHoldLine = {
   productId: string;
   productSku: string;
   productName: string;
+  productModel: string;
   quantity: number;
   notes: string;
 };

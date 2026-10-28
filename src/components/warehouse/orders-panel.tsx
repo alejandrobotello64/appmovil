@@ -20,6 +20,7 @@ import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { cn } from "@/lib/utils";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
+import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { getInventoryItems } from "@/lib/inventory/storage";
 import { type InventoryItem } from "@/lib/inventory/types";
 import { getSuppliers } from "@/lib/suppliers/storage";
@@ -674,7 +675,11 @@ export function OrdersPanel() {
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="font-medium">{line.itemName}</p>
-                          <p className="font-mono text-xs text-muted-foreground">{line.itemSku}</p>
+                          <p className="text-xs text-muted-foreground">
+                            <span className="font-mono">{line.itemSku}</span>
+                            {" · "}
+                            {catalogModelLabel(product?.model || line.itemModel)}
+                          </p>
                           {!line.itemId ? (
                             <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                               Fuera de catálogo · se registra recibido sin entrar a inventario

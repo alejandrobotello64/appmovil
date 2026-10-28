@@ -156,10 +156,12 @@ export type QuickOpenBox = {
   sku: string;
   name: string;
   partNumber: string;
+  model: string;
   piecesPerUnit: number | null;
   pieceId: string;
   pieceSku: string;
   pieceName: string;
+  pieceModel: string;
   /** Piezas que aún faltan del pedido, descontando lo ya disponible. */
   shortage: number;
   balances: QuickOpenBalance[];
@@ -183,6 +185,7 @@ type BoxRow = {
   id?: string;
   sku?: string;
   name?: string;
+  model?: string;
   part_number?: string;
   pieces_per_unit?: number | null;
   piece_product_id?: string | null;
@@ -197,8 +200,8 @@ export async function listQuickOpenBoxes(targets: QuickOpenTarget[]): Promise<Qu
   ];
   if (!pieceIds.length && !parts.length) return [];
 
-  const boxColumns = "id, sku, name, part_number, pieces_per_unit, piece_product_id";
-  const boxColumnsLegacy = "id, sku, name, part_number";
+  const boxColumns = "id, sku, name, model, part_number, pieces_per_unit, piece_product_id";
+  const boxColumnsLegacy = "id, sku, name, model, part_number";
   async function loadBoxes(columns: string, linkPieces: boolean) {
     const [linkedRes, partRes] = await Promise.all([
       linkPieces && pieceIds.length
@@ -252,7 +255,7 @@ export async function listQuickOpenBoxes(targets: QuickOpenTarget[]): Promise<Qu
   const boxIds = boxes.map((row) => String(row.id));
   const [piecesRes, balancesRes] = await Promise.all([
     destinationIds.length
-      ? db.from("inventory_items").select("id, sku, name").in("id", destinationIds)
+      ? db.from("inventory_items").select("id, sku, name, model").in("id", destinationIds)
       : Promise.resolve({ data: [], error: null }),
     db
       .from("inventory_balances")
@@ -265,9 +268,13 @@ export async function listQuickOpenBoxes(targets: QuickOpenTarget[]): Promise<Qu
   if (piecesRes.error) throw new Error(piecesRes.error.message);
   if (balancesRes.error) throw new Error(balancesRes.error.message);
 
-  const pieceById = new Map<string, { sku: string; name: string }>();
+  const pieceById = new Map<string, { sku: string; name: string; model: string }>();
   for (const row of piecesRes.data ?? []) {
-    pieceById.set(String(row.id), { sku: String(row.sku ?? ""), name: String(row.name ?? "") });
+    pieceById.set(String(row.id), {
+      sku: String(row.sku ?? ""),
+      name: String(row.name ?? ""),
+      model: String(row.model ?? ""),
+    });
   }
 
   const balancesByBox = new Map<string, QuickOpenBalance[]>();
@@ -323,10 +330,12 @@ export async function listQuickOpenBoxes(targets: QuickOpenTarget[]): Promise<Qu
       sku: String(row.sku ?? ""),
       name: String(row.name ?? ""),
       partNumber: String(row.part_number ?? ""),
+      model: String(row.model ?? ""),
       piecesPerUnit: per > 0 ? per : null,
       pieceId,
       pieceSku: piece.sku,
       pieceName: piece.name,
+      pieceModel: piece.model,
       shortage: Math.max(0, pending - onHand),
       balances,
     });
