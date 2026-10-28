@@ -1,5 +1,6 @@
 import type { InventoryItem } from "@/lib/inventory/types";
 import { supabase } from "@/lib/supabase/client";
+import { applyStockMovement } from "@/lib/warehouse/stock";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -119,7 +120,12 @@ export async function openBoxToPieces(input: {
     p_created_by: input.createdBy,
     p_note: input.note ?? "",
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (!/schema cache|open_box_to_pieces/i.test(error.message ?? "")) {
+      throw new Error(error.message);
+    }
+    return openBoxWithMovements(input);
+  }
   const row = data?.[0];
   if (!row) throw new Error("La apertura no devolvió folio.");
   return {
@@ -166,6 +172,120 @@ export type QuickOpenBox = {
   shortage: number;
   balances: QuickOpenBalance[];
 };
+
+async function openBoxWithMovements(input: {
+  boxProductId: string;
+  pieceProductId: string;
+  boxes: number;
+  piecesPerBox: number;
+  warehouseId: string;
+  locationId: string;
+  lotNumber?: string | null;
+  expiryDate?: string | null;
+  createdBy: string;
+  note?: string;
+}): Promise<BoxOpeningResult> {
+  if (!input.createdBy.trim()) throw new Error("La apertura requiere un usuario responsable");
+  if (!Number.isInteger(input.boxes) || input.boxes <= 0) {
+    throw new Error("Indica cuántas cajas vas a abrir");
+  }
+  if (!Number.isInteger(input.piecesPerBox) || input.piecesPerBox <= 0) {
+    throw new Error("Indica cuántas piezas trae cada caja");
+  }
+  if (input.boxes > 100000 || input.piecesPerBox > 100000) {
+    throw new Error("La cantidad es demasiado grande");
+  }
+  if (input.boxProductId === input.pieceProductId) {
+    throw new Error("La presentación en piezas debe ser otro código");
+  }
+
+  const { data: products, error: productError } = await db
+    .from("inventory_items")
+    .select("id, sku, unit, is_active")
+    .in("id", [input.boxProductId, input.pieceProductId]);
+  if (productError) throw new Error(productError.message);
+  const box = (products ?? []).find((row: { id: string }) => row.id === input.boxProductId);
+  const piece = (products ?? []).find((row: { id: string }) => row.id === input.pieceProductId);
+  if (!box) throw new Error("No se encontró el artículo en caja");
+  if (box.is_active === false) throw new Error("El artículo en caja está inactivo");
+  if (box.unit !== "caja" && box.unit !== "paquete") {
+    throw new Error("El artículo de origen debe estar en unidad caja o paquete");
+  }
+  if (!piece) throw new Error("No se encontró la presentación en piezas");
+  if (piece.is_active === false) throw new Error("La presentación en piezas está inactiva");
+  if (piece.unit !== "pieza") throw new Error("El destino debe ser un artículo en piezas");
+
+  const pieces = input.boxes * input.piecesPerBox;
+  const extra = input.note?.trim();
+  const note = [
+    `Apertura de ${input.boxes} ${box.unit}(s) × ${input.piecesPerBox} = ${pieces} piezas. ${box.sku} → ${piece.sku}.`,
+    extra,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const lotNumber = input.lotNumber?.trim() || null;
+  const expiryDate = input.expiryDate || null;
+
+  const boxMove = await applyStockMovement({
+    productId: input.boxProductId,
+    movementType: "salida",
+    quantity: input.boxes,
+    note,
+    createdBy: input.createdBy,
+    reason: "apertura_caja",
+    warehouseId: input.warehouseId,
+    locationId: input.locationId,
+    lotNumber,
+    expiryDate,
+  });
+
+  let pieceMove;
+  try {
+    pieceMove = await applyStockMovement({
+      productId: input.pieceProductId,
+      movementType: "entrada",
+      quantity: pieces,
+      note,
+      createdBy: input.createdBy,
+      reason: "apertura_caja",
+      warehouseId: input.warehouseId,
+      locationId: input.locationId,
+      lotNumber,
+      expiryDate,
+    });
+  } catch (pieceError) {
+    await applyStockMovement({
+      productId: input.boxProductId,
+      movementType: "entrada",
+      quantity: input.boxes,
+      note: `Reverso de apertura. ${note}`,
+      createdBy: input.createdBy,
+      reason: "apertura_caja",
+      warehouseId: input.warehouseId,
+      locationId: input.locationId,
+      lotNumber,
+      expiryDate,
+    }).catch(() => undefined);
+    throw pieceError;
+  }
+
+  const { error: linkError } = await db
+    .from("inventory_items")
+    .update({
+      pieces_per_unit: input.piecesPerBox,
+      piece_product_id: input.pieceProductId,
+    })
+    .eq("id", input.boxProductId);
+  if (linkError) throw new Error(linkError.message);
+
+  return {
+    boxFolio: boxMove.folio,
+    pieceFolio: pieceMove.folio,
+    piecesAdded: pieces,
+    boxesLeft: boxMove.newQuantity,
+    pieceQuantity: pieceMove.newQuantity,
+  };
+}
 
 function isPieceUnit(unit: string) {
   const value = unit.trim().toLowerCase();
