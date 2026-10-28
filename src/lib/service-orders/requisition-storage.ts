@@ -25,7 +25,7 @@ const db = supabase as any;
 
 function mapLine(
   row: Record<string, unknown>,
-  product?: { sku?: string; name?: string; model?: string; partNumber?: string }
+  product?: { sku?: string; name?: string; brand?: string; model?: string; partNumber?: string }
 ): ServiceOrderRequisitionLine {
   return {
     id: String(row.id),
@@ -37,6 +37,7 @@ function mapLine(
     productId: row.product_id ? String(row.product_id) : null,
     productSku: String(product?.sku ?? ""),
     productName: String(product?.name ?? ""),
+    productBrand: String(product?.brand ?? "").trim(),
     productModel: String(product?.model ?? "").trim(),
     partNumber: String(product?.partNumber ?? "").trim(),
     description: String(row.description ?? ""),
@@ -106,7 +107,7 @@ async function hydrateRequisitions(
   const [linesRes, ordersRes] = await Promise.all([
     db
       .from("service_order_requisition_lines")
-      .select("*, product:inventory_items(sku, name, model, part_number), quote_line:quote_lines(part_number)")
+      .select("*, product:inventory_items(sku, name, brand, model, part_number), quote_line:quote_lines(part_number)")
       .in("requisition_id", ids),
     orderIds.length
       ? db
@@ -134,6 +135,7 @@ async function hydrateRequisitions(
       mapLine(row, {
         sku: row.product?.sku,
         name: row.product?.name,
+        brand: row.product?.brand,
         model: row.product?.model,
         partNumber: catalogPart || quotePart,
       })

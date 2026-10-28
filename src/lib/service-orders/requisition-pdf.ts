@@ -177,7 +177,8 @@ function materialCell(
 ) {
   const title = group.description || group.productName || "Material";
   const extra = [
-    group.productModel.trim() ? `Modelo: ${group.productModel.trim()}` : "",
+    group.productBrand.trim() ? `Marca: ${group.productBrand.trim()}` : "",
+    group.productId ? `Modelo: ${group.productModel.trim() || "—"}` : "",
     ...notes.map((note) => `Nota: ${note}`),
     ...(group.productId ? lotDetailLines(lots ?? [], chosen) : []),
   ].filter(Boolean);
@@ -708,10 +709,11 @@ function drawRequisitionBody(
       doc.setTextColor(...PDF_INK);
       const part = line?.partNumber.trim();
       const model = line?.productModel.trim();
+      const brand = line?.productBrand.trim();
       doc.text(
         `${formatPdfQty(item.quantity)} × ${
           line
-            ? `${line.productSku ? `${line.productSku} · ` : ""}${model ? `modelo ${model} · ` : ""}${part ? `n.º ${part} · ` : ""}${line.description}`
+            ? `${line.productSku ? `${line.productSku} · ` : ""}${brand ? `${brand} · ` : ""}${model ? `modelo ${model} · ` : ""}${part ? `n.º ${part} · ` : ""}${line.description}`
             : "Material"
         }`,
         PDF_MARGIN + 32,

@@ -446,6 +446,7 @@ export function ServiceRequisitionsPanel({
               line.productSku,
               line.productName,
               line.partNumber,
+              line.productBrand,
               line.productModel,
               line.description,
             ]),
@@ -1208,9 +1209,11 @@ export function ServiceRequisitionsPanel({
                         {group.productSku ? `${group.productSku} · ` : ""}
                         {group.description}
                       </p>
-                      {group.productModel.trim() ? (
+                      {group.productBrand.trim() || group.productId ? (
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          Modelo: {group.productModel.trim()}
+                          {group.productBrand.trim() ? `Marca: ${group.productBrand.trim()}` : ""}
+                          {group.productBrand.trim() && group.productId ? " · " : ""}
+                          {group.productId ? `Modelo: ${group.productModel.trim() || "—"}` : ""}
                         </p>
                       ) : null}
                       {group.partNumber.trim() ? (
