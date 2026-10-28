@@ -60,6 +60,8 @@ export type ServiceOrderRequisition = {
   equipmentName: string;
   priority: RequisitionPriority;
   neededBy: string;
+  /** Fecha promesa de la orden de servicio, o fecha requerida de la cotización. */
+  promisedAt: string;
   deliveryAddress: string;
   status: RequisitionStatus;
   requestedBy: string;

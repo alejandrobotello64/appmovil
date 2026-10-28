@@ -58,6 +58,58 @@ import { matchesSearch } from "@/lib/search";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { requisitionStatusTone as statusTone } from "@/components/sales/quote-fulfillment";
 
+function mexicoDay(offset = 0) {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" });
+  if (!offset) return today;
+  const date = new Date(`${today}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
+}
+
+function promiseRank(item: ServiceOrderRequisition) {
+  return item.promisedAt.trim().slice(0, 10) || "9999-12-31";
+}
+
+function daysUntilPromise(day: string, today: string) {
+  const start = Date.parse(`${today}T12:00:00Z`);
+  const end = Date.parse(`${day}T12:00:00Z`);
+  return Math.round((end - start) / 86_400_000);
+}
+
+function PromiseDate({ value }: { value: string }) {
+  const day = value.trim().slice(0, 10);
+  if (!day) return <span className="text-xs text-muted-foreground">Sin fecha</span>;
+  const today = mexicoDay();
+  const days = daysUntilPromise(day, today);
+  const overdue = days < 0;
+  const near = days >= 0 && days <= 7;
+  const hint =
+    days < 0 ? "Vencida" : days === 0 ? "Hoy" : days === 1 ? "Mañana" : near ? `En ${days} días` : "";
+  return (
+    <div>
+      <p
+        className={cn(
+          "tabular-nums",
+          overdue && "font-semibold text-destructive",
+          near && "font-semibold text-amber-700 dark:text-amber-300"
+        )}
+      >
+        {formatDay(value)}
+      </p>
+      {hint ? (
+        <p
+          className={cn(
+            "text-[11px] font-medium",
+            overdue ? "text-destructive" : "text-amber-700 dark:text-amber-300"
+          )}
+        >
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function formatDay(value: string) {
   if (!value) return "";
   if (/^\d{4}-\d{2}-\d{2}/.test(value) && value.length > 10) {
@@ -406,6 +458,8 @@ export function ServiceRequisitionsPanel({
             requisitionSourceLabel(item.sourceType),
             item.requestedBy,
             item.fulfilledBy,
+            item.promisedAt,
+            formatDay(item.promisedAt),
             requisitionStatusLabel(item.status),
             ...item.lines.flatMap((line) => [
               line.productSku,
@@ -464,7 +518,19 @@ export function ServiceRequisitionsPanel({
         items: [item],
       });
     }
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "es"));
+    for (const group of map.values()) {
+      group.items.sort(
+        (a, b) =>
+          promiseRank(a).localeCompare(promiseRank(b)) ||
+          Number(b.priority === "urgente") - Number(a.priority === "urgente") ||
+          a.folio.localeCompare(b.folio, "es")
+      );
+    }
+    return [...map.values()].sort((a, b) => {
+      const aRank = a.items.reduce((min, item) => (promiseRank(item) < min ? promiseRank(item) : min), "9999-12-31");
+      const bRank = b.items.reduce((min, item) => (promiseRank(item) < min ? promiseRank(item) : min), "9999-12-31");
+      return aRank.localeCompare(bRank) || a.name.localeCompare(b.name, "es");
+    });
   }, [filtered, staff]);
 
   function mergeDrafts(requisitions: ServiceOrderRequisition[], reset: boolean) {
@@ -787,6 +853,7 @@ export function ServiceRequisitionsPanel({
                 <th className="px-3 py-3">Folio</th>
                 <th className="px-3 py-3">Origen</th>
                 <th className="px-3 py-3">Cliente / detalle</th>
+                <th className="px-3 py-3">Fecha promesa</th>
                 <th className="px-3 py-3">Estatus</th>
                 <th className="px-3 py-3">Avance</th>
                 <th className="px-3 py-3">Solicitó</th>
@@ -795,13 +862,13 @@ export function ServiceRequisitionsPanel({
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-3 py-6 text-muted-foreground" colSpan={7}>
+                  <td className="px-3 py-6 text-muted-foreground" colSpan={8}>
                     Cargando…
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-6 text-muted-foreground" colSpan={7}>
+                  <td className="px-3 py-6 text-muted-foreground" colSpan={8}>
                     {query.trim()
                       ? "Ninguna solicitud coincide con la búsqueda."
                       : "No hay solicitudes en este filtro."}
@@ -838,7 +905,7 @@ export function ServiceRequisitionsPanel({
                           />
                         ) : null}
                       </td>
-                      <td className="px-3 py-2" colSpan={6}>
+                      <td className="px-3 py-2" colSpan={7}>
                         <p className="text-xs font-semibold text-[#3B46A5]">
                           {group.name}
                           <span className="ml-2 font-normal text-muted-foreground">
@@ -909,9 +976,9 @@ export function ServiceRequisitionsPanel({
                       <td className="px-3 py-3">
                         <p>{item.clientName || "—"}</p>
                         <p className="text-xs text-muted-foreground">{detail}</p>
-                        {item.neededBy ? (
-                          <p className="text-xs text-muted-foreground">Para {formatDay(item.neededBy)}</p>
-                        ) : null}
+                      </td>
+                      <td className="px-3 py-3" data-sort={item.promisedAt.trim().slice(0, 10)}>
+                        <PromiseDate value={item.promisedAt} />
                       </td>
                       <td className="px-3 py-3">
                         <span

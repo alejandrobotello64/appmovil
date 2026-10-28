@@ -52,12 +52,15 @@ function mapLine(
 function mapRequisition(
   row: Record<string, unknown>,
   lines: ServiceOrderRequisitionLine[],
-  order?: { folio?: string; client_name?: string; equipment_name?: string }
+  order?: { folio?: string; client_name?: string; equipment_name?: string; promised_at?: string | null }
 ): ServiceOrderRequisition {
+  const source = row.source_type === "cotizacion" ? "cotizacion" : "orden_servicio";
+  const neededBy = row.needed_by ? String(row.needed_by) : "";
+  const orderPromise = order?.promised_at ? String(order.promised_at) : "";
   return {
     id: String(row.id),
     folio: String(row.folio),
-    sourceType: (row.source_type === "cotizacion" ? "cotizacion" : "orden_servicio") as RequisitionSource,
+    sourceType: source as RequisitionSource,
     serviceOrderId: row.service_order_id ? String(row.service_order_id) : null,
     serviceOrderFolio: String(order?.folio ?? row.service_order_folio ?? ""),
     quoteId: row.quote_id ? String(row.quote_id) : null,
@@ -65,7 +68,8 @@ function mapRequisition(
     clientName: String(order?.client_name || row.client_name || ""),
     equipmentName: String(order?.equipment_name ?? row.equipment_name ?? ""),
     priority: (row.priority === "urgente" ? "urgente" : "normal") as RequisitionPriority,
-    neededBy: row.needed_by ? String(row.needed_by) : "",
+    neededBy,
+    promisedAt: source === "cotizacion" ? neededBy : orderPromise || neededBy,
     deliveryAddress: String(row.delivery_address ?? ""),
     status: String(row.status ?? "solicitada") as RequisitionStatus,
     requestedBy: String(row.requested_by ?? ""),
@@ -112,7 +116,7 @@ async function hydrateRequisitions(
     orderIds.length
       ? db
           .from("service_orders")
-          .select("id, folio, client_name, equipment_name")
+          .select("id, folio, client_name, equipment_name, promised_at")
           .in("id", orderIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
