@@ -853,7 +853,7 @@ export function ServiceRequisitionsPanel({
                 <th className="px-3 py-3">Folio</th>
                 <th className="px-3 py-3">Origen</th>
                 <th className="px-3 py-3">Cliente / detalle</th>
-                <th className="px-3 py-3">Fecha promesa</th>
+                <th className="whitespace-nowrap px-3 py-3">Fecha promesa</th>
                 <th className="px-3 py-3">Estatus</th>
                 <th className="px-3 py-3">Avance</th>
                 <th className="px-3 py-3">Solicitó</th>
@@ -977,7 +977,7 @@ export function ServiceRequisitionsPanel({
                         <p>{item.clientName || "—"}</p>
                         <p className="text-xs text-muted-foreground">{detail}</p>
                       </td>
-                      <td className="px-3 py-3" data-sort={item.promisedAt.trim().slice(0, 10)}>
+                      <td className="whitespace-nowrap px-3 py-3" data-sort={item.promisedAt.trim().slice(0, 10)}>
                         <PromiseDate value={item.promisedAt} />
                       </td>
                       <td className="px-3 py-3">
