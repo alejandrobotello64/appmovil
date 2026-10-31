@@ -44,6 +44,9 @@ next-env.d.ts
 # local supabase CLI
 supabase/.temp/
 
+# archivos subidos cuando la app corre contra el API local
+.data/
+
 # python
 scripts/__pycache__/
 *.pyc
