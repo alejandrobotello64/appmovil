@@ -9,7 +9,6 @@ import {
   PAYMENT_METHODS,
   categoriesForKind,
   categoryLabel,
-  formatMoney,
   todayIso,
   type ExpenseCategoryId,
   type ExpenseItem,
@@ -17,7 +16,7 @@ import {
   type ExpenseReport,
   type PaymentMethod,
 } from "@/lib/expenses/types";
-import { parseCfdiXml } from "@/lib/warehouse/order-invoices";
+import { recognizeExpenseReceipt } from "@/lib/expenses/receipt-recognition";
 import { Field, inputClass } from "./expense-ui";
 
 const round = (value: number) => Math.round(value * 100) / 100;
@@ -42,6 +41,7 @@ function emptyInput(report: ExpenseReport): ExpenseItemInput {
     subtotal: 0,
     tax: 0,
     total: 0,
+    taxType: "",
     paymentMethod: defaultPayment(report),
     notes: "",
     pdfFile: null,
@@ -61,6 +61,7 @@ function inputFromItem(item: ExpenseItem): ExpenseItemInput {
     subtotal: item.subtotal,
     tax: item.tax,
     total: item.total,
+    taxType: item.taxType,
     paymentMethod: item.paymentMethod,
     notes: item.notes,
     pdfFile: null,
@@ -104,23 +105,22 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
     setXmlNotice("");
     if (!file) return;
     try {
-      const cfdi = parseCfdiXml(await file.text());
-      const tax = cfdi.total > cfdi.subtotal ? round(cfdi.total - cfdi.subtotal) : 0;
+      const recognized = recognizeExpenseReceipt(await file.text());
+      const allowed = categories.some((category) => category.id === recognized.category);
+      const category = recognized.category && allowed ? recognized.category : null;
       setForm((prev) => ({
         ...prev,
         xmlFile: file,
-        supplierName: cfdi.issuerName || prev.supplierName,
-        supplierRfc: cfdi.issuerRfc || prev.supplierRfc,
-        invoiceNumber: cfdi.invoiceNumber || prev.invoiceNumber,
-        cfdiUuid: cfdi.cfdiUuid || prev.cfdiUuid,
-        expenseDate: cfdi.invoiceDate || prev.expenseDate,
-        subtotal: cfdi.subtotal || prev.subtotal,
-        tax: cfdi.total ? tax : prev.tax,
-        total: cfdi.total || prev.total,
+        category: category ?? prev.category,
+        taxType: recognized.taxType || prev.taxType,
       }));
-      setXmlNotice(
-        `Datos tomados del CFDI${cfdi.currency !== "MXN" ? ` (moneda ${cfdi.currency})` : ""}: ${cfdi.issuerName || cfdi.issuerRfc} · ${formatMoney(cfdi.total)}`
-      );
+      const taxText = recognized.taxType || "no se identificó el tipo de impuesto";
+      const categoryText = category
+        ? categoryLabel(category)
+        : recognized.category
+          ? `${categoryLabel(recognized.category)} no aplica en este registro`
+          : "no se identificó la categoría";
+      setXmlNotice(`Del archivo solo se tomó el impuesto y la categoría: ${taxText}; ${categoryText}.`);
     } catch (err) {
       setXmlNotice(err instanceof Error ? err.message : "No se pudo leer el XML.");
     }
@@ -143,7 +143,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
   return (
     <ModalShell
       title={item ? "Editar gasto" : "Agregar gasto"}
-      description={`${report.folio} · Sube la factura en PDF (o foto del ticket) y, si la tienes, el XML para llenar los datos automáticamente.`}
+      description={`${report.folio} · Al subir el XML solo se reconocen el tipo de impuesto y la categoría. El resto se captura a mano.`}
       headerAction={
         <Button type="button" variant="outline" size="sm" onClick={onClose}>
           Cerrar
@@ -168,7 +168,11 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
           </Field>
           <Field
             label="XML del CFDI (opcional)"
-            hint={item?.xmlUrl && !form.xmlFile ? "Ya tiene XML; elige otro para reemplazarlo." : undefined}
+            hint={
+              item?.xmlUrl && !form.xmlFile
+                ? "Ya tiene XML; elige otro para reemplazarlo. Solo se reconocen el impuesto y la categoría."
+                : "Solo reconoce el tipo de impuesto y la categoría."
+            }
           >
             <span className="flex items-center gap-2">
               <FileCode2 className="size-4 shrink-0 text-muted-foreground" />
@@ -252,6 +256,14 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
               value={form.subtotal || ""}
               onChange={(e) => setAmount("subtotal", Number(e.target.value) || 0)}
               placeholder="0.00"
+            />
+          </Field>
+          <Field label="Tipo de impuesto" hint="Se llena al subir el XML. Puedes corregirlo.">
+            <input
+              className={inputClass}
+              value={form.taxType}
+              onChange={(e) => patch({ taxType: e.target.value })}
+              placeholder="IVA 16%, ISR retenido…"
             />
           </Field>
           <Field label="IVA / impuestos">

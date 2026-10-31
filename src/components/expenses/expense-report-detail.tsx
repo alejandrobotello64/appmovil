@@ -309,6 +309,7 @@ export function ExpenseReportDetail({
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {formatDate(item.expenseDate)} · {categoryLabel(item.category)}
+                          {item.taxType ? ` · ${item.taxType}` : ""}
                           {item.supplierName && item.concept ? ` · ${item.supplierName}` : ""}
                           {item.supplierRfc ? ` · ${item.supplierRfc}` : ""}
                           {" · "}

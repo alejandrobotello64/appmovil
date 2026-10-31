@@ -132,6 +132,8 @@ export type ExpenseItem = {
   subtotal: number;
   tax: number;
   total: number;
+  /** Tipo de impuesto leído del CFDI, por ejemplo «IVA 16%». */
+  taxType: string;
   paymentMethod: PaymentMethod;
   pdfPath: string;
   pdfUrl: string;
@@ -203,6 +205,7 @@ export type ExpenseItemInput = {
   subtotal: number;
   tax: number;
   total: number;
+  taxType: string;
   paymentMethod: PaymentMethod;
   notes: string;
   pdfFile?: File | null;

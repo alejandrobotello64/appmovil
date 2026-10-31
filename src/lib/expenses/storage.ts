@@ -42,6 +42,7 @@ function mapItem(row: Row): ExpenseItem {
     subtotal: num(row.subtotal),
     tax: num(row.tax),
     total: num(row.total),
+    taxType: str(row.tax_type),
     paymentMethod: (str(row.payment_method) || "efectivo") as PaymentMethod,
     pdfPath: str(row.pdf_path),
     pdfUrl: str(row.pdf_url),
@@ -293,6 +294,7 @@ function itemPayload(input: ExpenseItemInput) {
     subtotal: cents(input.subtotal),
     tax: cents(input.tax),
     total: cents(input.total),
+    tax_type: input.taxType.trim(),
     payment_method: input.paymentMethod,
     notes: input.notes.trim(),
   };
