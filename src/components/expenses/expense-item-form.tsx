@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { FileCode2, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -16,7 +16,8 @@ import {
   type ExpenseReport,
   type PaymentMethod,
 } from "@/lib/expenses/types";
-import { recognizeExpenseReceipt } from "@/lib/expenses/receipt-recognition";
+import { recognizeReceiptUpload } from "@/lib/expenses/recognize-receipt-file";
+import type { ReceiptFill } from "@/lib/expenses/receipt-recognition";
 import { Field, inputClass } from "./expense-ui";
 
 const round = (value: number) => Math.round(value * 100) / 100;
@@ -81,7 +82,9 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
   const [form, setForm] = useState<ExpenseItemInput>(() => (item ? inputFromItem(item) : emptyInput(report)));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [xmlNotice, setXmlNotice] = useState("");
+  const [fileNotice, setFileNotice] = useState("");
+  const [readingFile, setReadingFile] = useState(false);
+  const readSeq = useRef(0);
 
   const categories = categoriesForKind(report.kind);
   const categoryOptions = categories.some((c) => c.id === form.category)
@@ -100,29 +103,74 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
     });
   }
 
-  async function chooseXml(file: File | null) {
-    patch({ xmlFile: file });
-    setXmlNotice("");
+  function applyFill(prev: ExpenseItemInput, fill: ReceiptFill, filePatch: Partial<ExpenseItemInput>) {
+    const allowed = categories.some((category) => category.id === fill.category);
+    const category = fill.category && allowed ? fill.category : null;
+    const next: ExpenseItemInput = { ...prev, ...filePatch };
+    if (fill.concept) next.concept = fill.concept;
+    if (fill.supplierName) next.supplierName = fill.supplierName;
+    if (fill.supplierRfc) next.supplierRfc = fill.supplierRfc;
+    if (fill.invoiceNumber) next.invoiceNumber = fill.invoiceNumber;
+    if (fill.cfdiUuid) next.cfdiUuid = fill.cfdiUuid;
+    if (fill.expenseDate) next.expenseDate = fill.expenseDate;
+    if (fill.taxType) next.taxType = fill.taxType;
+    if (category) next.category = category;
+    if (fill.subtotal != null) next.subtotal = fill.subtotal;
+    if (fill.tax != null) next.tax = fill.tax;
+    if (fill.total != null) next.total = fill.total;
+    else if (fill.subtotal != null || fill.tax != null) {
+      next.total = round((fill.subtotal ?? prev.subtotal) + (fill.tax ?? prev.tax));
+    }
+    return { next, category };
+  }
+
+  function fillNotice(fill: ReceiptFill, category: ExpenseCategoryId | null) {
+    const parts = [
+      fill.supplierName,
+      fill.invoiceNumber ? `folio ${fill.invoiceNumber}` : "",
+      fill.taxType,
+      category ? categoryLabel(category) : "",
+    ].filter(Boolean);
+    const summary = parts.length
+      ? `Se llenó el gasto: ${parts.join(" · ")}.`
+      : "Se leyó el archivo, pero no trajo datos para llenar.";
+    if (fill.category && !category) {
+      return `${summary} ${categoryLabel(fill.category)} no aplica en este registro.`;
+    }
+    return summary;
+  }
+
+  async function chooseReceipt(kind: "pdf" | "xml", file: File | null) {
+    const seq = ++readSeq.current;
+    setForm((prev) => ({ ...prev, ...(kind === "pdf" ? { pdfFile: file } : { xmlFile: file }) }));
+    setFileNotice("");
     if (!file) return;
+    if (kind === "pdf" && file.type.startsWith("image/")) {
+      setFileNotice("La foto se guarda con el gasto. Para llenar los datos sube el XML o un PDF con texto.");
+      return;
+    }
+    setReadingFile(true);
     try {
-      const recognized = recognizeExpenseReceipt(await file.text());
-      const allowed = categories.some((category) => category.id === recognized.category);
-      const category = recognized.category && allowed ? recognized.category : null;
-      setForm((prev) => ({
-        ...prev,
-        xmlFile: file,
-        category: category ?? prev.category,
-        taxType: recognized.taxType || prev.taxType,
-      }));
-      const taxText = recognized.taxType || "no se identificó el tipo de impuesto";
-      const categoryText = category
-        ? categoryLabel(category)
-        : recognized.category
-          ? `${categoryLabel(recognized.category)} no aplica en este registro`
-          : "no se identificó la categoría";
-      setXmlNotice(`Del archivo solo se tomó el impuesto y la categoría: ${taxText}; ${categoryText}.`);
+      const body = new FormData();
+      body.set("file", file);
+      const result = await recognizeReceiptUpload(body);
+      if (seq !== readSeq.current) return;
+      if ("error" in result) {
+        setFileNotice(result.error);
+        return;
+      }
+      let applied: ExpenseCategoryId | null = null;
+      setForm((prev) => {
+        const { next, category } = applyFill(prev, result.fill, kind === "pdf" ? { pdfFile: file } : { xmlFile: file });
+        applied = category;
+        return next;
+      });
+      setFileNotice(fillNotice(result.fill, applied));
     } catch (err) {
-      setXmlNotice(err instanceof Error ? err.message : "No se pudo leer el XML.");
+      if (seq !== readSeq.current) return;
+      setFileNotice(err instanceof Error ? err.message : "No se pudo leer el archivo.");
+    } finally {
+      if (seq === readSeq.current) setReadingFile(false);
     }
   }
 
@@ -143,7 +191,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
   return (
     <ModalShell
       title={item ? "Editar gasto" : "Agregar gasto"}
-      description={`${report.folio} · Al subir el XML solo se reconocen el tipo de impuesto y la categoría. El resto se captura a mano.`}
+      description={`${report.folio} · El XML o un PDF con texto llena el gasto, incluidos IVA, IEPS y el impuesto de hospedaje.`}
       headerAction={
         <Button type="button" variant="outline" size="sm" onClick={onClose}>
           Cerrar
@@ -154,7 +202,11 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
         <div className="grid gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-3 sm:grid-cols-2">
           <Field
             label="Factura PDF o foto del ticket"
-            hint={item?.pdfUrl && !form.pdfFile ? "Ya tiene archivo; elige otro para reemplazarlo." : undefined}
+            hint={
+              item?.pdfUrl && !form.pdfFile
+                ? "Ya tiene archivo; elige otro para reemplazarlo."
+                : "Un PDF con texto llena el gasto. Una foto se guarda, pero no se lee."
+            }
           >
             <span className="flex items-center gap-2">
               <FileText className="size-4 shrink-0 text-muted-foreground" />
@@ -162,7 +214,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
                 type="file"
                 accept="application/pdf,image/*"
                 className="w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#3B46A5]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#3B46A5]"
-                onChange={(e) => patch({ pdfFile: e.target.files?.[0] ?? null })}
+                onChange={(e) => void chooseReceipt("pdf", e.target.files?.[0] ?? null)}
               />
             </span>
           </Field>
@@ -170,8 +222,8 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
             label="XML del CFDI (opcional)"
             hint={
               item?.xmlUrl && !form.xmlFile
-                ? "Ya tiene XML; elige otro para reemplazarlo. Solo se reconocen el impuesto y la categoría."
-                : "Solo reconoce el tipo de impuesto y la categoría."
+                ? "Ya tiene XML; elige otro para reemplazarlo y volver a llenar los datos."
+                : "Llena proveedor, folio, importes, categoría e impuestos."
             }
           >
             <span className="flex items-center gap-2">
@@ -180,11 +232,12 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
                 type="file"
                 accept=".xml,text/xml,application/xml"
                 className="w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#3B46A5]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#3B46A5]"
-                onChange={(e) => void chooseXml(e.target.files?.[0] ?? null)}
+                onChange={(e) => void chooseReceipt("xml", e.target.files?.[0] ?? null)}
               />
             </span>
           </Field>
-          {xmlNotice ? <p className="text-xs text-muted-foreground sm:col-span-2">{xmlNotice}</p> : null}
+          {readingFile ? <p className="text-xs text-muted-foreground sm:col-span-2">Leyendo el archivo…</p> : null}
+          {fileNotice ? <p className="text-xs text-muted-foreground sm:col-span-2">{fileNotice}</p> : null}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -258,15 +311,15 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
               placeholder="0.00"
             />
           </Field>
-          <Field label="Tipo de impuesto" hint="Se llena al subir el XML. Puedes corregirlo.">
+          <Field label="Tipo de impuesto" hint="IVA, IEPS, hospedaje u otros. Puedes corregirlo.">
             <input
               className={inputClass}
               value={form.taxType}
               onChange={(e) => patch({ taxType: e.target.value })}
-              placeholder="IVA 16%, ISR retenido…"
+              placeholder="IVA 16%, IEPS, Impuesto sobre hospedaje 3%"
             />
           </Field>
-          <Field label="IVA / impuestos">
+          <Field label="Impuestos" hint="Suma IVA, IEPS y hospedaje. Las retenciones se anotan en el tipo y no se suman aquí.">
             <input
               type="number"
               min={0}
@@ -277,7 +330,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
               placeholder="0.00"
             />
           </Field>
-          <Field label="Total *" hint="Se calcula con subtotal + IVA; puedes ajustarlo (propinas, descuentos).">
+          <Field label="Total *" hint="Con retenciones se respeta el total del comprobante. Si no, es subtotal más impuestos.">
             <input
               type="number"
               min={0}

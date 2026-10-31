@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  serverExternalPackages: ["xlsx"],
+  serverExternalPackages: ["xlsx", "unpdf"],
 };
 
 export default nextConfig;
