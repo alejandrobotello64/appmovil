@@ -103,9 +103,13 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
     });
   }
 
+  function acceptedCategory(fill: ReceiptFill): ExpenseCategoryId | null {
+    if (!fill.category) return null;
+    return categories.some((category) => category.id === fill.category) ? fill.category : null;
+  }
+
   function applyFill(prev: ExpenseItemInput, fill: ReceiptFill, filePatch: Partial<ExpenseItemInput>) {
-    const allowed = categories.some((category) => category.id === fill.category);
-    const category = fill.category && allowed ? fill.category : null;
+    const category = acceptedCategory(fill);
     const next: ExpenseItemInput = { ...prev, ...filePatch };
     if (fill.concept) next.concept = fill.concept;
     if (fill.supplierName) next.supplierName = fill.supplierName;
@@ -159,13 +163,9 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
         setFileNotice(result.error);
         return;
       }
-      let applied: ExpenseCategoryId | null = null;
-      setForm((prev) => {
-        const { next, category } = applyFill(prev, result.fill, kind === "pdf" ? { pdfFile: file } : { xmlFile: file });
-        applied = category;
-        return next;
-      });
-      setFileNotice(fillNotice(result.fill, applied));
+      const category = acceptedCategory(result.fill);
+      setForm((prev) => applyFill(prev, result.fill, kind === "pdf" ? { pdfFile: file } : { xmlFile: file }).next);
+      setFileNotice(fillNotice(result.fill, category));
     } catch (err) {
       if (seq !== readSeq.current) return;
       setFileNotice(err instanceof Error ? err.message : "No se pudo leer el archivo.");
