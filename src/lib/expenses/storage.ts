@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { staffDisplayName } from "@/lib/users/staff";
+import { receiptContentType } from "./receipt-file";
 import {
   expenseKindMeta,
   formatMoney,
@@ -271,7 +272,7 @@ async function uploadReceipt(reportId: string, file: File) {
   const path = `${reportId}/${Date.now()}-${safeName}`;
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(path, file, { upsert: false, contentType: file.type || undefined });
+    .upload(path, file, { upsert: false, contentType: receiptContentType(file) });
   if (error) throw new Error(error.message);
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return { path, url: data.publicUrl };

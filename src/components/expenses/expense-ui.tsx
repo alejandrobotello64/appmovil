@@ -1,7 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { FileText } from "lucide-react";
+import { receiptDisplay } from "@/lib/expenses/receipt-file";
 import { formatMoney, statusMeta, type CategoryTotal } from "@/lib/expenses/types";
+import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
@@ -24,6 +27,45 @@ export function Field({
       {children}
       {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
     </label>
+  );
+}
+
+export function ReceiptFileLink({
+  path,
+  url,
+  invoiceNumber,
+  compact = false,
+}: {
+  path: string;
+  url: string;
+  invoiceNumber?: string;
+  compact?: boolean;
+}) {
+  const receipt = receiptDisplay(path, url);
+  const label = receipt.image ? (compact ? "Foto" : "Foto del ticket") : compact ? "Ver" : "Comprobante";
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1.5 rounded-md bg-[#3B46A5]/10 px-2 py-0.5 font-medium text-[#3B46A5] hover:underline"
+      onClick={(event) =>
+        openStoredFileOnMobile(event, {
+          url,
+          title: receipt.image ? "Foto del ticket" : invoiceNumber ? `Comprobante ${invoiceNumber}` : "Comprobante",
+          fileName: receipt.fileName,
+          mime: receipt.mime,
+        })
+      }
+    >
+      {receipt.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className="size-8 rounded object-cover" />
+      ) : (
+        <FileText className="size-3.5" />
+      )}
+      {label}
+    </a>
   );
 }
 

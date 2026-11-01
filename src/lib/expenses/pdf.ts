@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
 import { summarize, type ExpenseEntry } from "./summary";
+import { isReceiptImageName } from "./receipt-file";
 import {
   balanceLabel,
   categoryColor,
@@ -17,6 +18,7 @@ import {
   reportTitle,
   statusMeta,
   todayIso,
+  type ExpenseItem,
   type ExpenseReport,
 } from "./types";
 
@@ -27,6 +29,12 @@ const BOTTOM = 18;
 
 type Column = { header: string; width: number; align?: "left" | "right" | "center" };
 type Cell = string | { text: string; color?: string; bold?: boolean };
+
+function receiptKindLabel(item: Pick<ExpenseItem, "pdfPath" | "xmlPath" | "cfdiUuid" | "invoiceNumber">) {
+  if (itemHasInvoice(item)) return item.invoiceNumber || item.cfdiUuid.slice(0, 8) || "XML";
+  if (!item.pdfPath) return "Sin comprobante";
+  return isReceiptImageName(item.pdfPath) ? "Foto" : "Ticket";
+}
 
 function hexToRgb(hex: string): [number, number, number] {
   const value = hex.replace("#", "");
@@ -278,11 +286,7 @@ export async function buildExpenseReportPdf(report: ExpenseReport) {
       formatDate(item.expenseDate),
       { text: categoryLabel(item.category), color: categoryColor(item.category) },
       [item.concept, item.supplierName].filter(Boolean).join(" · "),
-      itemHasInvoice(item)
-        ? item.invoiceNumber || item.cfdiUuid.slice(0, 8) || "XML"
-        : item.pdfPath
-          ? "Ticket"
-          : "Sin comprobante",
+      receiptKindLabel(item),
       paymentMethodLabel(item.paymentMethod, true),
       formatMoney(item.total),
     ]),
@@ -463,7 +467,7 @@ export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
         report.folio,
         { text: categoryLabel(item.category), color: categoryColor(item.category) },
         [item.concept, item.supplierName].filter(Boolean).join(" · "),
-        itemHasInvoice(item) ? "Sí" : item.pdfPath ? "Ticket" : "No",
+        itemHasInvoice(item) ? "Sí" : item.pdfPath ? (isReceiptImageName(item.pdfPath) ? "Foto" : "Ticket") : "No",
         formatMoney(item.total),
       ]),
       ["", "", "", "", "Total", formatMoney(summary.total)]

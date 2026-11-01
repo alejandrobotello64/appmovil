@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
-import { FileCode2, FileText, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Camera, FileCode2, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { ensureTicketPhoto, isImageFile, isPdfFile, isReceiptImageName } from "@/lib/expenses/receipt-file";
 import { addExpenseItem, updateExpenseItem } from "@/lib/expenses/storage";
 import {
   PAYMENT_METHODS,
@@ -84,7 +85,25 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
   const [error, setError] = useState("");
   const [fileNotice, setFileNotice] = useState("");
   const [readingFile, setReadingFile] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [photoBroken, setPhotoBroken] = useState(false);
   const readSeq = useRef(0);
+  const previewUrl = useRef("");
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    };
+  }, []);
+
+  function replacePreview(next: string) {
+    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+    previewUrl.current = next;
+    setPhotoBroken(false);
+    setPhotoPreview(next);
+  }
 
   const categories = categoriesForKind(report.kind);
   const categoryOptions = categories.some((c) => c.id === form.category)
@@ -144,15 +163,30 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
     return summary;
   }
 
+  function attachPhoto(file: File | null) {
+    readSeq.current += 1;
+    setReadingFile(false);
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    const photo = file ? ensureTicketPhoto(file) : null;
+    replacePreview(photo ? URL.createObjectURL(photo) : "");
+    setForm((prev) => ({ ...prev, pdfFile: photo }));
+    setFileNotice(photo ? "Foto del ticket lista. Captura concepto y total; no hace falta factura." : "");
+  }
+
   async function chooseReceipt(kind: "pdf" | "xml", file: File | null) {
+    if (kind === "pdf" && file && isImageFile(file)) {
+      if (photoInputRef.current) photoInputRef.current.value = "";
+      attachPhoto(file);
+      return;
+    }
     const seq = ++readSeq.current;
+    if (kind === "pdf") {
+      if (photoInputRef.current) photoInputRef.current.value = "";
+      replacePreview("");
+    }
     setForm((prev) => ({ ...prev, ...(kind === "pdf" ? { pdfFile: file } : { xmlFile: file }) }));
     setFileNotice("");
     if (!file) return;
-    if (kind === "pdf" && file.type.startsWith("image/")) {
-      setFileNotice("La foto se guarda con el gasto. Para llenar los datos sube el XML o un PDF con texto.");
-      return;
-    }
     setReadingFile(true);
     try {
       const body = new FormData();
@@ -188,10 +222,15 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
     }
   }
 
+  const savedIsPhoto = Boolean(item?.pdfUrl && isReceiptImageName(item.pdfPath || item.pdfUrl));
+  const shownPhoto = photoPreview || (!form.pdfFile && savedIsPhoto ? (item?.pdfUrl ?? "") : "");
+  const fileClass =
+    "w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#3B46A5]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#3B46A5]";
+
   return (
     <ModalShell
       title={item ? "Editar gasto" : "Agregar gasto"}
-      description={`${report.folio} · El XML o un PDF con texto llena el gasto, incluidos IVA, IEPS y el impuesto de hospedaje.`}
+      description={`${report.folio} · Sin factura, agrega una foto del ticket. El XML o un PDF con texto llena el gasto, incluidos IVA, IEPS y el impuesto de hospedaje.`}
       headerAction={
         <Button type="button" variant="outline" size="sm" onClick={onClose}>
           Cerrar
@@ -201,19 +240,22 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
       <form onSubmit={submit} className="space-y-4">
         <div className="grid gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-3 sm:grid-cols-2">
           <Field
-            label="Factura PDF o foto del ticket"
+            label="Factura PDF"
             hint={
-              item?.pdfUrl && !form.pdfFile
-                ? "Ya tiene archivo; elige otro para reemplazarlo."
-                : "Un PDF con texto llena el gasto. Una foto se guarda, pero no se lee."
+              item?.pdfUrl && !form.pdfFile && !savedIsPhoto
+                ? "Ya tiene PDF; elige otro para reemplazarlo."
+                : savedIsPhoto && !form.pdfFile
+                  ? "Este gasto tiene foto del ticket. Un PDF la sustituye."
+                  : "Un PDF con texto llena el gasto. Si eliges una foto, se toma como ticket."
             }
           >
             <span className="flex items-center gap-2">
               <FileText className="size-4 shrink-0 text-muted-foreground" />
               <input
+                ref={pdfInputRef}
                 type="file"
-                accept="application/pdf,image/*"
-                className="w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#3B46A5]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#3B46A5]"
+                accept="application/pdf,.pdf"
+                className={fileClass}
                 onChange={(e) => void chooseReceipt("pdf", e.target.files?.[0] ?? null)}
               />
             </span>
@@ -231,11 +273,56 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
               <input
                 type="file"
                 accept=".xml,text/xml,application/xml"
-                className="w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#3B46A5]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#3B46A5]"
+                className={fileClass}
                 onChange={(e) => void chooseReceipt("xml", e.target.files?.[0] ?? null)}
               />
             </span>
           </Field>
+          <div className="grid gap-2 sm:col-span-2">
+            <Field
+              label="Foto del ticket"
+              hint={
+                photoPreview
+                  ? "Se guarda como comprobante. La factura no es necesaria."
+                  : savedIsPhoto && !form.pdfFile
+                    ? "Ya tiene foto; elige otra para reemplazarla."
+                    : "Cámara o galería. Úsala cuando no haya factura."
+              }
+            >
+              <span className="flex items-center gap-2">
+                <Camera className="size-4 shrink-0 text-muted-foreground" />
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className={fileClass}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    if (file && isPdfFile(file) && !isImageFile(file)) {
+                      e.target.value = "";
+                      void chooseReceipt("pdf", file);
+                      return;
+                    }
+                    attachPhoto(file);
+                  }}
+                />
+              </span>
+            </Field>
+            {shownPhoto && !photoBroken ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={shownPhoto}
+                alt="Foto del ticket"
+                className="max-h-40 w-auto rounded-lg border border-border object-contain"
+                onError={() => setPhotoBroken(true)}
+              />
+            ) : null}
+            {shownPhoto && photoBroken ? (
+              <p className="text-xs text-muted-foreground">
+                La foto se guarda con el gasto. Este navegador no puede mostrarla antes.
+              </p>
+            ) : null}
+          </div>
           {readingFile ? <p className="text-xs text-muted-foreground sm:col-span-2">Leyendo el archivo…</p> : null}
           {fileNotice ? <p className="text-xs text-muted-foreground sm:col-span-2">{fileNotice}</p> : null}
         </div>

@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   FileCode2,
   FileDown,
-  FileText,
   Loader2,
   Lock,
   Pencil,
@@ -41,7 +40,7 @@ import {
 } from "@/lib/expenses/types";
 import { cn } from "@/lib/utils";
 import { ExpenseItemForm } from "./expense-item-form";
-import { CategoryBars, CategoryDot, KpiCard, StatusBadge, inputClass } from "./expense-ui";
+import { CategoryBars, CategoryDot, KpiCard, ReceiptFileLink, StatusBadge, inputClass } from "./expense-ui";
 
 export type ExpenseAccess = {
   canCreate: boolean;
@@ -296,7 +295,7 @@ export function ExpenseReportDetail({
               </header>
               {report.items.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  Aún no hay gastos. {canCapture ? "Agrega cada factura o ticket con su categoría." : ""}
+                  Aún no hay gastos. {canCapture ? "Agrega la factura o, si no hay, una foto del ticket." : ""}
                 </p>
               ) : (
                 <ul className="divide-y divide-border">
@@ -317,25 +316,7 @@ export function ExpenseReportDetail({
                         </p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                           {item.pdfUrl ? (
-                            <a
-                              href={item.pdfUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 rounded-md bg-[#3B46A5]/10 px-2 py-0.5 font-medium text-[#3B46A5] hover:underline"
-                              onClick={(event) =>
-                                openStoredFileOnMobile(event, {
-                                  url: item.pdfUrl,
-                                  title: item.invoiceNumber
-                                    ? `Comprobante ${item.invoiceNumber}`
-                                    : "Comprobante",
-                                  fileName: `${item.invoiceNumber || "comprobante"}.pdf`,
-                                  mime: "application/pdf",
-                                })
-                              }
-                            >
-                              <FileText className="size-3.5" />
-                              Comprobante
-                            </a>
+                            <ReceiptFileLink path={item.pdfPath} url={item.pdfUrl} invoiceNumber={item.invoiceNumber} />
                           ) : null}
                           {item.xmlUrl ? (
                             <a
