@@ -204,6 +204,94 @@ async function finish(doc: jsPDF, fileName: string, output: PdfOutput) {
   await deliverPdf(doc, fileName, output);
 }
 
+function drawSpendBars(doc: jsPDF, startY: number, buckets: SpendBucket[]) {
+  if (!buckets.some((bucket) => bucket.total > 0)) return startY;
+  const chartW = doc.internal.pageSize.getWidth() - MARGIN * 2;
+  const chartH = 32;
+  const legend: Array<{ label: string; color: string }> = [];
+  const seen = new Set<string>();
+  for (const bucket of buckets) {
+    for (const segment of bucket.segments) {
+      if (seen.has(segment.category)) continue;
+      seen.add(segment.category);
+      legend.push(segment);
+    }
+  }
+  const legendRows = Math.max(Math.ceil(legend.length / 3), 1);
+  let y = ensureSpace(doc, startY, chartH + 10 + legendRows * 4.2);
+  const max = Math.max(...buckets.map((bucket) => bucket.total), 1);
+  const slot = chartW / Math.max(buckets.length, 1);
+  const barW = Math.max(1.3, Math.min(5.5, slot * 0.62));
+  const base = y + chartH;
+
+  doc.setDrawColor(210, 214, 226);
+  doc.setLineWidth(0.2);
+  doc.line(MARGIN, base, MARGIN + chartW, base);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+  doc.setTextColor(120, 120, 130);
+  doc.text(formatMoney(max), MARGIN, y + 2.4);
+
+  buckets.forEach((bucket, index) => {
+    const x = MARGIN + index * slot + (slot - barW) / 2;
+    let cursor = base;
+    for (const segment of bucket.segments) {
+      const height = (segment.total / max) * (chartH - 4);
+      if (height <= 0.2) continue;
+      cursor -= height;
+      doc.setFillColor(...hexToRgb(segment.color));
+      doc.rect(x, cursor, barW, height, "F");
+    }
+  });
+
+  const step = slot >= 14 ? 1 : Math.max(Math.ceil(14 / slot), 1);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(5.5);
+  doc.setTextColor(80, 80, 90);
+  buckets.forEach((bucket, index) => {
+    if (index % step !== 0 && index !== buckets.length - 1) return;
+    doc.text(bucket.label, MARGIN + index * slot + slot / 2, base + 3.2, { align: "center" });
+  });
+
+  const colW = chartW / 3;
+  let ly = base + 8;
+  legend.forEach((segment, index) => {
+    const col = index % 3;
+    if (col === 0 && index > 0) ly += 4.2;
+    const x = MARGIN + col * colW;
+    doc.setFillColor(...hexToRgb(segment.color));
+    doc.circle(x + 1.2, ly - 0.8, 1, "F");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 70);
+    doc.text(fit(doc, segment.label, colW - 6), x + 3.2, ly);
+  });
+  return ly + 5;
+}
+
+function drawShareBar(doc: jsPDF, startY: number, rows: Array<{ total: number; color: string }>) {
+  const total = rows.reduce((sum, row) => sum + row.total, 0);
+  if (total <= 0) return startY;
+  const y = ensureSpace(doc, startY, 8);
+  const chartW = doc.internal.pageSize.getWidth() - MARGIN * 2;
+  let x = MARGIN;
+  rows.forEach((row) => {
+    const width = (row.total / total) * chartW;
+    if (width <= 0) return;
+    doc.setFillColor(...hexToRgb(row.color));
+    doc.rect(x, y, width, 4.2, "F");
+    x += width;
+  });
+  return y + 7;
+}
+
+function categoryBreakdown(bucket: SpendBucket) {
+  return [...bucket.segments]
+    .sort((a, b) => b.total - a.total)
+    .map((segment) => `${segment.label} ${formatMoney(segment.total)}`)
+    .join(" · ");
+}
+
 /** Comprobación de un registro: datos generales, gastos, resumen por categoría y saldo. */
 export async function buildExpenseReportPdf(report: ExpenseReport) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -246,27 +334,72 @@ export async function buildExpenseReportPdf(report: ExpenseReport) {
       : ["Pagado por colaborador", formatMoney(balance.employeePaid)],
   ]);
 
+  const dated = report.items.map((item) => item.expenseDate).filter(Boolean).sort();
+  const bounds = [report.startDate, report.endDate, dated[0], dated[dated.length - 1]].filter(Boolean).sort();
+  const insights = spendInsights(
+    report.items.map((item) => ({ item, report })),
+    bounds[0] ?? "",
+    bounds[bounds.length - 1] ?? ""
+  );
+  if (report.items.length > 0) {
+    y = drawKpis(doc, y, [
+      ["Promedio diario", formatMoney(insights.dailyAverage)],
+      ["Por comprobante", formatMoney(insights.perReceipt)],
+      [
+        grainPeakLabel(insights.grain),
+        insights.peak ? `${insights.peak.label} · ${formatMoney(insights.peak.total)}` : "—",
+      ],
+      ["Días con gasto", `${insights.activeDays} de ${insights.days}`],
+    ]);
+    y = sectionTitle(doc, y, "Gasto en el tiempo");
+    y = drawSpendBars(doc, y, insights.buckets);
+  }
+
   const byCategory = categoryTotals(report.items);
   if (byCategory.length) {
-    y = sectionTitle(doc, y, "Resumen por categoría");
+    y = sectionTitle(doc, y, "Por categoría, en conjunto");
+    y = drawShareBar(doc, y, byCategory);
     y = drawTable(
       doc,
       y,
       [
-        { header: "Categoría", width: 50 },
+        { header: "Categoría", width: 40 },
         { header: "Gastos", width: 14, align: "right" },
-        { header: "Con factura", width: 24, align: "right" },
-        { header: "Total", width: 24, align: "right" },
+        { header: "Promedio", width: 22, align: "right" },
+        { header: "Con factura", width: 22, align: "right" },
+        { header: "Total", width: 22, align: "right" },
         { header: "%", width: 12, align: "right" },
       ],
       byCategory.map((row) => [
         { text: row.label, color: row.color },
         String(row.count),
+        formatMoney(row.count > 0 ? row.total / row.count : 0),
         formatMoney(row.invoiced),
         formatMoney(row.total),
         `${(row.share * 100).toFixed(1)}%`,
       ]),
-      ["Total", String(report.items.length), formatMoney(balance.invoiced), formatMoney(balance.spent), "100%"]
+      ["Total", String(report.items.length), formatMoney(insights.perReceipt), formatMoney(balance.invoiced), formatMoney(balance.spent), "100%"]
+    );
+  }
+
+  const chronology = insights.buckets.filter((bucket) => bucket.count > 0);
+  if (chronology.length > 0) {
+    y = sectionTitle(doc, y, "Cronología por tipo de gasto");
+    y = drawTable(
+      doc,
+      y,
+      [
+        { header: "Periodo", width: 24 },
+        { header: "Gastos", width: 14, align: "right" },
+        { header: "Total", width: 22, align: "right" },
+        { header: "Desglose", width: 76 },
+      ],
+      chronology.map((bucket) => [
+        bucket.label,
+        String(bucket.count),
+        formatMoney(bucket.total),
+        categoryBreakdown(bucket),
+      ])
     );
   }
 
