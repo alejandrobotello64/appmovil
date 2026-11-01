@@ -1,7 +1,14 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
-import { grainPeakLabel, spendInsights, summarize, type ExpenseEntry, type SpendBucket } from "./summary";
+import {
+  categoryGroupTotals,
+  grainPeakLabel,
+  spendInsights,
+  summarize,
+  type ExpenseEntry,
+  type SpendBucket,
+} from "./summary";
 import { isReceiptImageName } from "./receipt-file";
 import {
   balanceLabel,
@@ -285,6 +292,37 @@ function drawShareBar(doc: jsPDF, startY: number, rows: Array<{ total: number; c
   return y + 7;
 }
 
+function drawCategoryTotals(doc: jsPDF, startY: number, items: Array<Pick<ExpenseItem, "category" | "total">>, grand: number) {
+  const groups = categoryGroupTotals(items);
+  if (groups.length === 0) return startY;
+  let y = sectionTitle(doc, startY, "Totales por categoría");
+  y = drawShareBar(doc, y, groups);
+  const rows: Array<Array<string | { text: string; color?: string; bold?: boolean }>> = [];
+  for (const group of groups) {
+    rows.push([
+      { text: group.label, color: group.color, bold: true },
+      String(group.count),
+      formatMoney(group.total),
+      `${(group.share * 100).toFixed(1)}%`,
+    ]);
+    for (const part of group.parts) {
+      rows.push([`   ${part.label}`, String(part.count), formatMoney(part.total), ""]);
+    }
+  }
+  return drawTable(
+    doc,
+    y,
+    [
+      { header: "Categoría", width: 58 },
+      { header: "Comprobantes", width: 22, align: "right" },
+      { header: "Total", width: 28, align: "right" },
+      { header: "%", width: 14, align: "right" },
+    ],
+    rows,
+    ["Total", String(groups.reduce((sum, group) => sum + group.count, 0)), formatMoney(grand), "100%"]
+  );
+}
+
 function categoryBreakdown(bucket: SpendBucket) {
   return [...bucket.segments]
     .sort((a, b) => b.total - a.total)
@@ -351,6 +389,7 @@ export async function buildExpenseReportPdf(report: ExpenseReport) {
       ],
       ["Días con gasto", `${insights.activeDays} de ${insights.days}`],
     ]);
+    y = drawCategoryTotals(doc, y, report.items, balance.spent);
     y = sectionTitle(doc, y, "Gasto en el tiempo");
     y = drawSpendBars(doc, y, insights.buckets);
   }
@@ -520,6 +559,15 @@ export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
     drawBrandedFooter(doc);
     return doc;
   }
+
+  y = drawCategoryTotals(
+    doc,
+    y,
+    options.entries.map((entry) => entry.item),
+    summary.total
+  );
+  y = sectionTitle(doc, y, "Gasto en el tiempo");
+  y = drawSpendBars(doc, y, insights.buckets);
 
   y = sectionTitle(doc, y, "Por tipo de gasto");
   y = drawTable(

@@ -119,6 +119,82 @@ export function summarize(entries: ExpenseEntry[]): ExpenseSummary {
   };
 }
 
+const TRANSPORT_CATEGORIES = new Set([
+  "transporte_aereo",
+  "transporte_terrestre",
+  "renta_auto",
+  "combustible",
+  "casetas",
+  "estacionamiento",
+]);
+
+export type CategoryGroupTotal = {
+  id: string;
+  label: string;
+  color: string;
+  count: number;
+  total: number;
+  share: number;
+  parts: Array<{ label: string; total: number; count: number }>;
+};
+
+function categoryTotalLabel(id: string, name: string) {
+  if (id === "hospedaje") return "Total de hotel";
+  if (id === "alimentos") return "Total de alimentos";
+  if (id === "transporte") return "Total de transporte";
+  return `Total de ${name.charAt(0).toLowerCase()}${name.slice(1)}`;
+}
+
+/** Totales que se leen en el PDF: hotel, alimentos, transporte y el resto de categorías. */
+export function categoryGroupTotals(items: Array<Pick<ExpenseItem, "category" | "total">>): CategoryGroupTotal[] {
+  const grand = items.reduce((sum, item) => sum + item.total, 0);
+  const byCategory = new Map<string, { total: number; count: number }>();
+  for (const item of items) {
+    const row = byCategory.get(item.category) ?? { total: 0, count: 0 };
+    row.total += item.total;
+    row.count += 1;
+    byCategory.set(item.category, row);
+  }
+
+  const groups = new Map<string, CategoryGroupTotal>();
+  const ensure = (id: string, name: string, color: string) => {
+    let group = groups.get(id);
+    if (!group) {
+      group = { id, label: categoryTotalLabel(id, name), color, count: 0, total: 0, share: 0, parts: [] };
+      groups.set(id, group);
+    }
+    return group;
+  };
+
+  for (const [category, row] of byCategory) {
+    const grouped = TRANSPORT_CATEGORIES.has(category);
+    const group = grouped
+      ? ensure("transporte", "Transporte", "#14B8A6")
+      : ensure(category, categoryLabel(category), categoryColor(category));
+    group.total += row.total;
+    group.count += row.count;
+    if (grouped) {
+      group.parts.push({ label: categoryLabel(category), total: Math.round(row.total * 100) / 100, count: row.count });
+    }
+  }
+
+  const preferred = ["alimentos", "hospedaje", "transporte"];
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      total: Math.round(group.total * 100) / 100,
+      share: grand > 0 ? group.total / grand : 0,
+      parts: group.parts.sort((a, b) => b.total - a.total),
+    }))
+    .filter((group) => group.count > 0)
+    .sort((a, b) => {
+      const ai = preferred.indexOf(a.id);
+      const bi = preferred.indexOf(b.id);
+      if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      return b.total - a.total;
+    });
+}
+
 export type SpendGrain = "day" | "week" | "month";
 
 export type SpendSegment = {

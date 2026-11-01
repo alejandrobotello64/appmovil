@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { exportExpenseSummaryPdf, type PdfOutput } from "@/lib/expenses/pdf";
 import {
   EXPENSE_KIND_COLORS,
+  categoryGroupTotals,
   filterEntries,
   grainPeakLabel,
   grainSeriesLabel,
@@ -82,6 +83,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
   const entries = useMemo(() => filterEntries(reports, filters), [reports, filters]);
   const summary = useMemo(() => summarize(entries), [entries]);
   const insights = useMemo(() => spendInsights(entries, filters.from, filters.to), [entries, filters.from, filters.to]);
+  const categoryGroups = useMemo(() => categoryGroupTotals(entries.map((entry) => entry.item)), [entries]);
   const kindsInRange = new Set(insights.buckets.flatMap((bucket) => bucket.kinds.map((kind) => kind.kind))).size;
 
   function patch(values: Partial<SummaryFilters>) {
@@ -375,8 +377,33 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
           </div>
 
           <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <h3 className="font-semibold">Por categoría, en conjunto</h3>
-            <p className="mb-3 text-sm text-muted-foreground">Participación y promedio de cada categoría en el periodo.</p>
+            <h3 className="font-semibold">Totales por categoría</h3>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Hotel, alimentos, transporte y el resto. El PDF de descarga trae los mismos totales.
+            </p>
+            {categoryGroups.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">Sin gastos en el periodo.</p>
+            ) : (
+              <ul className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {categoryGroups.map((group) => (
+                  <li key={group.id} className="rounded-xl border border-border px-3 py-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
+                        <CategoryDot color={group.color} />
+                        <span className="truncate">{group.label}</span>
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">{formatMoney(group.total)}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {group.count} {group.count === 1 ? "comprobante" : "comprobantes"} · {(group.share * 100).toFixed(0)}%
+                      {group.parts.length > 1
+                        ? ` · ${group.parts.map((part) => `${part.label} ${formatMoney(part.total)}`).join(" · ")}`
+                        : ""}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
             <CategoryShare rows={summary.byCategory} />
           </section>
 
