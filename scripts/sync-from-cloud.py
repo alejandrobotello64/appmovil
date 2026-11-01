@@ -178,6 +178,10 @@ def insert_rows(table: str, columns: list[str], rows: list[dict]) -> None:
     if not usable:
         return
     filtered = [{column: row.get(column) for column in usable} for row in rows]
+    if table == "purchase_request_lines":
+        for row in filtered:
+            if row.get("quantity_requested") is None:
+                row["quantity_requested"] = row.get("quantity") or row.get("quantity_ordered") or 1
     col_sql = ", ".join(quote_ident(column) for column in usable)
     sql = f"""
 set session_replication_role = replica;

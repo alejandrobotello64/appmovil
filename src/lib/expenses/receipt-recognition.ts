@@ -27,6 +27,8 @@ const CLAVE_CATEGORIES: Array<[string, ExpenseCategoryId]> = [
   ["9010", "alimentos"],
   ["781115", "transporte_aereo"],
   ["781118", "transporte_terrestre"],
+  ["781018", "transporte_terrestre"],
+  ["781016", "transporte_terrestre"],
   ["781015", "transporte_terrestre"],
   ["781815", "renta_auto"],
   ["151015", "combustible"],
@@ -52,12 +54,12 @@ const CLAVE_CATEGORIES: Array<[string, ExpenseCategoryId]> = [
 
 const TEXT_CATEGORIES: Array<[RegExp, ExpenseCategoryId]> = [
   [/hosped|hotel|motel|hostal|alojamiento|habitacion/, "hospedaje"],
-  [/vuelo|boleto de avion|aerolinea|transporte aereo/, "transporte_aereo"],
+  [/vuelo|boleto de avion|aerolinea|transporte aereo|viajes en aviones/, "transporte_aereo"],
+  [/transporte de pasajeros|servicios privados de transporte|taxi|uber|didi|cabify|indrive|autobus|transporte terrestre/, "transporte_terrestre"],
   [/renta de auto|arrendamiento de vehiculo|alquiler de auto|renta de vehiculo/, "renta_auto"],
   [/gasolina|diesel|combustible|magna|premium/, "combustible"],
   [/caseta|peaje/, "casetas"],
   [/estacionamiento/, "estacionamiento"],
-  [/taxi|uber|didi|autobus|transporte terrestre/, "transporte_terrestre"],
   [/alimento|restaurant|restaurante|comida|consumo de alimentos/, "alimentos"],
   [/arrendamiento de inmueble|renta de local|renta de oficina|renta de bodega/, "renta"],
   [/energia electrica|servicio de luz|agua potable|gas natural|suministro de energia/, "servicios"],
@@ -175,6 +177,60 @@ function isTaxOnlyConcept(description: string) {
   if (product && !/^impuesto\b/.test(n)) return false;
   if (/^(impuesto|ish|ieps|iva|isr)\b/.test(n) && !product) return true;
   return false;
+}
+
+const BOILERPLATE =
+  /representacion impresa|efectos fiscales|sello digital|sello del sat|cadena original|este documento es|pagina \d+ de \d+|complemento de certificacion/;
+
+function isBoilerplate(line: string) {
+  return BOILERPLATE.test(stripAccents(line));
+}
+
+function platformBrand(text: string) {
+  const n = stripAccents(text);
+  if (/\buber\b/.test(n)) return "Uber";
+  if (/\bdidi\b/.test(n)) return "Didi";
+  if (/\bcabify\b/.test(n)) return "Cabify";
+  if (/\bindrive\b|\bin drive\b/.test(n)) return "inDrive";
+  return "";
+}
+
+function isPassengerTransport(text: string) {
+  return /transporte de pasajeros|servicios privados de transporte|alquiler de vehiculos/.test(stripAccents(text));
+}
+
+function genericRideConcept(text: string) {
+  return /^(tarifa|tarifas|servicio|servicios|viaje|trip|concepto)$/.test(stripAccents(text).trim());
+}
+
+/** Facturify y otras plataformas dejan el concepto en "Tarifa". El viaje sí es transporte. */
+function rideConcept(
+  description: string,
+  context: string,
+  driver: string,
+  category: ExpenseCategoryId | null,
+) {
+  const brand = platformBrand(`${description}\n${context}`);
+  const transport = category === "transporte_terrestre" || isPassengerTransport(`${description}\n${context}`) || Boolean(brand);
+  const weak =
+    !description ||
+    genericRideConcept(description) ||
+    isBoilerplate(description) ||
+    (isPassengerTransport(description) && description.length < 90 && !/[–—]/.test(description));
+  if (!transport || !weak) return description;
+  const title = brand ? `Viaje ${brand}` : "Transporte de pasajeros";
+  const cleanDriver = driver.replace(/\s+/g, " ").trim();
+  return cleanDriver ? `${title} · ${cleanDriver}` : title;
+}
+
+function thirdPartyName(xml: string) {
+  const attrs = readAttrs(tagBodies(xml, "ACuentaTerceros")[0] ?? "");
+  return (attrs.nombreacuentaterceros ?? "").replace(/\s+/g, " ").trim();
+}
+
+function driverFromText(flat: string) {
+  const match = flat.match(/por cuenta del tercero:\s*[A-ZÑ&\d]+\s*\|\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]{3,80})/i);
+  return match?.[1]?.replace(/\s+/g, " ").trim() ?? "";
 }
 
 function winningCategory(votes: Map<ExpenseCategoryId, number>) {
@@ -309,11 +365,13 @@ export function recognizeExpenseReceipt(xml: string): ReceiptFill {
 
   const fecha = comprobante.fecha ?? "";
   const expenseDate = /^\d{4}-\d{2}-\d{2}/.test(fecha) ? fecha.slice(0, 10) : "";
+  const category = winningCategory(votes);
+  const rawConcept = concepts.join(" · ");
 
   return {
     taxType: collectTaxLabels(xml),
-    category: winningCategory(votes),
-    concept: concepts.join(" · ").slice(0, 180),
+    category,
+    concept: rideConcept(rawConcept, `${rawConcept}\n${emisor.nombre ?? ""}`, thirdPartyName(xml), category).slice(0, 180),
     supplierName: (emisor.nombre ?? "").replace(/\s+/g, " ").trim().slice(0, 120),
     supplierRfc: (emisor.rfc ?? "").toUpperCase(),
     invoiceNumber: serie && folio ? `${serie}-${folio}` : serie || folio,
@@ -374,7 +432,7 @@ function looksLikeCompany(line: string) {
 }
 
 const PDF_HEADER =
-  /rfc|folio|fecha|uuid|emisor|receptor|regimen|codigo postal|moneda|metodo|forma de pago|uso cfdi|subtotal|total|sello|certificado|lugar de expedicion|\bcp\b|domicilio/;
+  /rfc|folio|fecha|uuid|emisor|receptor|regimen|codigo postal|moneda|metodo|forma de pago|uso cfdi|subtotal|total|sello|certificado|lugar de expedicion|\bcp\b|domicilio|representacion impresa|efectos fiscales|cadena original/;
 
 function conceptFromLines(lines: string[]) {
   for (const line of lines) {
@@ -383,7 +441,7 @@ function conceptFromLines(lines: string[]) {
   }
   const candidates = lines.filter((line) => {
     if (line.length < 6 || line.length > 140) return false;
-    if (PDF_HEADER.test(stripAccents(line))) return false;
+    if (PDF_HEADER.test(stripAccents(line)) || isBoilerplate(line)) return false;
     if (isTaxOnlyConcept(line) || looksLikeCompany(line)) return false;
     return /[a-zA-ZáéíóúñÁÉÍÓÚÑ]{4}/.test(line);
   });
@@ -401,7 +459,8 @@ function taxesFromLines(lines: string[]): TextTax[] {
     if (/\bsubtotal\b/.test(n) || (/^\s*total\b/.test(n) && !/impuesto/.test(n))) continue;
     const rate = n.match(/(\d+(?:[.,]\d+)?)\s*%/);
     const pct = rate ? localPercentLabel(rate[1].replace(",", ".")) : "";
-    const amount = lastMoney(line);
+    const keyword = line.match(/\b(?:iva|ieps|isr|ish|predial|n[oó]mina|saneamiento|cedular|impuesto)\b/i);
+    const amount = keyword ? lastMoney(line.slice(keyword.index ?? 0)) : lastMoney(line);
     const retained = /retenid/.test(n);
     let label = "";
     if (/\bieps\b/.test(n)) label = `IEPS${pct}`;
@@ -413,8 +472,16 @@ function taxesFromLines(lines: string[]): TextTax[] {
     else if (/nomina/.test(n)) label = `Impuesto sobre nómina${pct}`;
     else if (/saneamiento/.test(n)) label = `Derechos de saneamiento${pct}`;
     else if (/cedular/.test(n)) label = `Impuesto cedular${pct}`;
-    if (!label || found.some((item) => item.label === label)) continue;
-    found.push({ label, amount: label.endsWith("exento") ? 0 : amount, retained });
+    if (!label) continue;
+    const family = label.split(" ")[0] ?? label;
+    const existing = found.find((item) => (item.label.split(" ")[0] ?? item.label) === family && item.retained === retained);
+    const nextAmount = label.endsWith("exento") ? 0 : amount;
+    if (existing) {
+      if (existing.amount == null && nextAmount != null) existing.amount = nextAmount;
+      if (pct && !/\d/.test(existing.label)) existing.label = label;
+      continue;
+    }
+    found.push({ label, amount: nextAmount, retained });
   }
   return found;
 }
@@ -434,9 +501,10 @@ export function recognizeExpenseText(text: string): ReceiptFill {
   const flat = lines.join("\n");
   const fill = blankFill();
 
-  fill.cfdiUuid = (
-    flat.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/)?.[0] ?? ""
-  ).toUpperCase();
+  const uuid = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
+  const fiscalUuid = flat.match(new RegExp(`folio fiscal\\s*[:\\-]?\\s*(${uuid.source})`, "i"));
+  const withoutTrip = flat.replace(/trip uuid\s*:\s*[0-9a-fA-F-]{36}/gi, " ");
+  fill.cfdiUuid = (fiscalUuid?.[1] ?? withoutTrip.match(uuid)?.[0] ?? "").toUpperCase();
 
   const labeledRfc = flat.match(/rfc(?:\s+del)?(?:\s+emisor)?\s*[:\-]?\s*([A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3})/i);
   fill.supplierRfc = (labeledRfc?.[1] ?? flat.match(/\b[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}\b/i)?.[0] ?? "").toUpperCase();
@@ -452,10 +520,13 @@ export function recognizeExpenseText(text: string): ReceiptFill {
     if (previous && !PDF_HEADER.test(stripAccents(previous))) fill.supplierName = previous.slice(0, 120);
   }
 
+  const factura = flat.match(/\bfactura[^\S\n]*[:#][^\S\n]*([A-Z0-9]+(?:-[A-Z0-9]+)*)/i);
   const serieFolio = flat.match(
     /serie\s*(?:y|&|\/)?\s*folio\s*[:#\-]?\s*([A-Z0-9]{1,10})(?:\s*[- ]\s*([A-Z0-9]{1,15}))?/i,
   );
-  if (serieFolio && !/fiscal/i.test(serieFolio[0])) {
+  if (factura && !/fiscal/i.test(factura[0])) {
+    fill.invoiceNumber = factura[1];
+  } else if (serieFolio && !/fiscal/i.test(serieFolio[0])) {
     fill.invoiceNumber = serieFolio[2] ? `${serieFolio[1]}-${serieFolio[2]}` : serieFolio[1];
   } else {
     const folio = flat.match(/\bfolio(?!\s+fiscal)\s*[:#\-]\s*([A-Z0-9][A-Z0-9-]{0,20})/i);
@@ -467,7 +538,8 @@ export function recognizeExpenseText(text: string): ReceiptFill {
   );
   fill.expenseDate = date ? normalizeDate(date[1]) : "";
 
-  fill.concept = conceptFromLines(lines);
+  const rawConcept = conceptFromLines(lines);
+  fill.concept = rideConcept(rawConcept, flat, driverFromText(flat), categoryFromText(flat)).slice(0, 180);
   fill.category = categoryFromText(fill.concept) ?? categoryFromText(flat);
   fill.subtotal = amountOnLabel(lines, /\bsub\s*-?\s*total\b/);
   fill.total = amountOnLabel(
