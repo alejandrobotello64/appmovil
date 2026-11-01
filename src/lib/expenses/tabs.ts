@@ -4,7 +4,7 @@ export const EXPENSE_TABS = [
   {
     id: "resumen",
     label: "Resumen y reportes",
-    description: "Totales por tipo, categoría y colaborador; impresión de reportes",
+    description: "Gráficas, promedio diario y desglose por tipo, en conjunto y por fecha",
     href: "/dashboard/gastos?tab=resumen",
   },
   {

@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
 import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
-import { summarize, type ExpenseEntry } from "./summary";
+import { grainPeakLabel, spendInsights, summarize, type ExpenseEntry, type SpendBucket } from "./summary";
 import { isReceiptImageName } from "./receipt-file";
 import {
   balanceLabel,
@@ -321,9 +321,21 @@ export type SummaryPdfOptions = {
   reports: ExpenseReport[];
   periodLabel: string;
   filterLines: string[];
+  from?: string;
+  to?: string;
   includeItems: boolean;
   output?: PdfOutput;
 };
+
+function chronologyNote(bucket: SpendBucket) {
+  return bucket.kinds
+    .map((kind) => {
+      const top = [...kind.categories].sort((a, b) => b.total - a.total).slice(0, 2);
+      const detail = top.map((item) => item.label).join(", ");
+      return detail ? `${kind.label}: ${detail}` : kind.label;
+    })
+    .join(" · ");
+}
 
 export async function exportExpenseSummaryPdf(options: SummaryPdfOptions) {
   await finish(await buildExpenseSummaryPdf(options), "resumen-gastos.pdf", options.output ?? "download");
@@ -333,6 +345,7 @@ export async function exportExpenseSummaryPdf(options: SummaryPdfOptions) {
 export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const summary = summarize(options.entries);
+  const insights = spendInsights(options.entries, options.from ?? "", options.to ?? "");
   let y = await drawBrandedHeader(doc, {
     title: "Resumen de gastos",
     rightLines: [options.periodLabel, `Generado ${formatDate(todayIso())}`],
@@ -355,6 +368,15 @@ export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
     ["Comprobantes", String(summary.count)],
     ["Con factura", formatMoney(summary.invoiced)],
     ["Sin factura", formatMoney(summary.withoutInvoice)],
+  ]);
+  y = drawKpis(doc, y, [
+    ["Promedio diario", formatMoney(insights.dailyAverage)],
+    ["Por comprobante", summary.count > 0 ? formatMoney(insights.perReceipt) : "—"],
+    [
+      grainPeakLabel(insights.grain),
+      insights.peak ? `${insights.peak.label} · ${formatMoney(insights.peak.total)}` : "—",
+    ],
+    ["Días con gasto", `${insights.activeDays} de ${insights.days}`],
   ]);
 
   if (summary.count === 0) {
@@ -420,6 +442,27 @@ export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
     ],
     summary.byEmployee.map((row) => [row.name, String(row.reports), String(row.count), formatMoney(row.total)])
   );
+
+  const chronology = insights.buckets.filter((bucket) => bucket.count > 0);
+  if (chronology.length > 0) {
+    y = sectionTitle(doc, y, "Cronología por tipo de gasto");
+    y = drawTable(
+      doc,
+      y,
+      [
+        { header: "Periodo", width: 28 },
+        { header: "Gastos", width: 14, align: "right" },
+        { header: "Total", width: 24, align: "right" },
+        { header: "Principales", width: 70 },
+      ],
+      chronology.map((bucket) => [
+        bucket.label,
+        String(bucket.count),
+        formatMoney(bucket.total),
+        chronologyNote(bucket),
+      ])
+    );
+  }
 
   const reportTotals = new Map<string, number>();
   for (const entry of options.entries) {

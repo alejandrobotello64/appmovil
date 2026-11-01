@@ -4,7 +4,15 @@ import { useMemo, useState } from "react";
 import { FileDown, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportExpenseSummaryPdf, type PdfOutput } from "@/lib/expenses/pdf";
-import { filterEntries, summarize, type SummaryFilters } from "@/lib/expenses/summary";
+import {
+  EXPENSE_KIND_COLORS,
+  filterEntries,
+  grainPeakLabel,
+  grainSeriesLabel,
+  spendInsights,
+  summarize,
+  type SummaryFilters,
+} from "@/lib/expenses/summary";
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_KINDS,
@@ -21,16 +29,10 @@ import {
   type ExpenseStatus,
 } from "@/lib/expenses/types";
 import { cn } from "@/lib/utils";
-import { CategoryBars, CategoryDot, Field, KpiCard, ReceiptFileLink, inputClass } from "./expense-ui";
+import { CategoryShare, SpendChronology, SpendTimeline } from "./expense-charts";
+import { CategoryDot, Field, KpiCard, ReceiptFileLink, inputClass } from "./expense-ui";
 import { useExpenseReports, type ExpenseViewer } from "./use-expense-reports";
 import { SortableTable } from "@/components/ui/sortable-table";
-
-const KIND_COLORS: Record<ExpenseKind, string> = {
-  viaticos: "#3B46A5",
-  corriente: "#00BFFF",
-  caja_chica: "#14B8A6",
-  otros: "#A3A3A3",
-};
 
 const DETAIL_LIMIT = 300;
 
@@ -79,6 +81,8 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
   );
   const entries = useMemo(() => filterEntries(reports, filters), [reports, filters]);
   const summary = useMemo(() => summarize(entries), [entries]);
+  const insights = useMemo(() => spendInsights(entries, filters.from, filters.to), [entries, filters.from, filters.to]);
+  const kindsInRange = new Set(insights.buckets.flatMap((bucket) => bucket.kinds.map((kind) => kind.kind))).size;
 
   function patch(values: Partial<SummaryFilters>) {
     setFilters((prev) => ({ ...prev, ...values }));
@@ -108,9 +112,11 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
       await exportExpenseSummaryPdf({
         entries,
         reports,
-        periodLabel: `${formatDate(filters.from)} – ${formatDate(filters.to)}`,
-        filterLines: filterLines(),
-        includeItems,
+            periodLabel: `${formatDate(filters.from)} – ${formatDate(filters.to)}`,
+            filterLines: filterLines(),
+            from: filters.from,
+            to: filters.to,
+            includeItems,
         output,
       });
     } catch (err) {
@@ -129,7 +135,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
           <div>
             <h2 className="text-lg font-semibold">Resumen de gastos</h2>
             <p className="text-sm text-muted-foreground">
-              Totales por fecha del gasto. Filtra y descarga o imprime el reporte.
+              Totales, gráficas y desglose por tipo de gasto. Filtra y descarga o imprime el reporte.
               {!viewer.seeAll ? " Solo incluye tus registros." : ""}
             </p>
           </div>
@@ -268,7 +274,49 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <KpiCard
+              label="Promedio diario"
+              value={formatMoney(insights.dailyAverage)}
+              hint={
+                insights.activeDays > 0
+                  ? `En días con gasto: ${formatMoney(insights.activeDayAverage)}`
+                  : "Sin comprobantes en el periodo"
+              }
+            />
+            <KpiCard
+              label="Promedio por comprobante"
+              value={summary.count > 0 ? formatMoney(insights.perReceipt) : "—"}
+              hint={summary.count > 0 ? `${summary.count} ${summary.count === 1 ? "comprobante" : "comprobantes"}` : "Sin comprobantes"}
+            />
+            <KpiCard
+              label={grainPeakLabel(insights.grain)}
+              value={insights.peak ? insights.peak.label : "—"}
+              hint={insights.peak ? formatMoney(insights.peak.total) : "Sin gastos en el periodo"}
+            />
+            <KpiCard
+              label="Días con gasto"
+              value={`${insights.activeDays} de ${insights.days}`}
+              hint={`${insights.days} días en el filtro`}
+            />
+          </div>
+
+          <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <h3 className="font-semibold">Gasto en el tiempo</h3>
+            <p className="mb-3 text-sm text-muted-foreground">
+              {grainSeriesLabel(insights.grain)}{" "}
+              {kindsInRange > 1
+                ? "Las barras apilan viáticos, corrientes, caja chica y otros."
+                : "Las barras apilan las categorías del periodo."}
+            </p>
+            <SpendTimeline
+              buckets={insights.buckets}
+              byKind={kindsInRange > 1}
+              caption={`Gasto ${kindsInRange > 1 ? "por tipo" : "por categoría"}, ${grainSeriesLabel(insights.grain)}`}
+            />
+          </section>
+
+          <div className="grid gap-4 lg:grid-cols-2">
             <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <h3 className="mb-3 font-semibold">Por tipo de gasto</h3>
               {summary.byKind.length === 0 ? (
@@ -279,30 +327,28 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
                     <li key={row.kind} className="text-sm">
                       <div className="flex items-center justify-between gap-3">
                         <span className="flex items-center gap-2">
-                          <CategoryDot color={KIND_COLORS[row.kind]} />
+                          <CategoryDot color={EXPENSE_KIND_COLORS[row.kind]} />
                           {row.label}
-                          <span className="text-xs text-muted-foreground">({row.reports})</span>
                         </span>
                         <span className="font-medium tabular-nums">
                           {formatMoney(row.total)}{" "}
                           <span className="text-xs font-normal text-muted-foreground">{(row.share * 100).toFixed(0)}%</span>
                         </span>
                       </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {row.reports} registros · {row.count} comprobantes · prom.{" "}
+                        {formatMoney(row.count > 0 ? row.total / row.count : 0)}
+                      </p>
                       <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full rounded-full"
-                          style={{ width: `${Math.max((row.total / maxKind) * 100, 2)}%`, background: KIND_COLORS[row.kind] }}
+                          style={{ width: `${Math.max((row.total / maxKind) * 100, 2)}%`, background: EXPENSE_KIND_COLORS[row.kind] }}
                         />
                       </div>
                     </li>
                   ))}
                 </ul>
               )}
-            </section>
-
-            <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <h3 className="mb-3 font-semibold">Por categoría</h3>
-              <CategoryBars rows={summary.byCategory} emptyMessage="Sin gastos en el periodo." />
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -317,6 +363,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
                         <span className="block truncate">{row.name}</span>
                         <span className="text-xs text-muted-foreground">
                           {row.reports} registros · {row.count} comprobantes
+                          {row.count > 0 ? ` · prom. ${formatMoney(row.total / row.count)}` : ""}
                         </span>
                       </span>
                       <span className="shrink-0 font-medium tabular-nums">{formatMoney(row.total)}</span>
@@ -326,6 +373,20 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
               )}
             </section>
           </div>
+
+          <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <h3 className="font-semibold">Por categoría, en conjunto</h3>
+            <p className="mb-3 text-sm text-muted-foreground">Participación y promedio de cada categoría en el periodo.</p>
+            <CategoryShare rows={summary.byCategory} />
+          </section>
+
+          <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <h3 className="font-semibold">Cronología por tipo de gasto</h3>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Cada periodo muestra el total y, dentro de cada tipo, las categorías que lo componen.
+            </p>
+            <SpendChronology buckets={insights.buckets} />
+          </section>
 
           <section className="rounded-2xl border border-border bg-card shadow-sm">
             <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
