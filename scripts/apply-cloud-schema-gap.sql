@@ -206,6 +206,54 @@ grant execute on function public.open_box_to_pieces(
   uuid, uuid, integer, integer, uuid, uuid, text, date, text, text
 ) to anon, authenticated;
 
+alter table public.expense_items
+  add column if not exists tax_type text not null default '';
+
+comment on column public.expense_items.tax_type is
+  'Tipo de impuesto leído del CFDI: IVA, IEPS, ISR retenido o impuesto sobre hospedaje.';
+
+do $$
+begin
+  if to_regclass('storage.buckets') is null then
+    return;
+  end if;
+  insert into storage.buckets (id, name, public)
+  values
+    ('expense-receipts', 'expense-receipts', true),
+    ('inventory-media', 'inventory-media', true),
+    ('sales-catalog', 'sales-catalog', true)
+  on conflict (id) do update
+    set public = true;
+end $$;
+
+do $$
+declare
+  op text;
+begin
+  if to_regclass('storage.objects') is null then
+    return;
+  end if;
+  foreach op in array array['select', 'insert', 'update', 'delete'] loop
+    if not exists (
+      select 1 from pg_policies
+      where schemaname = 'storage' and tablename = 'objects'
+        and policyname = 'expense_receipts_' || op
+    ) then
+      if op = 'insert' then
+        execute format(
+          'create policy %I on storage.objects for insert with check (bucket_id = %L)',
+          'expense_receipts_' || op, 'expense-receipts'
+        );
+      else
+        execute format(
+          'create policy %I on storage.objects for %s using (bucket_id = %L)',
+          'expense_receipts_' || op, op, 'expense-receipts'
+        );
+      end if;
+    end if;
+  end loop;
+end $$;
+
 notify pgrst, 'reload schema';
 
 commit;
