@@ -21,6 +21,7 @@ import {
   deleteBiomedicalInstrument,
   getBiomedicalInstruments,
   listInstrumentServiceUses,
+  scheduleInstrumentCalibration,
   updateBiomedicalInstrument,
   uploadBiomedicalInstrumentCertificate,
   uploadBiomedicalInstrumentImage,
@@ -51,6 +52,7 @@ function emptyForm(): BiomedicalInstrumentInput {
     notes: "",
     certificateNumber: "",
     certificateExpiresAt: "",
+    nextCalibrationAt: "",
     isActive: true,
   };
 }
@@ -157,6 +159,7 @@ export function BiomedicalInstrumentsPanel() {
       notes: item.notes,
       certificateNumber: item.certificateNumber,
       certificateExpiresAt: item.certificateExpiresAt,
+      nextCalibrationAt: item.nextCalibrationAt,
       isActive: item.isActive,
     });
     setPendingImage(null);
@@ -437,6 +440,19 @@ export function BiomedicalInstrumentsPanel() {
               }
             />
           </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-muted-foreground">
+              Próxima calibración
+            </span>
+            <input
+              type="date"
+              className={fieldClass}
+              value={form.nextCalibrationAt ?? ""}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, nextCalibrationAt: e.target.value }))
+              }
+            />
+          </label>
           <label className="flex items-center gap-2 self-end pb-2 text-sm">
             <input
               type="checkbox"
@@ -579,6 +595,11 @@ export function BiomedicalInstrumentsPanel() {
                 <p className="text-xs text-[#3B46A5]">
                   {serviceCount} {serviceCount === 1 ? "servicio" : "servicios"}
                 </p>
+                <p className={cn("text-xs", item.nextCalibrationAt && item.nextCalibrationAt < new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(new Date()) ? "text-amber-700" : "text-muted-foreground")}>
+                  {item.nextCalibrationAt
+                    ? `Próxima calibración ${item.nextCalibrationAt.slice(8, 10)}/${item.nextCalibrationAt.slice(5, 7)}/${item.nextCalibrationAt.slice(0, 4)}`
+                    : "Sin fecha de calibración"}
+                </p>
               </div>
               </button>
               <div className="space-y-2 px-4 pb-4">
@@ -702,6 +723,26 @@ export function BiomedicalInstrumentsPanel() {
             const current = selected;
             setSelected(null);
             openEdit(current);
+          }}
+          onSchedule={async (date) => {
+            if (!selected) return;
+            const saved = await updateBiomedicalInstrument(selected.id, {
+              instrumentType: selected.instrumentType,
+              name: selected.name,
+              brand: selected.brand,
+              model: selected.model,
+              serialNumber: selected.serialNumber,
+              assetTag: selected.assetTag,
+              location: selected.location,
+              notes: selected.notes,
+              certificateNumber: selected.certificateNumber,
+              certificateExpiresAt: selected.certificateExpiresAt,
+              nextCalibrationAt: date,
+              isActive: selected.isActive,
+            });
+            const scheduled = await scheduleInstrumentCalibration(saved, actor);
+            setSelected(scheduled);
+            setItems((current) => current.map((row) => (row.id === scheduled.id ? scheduled : row)));
           }}
         />
       ) : null}

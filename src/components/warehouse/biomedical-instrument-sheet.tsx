@@ -1,6 +1,7 @@
 "use client";
 
-import { FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CalendarPlus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
@@ -61,6 +62,7 @@ export function BiomedicalInstrumentSheet({
   canEdit,
   onClose,
   onEdit,
+  onSchedule,
 }: {
   item: BiomedicalInstrument;
   uses: InstrumentServiceUse[];
@@ -68,7 +70,14 @@ export function BiomedicalInstrumentSheet({
   canEdit: boolean;
   onClose: () => void;
   onEdit: () => void;
+  onSchedule: (date: string) => Promise<void>;
 }) {
+  const [calibrationDate, setCalibrationDate] = useState(item.nextCalibrationAt);
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleNote, setScheduleNote] = useState("");
+  useEffect(() => {
+    setCalibrationDate(item.nextCalibrationAt);
+  }, [item.id, item.nextCalibrationAt]);
   const history = usesForInstrument(item, uses);
   const today = todayIso();
   const expired = Boolean(item.certificateExpiresAt) && item.certificateExpiresAt < today;
@@ -119,6 +128,10 @@ export function BiomedicalInstrumentSheet({
             <Field label="Ubicación" value={item.location} />
             <Field label="Estado" value={item.isActive ? "Activo" : "Inactivo"} />
             <Field label="Certificado" value={certificateValue} />
+            <Field
+              label="Próxima calibración"
+              value={item.nextCalibrationAt ? formatIsoDate(item.nextCalibrationAt) : ""}
+            />
             <Field label="Registró" value={item.createdBy} />
           </dl>
         </div>
@@ -136,6 +149,51 @@ export function BiomedicalInstrumentSheet({
         ) : (
           <p className="text-sm text-muted-foreground">Sin PDF de certificación.</p>
         )}
+
+        <section className="rounded-xl border border-border p-3">
+          <h4 className="font-semibold">Próxima calibración</h4>
+          <p className="mt-1 text-sm text-muted-foreground">
+            La fecha queda en la ficha. Calendarizar la publica en el calendario, visible para Servicio.
+          </p>
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <label className="block text-sm">
+              <span className="mb-1 block text-muted-foreground">Fecha</span>
+              <input
+                type="date"
+                className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+                value={calibrationDate}
+                disabled={!canEdit || scheduling}
+                onChange={(event) => setCalibrationDate(event.target.value)}
+              />
+            </label>
+            <Button
+              type="button"
+              disabled={!canEdit || scheduling || !calibrationDate}
+              onClick={() => {
+                setScheduling(true);
+                setScheduleNote("");
+                void onSchedule(calibrationDate)
+                  .then(() => setScheduleNote("Quedó en el calendario del área de Servicio."))
+                  .catch((err: unknown) =>
+                    setScheduleNote(err instanceof Error ? err.message : "No se pudo calendarizar.")
+                  )
+                  .finally(() => setScheduling(false));
+              }}
+            >
+              <CalendarPlus className="size-4" />
+              {scheduling ? "Guardando…" : item.calibrationEventId ? "Actualizar en el calendario" : "Calendarizar"}
+            </Button>
+            {item.calibrationEventId ? (
+              <a href="/dashboard/calendario" className="text-sm text-[#3B46A5] hover:underline">
+                Ver calendario
+              </a>
+            ) : null}
+          </div>
+          {scheduleNote ? <p className="mt-2 text-sm text-muted-foreground">{scheduleNote}</p> : null}
+          {!canEdit ? (
+            <p className="mt-2 text-sm text-muted-foreground">Solo lectura: no puedes cambiar la fecha.</p>
+          ) : null}
+        </section>
 
         {item.notes ? (
           <div>

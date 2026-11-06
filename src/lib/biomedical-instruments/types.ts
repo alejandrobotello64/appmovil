@@ -36,6 +36,8 @@ export type BiomedicalInstrument = {
   certificateName: string;
   certificateNumber: string;
   certificateExpiresAt: string;
+  nextCalibrationAt: string;
+  calibrationEventId: string;
   isActive: boolean;
   createdBy: string;
   createdAt: string;
@@ -53,6 +55,7 @@ export type BiomedicalInstrumentInput = {
   notes?: string;
   certificateNumber?: string;
   certificateExpiresAt?: string;
+  nextCalibrationAt?: string;
   isActive?: boolean;
   createdBy?: string;
 };
