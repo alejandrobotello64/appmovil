@@ -16,7 +16,7 @@ export const SERVICE_ORDER_TABS = [
   {
     id: "instrumentos",
     label: "Simuladores y analizadores",
-    description: "Alta de equipos de prueba con foto y PDF de certificación",
+    description: "Ficha de cada equipo y los servicios en los que participó",
     href: "/dashboard/ordenes-servicio?tab=instrumentos",
   },
   {

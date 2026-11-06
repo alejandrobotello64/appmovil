@@ -62,3 +62,22 @@ export function biomedicalInstrumentTypeLabel(type: string) {
     BIOMEDICAL_INSTRUMENT_TYPES.find((t) => t.id === type)?.label ?? type
   );
 }
+
+/** Servicio en el que se usó un simulador o analizador. */
+export type InstrumentServiceUse = {
+  id: string;
+  serviceOrderId: string;
+  instrumentId: string | null;
+  instrumentSerial: string;
+  usageNotes: string;
+  folio: string;
+  status: string;
+  serviceType: string;
+  orderKind: string;
+  technician: string;
+  clientName: string;
+  equipmentName: string;
+  equipmentSerial: string;
+  receptionAt: string;
+  createdAt: string;
+};

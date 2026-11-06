@@ -20,6 +20,7 @@ import {
   createBiomedicalInstrument,
   deleteBiomedicalInstrument,
   getBiomedicalInstruments,
+  listInstrumentServiceUses,
   updateBiomedicalInstrument,
   uploadBiomedicalInstrumentCertificate,
   uploadBiomedicalInstrumentImage,
@@ -30,8 +31,10 @@ import {
   type BiomedicalInstrument,
   type BiomedicalInstrumentInput,
   type BiomedicalInstrumentType,
+  type InstrumentServiceUse,
 } from "@/lib/biomedical-instruments/types";
 import { cn } from "@/lib/utils";
+import { BiomedicalInstrumentSheet, usesForInstrument } from "./biomedical-instrument-sheet";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -63,6 +66,9 @@ export function BiomedicalInstrumentsPanel() {
     BiomedicalInstrumentType | "todos"
   >("todos");
   const [formOpen, setFormOpen] = useState(false);
+  const [selected, setSelected] = useState<BiomedicalInstrument | null>(null);
+  const [serviceUses, setServiceUses] = useState<InstrumentServiceUse[]>([]);
+  const [historyError, setHistoryError] = useState("");
   const [editing, setEditing] = useState<BiomedicalInstrument | null>(null);
   const [form, setForm] = useState<BiomedicalInstrumentInput>(emptyForm);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
@@ -75,8 +81,18 @@ export function BiomedicalInstrumentsPanel() {
   async function reload() {
     setLoading(true);
     setError("");
+    setHistoryError("");
     try {
-      setItems(await getBiomedicalInstruments({ includeInactive: true }));
+      const [nextItems, nextUses] = await Promise.all([
+        getBiomedicalInstruments({ includeInactive: true }),
+        listInstrumentServiceUses().catch((err: unknown) => {
+          setHistoryError(err instanceof Error ? err.message : "No se pudo cargar el historial.");
+          return [] as InstrumentServiceUse[];
+        }),
+      ]);
+      setItems(nextItems);
+      setServiceUses(nextUses);
+      setSelected((current) => nextItems.find((item) => item.id === current?.id) ?? current);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudieron cargar equipos."
@@ -469,8 +485,7 @@ export function BiomedicalInstrumentsPanel() {
             Simuladores y analizadores
           </h2>
           <p className="text-sm text-muted-foreground">
-            Alta de equipos de seguridad eléctrica, simuladores y analizadores.
-            Captura nombre, serie, foto y PDF de certificación.
+            Haz clic en un equipo para ver su ficha y los servicios en los que participó.
           </p>
         </div>
         {canCreate ? (
@@ -525,11 +540,18 @@ export function BiomedicalInstrumentsPanel() {
         </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((item) => (
+          {filtered.map((item) => {
+            const serviceCount = usesForInstrument(item, serviceUses).length;
+            return (
             <article
               key={item.id}
               className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
             >
+              <button
+                type="button"
+                onClick={() => setSelected(item)}
+                className="block w-full text-left transition-colors hover:bg-muted/40"
+              >
               <div className="aspect-[4/3] bg-muted/30">
                 {item.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -544,20 +566,22 @@ export function BiomedicalInstrumentsPanel() {
                   </div>
                 )}
               </div>
-              <div className="space-y-2 p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      {biomedicalInstrumentTypeLabel(item.instrumentType)}
-                      {!item.isActive ? " · Inactivo" : ""}
-                    </p>
-                    <h3 className="font-medium">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {[item.brand, item.model].filter(Boolean).join(" ")}
-                      {item.serialNumber ? ` · Serie ${item.serialNumber}` : ""}
-                    </p>
-                  </div>
-                </div>
+              <div className="space-y-1 p-4 pb-2">
+                <p className="text-xs text-muted-foreground">
+                  {biomedicalInstrumentTypeLabel(item.instrumentType)}
+                  {!item.isActive ? " · Inactivo" : ""}
+                </p>
+                <h3 className="font-medium">{item.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {[item.brand, item.model].filter(Boolean).join(" ")}
+                  {item.serialNumber ? ` · Serie ${item.serialNumber}` : ""}
+                </p>
+                <p className="text-xs text-[#3B46A5]">
+                  {serviceCount} {serviceCount === 1 ? "servicio" : "servicios"}
+                </p>
+              </div>
+              </button>
+              <div className="space-y-2 px-4 pb-4">
                 {item.certificateUrl ? (
                   <a
                     href={item.certificateUrl}
@@ -663,9 +687,24 @@ export function BiomedicalInstrumentsPanel() {
                 ) : null}
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
+      {selected ? (
+        <BiomedicalInstrumentSheet
+          item={selected}
+          uses={serviceUses}
+          historyError={historyError}
+          canEdit={canEdit}
+          onClose={() => setSelected(null)}
+          onEdit={() => {
+            const current = selected;
+            setSelected(null);
+            openEdit(current);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

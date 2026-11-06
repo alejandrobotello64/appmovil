@@ -3,6 +3,7 @@ import type {
   BiomedicalInstrument,
   BiomedicalInstrumentInput,
   BiomedicalInstrumentType,
+  InstrumentServiceUse,
 } from "./types";
 
 const MEDIA_BUCKET = "biomedical-instruments";
@@ -280,4 +281,56 @@ export async function clearBiomedicalInstrumentCertificate(
     .single();
   if (error) throw new Error(error.message);
   return mapRow(data);
+}
+
+function dateOrEmpty(value: unknown) {
+  if (!value) return "";
+  return String(value).slice(0, 10);
+}
+
+/** Órdenes de servicio donde se registró un simulador o analizador. */
+export async function listInstrumentServiceUses(): Promise<InstrumentServiceUse[]> {
+  const [linksRes, ordersRes] = await Promise.all([
+    db
+      .from("service_order_instruments")
+      .select("id, service_order_id, instrument_id, instrument_serial, usage_notes"),
+    db
+      .from("service_orders")
+      .select(
+        "id, folio, status, service_type, order_kind, technician, client_name, equipment_name, equipment_serial, reception_at, created_at"
+      ),
+  ]);
+  if (linksRes.error) throw new Error(linksRes.error.message);
+  if (ordersRes.error) throw new Error(ordersRes.error.message);
+
+  const orders = new Map<string, Record<string, unknown>>();
+  for (const row of ordersRes.data ?? []) {
+    orders.set(String(row.id), row);
+  }
+
+  const uses: InstrumentServiceUse[] = [];
+  for (const row of linksRes.data ?? []) {
+    const order = orders.get(String(row.service_order_id));
+    if (!order) continue;
+    uses.push({
+      id: String(row.id),
+      serviceOrderId: String(row.service_order_id),
+      instrumentId: row.instrument_id ? String(row.instrument_id) : null,
+      instrumentSerial: String(row.instrument_serial ?? ""),
+      usageNotes: String(row.usage_notes ?? ""),
+      folio: String(order.folio ?? ""),
+      status: String(order.status ?? ""),
+      serviceType: String(order.service_type ?? ""),
+      orderKind: String(order.order_kind ?? "servicio"),
+      technician: String(order.technician ?? ""),
+      clientName: String(order.client_name ?? ""),
+      equipmentName: String(order.equipment_name ?? ""),
+      equipmentSerial: String(order.equipment_serial ?? ""),
+      receptionAt: dateOrEmpty(order.reception_at) || dateOrEmpty(order.created_at),
+      createdAt: String(order.created_at ?? ""),
+    });
+  }
+  return uses.sort(
+    (a, b) => b.receptionAt.localeCompare(a.receptionAt) || b.folio.localeCompare(a.folio)
+  );
 }
