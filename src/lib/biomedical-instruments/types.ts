@@ -84,3 +84,18 @@ export type InstrumentServiceUse = {
   receptionAt: string;
   createdAt: string;
 };
+
+/** Servicios del equipo, por id o por serie cuando el vínculo no guardó el id. */
+export function usesForInstrument(item: BiomedicalInstrument, uses: InstrumentServiceUse[]) {
+  const serial = item.serialNumber.trim().toLowerCase();
+  const seen = new Set<string>();
+  return uses.filter((use) => {
+    const byId = use.instrumentId === item.id;
+    const bySerial =
+      !use.instrumentId && serial.length > 0 && use.instrumentSerial.trim().toLowerCase() === serial;
+    if (!byId && !bySerial) return false;
+    if (seen.has(use.serviceOrderId)) return false;
+    seen.add(use.serviceOrderId);
+    return true;
+  });
+}

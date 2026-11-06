@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
   biomedicalInstrumentTypeLabel,
+  usesForInstrument,
   type BiomedicalInstrument,
   type InstrumentServiceUse,
 } from "@/lib/biomedical-instruments/types";
@@ -26,20 +27,6 @@ function todayIso() {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60_000;
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
-}
-
-export function usesForInstrument(item: BiomedicalInstrument, uses: InstrumentServiceUse[]) {
-  const serial = item.serialNumber.trim().toLowerCase();
-  const seen = new Set<string>();
-  return uses.filter((use) => {
-    const byId = use.instrumentId === item.id;
-    const bySerial =
-      !use.instrumentId && serial.length > 0 && use.instrumentSerial.trim().toLowerCase() === serial;
-    if (!byId && !bySerial) return false;
-    if (seen.has(use.serviceOrderId)) return false;
-    seen.add(use.serviceOrderId);
-    return true;
-  });
 }
 
 function orderKindLabel(kind: string) {

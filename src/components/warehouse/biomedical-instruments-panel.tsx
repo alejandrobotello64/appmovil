@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   Camera,
+  FileDown,
   FileText,
   Pencil,
   Plus,
@@ -26,16 +27,18 @@ import {
   uploadBiomedicalInstrumentCertificate,
   uploadBiomedicalInstrumentImage,
 } from "@/lib/biomedical-instruments/storage";
+import { downloadInstrumentsRelationPdf } from "@/lib/biomedical-instruments/pdf";
 import {
   BIOMEDICAL_INSTRUMENT_TYPES,
   biomedicalInstrumentTypeLabel,
+  usesForInstrument,
   type BiomedicalInstrument,
   type BiomedicalInstrumentInput,
   type BiomedicalInstrumentType,
   type InstrumentServiceUse,
 } from "@/lib/biomedical-instruments/types";
 import { cn } from "@/lib/utils";
-import { BiomedicalInstrumentSheet, usesForInstrument } from "./biomedical-instrument-sheet";
+import { BiomedicalInstrumentSheet } from "./biomedical-instrument-sheet";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
@@ -75,6 +78,7 @@ export function BiomedicalInstrumentsPanel() {
   const [form, setForm] = useState<BiomedicalInstrumentInput>(emptyForm);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [pendingPdf, setPendingPdf] = useState<File | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
   const imageRef = useRef<HTMLInputElement>(null);
   const pdfRef = useRef<HTMLInputElement>(null);
@@ -504,15 +508,34 @@ export function BiomedicalInstrumentsPanel() {
             Haz clic en un equipo para ver su ficha y los servicios en los que participó.
           </p>
         </div>
-        {canCreate ? (
+        <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            onClick={openCreate}
-            className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+            variant="outline"
+            disabled={loading || exporting || items.length === 0}
+            onClick={() => {
+              setExporting(true);
+              setError("");
+              void downloadInstrumentsRelationPdf(items, serviceUses)
+                .catch((err: unknown) =>
+                  setError(err instanceof Error ? err.message : "No se pudo generar la relación.")
+                )
+                .finally(() => setExporting(false));
+            }}
           >
-            <Plus className="size-4" /> Nuevo equipo
+            <FileDown className="size-4" />
+            {exporting ? "Generando…" : "Relación PDF"}
           </Button>
-        ) : null}
+          {canCreate ? (
+            <Button
+              type="button"
+              onClick={openCreate}
+              className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+            >
+              <Plus className="size-4" /> Nuevo equipo
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {error ? (
