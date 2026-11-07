@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   FileCode2,
   FileDown,
   Loader2,
@@ -19,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { exportExpenseReportPdf, type PdfOutput } from "@/lib/expenses/pdf";
 import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
-import { deleteExpenseItem, setExpenseReportStatus } from "@/lib/expenses/storage";
+import { deleteExpenseItem, setExpenseReportStatus, updateExpenseItemDate } from "@/lib/expenses/storage";
 import {
   balanceLabel,
   categoryColor,
@@ -40,7 +42,17 @@ import {
 } from "@/lib/expenses/types";
 import { cn } from "@/lib/utils";
 import { ExpenseItemForm } from "./expense-item-form";
+import { ExpenseTripChart } from "./expense-trip-chart";
 import { CategoryBars, CategoryDot, KpiCard, ReceiptFileLink, StatusBadge, inputClass } from "./expense-ui";
+
+type ItemSort = "fecha" | "categoria" | "monto";
+
+function shiftIsoDate(value: string, days: number) {
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  const date = new Date(year, (month || 1) - 1, (day || 1) + days);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
 export type ExpenseAccess = {
   canCreate: boolean;
@@ -80,6 +92,37 @@ export function ExpenseReportDetail({
   const [error, setError] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [rejecting, setRejecting] = useState(false);
+  const [itemSort, setItemSort] = useState<ItemSort>("fecha");
+
+  const orderedItems = useMemo(() => {
+    const items = [...report.items];
+    if (itemSort === "categoria") {
+      items.sort(
+        (a, b) =>
+          categoryLabel(a.category).localeCompare(categoryLabel(b.category), "es") ||
+          a.expenseDate.localeCompare(b.expenseDate)
+      );
+    } else if (itemSort === "monto") {
+      items.sort((a, b) => b.total - a.total || a.expenseDate.localeCompare(b.expenseDate));
+    } else {
+      items.sort((a, b) => a.expenseDate.localeCompare(b.expenseDate) || a.concept.localeCompare(b.concept, "es"));
+    }
+    return items;
+  }, [report.items, itemSort]);
+
+  const groupedItems = useMemo(() => {
+    if (itemSort !== "fecha") return null;
+    const groups: { date: string; items: ExpenseItem[]; total: number }[] = [];
+    for (const item of orderedItems) {
+      const last = groups[groups.length - 1];
+      if (!last || last.date !== item.expenseDate) groups.push({ date: item.expenseDate, items: [item], total: item.total });
+      else {
+        last.items.push(item);
+        last.total += item.total;
+      }
+    }
+    return groups;
+  }, [orderedItems, itemSort]);
 
   async function run(key: string, action: () => Promise<void>) {
     setBusy(key);
@@ -102,6 +145,11 @@ export function ExpenseReportDetail({
     });
   }
 
+  function changeItemDate(item: ExpenseItem, expenseDate: string) {
+    if (!expenseDate || expenseDate === item.expenseDate) return;
+    void run(`date-${item.id}`, () => updateExpenseItemDate(item, expenseDate));
+  }
+
   function removeItem(item: ExpenseItem) {
     if (!confirm(`¿Eliminar el gasto "${item.concept || item.supplierName}" y sus comprobantes?`)) return;
     void run(`item-${item.id}`, () => deleteExpenseItem(item));
@@ -116,6 +164,109 @@ export function ExpenseReportDetail({
     } finally {
       setBusy("");
     }
+  }
+
+  function renderItem(item: ExpenseItem) {
+    const name = item.concept || item.supplierName || categoryLabel(item.category);
+    const outside = item.expenseDate < report.startDate || item.expenseDate > report.endDate;
+    const canShift = report.kind === "viaticos" && canCapture && access.canEdit;
+    const shifting = busy === `date-${item.id}`;
+    return (
+      <li key={item.id} className="flex flex-wrap items-start gap-3 px-4 py-3 text-sm">
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 font-medium">
+            <CategoryDot color={categoryColor(item.category)} />
+            <span className="truncate">{name}</span>
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {canShift ? (
+              <span className="inline-flex items-center gap-0.5">
+                <button
+                  type="button"
+                  className="inline-flex size-7 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
+                  aria-label={`Un día antes para ${name}`}
+                  disabled={Boolean(busy)}
+                  onClick={() => changeItemDate(item, shiftIsoDate(item.expenseDate, -1))}
+                >
+                  <ChevronLeft className="size-3.5" />
+                </button>
+                <input
+                  type="date"
+                  aria-label={`Fecha de ${name}`}
+                  className="h-7 rounded-md border border-input bg-background px-1.5 text-xs text-foreground"
+                  value={item.expenseDate}
+                  disabled={Boolean(busy)}
+                  onChange={(event) => changeItemDate(item, event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="inline-flex size-7 items-center justify-center rounded-md border border-border hover:bg-muted disabled:opacity-50"
+                  aria-label={`Un día después para ${name}`}
+                  disabled={Boolean(busy)}
+                  onClick={() => changeItemDate(item, shiftIsoDate(item.expenseDate, 1))}
+                >
+                  {shifting ? <Loader2 className="size-3.5 animate-spin" /> : <ChevronRight className="size-3.5" />}
+                </button>
+              </span>
+            ) : (
+              <span>{formatDate(item.expenseDate)}</span>
+            )}
+            <span>
+              {categoryLabel(item.category)}
+              {item.taxType ? ` · ${item.taxType}` : ""}
+              {item.supplierName && item.concept ? ` · ${item.supplierName}` : ""}
+              {item.supplierRfc ? ` · ${item.supplierRfc}` : ""}
+              {" · "}
+              {paymentMethodLabel(item.paymentMethod)}
+            </span>
+            {report.kind === "viaticos" && outside ? (
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700 dark:text-amber-300">Fuera del viaje</span>
+            ) : null}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+            {item.pdfUrl ? (
+              <ReceiptFileLink path={item.pdfPath} url={item.pdfUrl} invoiceNumber={item.invoiceNumber} />
+            ) : null}
+            {item.xmlUrl ? (
+              <a
+                href={item.xmlUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-md bg-[#00BFFF]/10 px-2 py-0.5 font-medium text-sky-700 hover:underline dark:text-sky-300"
+                onClick={(event) =>
+                  openStoredFileOnMobile(event, {
+                    url: item.xmlUrl,
+                    title: item.invoiceNumber ? `XML ${item.invoiceNumber}` : "XML del comprobante",
+                    fileName: `${item.invoiceNumber || "cfdi"}.xml`,
+                    mime: "application/xml",
+                  })
+                }
+              >
+                <FileCode2 className="size-3.5" />
+                XML
+              </a>
+            ) : null}
+            {item.invoiceNumber ? <span className="text-muted-foreground">Factura {item.invoiceNumber}</span> : null}
+            {!itemHasInvoice(item) ? (
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700 dark:text-amber-300">Sin factura</span>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="mr-2 font-semibold tabular-nums">{formatMoney(item.total)}</span>
+          {canCapture && access.canEdit ? (
+            <Button size="sm" variant="outline" aria-label={`Editar ${name}`} onClick={() => setItemForm({ item })} disabled={Boolean(busy)}>
+              <Pencil className="size-3.5" />
+            </Button>
+          ) : null}
+          {canCapture && (access.canDelete || access.canEdit) ? (
+            <Button size="sm" variant="outline" aria-label={`Eliminar ${name}`} onClick={() => removeItem(item)} disabled={Boolean(busy)}>
+              {busy === `item-${item.id}` ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+            </Button>
+          ) : null}
+        </div>
+      </li>
+    );
   }
 
   const period =
@@ -282,85 +433,73 @@ export function ExpenseReportDetail({
             )}
           </div>
 
+          {report.kind === "viaticos" && report.items.length > 0 ? (
+            <ExpenseTripChart items={report.items} startDate={report.startDate} endDate={report.endDate} />
+          ) : null}
+
           <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
             <section className="rounded-xl border border-border">
-              <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-                <h4 className="font-semibold">Gastos</h4>
-                {canCapture && access.canCreate ? (
-                  <Button size="sm" onClick={() => setItemForm({ item: null })}>
-                    <Plus className="size-4" />
-                    Agregar gasto
-                  </Button>
-                ) : null}
+              <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+                <div>
+                  <h4 className="font-semibold">Gastos</h4>
+                  {report.kind === "viaticos" && canCapture ? (
+                    <p className="text-xs text-muted-foreground">Cambia la fecha aquí para reacomodar el ticket.</p>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {report.items.length > 1 ? (
+                    <div className="flex rounded-lg border border-border p-0.5 text-xs" role="group" aria-label="Ordenar gastos">
+                      {(
+                        [
+                          ["fecha", "Fecha"],
+                          ["categoria", "Tipo"],
+                          ["monto", "Monto"],
+                        ] as const
+                      ).map(([id, label]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          aria-pressed={itemSort === id}
+                          className={cn(
+                            "rounded-md px-2 py-1 font-medium",
+                            itemSort === id ? "bg-[#3B46A5] text-white" : "text-muted-foreground hover:text-foreground"
+                          )}
+                          onClick={() => setItemSort(id)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {canCapture && access.canCreate ? (
+                    <Button size="sm" onClick={() => setItemForm({ item: null })}>
+                      <Plus className="size-4" />
+                      Agregar gasto
+                    </Button>
+                  ) : null}
+                </div>
               </header>
               {report.items.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-muted-foreground">
                   Aún no hay gastos. {canCapture ? "Agrega la factura o, si no hay, una foto del ticket." : ""}
                 </p>
+              ) : groupedItems ? (
+                <div>
+                  {groupedItems.map((group) => {
+                    const outside = group.date < report.startDate || group.date > report.endDate;
+                    return (
+                      <section key={group.date}>
+                        <header className={cn("flex items-center justify-between gap-2 bg-muted/40 px-4 py-1.5 text-xs", outside && "text-amber-700 dark:text-amber-300")}>
+                          <span className="font-medium">{formatDate(group.date)}{outside ? " · Fuera del viaje" : ""}</span>
+                          <span className="tabular-nums">{formatMoney(group.total)} · {group.items.length}</span>
+                        </header>
+                        <ul className="divide-y divide-border">{group.items.map((item) => renderItem(item))}</ul>
+                      </section>
+                    );
+                  })}
+                </div>
               ) : (
-                <ul className="divide-y divide-border">
-                  {report.items.map((item) => (
-                    <li key={item.id} className="flex flex-wrap items-start gap-3 px-4 py-3 text-sm">
-                      <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-2 font-medium">
-                          <CategoryDot color={categoryColor(item.category)} />
-                          <span className="truncate">{item.concept || item.supplierName || categoryLabel(item.category)}</span>
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {formatDate(item.expenseDate)} · {categoryLabel(item.category)}
-                          {item.taxType ? ` · ${item.taxType}` : ""}
-                          {item.supplierName && item.concept ? ` · ${item.supplierName}` : ""}
-                          {item.supplierRfc ? ` · ${item.supplierRfc}` : ""}
-                          {" · "}
-                          {paymentMethodLabel(item.paymentMethod)}
-                        </p>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
-                          {item.pdfUrl ? (
-                            <ReceiptFileLink path={item.pdfPath} url={item.pdfUrl} invoiceNumber={item.invoiceNumber} />
-                          ) : null}
-                          {item.xmlUrl ? (
-                            <a
-                              href={item.xmlUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 rounded-md bg-[#00BFFF]/10 px-2 py-0.5 font-medium text-sky-700 hover:underline dark:text-sky-300"
-                              onClick={(event) =>
-                                openStoredFileOnMobile(event, {
-                                  url: item.xmlUrl,
-                                  title: item.invoiceNumber
-                                    ? `XML ${item.invoiceNumber}`
-                                    : "XML del comprobante",
-                                  fileName: `${item.invoiceNumber || "cfdi"}.xml`,
-                                  mime: "application/xml",
-                                })
-                              }
-                            >
-                              <FileCode2 className="size-3.5" />
-                              XML
-                            </a>
-                          ) : null}
-                          {item.invoiceNumber ? <span className="text-muted-foreground">Factura {item.invoiceNumber}</span> : null}
-                          {!itemHasInvoice(item) ? (
-                            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700 dark:text-amber-300">Sin factura</span>
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="mr-2 font-semibold tabular-nums">{formatMoney(item.total)}</span>
-                        {canCapture && access.canEdit ? (
-                          <Button size="sm" variant="outline" aria-label="Editar gasto" onClick={() => setItemForm({ item })} disabled={Boolean(busy)}>
-                            <Pencil className="size-3.5" />
-                          </Button>
-                        ) : null}
-                        {canCapture && (access.canDelete || access.canEdit) ? (
-                          <Button size="sm" variant="outline" aria-label="Eliminar gasto" onClick={() => removeItem(item)} disabled={Boolean(busy)}>
-                            {busy === `item-${item.id}` ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <ul className="divide-y divide-border">{orderedItems.map((item) => renderItem(item))}</ul>
               )}
             </section>
 

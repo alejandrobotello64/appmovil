@@ -341,6 +341,15 @@ export async function addExpenseItem(
   }
 }
 
+/** Cambia solo la fecha, para reacomodar tickets sin reabrir el formulario. */
+export async function updateExpenseItemDate(item: ExpenseItem, expenseDate: string) {
+  const date = expenseDate.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("Indica la fecha del gasto.");
+  if (date === item.expenseDate) return;
+  const { error } = await db.from("expense_items").update({ expense_date: date }).eq("id", item.id);
+  if (error) throw new Error(error.message);
+}
+
 export async function updateExpenseItem(item: ExpenseItem, input: ExpenseItemInput) {
   const payload: Row = itemPayload(input);
   const uploaded: string[] = [];
