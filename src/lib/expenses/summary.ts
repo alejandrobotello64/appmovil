@@ -135,7 +135,9 @@ export type CategoryGroupTotal = {
   count: number;
   total: number;
   share: number;
-  parts: Array<{ label: string; total: number; count: number }>;
+  /** Categorías de gasto que suma el grupo. */
+  categories: string[];
+  parts: Array<{ category: string; label: string; total: number; count: number }>;
 };
 
 function categoryTotalLabel(id: string, name: string) {
@@ -160,7 +162,7 @@ export function categoryGroupTotals(items: Array<Pick<ExpenseItem, "category" | 
   const ensure = (id: string, name: string, color: string) => {
     let group = groups.get(id);
     if (!group) {
-      group = { id, label: categoryTotalLabel(id, name), color, count: 0, total: 0, share: 0, parts: [] };
+      group = { id, label: categoryTotalLabel(id, name), color, count: 0, total: 0, share: 0, categories: [], parts: [] };
       groups.set(id, group);
     }
     return group;
@@ -173,8 +175,14 @@ export function categoryGroupTotals(items: Array<Pick<ExpenseItem, "category" | 
       : ensure(category, categoryLabel(category), categoryColor(category));
     group.total += row.total;
     group.count += row.count;
+    group.categories.push(category);
     if (grouped) {
-      group.parts.push({ label: categoryLabel(category), total: Math.round(row.total * 100) / 100, count: row.count });
+      group.parts.push({
+        category,
+        label: categoryLabel(category),
+        total: Math.round(row.total * 100) / 100,
+        count: row.count,
+      });
     }
   }
 

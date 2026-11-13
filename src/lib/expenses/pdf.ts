@@ -24,7 +24,9 @@ import {
   reportDays,
   reportTitle,
   statusMeta,
+  sumDeductibleSplits,
   todayIso,
+  type DeductibleSplit,
   type ExpenseItem,
   type ExpenseReport,
 } from "./types";
@@ -77,27 +79,31 @@ function sectionTitle(doc: jsPDF, y: number, title: string) {
   return y + 4;
 }
 
-function drawTable(doc: jsPDF, startY: number, columns: Column[], rows: Cell[][], footer?: Cell[]) {
+function drawTable(doc: jsPDF, startY: number, columns: Column[], rows: Cell[][], footer?: Cell[], fontSize = 7.5) {
   const pageW = doc.internal.pageSize.getWidth();
   const tableW = pageW - MARGIN * 2;
   const totalWidth = columns.reduce((sum, column) => sum + column.width, 0);
   const widths = columns.map((column) => (column.width / totalWidth) * tableW);
   const rowH = 5.6;
+  const headerLines = Math.max(...columns.map((column) => column.header.split("\n").length));
+  const headerH = rowH + (headerLines - 1) * 3.2;
 
   const drawHeader = (y: number) => {
     doc.setFillColor(59, 70, 165);
-    doc.rect(MARGIN, y, tableW, rowH, "F");
+    doc.rect(MARGIN, y, tableW, headerH, "F");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
+    doc.setFontSize(fontSize);
     doc.setTextColor(255, 255, 255);
     let x = MARGIN;
     columns.forEach((column, index) => {
       const w = widths[index];
       const tx = column.align === "right" ? x + w - 1.5 : column.align === "center" ? x + w / 2 : x + 1.5;
-      doc.text(fit(doc, column.header, w - 3), tx, y + 3.9, { align: column.align ?? "left" });
+      column.header.split("\n").forEach((line, lineIndex) => {
+        doc.text(fit(doc, line, w - 3), tx, y + 3.9 + lineIndex * 3.2, { align: column.align ?? "left" });
+      });
       x += w;
     });
-    return y + rowH;
+    return y + headerH;
   };
 
   const drawRow = (y: number, cells: Cell[], shaded: boolean, bold = false) => {
@@ -119,7 +125,7 @@ function drawTable(doc: jsPDF, startY: number, columns: Column[], rows: Cell[][]
         tx += 3.4;
       }
       doc.setFont("helvetica", cellBold ? "bold" : "normal");
-      doc.setFontSize(7.5);
+      doc.setFontSize(fontSize);
       doc.setTextColor(40, 40, 40);
       const available = w - 3 - (color && column.align !== "right" ? 3.4 : 0);
       doc.text(fit(doc, text, available), tx, y + 3.9, { align: column.align ?? "left" });
@@ -130,7 +136,7 @@ function drawTable(doc: jsPDF, startY: number, columns: Column[], rows: Cell[][]
     return y + rowH;
   };
 
-  let y = ensureSpace(doc, startY, rowH * 3);
+  let y = ensureSpace(doc, startY, headerH + rowH * 2);
   y = drawHeader(y);
   rows.forEach((row, index) => {
     const nextY = ensureSpace(doc, y, rowH);
@@ -292,35 +298,160 @@ function drawShareBar(doc: jsPDF, startY: number, rows: Array<{ total: number; c
   return y + 7;
 }
 
-function drawCategoryTotals(doc: jsPDF, startY: number, items: Array<Pick<ExpenseItem, "category" | "total">>, grand: number) {
+function noteText(doc: jsPDF, y: number, text: string) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.8);
+  doc.setTextColor(100, 100, 110);
+  const lines = doc.splitTextToSize(text, doc.internal.pageSize.getWidth() - MARGIN * 2);
+  y = ensureSpace(doc, y - 3, lines.length * 3.2);
+  doc.text(lines, MARGIN, y);
+  return y + lines.length * 3.2 + 3;
+}
+
+function drawCategoryTotals(doc: jsPDF, startY: number, items: ExpenseItem[], grand: number) {
   const groups = categoryGroupTotals(items);
   if (groups.length === 0) return startY;
   let y = sectionTitle(doc, startY, "Totales por categoría");
   y = drawShareBar(doc, y, groups);
-  const rows: Array<Array<string | { text: string; color?: string; bold?: boolean }>> = [];
+  const withheld = sumDeductibleSplits(items).withheld > 0.005;
+  const splitCells = (split: DeductibleSplit) => [
+    formatMoney(split.subtotalDeductible),
+    formatMoney(split.subtotalNonDeductible),
+    formatMoney(split.ivaDeductible),
+    formatMoney(split.ishDeductible),
+    formatMoney(split.taxNonDeductible),
+    ...(withheld ? [formatMoney(split.withheld)] : []),
+  ];
+  const splitOf = (categories: string[]) => sumDeductibleSplits(items.filter((item) => categories.includes(item.category)));
+
+  const rows: Cell[][] = [];
   for (const group of groups) {
     rows.push([
       { text: group.label, color: group.color, bold: true },
       String(group.count),
-      formatMoney(group.total),
+      ...splitCells(splitOf(group.categories)),
+      { text: formatMoney(group.total), bold: true },
       `${(group.share * 100).toFixed(1)}%`,
     ]);
     for (const part of group.parts) {
-      rows.push([`   ${part.label}`, String(part.count), formatMoney(part.total), ""]);
+      rows.push([`   ${part.label}`, String(part.count), ...splitCells(splitOf([part.category])), formatMoney(part.total), ""]);
     }
   }
-  return drawTable(
+  y = drawTable(
     doc,
     y,
     [
-      { header: "Categoría", width: 58 },
-      { header: "Comprobantes", width: 22, align: "right" },
-      { header: "Total", width: 28, align: "right" },
-      { header: "%", width: 14, align: "right" },
+      { header: "Categoría", width: 37 },
+      { header: "#", width: 8, align: "right" },
+      { header: "Subtotal\ndeducible", width: 20, align: "right" },
+      { header: "Subtotal\nno deducible", width: 20, align: "right" },
+      { header: "IVA\ndeducible", width: 18, align: "right" },
+      { header: "ISH\ndeducible", width: 16, align: "right" },
+      { header: "Impuestos\nno deducibles", width: 20, align: "right" },
+      ...(withheld ? [{ header: "Retenciones", width: 18, align: "right" as const }] : []),
+      { header: "Total", width: 20, align: "right" },
+      { header: "%", width: 11, align: "right" },
     ],
     rows,
-    ["Total", String(groups.reduce((sum, group) => sum + group.count, 0)), formatMoney(grand), "100%"]
+    [
+      "Total",
+      String(groups.reduce((sum, group) => sum + group.count, 0)),
+      ...splitCells(sumDeductibleSplits(items)),
+      formatMoney(grand),
+      "100%",
+    ],
+    6.6
   );
+  return noteText(
+    doc,
+    y,
+    "Deducible: gastos con factura (subtotal, IVA e ISH de hospedaje). No deducible: gastos sin factura, IEPS y otros impuestos." +
+      (withheld ? " Las retenciones se restan del total del comprobante." : "")
+  );
+}
+
+type DetailEntry = { item: ExpenseItem; report?: ExpenseReport };
+
+/** Orden de categorías igual al de «Totales por categoría». */
+function categoryOrder(items: ExpenseItem[]) {
+  return categoryGroupTotals(items).flatMap((group) =>
+    group.parts.length ? group.parts.map((part) => part.category) : group.categories
+  );
+}
+
+function categoryHeading(doc: jsPDF, startY: number, category: string, count: number, total: number) {
+  const y = ensureSpace(doc, startY, 24);
+  const pageW = doc.internal.pageSize.getWidth();
+  doc.setFillColor(...hexToRgb(categoryColor(category)));
+  doc.rect(MARGIN, y - 2.6, 2.4, 2.4, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(30, 30, 30);
+  doc.text(categoryLabel(category), MARGIN + 4, y - 0.6);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(90, 90, 100);
+  doc.text(`${count} ${count === 1 ? "gasto" : "gastos"} · ${formatMoney(total)}`, pageW - MARGIN, y - 0.6, {
+    align: "right",
+  });
+  return y + 1.5;
+}
+
+function totalBand(doc: jsPDF, startY: number, label: string, value: string) {
+  const y = ensureSpace(doc, startY - 2, 8);
+  const pageW = doc.internal.pageSize.getWidth();
+  doc.setFillColor(59, 70, 165);
+  doc.rect(MARGIN, y, pageW - MARGIN * 2, 6.4, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(label, MARGIN + 2, y + 4.4);
+  doc.text(value, pageW - MARGIN - 2, y + 4.4, { align: "right" });
+  return y + 12;
+}
+
+/** Detalle de gastos separado por categoría, con total por categoría y total general. */
+function drawItemsByCategory(
+  doc: jsPDF,
+  startY: number,
+  entries: DetailEntry[],
+  grand: number,
+  withFolio: boolean
+) {
+  let y = sectionTitle(doc, startY, "Detalle de gastos") + 3;
+  const columns: Column[] = [
+    { header: "Fecha", width: 16 },
+    ...(withFolio ? [{ header: "Folio", width: 20 }] : []),
+    { header: "Concepto / proveedor", width: withFolio ? 52 : 64 },
+    { header: "Factura", width: 20 },
+    { header: "Pago", width: 20 },
+    { header: "Impuestos", width: 18, align: "right" },
+    { header: "Total", width: 20, align: "right" },
+  ];
+  for (const category of categoryOrder(entries.map((entry) => entry.item))) {
+    const rows = entries.filter((entry) => entry.item.category === category);
+    const total = rows.reduce((sum, entry) => sum + entry.item.total, 0);
+    y = categoryHeading(doc, y, category, rows.length, total);
+    y = drawTable(
+      doc,
+      y,
+      columns,
+      rows.map(({ item, report }) => [
+        formatDate(item.expenseDate),
+        ...(withFolio ? [report?.folio ?? ""] : []),
+        [item.concept, item.supplierName].filter(Boolean).join(" · "),
+        receiptKindLabel(item),
+        paymentMethodLabel(item.paymentMethod, true),
+        formatMoney(item.tax),
+        formatMoney(item.total),
+      ]),
+      columns.map((column) => {
+        if (column.header === "Concepto / proveedor") return `Total ${categoryLabel(category).toLowerCase()}`;
+        return column.header === "Total" ? formatMoney(total) : "";
+      })
+    );
+  }
+  return totalBand(doc, y, "Total de gastos", formatMoney(grand));
 }
 
 function categoryBreakdown(bucket: SpendBucket) {
@@ -442,28 +573,15 @@ export async function buildExpenseReportPdf(report: ExpenseReport) {
     );
   }
 
-  y = sectionTitle(doc, y, "Detalle de gastos");
-  y = drawTable(
-    doc,
-    y,
-    [
-      { header: "Fecha", width: 16 },
-      { header: "Categoría", width: 30 },
-      { header: "Concepto / proveedor", width: 50 },
-      { header: "Factura", width: 20 },
-      { header: "Pago", width: 22 },
-      { header: "Total", width: 20, align: "right" },
-    ],
-    report.items.map((item) => [
-      formatDate(item.expenseDate),
-      { text: categoryLabel(item.category), color: categoryColor(item.category) },
-      [item.concept, item.supplierName].filter(Boolean).join(" · "),
-      receiptKindLabel(item),
-      paymentMethodLabel(item.paymentMethod, true),
-      formatMoney(item.total),
-    ]),
-    ["", "", "", "", "Total", formatMoney(balance.spent)]
-  );
+  if (report.items.length > 0) {
+    y = drawItemsByCategory(
+      doc,
+      y,
+      report.items.map((item) => ({ item })),
+      balance.spent,
+      false
+    );
+  }
 
   if (report.reviewNotes || report.notes) {
     y = sectionTitle(doc, y, "Observaciones");
@@ -674,28 +792,7 @@ export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
   );
 
   if (options.includeItems) {
-    y = sectionTitle(doc, y, "Detalle de gastos");
-    drawTable(
-      doc,
-      y,
-      [
-        { header: "Fecha", width: 16 },
-        { header: "Folio", width: 22 },
-        { header: "Categoría", width: 26 },
-        { header: "Concepto / proveedor", width: 50 },
-        { header: "Factura", width: 16 },
-        { header: "Total", width: 20, align: "right" },
-      ],
-      options.entries.map(({ item, report }) => [
-        formatDate(item.expenseDate),
-        report.folio,
-        { text: categoryLabel(item.category), color: categoryColor(item.category) },
-        [item.concept, item.supplierName].filter(Boolean).join(" · "),
-        itemHasInvoice(item) ? "Sí" : item.pdfPath ? (isReceiptImageName(item.pdfPath) ? "Foto" : "Ticket") : "No",
-        formatMoney(item.total),
-      ]),
-      ["", "", "", "", "Total", formatMoney(summary.total)]
-    );
+    drawItemsByCategory(doc, y, options.entries, summary.total, true);
   }
 
   drawBrandedFooter(doc);

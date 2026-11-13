@@ -1,7 +1,9 @@
-import { EXPENSE_CATEGORIES, type ExpenseCategoryId } from "./types";
+import { EXPENSE_CATEGORIES, type ExpenseCategoryId, type TaxBreakdown } from "./types";
 
 export type ReceiptFill = {
   taxType: string;
+  /** Desglose del impuesto; null si el comprobante no lo trae. */
+  taxes: TaxBreakdown | null;
   category: ExpenseCategoryId | null;
   concept: string;
   supplierName: string;
@@ -153,6 +155,7 @@ function money(value: string | undefined): number | null {
 function blankFill(): ReceiptFill {
   return {
     taxType: "",
+    taxes: null,
     category: null,
     concept: "",
     supplierName: "",
@@ -246,7 +249,7 @@ function winningCategory(votes: Map<ExpenseCategoryId, number>) {
 }
 
 function localTaxName(raw: string) {
-  const n = stripAccents(raw);
+  const n = stripAccents(raw).replace(/\./g, "");
   if (/hosped|\bish\b/.test(n)) return "Impuesto sobre hospedaje";
   if (/\bieps\b/.test(n)) return "IEPS";
   if (/predial/.test(n)) return "Predial";
@@ -297,6 +300,62 @@ function localTrasladoTotal(xml: string) {
     any = true;
   }
   return any ? roundMoney(sum) : 0;
+}
+
+type LocalKind = "ish" | "ieps" | "otherTax";
+
+function localTaxKind(name: string): LocalKind {
+  if (name === "Impuesto sobre hospedaje") return "ish";
+  if (name === "IEPS") return "ieps";
+  return "otherTax";
+}
+
+/** El IVA absorbe redondeos e impuesto sin desglose, para que todo sume `tax`. */
+function withIvaRemainder(parts: Omit<TaxBreakdown, "withheld">, tax: number, withheld: number): TaxBreakdown {
+  const ieps = roundMoney(parts.ieps);
+  const ish = roundMoney(parts.ish);
+  const otherTax = roundMoney(parts.otherTax);
+  const iva = roundMoney(Math.max(0, tax - ieps - ish - otherTax));
+  return { iva, ieps, ish, otherTax, withheld: roundMoney(withheld) };
+}
+
+/**
+ * Los Traslado se repiten por concepto y a nivel comprobante; se reparten en
+ * proporción para que la suma sea TotalImpuestosTrasladados.
+ */
+function xmlTaxBreakdown(xml: string, federalTax: number | null, localTax: number, retentions: number): TaxBreakdown {
+  const byCode = new Map<string, number>();
+  let all = 0;
+  for (const body of tagBodies(xml, "Traslado")) {
+    const attrs = readAttrs(body);
+    const amount = money(attrs.importe);
+    if (amount == null || amount <= 0) continue;
+    const code = attrs.impuesto ?? "";
+    byCode.set(code, (byCode.get(code) ?? 0) + amount);
+    all += amount;
+  }
+  const federal = federalTax ?? all;
+  const ratio = all > 0 ? federal / all : 0;
+  const ivaFederal = (byCode.get("002") ?? 0) * ratio;
+  const iepsFederal = (byCode.get("003") ?? 0) * ratio;
+  const otherFederal = Math.max(0, federal - ivaFederal - iepsFederal);
+
+  const local = { ish: 0, ieps: 0, otherTax: 0 };
+  let localListed = 0;
+  for (const body of tagBodies(xml, "TrasladosLocales")) {
+    const attrs = readAttrs(body);
+    const amount = money(attrs.importe);
+    if (amount == null || amount <= 0) continue;
+    local[localTaxKind(localTaxName(attrs.imploctrasladado ?? ""))] += amount;
+    localListed += amount;
+  }
+  local.otherTax += Math.max(0, localTax - localListed);
+
+  return withIvaRemainder(
+    { iva: ivaFederal, ieps: iepsFederal + local.ieps, ish: local.ish, otherTax: otherFederal + local.otherTax },
+    federal + localTax,
+    retentions,
+  );
 }
 
 function collectTaxLabels(xml: string) {
@@ -368,8 +427,12 @@ export function recognizeExpenseReceipt(xml: string): ReceiptFill {
   const category = winningCategory(votes);
   const rawConcept = concepts.join(" · ");
 
+  const stated = federalTax != null || localTax > 0;
   return {
     taxType: collectTaxLabels(xml),
+    taxes: stated
+      ? xmlTaxBreakdown(xml, federalTax, localTax, retentions)
+      : withIvaRemainder({ iva: 0, ieps: 0, ish: 0, otherTax: 0 }, tax ?? 0, retentions),
     category,
     concept: rideConcept(rawConcept, `${rawConcept}\n${emisor.nombre ?? ""}`, thirdPartyName(xml), category).slice(0, 180),
     supplierName: (emisor.nombre ?? "").replace(/\s+/g, " ").trim().slice(0, 120),
@@ -453,7 +516,7 @@ type TextTax = { label: string; amount: number | null; retained: boolean };
 function taxesFromLines(lines: string[]): TextTax[] {
   const found: TextTax[] = [];
   for (const line of lines) {
-    const n = stripAccents(line);
+    const n = stripAccents(line).replace(/\bi\.\s?s\.\s?h\.?/g, "ish");
     if (!/\b(iva|ieps|isr|ish|predial|nomina|saneamiento|cedular|impuesto)\b/.test(n)) continue;
     if (/\bhospedaje\b/.test(n) && !/\b(impuesto|ish)\b/.test(n)) continue;
     if (/\bsubtotal\b/.test(n) || (/^\s*total\b/.test(n) && !/impuesto/.test(n))) continue;
@@ -563,6 +626,17 @@ export function recognizeExpenseText(text: string): ReceiptFill {
   if (trasladoSum > 0 && formula != null && formula > trasladoSum + 0.009) fill.tax = formula;
   else if (trasladoSum > 0) fill.tax = trasladoSum;
   else fill.tax = formula;
+
+  const parts = { iva: 0, ieps: 0, ish: 0, otherTax: 0 };
+  for (const item of taxes) {
+    if (item.retained || !item.amount) continue;
+    const family = item.label.split(" ")[0];
+    if (family === "IVA") parts.iva += item.amount;
+    else if (family === "IEPS") parts.ieps += item.amount;
+    else if (item.label.startsWith("Impuesto sobre hospedaje")) parts.ish += item.amount;
+    else parts.otherTax += item.amount;
+  }
+  fill.taxes = withIvaRemainder(parts, fill.tax ?? 0, retentionSum);
 
   return fill;
 }

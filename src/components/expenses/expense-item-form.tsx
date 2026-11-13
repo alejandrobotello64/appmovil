@@ -7,6 +7,7 @@ import { ModalShell } from "@/components/ui/modal-shell";
 import { ensureTicketPhoto, isImageFile, isPdfFile, isReceiptImageName } from "@/lib/expenses/receipt-file";
 import { addExpenseItem, updateExpenseItem } from "@/lib/expenses/storage";
 import {
+  EMPTY_TAX_BREAKDOWN,
   PAYMENT_METHODS,
   categoriesForKind,
   categoryLabel,
@@ -16,12 +17,21 @@ import {
   type ExpenseItemInput,
   type ExpenseReport,
   type PaymentMethod,
+  type TaxBreakdown,
 } from "@/lib/expenses/types";
 import { recognizeReceiptUpload } from "@/lib/expenses/recognize-receipt-file";
 import type { ReceiptFill } from "@/lib/expenses/receipt-recognition";
 import { Field, inputClass } from "./expense-ui";
 
 const round = (value: number) => Math.round(value * 100) / 100;
+
+const TAX_PARTS: { id: keyof TaxBreakdown; label: string }[] = [
+  { id: "iva", label: "IVA" },
+  { id: "ieps", label: "IEPS" },
+  { id: "ish", label: "ISH (hospedaje)" },
+  { id: "otherTax", label: "Otros impuestos" },
+  { id: "withheld", label: "Retenciones" },
+];
 
 function defaultPayment(report: ExpenseReport): PaymentMethod {
   if (report.kind === "corriente") return "pago_empresa";
@@ -44,6 +54,7 @@ function emptyInput(report: ExpenseReport): ExpenseItemInput {
     tax: 0,
     total: 0,
     taxType: "",
+    ...EMPTY_TAX_BREAKDOWN,
     paymentMethod: defaultPayment(report),
     notes: "",
     pdfFile: null,
@@ -64,6 +75,11 @@ function inputFromItem(item: ExpenseItem): ExpenseItemInput {
     tax: item.tax,
     total: item.total,
     taxType: item.taxType,
+    iva: item.iva,
+    ieps: item.ieps,
+    ish: item.ish,
+    otherTax: item.otherTax,
+    withheld: item.withheld,
     paymentMethod: item.paymentMethod,
     notes: item.notes,
     pdfFile: null,
@@ -117,7 +133,17 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
   function setAmount(field: "subtotal" | "tax", value: number) {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
-      next.total = round(next.subtotal + next.tax);
+      if (field === "tax") next.iva = round(Math.max(0, value - prev.ieps - prev.ish - prev.otherTax));
+      next.total = round(next.subtotal + next.tax - next.withheld);
+      return next;
+    });
+  }
+
+  function setTaxPart(field: keyof TaxBreakdown, value: number) {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      next.tax = round(next.iva + next.ieps + next.ish + next.otherTax);
+      next.total = round(next.subtotal + next.tax - next.withheld);
       return next;
     });
   }
@@ -137,6 +163,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
     if (fill.cfdiUuid) next.cfdiUuid = fill.cfdiUuid;
     if (fill.expenseDate) next.expenseDate = fill.expenseDate;
     if (fill.taxType) next.taxType = fill.taxType;
+    if (fill.taxes) Object.assign(next, fill.taxes);
     if (category) next.category = category;
     if (fill.subtotal != null) next.subtotal = fill.subtotal;
     if (fill.tax != null) next.tax = fill.tax;
@@ -406,7 +433,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
               placeholder="IVA 16%, IEPS, Impuesto sobre hospedaje 3%"
             />
           </Field>
-          <Field label="Impuestos" hint="Suma IVA, IEPS y hospedaje. Las retenciones se anotan en el tipo y no se suman aquí.">
+          <Field label="Impuestos" hint="Suma IVA, IEPS, hospedaje y otros. Las retenciones van aparte.">
             <input
               type="number"
               min={0}
@@ -417,7 +444,28 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
               placeholder="0.00"
             />
           </Field>
-          <Field label="Total *" hint="Con retenciones se respeta el total del comprobante. Si no, es subtotal más impuestos.">
+          <div className="grid gap-2 sm:col-span-2">
+            <p className="text-sm font-medium text-foreground">Desglose de impuestos</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {TAX_PARTS.map((part) => (
+                <Field key={part.id} label={part.label}>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className={inputClass}
+                    value={form[part.id] || ""}
+                    onChange={(e) => setTaxPart(part.id, Number(e.target.value) || 0)}
+                    placeholder="0.00"
+                  />
+                </Field>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Se llena con el XML. Con factura, IVA e ISH son deducibles; IEPS y otros impuestos no.
+            </p>
+          </div>
+          <Field label="Total *" hint="Subtotal más impuestos, menos retenciones.">
             <input
               type="number"
               min={0}

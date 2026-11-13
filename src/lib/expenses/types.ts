@@ -119,7 +119,20 @@ export const PAYMENT_METHODS = [
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number]["id"];
 
-export type ExpenseItem = {
+/** Impuestos del comprobante por tipo; `tax` es la suma de los trasladados. */
+export type TaxBreakdown = {
+  iva: number;
+  ieps: number;
+  /** Impuesto sobre hospedaje (local). */
+  ish: number;
+  otherTax: number;
+  /** Retenciones federales y locales; restan al total. */
+  withheld: number;
+};
+
+export const EMPTY_TAX_BREAKDOWN: TaxBreakdown = { iva: 0, ieps: 0, ish: 0, otherTax: 0, withheld: 0 };
+
+export type ExpenseItem = TaxBreakdown & {
   id: string;
   reportId: string;
   expenseDate: string;
@@ -194,7 +207,7 @@ export type ExpenseReportInput = {
   notes: string;
 };
 
-export type ExpenseItemInput = {
+export type ExpenseItemInput = TaxBreakdown & {
   expenseDate: string;
   category: ExpenseCategoryId;
   concept: string;
@@ -261,6 +274,88 @@ export function isReportEditable(status: ExpenseStatus) {
 /** Factura = XML, UUID o folio capturado; un PDF/foto sin esos datos es solo ticket. */
 export function itemHasInvoice(item: Pick<ExpenseItem, "xmlPath" | "cfdiUuid" | "invoiceNumber">) {
   return Boolean(item.xmlPath || item.cfdiUuid.trim() || item.invoiceNumber.trim());
+}
+
+export type DeductibleSplit = {
+  subtotalDeductible: number;
+  subtotalNonDeductible: number;
+  ivaDeductible: number;
+  /** Impuesto sobre hospedaje: deducible aunque no sea IVA. */
+  ishDeductible: number;
+  /** IEPS, otros impuestos y cualquier impuesto de un gasto sin factura. */
+  taxNonDeductible: number;
+  withheld: number;
+  total: number;
+};
+
+export const EMPTY_DEDUCTIBLE_SPLIT: DeductibleSplit = {
+  subtotalDeductible: 0,
+  subtotalNonDeductible: 0,
+  ivaDeductible: 0,
+  ishDeductible: 0,
+  taxNonDeductible: 0,
+  withheld: 0,
+  total: 0,
+};
+
+type SplitSource = Pick<ExpenseItem, "xmlPath" | "cfdiUuid" | "invoiceNumber" | "tax" | "total"> & TaxBreakdown;
+
+/**
+ * Ajusta el desglose para que sume `tax`. Sin desglose (capturas viejas o manuales)
+ * el impuesto se toma como IVA; una diferencia por edición manual también.
+ */
+export function normalizedTaxes(item: Pick<SplitSource, "tax"> & TaxBreakdown): TaxBreakdown {
+  const tax = Math.max(0, item.tax || 0);
+  const parts = { iva: item.iva || 0, ieps: item.ieps || 0, ish: item.ish || 0, otherTax: item.otherTax || 0 };
+  const sum = parts.iva + parts.ieps + parts.ish + parts.otherTax;
+  const withheld = Math.max(0, item.withheld || 0);
+  if (sum <= 0.005) return { ...EMPTY_TAX_BREAKDOWN, iva: tax, withheld };
+  const diff = tax - sum;
+  if (Math.abs(diff) < 0.01) return { ...parts, withheld };
+  if (parts.iva + diff >= 0) return { ...parts, iva: parts.iva + diff, withheld };
+  const ratio = tax / sum;
+  return {
+    iva: parts.iva * ratio,
+    ieps: parts.ieps * ratio,
+    ish: parts.ish * ratio,
+    otherTax: parts.otherTax * ratio,
+    withheld,
+  };
+}
+
+/**
+ * Con factura: subtotal, IVA e ISH son deducibles; IEPS y otros impuestos no.
+ * Sin factura nada es deducible.
+ */
+export function itemDeductibleSplit(item: SplitSource): DeductibleSplit {
+  const taxes = normalizedTaxes(item);
+  const tax = taxes.iva + taxes.ieps + taxes.ish + taxes.otherTax;
+  if (!itemHasInvoice(item)) {
+    return {
+      ...EMPTY_DEDUCTIBLE_SPLIT,
+      subtotalNonDeductible: item.total - tax,
+      taxNonDeductible: tax,
+      total: item.total,
+    };
+  }
+  return {
+    ...EMPTY_DEDUCTIBLE_SPLIT,
+    subtotalDeductible: item.total - tax + taxes.withheld,
+    ivaDeductible: taxes.iva,
+    ishDeductible: taxes.ish,
+    taxNonDeductible: taxes.ieps + taxes.otherTax,
+    withheld: taxes.withheld,
+    total: item.total,
+  };
+}
+
+export function sumDeductibleSplits(items: SplitSource[]): DeductibleSplit {
+  const sum = { ...EMPTY_DEDUCTIBLE_SPLIT };
+  for (const item of items) {
+    const split = itemDeductibleSplit(item);
+    for (const key of Object.keys(sum) as (keyof DeductibleSplit)[]) sum[key] += split[key];
+  }
+  return sum;
 }
 
 export type CategoryTotal = {
