@@ -39,7 +39,7 @@ export function areaLabel(id: string) {
 
 export function roleToArea(role: string | null | undefined): CompanyAreaId {
   const r = (role ?? "").trim().toLowerCase();
-  if (r === "administrador" || r === "admin") return "administracion";
+  if (r === "administrador" || r === "admin" || r === "contabilidad") return "administracion";
   if (r === "almacen" || r === "operador") return "almacen";
   if (r === "compras") return "compras";
   if (r === "ventas") return "ventas";

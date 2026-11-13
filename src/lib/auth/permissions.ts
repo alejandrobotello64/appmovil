@@ -27,6 +27,11 @@ export const APP_ROLES = [
     description: "Biomédica, órdenes de servicio, equipos, flotilla y educación.",
   },
   {
+    id: "contabilidad",
+    label: "Contabilidad",
+    description: "Gastos y comprobaciones, precios, proveedores, órdenes de compra y reportes.",
+  },
+  {
     id: "direccion",
     label: "Dirección",
     description: "Consulta de casi todo el sistema, sin editar.",
@@ -535,6 +540,8 @@ const ROLE_ALIASES: Record<string, AppRole> = {
   compras: "compras",
   ventas: "ventas",
   servicio: "servicio",
+  contabilidad: "contabilidad",
+  contador: "contabilidad",
   direccion: "direccion",
   lectura: "direccion",
 };
@@ -620,6 +627,22 @@ const ROLE_VIEW_MODULES: Record<AppRole, WarehouseModule[]> = {
     "gastos",
     "educacion",
     "calidad",
+  ],
+  contabilidad: [
+    "dashboard",
+    ...CATALOG_MODULES,
+    "kardex",
+    "reporte",
+    "calendario",
+    "pedidos",
+    "proveedores",
+    "solicitudes_compra",
+    "clientes",
+    "cotizaciones",
+    "licitaciones",
+    "flotilla",
+    "gastos",
+    "precios",
   ],
   direccion: [
     "dashboard",
@@ -712,7 +735,13 @@ const ROLE_WRITE_MODULES: Record<AppRole, WarehouseModule[]> = {
     "educacion",
     "calidad",
   ],
+  contabilidad: ["calendario", "proveedores", "clientes", "gastos", "precios"],
   direccion: [],
+};
+
+/** Aprobaciones que el rol trae de base, además del administrador. */
+const ROLE_APPROVE_MODULES: Partial<Record<AppRole, WarehouseModule[]>> = {
+  contabilidad: ["gastos"],
 };
 
 export function normalizeRole(role: string | null | undefined): AppRole {
@@ -735,7 +764,7 @@ export function roleDefaultPermission(
     case "export":
       return true;
     case "approve":
-      return normalized === "administrador";
+      return normalized === "administrador" || Boolean(ROLE_APPROVE_MODULES[normalized]?.includes(module));
     default:
       return ROLE_WRITE_MODULES[normalized].includes(module);
   }

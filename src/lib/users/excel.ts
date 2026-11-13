@@ -241,7 +241,7 @@ function withInstructionSheet(workbook: XLSX.WorkBook) {
     ["1. Completa la hoja Usuarios. La primera fila son encabezados."],
     ["2. usuario y nombre son obligatorios."],
     [
-      "3. rol: administrador, almacen, compras, ventas, servicio, direccion.",
+      "3. rol: administrador, almacen, compras, ventas, servicio, contabilidad, direccion.",
     ],
     [
       "4. password: obligatorio al crear un usuario nuevo (mín. 6 caracteres). En actualización déjalo vacío para no cambiarla.",
