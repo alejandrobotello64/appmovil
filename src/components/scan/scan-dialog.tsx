@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Camera, Link2, Loader2, ScanBarcode, Search, Unplug, Usb, X } from "lucide-react";
+import { Activity, Camera, Link2, Loader2, ScanBarcode, Search, Unplug, Usb, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { CameraCodeReader } from "@/components/scan/camera-code-reader";
@@ -220,15 +220,20 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
   const serial = scanner?.serial;
   const [serialBusy, setSerialBusy] = useState(false);
 
-  async function toggleSerial() {
-    if (!scanner) return;
+  async function runSerial(action: () => Promise<void>) {
     setSerialBusy(true);
     try {
-      if (serial?.status === "connected") await scanner.disconnectSerial();
-      else await scanner.connectSerial();
+      await action();
     } finally {
       setSerialBusy(false);
     }
+  }
+
+  function toggleSerial() {
+    if (!scanner) return;
+    void runSerial(() =>
+      serial?.status === "connected" ? scanner.disconnectSerial() : scanner.connectSerial()
+    );
   }
 
   const selected = result?.matches.find((match) => match.item.id === selectedId) ?? null;
@@ -294,7 +299,7 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
               size="sm"
               variant={serial.status === "connected" ? "outline" : "default"}
               disabled={serialBusy || serial.status === "connecting"}
-              onClick={() => void toggleSerial()}
+              onClick={toggleSerial}
               className="touch-target h-9"
             >
               {serial.status === "connected" ? (
@@ -327,10 +332,8 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
                       value={serial.baudRate}
                       disabled={serialBusy}
                       onChange={(event) => {
-                        setSerialBusy(true);
-                        void scanner
-                          ?.setSerialBaud(Number(event.target.value))
-                          .finally(() => setSerialBusy(false));
+                        const rate = Number(event.target.value);
+                        if (scanner) void runSerial(() => scanner.setSerialBaud(rate));
                       }}
                       className="h-8 rounded-md border border-border bg-background px-2 text-foreground"
                     >
@@ -352,7 +355,52 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
                     <ScanBarcode className="mr-1.5 size-4" />
                     Disparar lector
                   </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={serial.status !== "connected" || serial.probe === "waiting"}
+                    onClick={() => void scanner?.probeSerial()}
+                    className="h-8"
+                  >
+                    {serial.probe === "waiting" ? (
+                      <Loader2 className="mr-1.5 size-4 animate-spin" />
+                    ) : (
+                      <Activity className="mr-1.5 size-4" />
+                    )}
+                    Probar comunicación
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={serialBusy}
+                    onClick={() => {
+                      if (scanner) void runSerial(() => scanner.connectSerial({ replace: true }));
+                    }}
+                    className="h-8"
+                  >
+                    <Usb className="mr-1.5 size-4" />
+                    Cambiar puerto
+                  </Button>
                 </div>
+                {serial.portLabel && serial.status === "connected" ? (
+                  <p>
+                    Puerto abierto: <span className="font-mono text-foreground">{serial.portLabel}</span>
+                  </p>
+                ) : null}
+                {serial.probe === "ok" ? (
+                  <p className="text-emerald-600 dark:text-emerald-400">
+                    El puerto respondió{serial.probeReply ? `: ${serial.probeReply}` : ""}. Es el
+                    puerto del escáner; si al leer no llega nada, prueba Disparar lector.
+                  </p>
+                ) : serial.probe === "silent" ? (
+                  <p className="text-destructive">
+                    El puerto no respondió. Probablemente no es el del escáner: pulsa Cambiar puerto
+                    y elige el que diga «HoneyWell Gen7DB» o el COM del escáner (Administrador de
+                    dispositivos → Puertos COM y LPT). Prueba también otra velocidad.
+                  </p>
+                ) : null}
                 <p>
                   Bytes recibidos: <span className="font-mono text-foreground">{serial.bytesReceived}</span>
                   {serial.protocol ? ` · Formato: ${serial.protocol}` : ""}

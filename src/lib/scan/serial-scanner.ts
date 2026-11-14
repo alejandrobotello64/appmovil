@@ -8,12 +8,17 @@
  * Entiende dos formatos:
  * - Texto: el código seguido de CR/LF (o un silencio breve).
  * - SSI de Zebra: paquetes binarios que el escáner reenvía (pitando) hasta recibir ACK.
+ *
+ * La 7220 puede traer el módulo antiguo (motor Zebra) o el "Scanner Module with USB"
+ * (motor Honeywell, puerto "HoneyWell Gen7DB"); el disparo y la prueba usan el
+ * protocolo de cada fabricante.
  */
 
 type SerialPortLike = {
   open(options: { baudRate: number }): Promise<void>;
   close(): Promise<void>;
   setSignals?(signals: { dataTerminalReady?: boolean; requestToSend?: boolean }): Promise<void>;
+  getInfo?(): { usbVendorId?: number; usbProductId?: number };
   readable: ReadableStream<Uint8Array> | null;
   writable: WritableStream<Uint8Array> | null;
 };
@@ -35,6 +40,10 @@ export type SerialScannerState = {
   lastBytes: string;
   lastCode: string;
   protocol: "" | "texto" | "SSI";
+  /** Descripción del puerto abierto (fabricante USB si se conoce). */
+  portLabel: string;
+  probe: "" | "waiting" | "ok" | "silent";
+  probeReply: string;
 };
 
 export const SERIAL_BAUD_RATES = [9600, 19200, 38400, 57600, 115200] as const;
@@ -53,7 +62,22 @@ const SSI_SOURCE_DECODER = 0x00;
 const SSI_SOURCE_HOST = 0x04;
 const SSI_CMD_ACK = 0xd0;
 const SSI_START_DECODE = 0xe4;
+const SSI_REQUEST_REVISION = 0xa3;
+const SSI_REPLY_REVISION = 0xa4;
 const SSI_STATUS_CONTINUATION = 0x02;
+
+/** Comandos serie de Honeywell: SYN T CR dispara, SYN M CR + REVINF. pide la versión. */
+const HONEYWELL_TRIGGER = new Uint8Array([0x16, 0x54, 0x0d]);
+const HONEYWELL_REVISION = new TextEncoder().encode("\u0016M\rREVINF.");
+const PROBE_MS = 2000;
+
+const USB_VENDORS: Record<number, { name: string; kind: ScannerKind }> = {
+  0x0c2e: { name: "Honeywell", kind: "honeywell" },
+  0x0536: { name: "Honeywell (Hand Held)", kind: "honeywell" },
+  0x05e0: { name: "Zebra", kind: "zebra" },
+};
+
+type ScannerKind = "honeywell" | "zebra" | "";
 
 const UNSUPPORTED: SerialScannerState = {
   status: "unsupported",
@@ -63,11 +87,15 @@ const UNSUPPORTED: SerialScannerState = {
   lastBytes: "",
   lastCode: "",
   protocol: "",
+  portLabel: "",
+  probe: "",
+  probeReply: "",
 };
 
 let state: SerialScannerState = UNSUPPORTED;
 let initialized = false;
 let port: SerialPortLike | null = null;
+let probeUntil = 0;
 let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
 let stopping = false;
 let scanHandler: ((code: string) => void) | null = null;
@@ -123,8 +151,35 @@ function cleanText(bytes: number[]) {
   return text.replace(/[\u0000-\u001c\u001e\u001f\u007f]/g, "").trim();
 }
 
+function hex4(value: number) {
+  return value.toString(16).padStart(4, "0").toUpperCase();
+}
+
+function portVendor(current: SerialPortLike | null) {
+  const vendorId = current?.getInfo?.().usbVendorId;
+  return vendorId === undefined ? null : (USB_VENDORS[vendorId] ?? null);
+}
+
+/** Identifica el puerto para volver a abrir el mismo al recargar. */
+function portKey(current: SerialPortLike) {
+  const info = current.getInfo?.() ?? {};
+  return info.usbVendorId === undefined
+    ? "serie"
+    : `${hex4(info.usbVendorId)}:${hex4(info.usbProductId ?? 0)}`;
+}
+
+function portLabel(current: SerialPortLike) {
+  const key = portKey(current);
+  if (key === "serie") return "Puerto serie (sin datos USB)";
+  return `USB ${key}${portVendor(current) ? ` · ${portVendor(current)?.name}` : ""}`;
+}
+
 function emit(code: string, protocol: SerialScannerState["protocol"]) {
   if (!code) return;
+  if (Date.now() < probeUntil) {
+    setState({ probeReply: `${state.probeReply} ${code}`.trim().slice(0, 200) });
+    return;
+  }
   setState({ lastCode: code, protocol });
   scanHandler?.(code);
 }
@@ -177,6 +232,9 @@ async function readLoop(current: SerialPortLike) {
       if (packet) {
         const opcode = packet[1];
         if (opcode === SSI_DECODE_DATA || opcode === SSI_EVENT) void write(ssiPacket(SSI_CMD_ACK));
+        if (opcode === SSI_REPLY_REVISION) {
+          setState({ probeReply: `Zebra ${cleanText(packet.slice(4, packet[0]))}`.trim() });
+        }
         if (opcode === SSI_DECODE_DATA) {
           const length = packet[0];
           pendingSsi.push(...packet.slice(5, length));
@@ -239,8 +297,17 @@ async function start(next: SerialPortLike) {
   await next.setSignals?.({ dataTerminalReady: true, requestToSend: true }).catch(() => undefined);
   stopping = false;
   port = next;
-  storageSet(REMEMBER_KEY, "1");
-  setState({ status: "connected", error: "", bytesReceived: 0, lastBytes: "", lastCode: "" });
+  storageSet(REMEMBER_KEY, portKey(next));
+  setState({
+    status: "connected",
+    error: "",
+    bytesReceived: 0,
+    lastBytes: "",
+    lastCode: "",
+    portLabel: portLabel(next),
+    probe: "",
+    probeReply: "",
+  });
   void readLoop(next);
 }
 
@@ -251,8 +318,14 @@ function initialize() {
   if (!serial) return;
   state = { ...UNSUPPORTED, status: "disconnected", baudRate: storedBaud() };
   const reconnect = () => {
-    if (port || storageGet(REMEMBER_KEY) !== "1") return;
-    void serial.getPorts().then((ports) => (ports[0] ? start(ports[0]) : undefined));
+    const remembered = storageGet(REMEMBER_KEY);
+    if (port || !remembered) return;
+    void serial.getPorts().then((ports) => {
+      const match =
+        ports.find((candidate) => portKey(candidate) === remembered) ??
+        (remembered === "1" ? ports[0] : undefined);
+      return match ? start(match) : undefined;
+    });
   };
   serial.addEventListener("connect", reconnect);
   reconnect();
@@ -283,16 +356,21 @@ export function setSerialScanHandler(handler: (code: string) => void) {
   };
 }
 
-/** Pide al usuario elegir el puerto del lector (requiere un clic). */
-export async function connectSerialScanner() {
+/**
+ * Pide al usuario elegir el puerto del lector (requiere un clic). Con `replace`
+ * cierra el puerto actual tras elegir otro.
+ */
+export async function connectSerialScanner(options: { replace?: boolean } = {}) {
   const serial = serialApi();
-  if (!serial || port) return;
+  if (!serial || (port && !options.replace)) return;
   let selected: SerialPortLike;
   try {
     selected = await serial.requestPort();
   } catch {
     return;
   }
+  if (selected === port) return;
+  await closeCurrent();
   await start(selected);
 }
 
@@ -321,7 +399,33 @@ export async function setSerialBaudRate(baudRate: number) {
   if (current) await start(current);
 }
 
-/** Pide al escáner (SSI) que lea, como si se presionara el gatillo. */
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+/** Envía el comando de cada fabricante (los dos si el puerto no lo indica). */
+async function sendByKind(honeywell: Uint8Array, zebra: Uint8Array) {
+  const kind = portVendor(port)?.kind ?? "";
+  if (kind !== "zebra") await write(honeywell).catch(() => undefined);
+  if (!kind) await wait(300);
+  if (kind !== "honeywell") await write(zebra).catch(() => undefined);
+}
+
+/** Pide al escáner que lea, como si se presionara el gatillo. */
 export async function triggerSerialScanner() {
-  await write(ssiPacket(SSI_START_DECODE)).catch(() => undefined);
+  await sendByKind(HONEYWELL_TRIGGER, ssiPacket(SSI_START_DECODE));
+}
+
+/**
+ * Pide la versión al escáner para saber si el puerto elegido es el correcto:
+ * si no llega ningún byte, ese puerto no es el del lector.
+ */
+export async function probeSerialScanner() {
+  if (!port) return;
+  const before = state.bytesReceived;
+  probeUntil = Date.now() + PROBE_MS;
+  setState({ probe: "waiting", probeReply: "" });
+  await sendByKind(HONEYWELL_REVISION, ssiPacket(SSI_REQUEST_REVISION));
+  await wait(Math.max(0, probeUntil - Date.now()));
+  setState({ probe: state.bytesReceived > before ? "ok" : "silent" });
 }
