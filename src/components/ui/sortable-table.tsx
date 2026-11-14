@@ -34,6 +34,16 @@ function isElement(node: ReactNode, type?: string): node is AnyElement {
   return isValidElement<AnyProps>(node) && (type === undefined || node.type === type);
 }
 
+/** Cells of a row, expanding `<>…</>` groups so each `<th>`/`<td>` counts as its own column. */
+function flattenCells(children: ReactNode): ReactNode[] {
+  return flatten(children).flatMap((child) => {
+    if (!isElement(child) || child.type !== Fragment) return [child];
+    return flattenCells(child.props.children).map((cell) =>
+      isElement(cell) ? cloneElement(cell, { key: `${child.key}${cell.key}` }) : cell
+    );
+  });
+}
+
 /** Best-effort text of a React subtree; `data-sort` on any element overrides it. */
 function nodeText(node: ReactNode): string {
   if (node == null || typeof node === "boolean") return "";
@@ -69,7 +79,7 @@ function hasInteractive(node: ReactNode): boolean {
 function rowCells(row: AnyElement): Map<number, AnyElement> {
   const cells = new Map<number, AnyElement>();
   let column = 0;
-  for (const cell of flatten(row.props.children)) {
+  for (const cell of flattenCells(row.props.children)) {
     if (!isElement(cell)) continue;
     cells.set(column, cell);
     column += Number(cell.props.colSpan ?? 1) || 1;
@@ -193,7 +203,7 @@ function enhanceHead(
 
   const row = rows[lastRowIndex] as AnyElement;
   let column = 0;
-  const cells = flatten(row.props.children).map((cell) => {
+  const cells = flattenCells(row.props.children).map((cell) => {
     if (!isElement(cell)) return cell;
     const current = column;
     column += Number(cell.props.colSpan ?? 1) || 1;

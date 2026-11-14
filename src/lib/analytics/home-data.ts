@@ -83,6 +83,7 @@ async function getServiceOrdersLite(): Promise<ServiceOrderLite[]> {
         "id, folio, order_kind, status, priority, service_type, client_id, client_name, equipment_name, equipment_brand, equipment_model, technician, reception_at, promised_at, delivered_at, total, currency, under_warranty, created_at"
       )
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw new Error(error.message);
     const page = (data ?? []) as Record<string, unknown>[];

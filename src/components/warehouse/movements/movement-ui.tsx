@@ -173,6 +173,7 @@ export function ProductPicker({
         disabled={disabled}
         onChange={(event) => setQuery(event.target.value)}
         placeholder={placeholder}
+        data-scan-search="true"
         className={cn(inputClass, "pl-9")}
       />
       {query.trim() ? (

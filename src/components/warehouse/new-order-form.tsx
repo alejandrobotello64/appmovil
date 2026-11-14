@@ -416,6 +416,7 @@ export function NewOrderForm({
                     autoFocus
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="SKU, nombre o marca"
+                    data-scan-search="true"
                     className={`${fieldClass} pl-10`}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -148,7 +148,6 @@ type SidebarProps = {
 };
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeWarehouseTab = normalizeWarehouseTab(searchParams.get("tab"));
@@ -172,10 +171,24 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const inEducation = pathname.startsWith("/dashboard/educacion");
   const inQuality = pathname.startsWith("/dashboard/calidad");
   const [warehouseOpen, setWarehouseOpen] = useState(inWarehouse);
+  const [wasInWarehouse, setWasInWarehouse] = useState(inWarehouse);
+  if (inWarehouse !== wasInWarehouse) {
+    setWasInWarehouse(inWarehouse);
+    if (inWarehouse) setWarehouseOpen(true);
+  }
   const [usersOpen, setUsersOpen] = useState(inUsers);
-  const [biomedicaOpen, setBiomedicaOpen] = useState(
-    inServiceOrders || inEducation
-  );
+  const [wasInUsers, setWasInUsers] = useState(inUsers);
+  if (inUsers !== wasInUsers) {
+    setWasInUsers(inUsers);
+    if (inUsers) setUsersOpen(true);
+  }
+  const inBiomedica = inServiceOrders || inEducation;
+  const [biomedicaOpen, setBiomedicaOpen] = useState(inBiomedica);
+  const [wasInBiomedica, setWasInBiomedica] = useState(inBiomedica);
+  if (inBiomedica !== wasInBiomedica) {
+    setWasInBiomedica(inBiomedica);
+    if (inBiomedica) setBiomedicaOpen(true);
+  }
   const [salesOpen, setSalesOpen] = useState(inSales);
   const [wasInSales, setWasInSales] = useState(inSales);
   if (inSales !== wasInSales) {
@@ -196,53 +209,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   }
   const { canView } = useSessionAccess();
 
-  useEffect(() => {
-    if (inWarehouse) setWarehouseOpen(true);
-  }, [inWarehouse]);
-
-  useEffect(() => {
-    if (inUsers) setUsersOpen(true);
-  }, [inUsers]);
-
-  useEffect(() => {
-    if (inServiceOrders || inEducation) setBiomedicaOpen(true);
-  }, [inServiceOrders, inEducation]);
-
   function handleWarehouseClick() {
-    const nextOpen = !warehouseOpen;
-    setWarehouseOpen(nextOpen);
-    if (nextOpen) {
-      router.push("/dashboard/almacen?tab=dashboard");
-    }
+    setWarehouseOpen((current) => !current);
   }
 
   function handleUsersClick() {
-    const nextOpen = !usersOpen;
-    setUsersOpen(nextOpen);
-    if (nextOpen) {
-      router.push("/dashboard/usuarios?tab=dashboard");
-    }
+    setUsersOpen((current) => !current);
   }
 
   function handleBiomedicaClick() {
-    const nextOpen = !biomedicaOpen;
-    setBiomedicaOpen(nextOpen);
-    if (nextOpen) {
-      const firstTab = visibleServiceOrderTabs[0];
-      if (firstTab) {
-        router.push(firstTab.href);
-      } else if (canView("educacion")) {
-        router.push("/dashboard/educacion");
-      }
-    }
+    setBiomedicaOpen((current) => !current);
   }
 
   function handleSalesClick() {
-    const nextOpen = !salesOpen;
-    setSalesOpen(nextOpen);
-    if (nextOpen && visibleSalesTabs[0]) {
-      router.push(visibleSalesTabs[0].href);
-    }
+    setSalesOpen((current) => !current);
   }
 
   const visibleSalesTabs = SALES_TABS.filter((tab) =>
@@ -250,17 +230,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   );
 
   function handlePurchasingClick() {
-    const nextOpen = !purchasingOpen;
-    setPurchasingOpen(nextOpen);
-    if (nextOpen && visiblePurchasingTabs[0]) {
-      router.push(visiblePurchasingTabs[0].href);
-    }
+    setPurchasingOpen((current) => !current);
   }
 
   function handleExpensesClick() {
-    const nextOpen = !expensesOpen;
-    setExpensesOpen(nextOpen);
-    if (nextOpen) router.push(EXPENSE_TABS[0].href);
+    setExpensesOpen((current) => !current);
   }
 
   const visiblePurchasingTabs = PURCHASING_TABS.filter((tab) =>
@@ -271,7 +245,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     canView(SERVICE_ORDER_TAB_MODULE[tab.id])
   );
   const showBiomedica = BIOMEDICA_MODULES.some((module) => canView(module));
-  const biomedicaActive = inServiceOrders || inEducation;
+  const biomedicaActive = inBiomedica;
 
   return (
     <>

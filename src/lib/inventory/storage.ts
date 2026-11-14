@@ -399,6 +399,7 @@ async function fetchInventoryRows(options?: {
       .from("inventory_items")
       .select("*")
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(from, from + pageSize - 1);
 
     if (options?.kind) {

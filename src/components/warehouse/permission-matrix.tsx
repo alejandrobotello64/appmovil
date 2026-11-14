@@ -195,6 +195,7 @@ export function PermissionMatrix({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar módulo (ej. cotizaciones, flotilla...)"
+          data-scan-search="off"
           className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-9 text-sm"
         />
       </label>

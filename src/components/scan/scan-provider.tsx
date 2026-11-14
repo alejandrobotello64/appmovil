@@ -15,6 +15,7 @@ import { ScanDialog, type ScanRequest } from "@/components/scan/scan-dialog";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { CATALOG_MODULES } from "@/lib/auth/permissions";
 import { SCAN_TARGET_EVENT, useBarcodeScanner } from "@/lib/scan/use-barcode-scanner";
+import { fillSearchField, findPageSearchField, scanSearchMode } from "@/lib/scan/search-fields";
 import {
   connectSerialScanner,
   disconnectSerialScanner,
@@ -67,19 +68,34 @@ export function ScanProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
 
-  useBarcodeScanner(openScanner, { enabled: allowed });
-
-  useEffect(() => {
-    if (!allowed) return;
-    return setSerialScanHandler((code) => {
+  /** Campo enfocado que procesa la lectura, buscador de la pantalla o ficha del producto. */
+  const deliverScan = useCallback(
+    (code: string) => {
       const target = document.activeElement;
       if (target instanceof HTMLElement && target.dataset.scanTarget === "true") {
         target.dispatchEvent(new CustomEvent(SCAN_TARGET_EVENT, { detail: code }));
         return;
       }
+      const field = scanSearchMode(target) ? (target as HTMLInputElement) : findPageSearchField();
+      if (field) {
+        void fillSearchField(field, code);
+        return;
+      }
       openScanner(code);
-    });
-  }, [allowed, openScanner]);
+    },
+    [openScanner]
+  );
+
+  const fillField = useCallback((input: HTMLInputElement, code: string) => {
+    void fillSearchField(input, code);
+  }, []);
+
+  useBarcodeScanner(deliverScan, { enabled: allowed, onFieldScan: fillField });
+
+  useEffect(() => {
+    if (!allowed) return;
+    return setSerialScanHandler(deliverScan);
+  }, [allowed, deliverScan]);
 
   const value = useMemo(
     () => ({

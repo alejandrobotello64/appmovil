@@ -470,6 +470,7 @@ export function PurchaseRequestsPanel() {
           <input
             className={cn(fieldClass, "pl-9")}
             placeholder="Folio, OS, cliente, material, proveedor…"
+            data-scan-search="true"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

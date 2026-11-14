@@ -6,6 +6,7 @@ import {
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import { scanSearchMode } from "./search-fields";
 
 /** Máximo entre teclas de una ráfaga de lector (una persona escribe más lento). */
 const MAX_KEY_GAP_MS = 60;
@@ -38,17 +39,24 @@ function isFastBurst(keys: number, startedAt: number, lastAt: number, minLength:
 /**
  * Detecta lecturas de un lector de códigos tipo teclado (HID): caracteres muy
  * rápidos que terminan en Enter/Tab o en un silencio breve. Fuera de campos de
- * texto, la lectura se entrega a `onScan`; dentro de un campo se escribe normalmente.
+ * texto, la lectura se entrega a `onScan`; en un buscador (ver `scanSearchMode`)
+ * se escribe normalmente y al terminar se entrega a `onFieldScan`; en otros
+ * campos no se intercepta.
  */
 export function useBarcodeScanner(
   onScan: (code: string) => void,
-  options: { enabled?: boolean } = {}
+  options: {
+    enabled?: boolean;
+    onFieldScan?: (input: HTMLInputElement, code: string) => void;
+  } = {}
 ) {
   const enabled = options.enabled ?? true;
   const onScanRef = useRef(onScan);
+  const onFieldScanRef = useRef(options.onFieldScan);
   useEffect(() => {
     onScanRef.current = onScan;
-  }, [onScan]);
+    onFieldScanRef.current = options.onFieldScan;
+  }, [onScan, options.onFieldScan]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -57,31 +65,39 @@ export function useBarcodeScanner(
     let lastAt = 0;
     let keys = 0;
     let idleTimer = 0;
+    let field: HTMLInputElement | null = null;
 
     const reset = () => {
       buffer = "";
       keys = 0;
+      field = null;
       window.clearTimeout(idleTimer);
     };
 
     const flushIfScan = (minLength: number) => {
       const code = buffer;
+      const target = field;
       const fast = isFastBurst(keys, startedAt, lastAt, minLength);
       reset();
       if (fast && code.replace(new RegExp(GS, "g"), "").length >= minLength) {
-        onScanRef.current(code);
+        if (target) onFieldScanRef.current?.(target, code);
+        else onScanRef.current(code);
         return true;
       }
       return false;
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.isComposing || isEditable(event.target)) {
+      const searchField =
+        onFieldScanRef.current && scanSearchMode(event.target)
+          ? (event.target as HTMLInputElement)
+          : null;
+      if (event.isComposing || (isEditable(event.target) && !searchField)) {
         reset();
         return;
       }
       const now = performance.now();
-      if (keys && now - lastAt > MAX_KEY_GAP_MS) reset();
+      if (keys && (now - lastAt > MAX_KEY_GAP_MS || field !== searchField)) reset();
 
       if (event.key === "Enter" || event.key === "Tab") {
         if (keys && flushIfScan(MIN_LENGTH)) {
@@ -99,7 +115,10 @@ export function useBarcodeScanner(
       }
       if (!char) return;
 
-      if (!keys) startedAt = now;
+      if (!keys) {
+        startedAt = now;
+        field = searchField;
+      }
       buffer += char;
       keys += 1;
       lastAt = now;

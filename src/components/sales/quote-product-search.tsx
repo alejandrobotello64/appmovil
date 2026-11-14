@@ -130,6 +130,7 @@ export function QuoteProductSearch({
               if (event.key === "Escape") setOpen(false);
             }}
             placeholder="SKU, nombre, marca o n.º de parte"
+            data-scan-search="true"
             aria-label="Buscar producto del catálogo"
             className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           />
