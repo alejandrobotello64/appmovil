@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Camera, Link2, Loader2, ScanBarcode, Search, X } from "lucide-react";
+import { Camera, Link2, Loader2, ScanBarcode, Search, Unplug, Usb, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { CameraCodeReader } from "@/components/scan/camera-code-reader";
@@ -17,6 +17,8 @@ import {
   SCAN_MATCH_LABELS,
   type ScanResult,
 } from "@/lib/scan/lookup";
+import { useScanBurstInput, useScanTarget } from "@/lib/scan/use-barcode-scanner";
+import { useScanner } from "@/components/scan/scan-provider";
 
 export type ScanRequest = { code: string; nonce: number };
 
@@ -36,6 +38,8 @@ function LinkCodePanel({ code, onLinked }: LinkCodePanelProps) {
   const [searching, setSearching] = useState(false);
   const [linkingId, setLinkingId] = useState("");
   const [error, setError] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  useScanTarget(searchRef, setTerm);
 
   useEffect(() => {
     const value = term.trim();
@@ -89,6 +93,8 @@ function LinkCodePanel({ code, onLinked }: LinkCodePanelProps) {
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <input
+          ref={searchRef}
+          data-scan-target="true"
           value={term}
           onChange={(event) => setTerm(event.target.value)}
           placeholder="Busca por SKU, nombre, marca o modelo…"
@@ -197,12 +203,31 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
     return () => window.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  function submitManual(event: FormEvent) {
-    event.preventDefault();
-    const value = manual;
+  function lookupManual(value: string) {
     setManual("");
     manualRef.current?.blur();
     startLookup(value);
+  }
+
+  function submitManual(event: FormEvent) {
+    event.preventDefault();
+    lookupManual(manual);
+  }
+
+  const handleManualKeyDown = useScanBurstInput(lookupManual);
+  const scanner = useScanner();
+  const serial = scanner?.serial;
+  const [serialBusy, setSerialBusy] = useState(false);
+
+  async function toggleSerial() {
+    if (!scanner) return;
+    setSerialBusy(true);
+    try {
+      if (serial?.status === "connected") await scanner.disconnectSerial();
+      else await scanner.connectSerial();
+    } finally {
+      setSerialBusy(false);
+    }
   }
 
   const selected = result?.matches.find((match) => match.item.id === selectedId) ?? null;
@@ -228,6 +253,7 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
               autoFocus={!request?.code}
               value={manual}
               onChange={(event) => setManual(event.target.value)}
+              onKeyDown={handleManualKeyDown}
               placeholder="Escanea o escribe un código, SKU, lote o serie"
               className="h-11 w-full rounded-lg border border-border bg-background pr-3 pl-9 font-mono text-sm"
             />
@@ -245,6 +271,53 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
             {camera ? "Cerrar cámara" : "Usar cámara"}
           </Button>
         </form>
+
+        {serial && serial.status !== "unsupported" ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm">
+            <span className="flex items-center gap-2">
+              <span
+                className={
+                  serial.status === "connected"
+                    ? "size-2 rounded-full bg-emerald-500"
+                    : "size-2 rounded-full bg-muted-foreground/40"
+                }
+              />
+              {serial.status === "connected"
+                ? "Lector integrado conectado: escanea en cualquier pantalla."
+                : serial.status === "connecting"
+                  ? "Conectando lector…"
+                  : "Lector integrado (puerto COM) sin conectar."}
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant={serial.status === "connected" ? "outline" : "default"}
+              disabled={serialBusy || serial.status === "connecting"}
+              onClick={() => void toggleSerial()}
+              className="touch-target h-9"
+            >
+              {serial.status === "connected" ? (
+                <>
+                  <Unplug className="mr-1.5 size-4" />
+                  Desconectar
+                </>
+              ) : (
+                <>
+                  <Usb className="mr-1.5 size-4" />
+                  Conectar lector
+                </>
+              )}
+            </Button>
+            {serial.error ? (
+              <p className="w-full text-xs text-destructive">{serial.error}</p>
+            ) : serial.status !== "connected" ? (
+              <p className="w-full text-xs text-muted-foreground">
+                En la Dell Rugged el lector trabaja por puerto serie: pulsa Conectar lector y elige
+                el puerto COM del escáner (solo la primera vez).
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {camera ? <CameraCodeReader onDetected={startLookup} /> : null}
 

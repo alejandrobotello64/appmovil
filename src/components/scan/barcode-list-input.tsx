@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { ScanBarcode, X } from "lucide-react";
 import { normalizeBarcode, parseGs1 } from "@/lib/scan/codes";
 import { productsWithBarcode } from "@/lib/scan/lookup";
+import { useScanBurstInput, useScanTarget } from "@/lib/scan/use-barcode-scanner";
 
 type BarcodeListInputProps = {
   value: string[];
@@ -39,11 +40,16 @@ export function BarcodeListInput({ value, onChange, productId }: BarcodeListInpu
       .catch(() => undefined);
   }
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  const handleBurst = useScanBurstInput(add);
+  useScanTarget(inputRef, add);
+
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if ((event.key === "Enter" || event.key === "Tab") && draft.trim()) {
       event.preventDefault();
       add(draft);
     }
+    handleBurst(event);
   }
 
   return (
@@ -71,6 +77,8 @@ export function BarcodeListInput({ value, onChange, productId }: BarcodeListInpu
       <div className="relative">
         <ScanBarcode className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <input
+          ref={inputRef}
+          data-scan-target="true"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleKeyDown}

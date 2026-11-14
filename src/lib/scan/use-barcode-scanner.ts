@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 
 /** Máximo entre teclas de una ráfaga de lector (una persona escribe más lento). */
-const MAX_KEY_GAP_MS = 45;
-const MAX_AVG_GAP_MS = 30;
+const MAX_KEY_GAP_MS = 60;
+const MAX_AVG_GAP_MS = 35;
+/** Sin Enter/Tab de sufijo, la lectura se da por terminada tras este silencio. */
+const IDLE_MS = 120;
 const MIN_LENGTH = 4;
+const MIN_LENGTH_WITHOUT_SUFFIX = 6;
 const GS = "\u001d";
 
 function isEditable(target: EventTarget | null) {
@@ -22,10 +30,15 @@ function isEditable(target: EventTarget | null) {
   return false;
 }
 
+function isFastBurst(keys: number, startedAt: number, lastAt: number, minLength: number) {
+  if (keys < minLength) return false;
+  return (lastAt - startedAt) / (keys - 1) <= MAX_AVG_GAP_MS;
+}
+
 /**
  * Detecta lecturas de un lector de códigos tipo teclado (HID): caracteres muy
- * rápidos que terminan en Enter o Tab. Fuera de campos de texto, la lectura se
- * consume y se entrega a `onScan`; dentro de un campo se escribe normalmente.
+ * rápidos que terminan en Enter/Tab o en un silencio breve. Fuera de campos de
+ * texto, la lectura se entrega a `onScan`; dentro de un campo se escribe normalmente.
  */
 export function useBarcodeScanner(
   onScan: (code: string) => void,
@@ -43,10 +56,23 @@ export function useBarcodeScanner(
     let startedAt = 0;
     let lastAt = 0;
     let keys = 0;
+    let idleTimer = 0;
 
     const reset = () => {
       buffer = "";
       keys = 0;
+      window.clearTimeout(idleTimer);
+    };
+
+    const flushIfScan = (minLength: number) => {
+      const code = buffer;
+      const fast = isFastBurst(keys, startedAt, lastAt, minLength);
+      reset();
+      if (fast && code.replace(new RegExp(GS, "g"), "").length >= minLength) {
+        onScanRef.current(code);
+        return true;
+      }
+      return false;
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -58,13 +84,9 @@ export function useBarcodeScanner(
       if (keys && now - lastAt > MAX_KEY_GAP_MS) reset();
 
       if (event.key === "Enter" || event.key === "Tab") {
-        const avg = keys > 1 ? (lastAt - startedAt) / (keys - 1) : Infinity;
-        const code = buffer;
-        reset();
-        if (code.replace(new RegExp(GS, "g"), "").length >= MIN_LENGTH && avg <= MAX_AVG_GAP_MS) {
+        if (keys && flushIfScan(MIN_LENGTH)) {
           event.preventDefault();
           event.stopPropagation();
-          onScanRef.current(code);
         }
         return;
       }
@@ -82,9 +104,83 @@ export function useBarcodeScanner(
       keys += 1;
       lastAt = now;
       if (char === GS) event.preventDefault();
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => flushIfScan(MIN_LENGTH_WITHOUT_SUFFIX), IDLE_MS);
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.clearTimeout(idleTimer);
+    };
   }, [enabled]);
+}
+
+/**
+ * Para un campo de texto donde el lector escribe sin Enter: al terminar una
+ * ráfaga rápida entrega el valor del campo (p. ej. para buscar o agregar).
+ */
+export function useScanBurstInput(onBurst: (value: string) => void) {
+  const onBurstRef = useRef(onBurst);
+  const state = useRef({ startedAt: 0, lastAt: 0, keys: 0, timer: 0 });
+  useEffect(() => {
+    onBurstRef.current = onBurst;
+  }, [onBurst]);
+  useEffect(() => {
+    const current = state.current;
+    return () => window.clearTimeout(current.timer);
+  }, []);
+
+  return useCallback((event: ReactKeyboardEvent<HTMLInputElement>) => {
+    const current = state.current;
+    if (event.key === "Enter" || event.key === "Tab") {
+      window.clearTimeout(current.timer);
+      current.keys = 0;
+      return;
+    }
+    if (event.key.length !== 1) return;
+    const now = performance.now();
+    if (!current.keys || now - current.lastAt > MAX_KEY_GAP_MS) {
+      current.keys = 0;
+      current.startedAt = now;
+    }
+    current.keys += 1;
+    current.lastAt = now;
+    const input = event.currentTarget;
+    window.clearTimeout(current.timer);
+    current.timer = window.setTimeout(() => {
+      const fast = isFastBurst(
+        current.keys,
+        current.startedAt,
+        current.lastAt,
+        MIN_LENGTH_WITHOUT_SUFFIX
+      );
+      current.keys = 0;
+      if (fast && input.value.trim()) onBurstRef.current(input.value);
+    }, IDLE_MS);
+  }, []);
+}
+
+/** Evento con el que el lector serie entrega un código al campo enfocado. */
+export const SCAN_TARGET_EVENT = "mas-scan";
+
+/**
+ * Hace que el campo reciba los códigos del lector serie mientras tiene el foco
+ * (el campo debe llevar `data-scan-target="true"`).
+ */
+export function useScanTarget(
+  ref: { current: HTMLElement | null },
+  onCode: (code: string) => void
+) {
+  const onCodeRef = useRef(onCode);
+  useEffect(() => {
+    onCodeRef.current = onCode;
+  }, [onCode]);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const handle = (event: Event) => onCodeRef.current(String((event as CustomEvent).detail ?? ""));
+    element.addEventListener(SCAN_TARGET_EVENT, handle);
+    return () => element.removeEventListener(SCAN_TARGET_EVENT, handle);
+  }, [ref]);
 }
