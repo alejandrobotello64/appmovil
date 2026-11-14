@@ -20,8 +20,10 @@ import {
   disconnectSerialScanner,
   getSerialScannerState,
   getServerSerialScannerState,
+  setSerialBaudRate,
   setSerialScanHandler,
   subscribeSerialScanner,
+  triggerSerialScanner,
   type SerialScannerState,
 } from "@/lib/scan/serial-scanner";
 import { cn } from "@/lib/utils";
@@ -32,6 +34,8 @@ type ScanContextValue = {
   serial: SerialScannerState;
   connectSerial: () => Promise<void>;
   disconnectSerial: () => Promise<void>;
+  setSerialBaud: (baudRate: number) => Promise<void>;
+  triggerSerial: () => Promise<void>;
 };
 
 const ScanContext = createContext<ScanContextValue | null>(null);
@@ -82,6 +86,8 @@ export function ScanProvider({ children }: { children: ReactNode }) {
       serial,
       connectSerial: connectSerialScanner,
       disconnectSerial: disconnectSerialScanner,
+      setSerialBaud: setSerialBaudRate,
+      triggerSerial: triggerSerialScanner,
     }),
     [allowed, openScanner, serial]
   );

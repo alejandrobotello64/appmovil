@@ -19,6 +19,7 @@ import {
 } from "@/lib/scan/lookup";
 import { useScanBurstInput, useScanTarget } from "@/lib/scan/use-barcode-scanner";
 import { useScanner } from "@/components/scan/scan-provider";
+import { SERIAL_BAUD_RATES } from "@/lib/scan/serial-scanner";
 
 export type ScanRequest = { code: string; nonce: number };
 
@@ -316,6 +317,61 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
                 el puerto COM del escáner (solo la primera vez).
               </p>
             ) : null}
+            <details className="w-full text-xs text-muted-foreground">
+              <summary className="cursor-pointer select-none">Ajustes y diagnóstico del lector</summary>
+              <div className="mt-2 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex items-center gap-1.5">
+                    Velocidad
+                    <select
+                      value={serial.baudRate}
+                      disabled={serialBusy}
+                      onChange={(event) => {
+                        setSerialBusy(true);
+                        void scanner
+                          ?.setSerialBaud(Number(event.target.value))
+                          .finally(() => setSerialBusy(false));
+                      }}
+                      className="h-8 rounded-md border border-border bg-background px-2 text-foreground"
+                    >
+                      {SERIAL_BAUD_RATES.map((rate) => (
+                        <option key={rate} value={rate}>
+                          {rate} baudios
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={serial.status !== "connected"}
+                    onClick={() => void scanner?.triggerSerial()}
+                    className="h-8"
+                  >
+                    <ScanBarcode className="mr-1.5 size-4" />
+                    Disparar lector
+                  </Button>
+                </div>
+                <p>
+                  Bytes recibidos: <span className="font-mono text-foreground">{serial.bytesReceived}</span>
+                  {serial.protocol ? ` · Formato: ${serial.protocol}` : ""}
+                  {serial.lastCode ? (
+                    <>
+                      {" "}· Último código: <span className="font-mono text-foreground">{serial.lastCode}</span>
+                    </>
+                  ) : null}
+                </p>
+                {serial.lastBytes ? (
+                  <p className="font-mono break-all text-foreground">{serial.lastBytes}</p>
+                ) : serial.status === "connected" ? (
+                  <p>
+                    Aún no llega nada del puerto. Si el lector pita y aquí no cambia, ese puerto no es
+                    el del escáner o Rugged Control Center lo está usando.
+                  </p>
+                ) : null}
+              </div>
+            </details>
           </div>
         ) : null}
 
