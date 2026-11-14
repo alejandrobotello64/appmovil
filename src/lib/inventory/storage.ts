@@ -17,6 +17,7 @@ import {
 } from "./types";
 import { removeStoredImage } from "./unit-media";
 import { normalizeProductColor } from "./colors";
+import { normalizeBarcodeList } from "@/lib/scan/codes";
 
 type InventoryRow = Database["public"]["Tables"]["inventory_items"]["Row"];
 type InventoryInsert =
@@ -167,6 +168,7 @@ function mapRowToItem(row: InventoryRow): InventoryItem {
     maxStock: row.max_stock ?? 0,
     reorderPoint: row.reorder_point ?? row.min_stock,
     partNumber: row.part_number ?? "",
+    barcodes: Array.isArray(row.barcodes) ? row.barcodes.filter(Boolean) : [],
     manufacturer: row.manufacturer ?? "",
     subcategory: row.subcategory ?? "",
     imagePath: row.image_path ?? "",
@@ -236,6 +238,7 @@ function mapInputToRow(input: InventoryItemInput): InventoryInsert {
     subcategory: input.subcategory ?? "",
     image_path: input.imagePath ?? "",
     image_url: input.imageUrl ?? "",
+    ...(input.barcodes ? { barcodes: normalizeBarcodeList(input.barcodes) } : {}),
   };
 }
 
@@ -652,6 +655,35 @@ export async function setInventoryItemColor(
     );
   }
 
+  return mapRowToItem(data);
+}
+
+export async function getInventoryItemsByIds(ids: string[]): Promise<InventoryItem[]> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (!unique.length) return [];
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .select("*")
+    .in("id", unique);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapRowToItem);
+}
+
+export async function setInventoryItemBarcodes(
+  id: string,
+  barcodes: string[]
+): Promise<InventoryItem> {
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .update({ barcodes: normalizeBarcodeList(barcodes) })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error || !data) {
+    throw new Error(
+      inventoryWriteMessage(error ?? {}) || "No se pudo guardar el código de barras."
+    );
+  }
   return mapRowToItem(data);
 }
 

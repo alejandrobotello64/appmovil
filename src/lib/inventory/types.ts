@@ -195,6 +195,8 @@ export type InventoryItem = {
   maxStock: number;
   reorderPoint: number;
   partNumber: string;
+  /** Códigos de barras / QR que identifican el producto al escanear. */
+  barcodes?: string[];
   manufacturer: string;
   subcategory: string;
   imagePath: string;

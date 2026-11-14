@@ -21,6 +21,8 @@ import {
   productColorMeta,
 } from "@/lib/inventory/colors";
 import { cn } from "@/lib/utils";
+import { CameraButton } from "@/components/media/camera-capture";
+import { BarcodeListInput } from "@/components/scan/barcode-list-input";
 
 type InventoryFormProps = {
   item?: InventoryItem | null;
@@ -80,6 +82,7 @@ function emptyForm(
     maxStock: 0,
     reorderPoint: 0,
     partNumber: "",
+    barcodes: [],
     manufacturer: "",
     subcategory: "",
     colorTag: "",
@@ -264,6 +267,10 @@ export function InventoryForm({
               <Camera className="size-4" />
               {showPreview ? "Cambiar imagen" : "Elegir imagen"}
             </Button>
+            <CameraButton
+              title="Foto del artículo"
+              onCapture={(files) => handleImagePick(files[0] ?? null)}
+            />
             {showPreview || (item?.imageUrl && !clearExistingImage) ? (
               <Button
                 type="button"
@@ -523,6 +530,14 @@ export function InventoryForm({
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
             />
           </label>
+          <div className="space-y-1.5 md:col-span-2">
+            <span className="text-sm font-medium">Códigos de barras</span>
+            <BarcodeListInput
+              value={form.barcodes ?? []}
+              onChange={(codes) => handleChange("barcodes", codes)}
+              productId={item?.id}
+            />
+          </div>
           <div className="space-y-1.5 md:col-span-2">
             <span className="text-sm font-medium">Color para separar</span>
             <div className="flex flex-wrap gap-1.5" aria-label="Color del producto">

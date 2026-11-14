@@ -16,6 +16,7 @@ import {
   type SessionData,
 } from "@/lib/auth";
 import { GlobalSearch } from "@/components/dashboard/global-search";
+import { ScanButton, ScanProvider } from "@/components/scan/scan-provider";
 
 type AppShellProps = {
   title: string;
@@ -76,7 +77,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
     );
   }
 
-  return (
+  const shell = (
     <div className="flex min-h-dvh bg-background">
       <Suspense fallback={<aside className="hidden w-72 border-r border-border lg:block" />}>
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -105,6 +106,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+            <ScanButton />
             <GlobalSearch />
             <ZoomControls className="hidden md:inline-flex" />
             <ThemeToggle
@@ -148,4 +150,6 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
       </div>
     </div>
   );
+
+  return <ScanProvider>{shell}</ScanProvider>;
 }

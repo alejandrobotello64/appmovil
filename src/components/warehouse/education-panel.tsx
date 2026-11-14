@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CameraButton } from "@/components/media/camera-capture";
 import {
   DesktopTable,
   ResponsiveDataList,
@@ -439,7 +440,7 @@ export function EducationPanel() {
     }
   }
 
-  async function handlePhotoUpload(files: FileList | null) {
+  async function handlePhotoUpload(files: FileList | File[] | null) {
     if (!canWrite || !selected || !files?.length) return;
     setPhotoUploading(true);
     setError("");
@@ -1105,21 +1106,30 @@ export function EducationPanel() {
                           </p>
                         </div>
                         {canWrite ? (
-                          <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium hover:bg-muted">
-                            <Camera className="size-3.5" />
-                            {photoUploading ? "Subiendo…" : "Agregar fotos"}
-                            <input
-                              type="file"
-                              accept="image/*"
+                          <div className="flex flex-wrap gap-2">
+                            <CameraButton
                               multiple
-                              className="sr-only"
+                              title="Fotografías de la capacitación"
                               disabled={photoUploading}
-                              onChange={(event) => {
-                                void handlePhotoUpload(event.target.files);
-                                event.target.value = "";
-                              }}
+                              className="h-9 text-xs"
+                              onCapture={(files) => void handlePhotoUpload(files)}
                             />
-                          </label>
+                            <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium hover:bg-muted">
+                              <Camera className="size-3.5" />
+                              {photoUploading ? "Subiendo…" : "Agregar fotos"}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="sr-only"
+                                disabled={photoUploading}
+                                onChange={(event) => {
+                                  void handlePhotoUpload(event.target.files);
+                                  event.target.value = "";
+                                }}
+                              />
+                            </label>
+                          </div>
                         ) : null}
                       </div>
                       {selected.photos.length === 0 ? (

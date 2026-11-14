@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CameraButton } from "@/components/media/camera-capture";
 import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
@@ -314,6 +315,12 @@ export function BiomedicalInstrumentsPanel() {
                 >
                   <Camera className="size-4" /> Elegir foto
                 </Button>
+                <CameraButton
+                  title="Foto del instrumento"
+                  onCapture={(files) => {
+                    if (files[0]) setPendingImage(files[0]);
+                  }}
+                />
                 <Button
                   type="button"
                   size="sm"
@@ -677,6 +684,13 @@ export function BiomedicalInstrumentsPanel() {
                         }}
                       />
                     </label>
+                    <CameraButton
+                      size="icon-sm"
+                      label="Tomar foto del instrumento"
+                      onCapture={(files) => {
+                        if (files[0]) void onUploadImage(item, files[0]);
+                      }}
+                    />
                     <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-input px-2.5 py-1.5 text-xs hover:bg-muted">
                       <FileText className="size-3.5" /> PDF
                       <input

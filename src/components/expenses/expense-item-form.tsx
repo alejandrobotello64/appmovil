@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Camera, FileCode2, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { CameraButton } from "@/components/media/camera-capture";
 import { ensureTicketPhoto, isImageFile, isPdfFile, isReceiptImageName } from "@/lib/expenses/receipt-file";
 import { addExpenseItem, updateExpenseItem } from "@/lib/expenses/storage";
 import {
@@ -331,6 +332,15 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
                       return;
                     }
                     attachPhoto(file);
+                  }}
+                />
+                <CameraButton
+                  size="icon"
+                  label="Tomar foto del ticket"
+                  className="size-10 shrink-0"
+                  onCapture={(files) => {
+                    if (photoInputRef.current) photoInputRef.current.value = "";
+                    attachPhoto(files[0] ?? null);
                   }}
                 />
               </span>

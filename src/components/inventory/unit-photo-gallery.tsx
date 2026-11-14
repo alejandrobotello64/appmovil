@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ImagePlus, Loader2, Star, Trash2, ZoomIn } from "lucide-react";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { CameraButton } from "@/components/media/camera-capture";
 import {
   addUnitImages,
   removeUnitImage,
@@ -98,27 +99,37 @@ export function UnitPhotoGallery({
           {title} <span className="font-normal text-muted-foreground">({list.length})</span>
         </p>
         {canEdit ? (
-          <label
-            className={cn(
-              "flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted",
-              busy && "pointer-events-none opacity-60"
-            )}
-          >
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
-            {busy ? "Guardando…" : "Agregar fotos"}
-            <input
-              type="file"
-              accept="image/*"
+          <div className="flex flex-wrap gap-2">
+            <CameraButton
               multiple
-              className="sr-only"
+              size="default"
+              title={`${title} · ${caption}`}
               disabled={busy}
-              onChange={(e) => {
-                const files = Array.from(e.target.files ?? []);
-                e.target.value = "";
-                onAdd(files);
-              }}
+              className="h-auto py-1.5"
+              onCapture={onAdd}
             />
-          </label>
+            <label
+              className={cn(
+                "flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted",
+                busy && "pointer-events-none opacity-60"
+              )}
+            >
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+              {busy ? "Guardando…" : "Agregar fotos"}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="sr-only"
+                disabled={busy}
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? []);
+                  e.target.value = "";
+                  onAdd(files);
+                }}
+              />
+            </label>
+          </div>
         ) : null}
       </div>
 

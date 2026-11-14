@@ -129,6 +129,7 @@ export type Database = {
           max_stock: number;
           reorder_point: number;
           part_number: string;
+          barcodes: string[];
           manufacturer: string;
           subcategory: string;
           image_path: string;
@@ -169,6 +170,7 @@ export type Database = {
           max_stock?: number;
           reorder_point?: number;
           part_number?: string;
+          barcodes?: string[];
           manufacturer?: string;
           subcategory?: string;
           image_path?: string;
@@ -209,6 +211,7 @@ export type Database = {
           max_stock?: number;
           reorder_point?: number;
           part_number?: string;
+          barcodes?: string[];
           manufacturer?: string;
           subcategory?: string;
           image_path?: string;

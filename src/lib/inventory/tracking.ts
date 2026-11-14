@@ -190,7 +190,8 @@ export function hasStockIn(stock: InventoryStock | undefined, warehouseId: strin
  * artículos (de una categoría, o de todo el catálogo), agrupados por producto.
  */
 export async function getInventoryStock(
-  category?: InventoryCategoryId
+  category?: InventoryCategoryId,
+  productId?: string
 ): Promise<Map<string, InventoryStock>> {
   let balancesQuery = db
     .from("inventory_balances")
@@ -208,6 +209,10 @@ export async function getInventoryStock(
   if (category) {
     balancesQuery = balancesQuery.eq("item.category", category);
     serialsQuery = serialsQuery.eq("item.category", category);
+  }
+  if (productId) {
+    balancesQuery = balancesQuery.eq("product_id", productId);
+    serialsQuery = serialsQuery.eq("product_id", productId);
   }
   const [balancesRes, serialsRes] = await Promise.all([
     balancesQuery,

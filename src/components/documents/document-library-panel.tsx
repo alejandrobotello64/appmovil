@@ -28,6 +28,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CameraButton } from "@/components/media/camera-capture";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
@@ -1677,9 +1678,12 @@ function CatalogDocumentForm({
             <Upload className="mx-auto mb-2 size-7 text-[#3B46A5]" />
             <p className="text-sm font-medium">Arrastra los archivos aquí</p>
             <p className="mb-3 text-xs text-muted-foreground">o</p>
-            <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-              Elegir archivos
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                Elegir archivos
+              </Button>
+              <CameraButton multiple title="Fotografiar documento" onCapture={addFiles} />
+            </div>
             <input
               ref={fileRef}
               type="file"

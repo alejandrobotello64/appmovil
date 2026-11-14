@@ -15,6 +15,7 @@ import { useZoom } from "@/components/zoom-provider";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { CameraButton } from "@/components/media/camera-capture";
 import {
   createSession,
   getSession,
@@ -425,6 +426,14 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                         }}
                       />
                     </label>
+                    <CameraButton
+                      title="Tu foto"
+                      className="h-9 text-xs"
+                      onCapture={(files) => {
+                        setPhotoFile(files[0] ?? null);
+                        setRemovePhoto(false);
+                      }}
+                    />
                     {(photoUrl || photoFile) && !removePhoto ? (
                       <Button
                         type="button"

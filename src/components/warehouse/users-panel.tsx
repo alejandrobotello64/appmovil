@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CameraButton } from "@/components/media/camera-capture";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   DesktopTable,
@@ -1150,6 +1151,15 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                         }}
                       />
                     </label>
+                    <CameraButton
+                      title="Foto del colaborador"
+                      disabled={!canWrite}
+                      className="h-9 text-xs"
+                      onCapture={(files) => {
+                        setPhotoFile(files[0] ?? null);
+                        setRemovePhoto(false);
+                      }}
+                    />
                     {(photoUrl || photoFile) && !removePhoto ? (
                       <Button
                         type="button"

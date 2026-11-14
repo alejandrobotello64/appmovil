@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDownToLine, ArrowUpFromLine, Camera, Plus, X } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ImagePlus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CameraButton } from "@/components/media/camera-capture";
 import { ImageLightbox, type LightboxImage } from "@/components/ui/image-lightbox";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { attachEntryEvidence } from "@/lib/warehouse/entry-evidence";
@@ -1029,29 +1030,39 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       lote o del producto recibido.
                     </p>
                   </div>
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted",
-                      (!canWrite || submitting) && "pointer-events-none opacity-60"
-                    )}
-                  >
-                    <Camera className="size-4" />
-                    {evidenceFiles.length ? "Agregar más" : "Agregar fotos"}
-                    <input
-                      type="file"
-                      accept="image/*"
+                  <div className="flex flex-wrap gap-2">
+                    <CameraButton
                       multiple
-                      className="sr-only"
+                      size="default"
+                      title="Fotos de evidencia"
                       disabled={!canWrite || submitting}
-                      onChange={(event) => {
-                        const files = Array.from(event.target.files ?? []).filter((file) =>
-                          file.type.startsWith("image/")
-                        );
-                        event.target.value = "";
-                        if (files.length) setEvidenceFiles((current) => [...current, ...files]);
-                      }}
+                      className="h-auto py-1.5"
+                      onCapture={(files) => setEvidenceFiles((current) => [...current, ...files])}
                     />
-                  </label>
+                    <label
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted",
+                        (!canWrite || submitting) && "pointer-events-none opacity-60"
+                      )}
+                    >
+                      <ImagePlus className="size-4" />
+                      {evidenceFiles.length ? "Agregar más" : "Elegir fotos"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="sr-only"
+                        disabled={!canWrite || submitting}
+                        onChange={(event) => {
+                          const files = Array.from(event.target.files ?? []).filter((file) =>
+                            file.type.startsWith("image/")
+                          );
+                          event.target.value = "";
+                          if (files.length) setEvidenceFiles((current) => [...current, ...files]);
+                        }}
+                      />
+                    </label>
+                  </div>
                 </div>
                 {evidenceFiles.length > 0 ? (
                   <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">

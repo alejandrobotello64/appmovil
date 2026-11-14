@@ -10,6 +10,7 @@ import {
   MapPin,
   Pencil,
   Plus,
+  QrCode,
   Star,
   Trash2,
   Warehouse as WarehouseIcon,
@@ -17,6 +18,8 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
+import { CameraButton } from "@/components/media/camera-capture";
+import { printProductLabels } from "@/lib/scan/label";
 import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { InventoryStats } from "@/components/inventory/inventory-stats";
 import { Button } from "@/components/ui/button";
@@ -172,11 +175,14 @@ type InventoryPanelProps = {
   /** Catálogo unificado, una categoría, o solo equipos */
   panelMode?: SupplyCategoryId | "equipment" | "catalog";
   initialCategory?: SupplyCategoryId | null;
+  /** Texto de búsqueda inicial (p. ej. el SKU de un código escaneado). */
+  initialSearch?: string;
 };
 
 export function InventoryPanel({
   panelMode = "catalog",
   initialCategory = null,
+  initialSearch = "",
 }: InventoryPanelProps) {
   const isCatalog = panelMode === "catalog";
   const isEquipment = panelMode === "equipment";
@@ -246,7 +252,7 @@ export function InventoryPanel({
   const [notice, setNotice] = useState("");
   const selectedWarehouse = warehouses.find((w) => w.id === warehouseFilter);
   const trackingMode: TrackingDateMode = isEquipment ? "manufacture" : "both";
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState<
     StockStatus | "all" | "sin_alerta"
   >("all");
@@ -267,6 +273,12 @@ export function InventoryPanel({
   useEffect(() => {
     setCategoryFilter(initialCategory ?? "all");
   }, [initialCategory]);
+
+  const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+  if (initialSearch !== appliedSearch) {
+    setAppliedSearch(initialSearch);
+    if (initialSearch) setSearch(initialSearch);
+  }
 
   async function handleSubmit(
     data: InventoryItemInput,
@@ -358,6 +370,7 @@ export function InventoryPanel({
         item.brand,
         productColorLabel(resolveProductColor(item.colorTag, item.brand)),
         item.partNumber,
+        ...(item.barcodes ?? []),
         item.model,
         item.supplier,
         item.serialNumber,
@@ -1662,37 +1675,57 @@ export function InventoryPanel({
                 </p>
 
                 {itemCan(viewingItem, "edit") ? (
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted",
-                      imageBusy && "pointer-events-none opacity-60"
-                    )}
-                  >
-                    {imageBusy ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <ImagePlus className="size-4" />
-                    )}
-                    {imageBusy ? "Guardando…" : "Agregar imágenes"}
-                    <input
-                      type="file"
-                      accept="image/*"
+                  <div className="grid grid-cols-2 gap-2">
+                    <label
+                      className={cn(
+                        "flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted",
+                        imageBusy && "pointer-events-none opacity-60"
+                      )}
+                    >
+                      {imageBusy ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <ImagePlus className="size-4" />
+                      )}
+                      {imageBusy ? "Guardando…" : "Agregar imágenes"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="sr-only"
+                        disabled={imageBusy}
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files ?? []);
+                          e.target.value = "";
+                          void handleAddImages(files);
+                        }}
+                      />
+                    </label>
+                    <CameraButton
                       multiple
-                      className="sr-only"
+                      size="default"
                       disabled={imageBusy}
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files ?? []);
-                        e.target.value = "";
-                        void handleAddImages(files);
-                      }}
+                      title="Fotos del artículo"
+                      className="h-auto py-2"
+                      onCapture={(files) => void handleAddImages(files)}
                     />
-                  </label>
+                  </div>
                 ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => void printProductLabels([viewingItem])}
+                >
+                  <QrCode className="mr-1.5 size-4" />
+                  Imprimir etiqueta QR
+                </Button>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
                   ["N.º de parte", viewingItem.partNumber || "—"],
+                  ["Códigos de barras", viewingItem.barcodes?.join(", ") || "—"],
                   ["Color", renderColorTag(viewingItem)],
                   ["Marca", viewingItem.brand || "—"],
                   ["Categoría", getCategoryLabel(viewingItem.category)],

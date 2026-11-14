@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { ServicePricingSummary } from "@/components/service-orders/service-pricing-summary";
 import { Button } from "@/components/ui/button";
+import { CameraButton } from "@/components/media/camera-capture";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
@@ -1874,6 +1875,17 @@ export function ServiceOrdersPanel({
                       >
                         <Camera className="size-4" /> Subir imagen
                       </Button>
+                      <CameraButton
+                        multiple
+                        variant="default"
+                        disabled={!canEdit}
+                        title="Fotos de la orden de servicio"
+                        onCapture={(files) =>
+                          void (async () => {
+                            for (const file of files) await onUploadImage(file);
+                          })()
+                        }
+                      />
                     </div>
                   </div>
                   {selected.images.length === 0 ? (
@@ -2853,21 +2865,31 @@ export function ServiceOrdersPanel({
                       </p>
                     </div>
                     {canEdit ? (
-                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-muted">
-                        <Stamp className="size-4" />
-                        Subir escaneo
-                        <input
-                          type="file"
+                      <div className="flex flex-wrap gap-2">
+                        <CameraButton
                           multiple
-                          accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
-                          className="hidden"
-                          onChange={(e) => {
-                            const files = e.target.files;
-                            if (files?.length) void onUploadSignedOrder(files);
-                            e.target.value = "";
-                          }}
+                          size="default"
+                          label="Fotografiar orden"
+                          title="Orden firmada y sellada"
+                          className="h-auto py-2"
+                          onCapture={(files) => void onUploadSignedOrder(files)}
                         />
-                      </label>
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm hover:bg-muted">
+                          <Stamp className="size-4" />
+                          Subir escaneo
+                          <input
+                            type="file"
+                            multiple
+                            accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = e.target.files;
+                              if (files?.length) void onUploadSignedOrder(files);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      </div>
                     ) : null}
                   </div>
                   {selected.documents.filter((d) => isHospitalSignedDocument(d))

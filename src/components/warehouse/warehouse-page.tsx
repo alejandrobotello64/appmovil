@@ -34,6 +34,7 @@ export function WarehousePage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const categoryParam = searchParams.get("categoria");
+  const searchParam = searchParams.get("buscar") ?? "";
   const activeTab: WarehouseTabId = normalizeWarehouseTab(tabParam) ?? "dashboard";
   const requestedCategory =
     normalizeCatalogCategory(categoryParam) ??
@@ -98,11 +99,12 @@ export function WarehousePage() {
               <InventoryPanel
                 panelMode="catalog"
                 initialCategory={catalogCategory}
+                initialSearch={searchParam}
               />
             ) : null}
 
             {activeTab === "equipo" ? (
-              <InventoryPanel panelMode="equipment" />
+              <InventoryPanel panelMode="equipment" initialSearch={searchParam} />
             ) : null}
 
             {activeTab === "kits" ? <SupplyKitsPanel /> : null}
