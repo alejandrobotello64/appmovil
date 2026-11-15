@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { APP_VERSION_LABEL } from "@/lib/app-version";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -271,8 +272,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <p className="text-[11px] font-semibold tracking-[0.18em] text-[#00BFFF] uppercase">
               MAS
             </p>
-            <p className="text-sm font-semibold text-foreground">
-              Medical Advanced Supplies
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-semibold text-foreground">
+              <span>Medical Advanced Supplies</span>
+              <span
+                className="rounded-md border border-[rgba(0,191,255,0.35)] bg-[rgba(0,191,255,0.12)] px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-[#00BFFF]"
+                title={`Versión ${APP_VERSION_LABEL}`}
+              >
+                {APP_VERSION_LABEL}
+              </span>
             </p>
           </div>
           <button
