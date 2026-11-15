@@ -62,6 +62,16 @@ import {
   type DocArea,
   type FileKind,
 } from "@/lib/sales-catalog/types";
+import {
+  AUTHORIZED_SALES_BRANDS,
+  documentSearchText,
+  matchesBroadSearch,
+} from "@/lib/sales-catalog/brand-equipment";
+import { normalizeBrand } from "@/lib/inventory/brands";
+import {
+  orphanSalesDocuments,
+  SalesBrandIndex,
+} from "@/components/sales/sales-brand-index";
 import { cn } from "@/lib/utils";
 
 type AreaConfig = {
@@ -88,7 +98,8 @@ const AREA_CONFIG: Record<DocArea, AreaConfig> = {
   ventas: {
     module: "catalogo_ventas",
     title: "Catálogo de ventas",
-    description: "Brochures, folletos y presentaciones para compartir con clientes.",
+    description:
+      "Índice comercial por marca y equipo, con brochures y presentaciones para compartir con clientes.",
     emptyText: "Aún no hay brochures, folletos ni presentaciones.",
     defaultType: "brochure",
     defaultSort: "recientes",
@@ -406,13 +417,13 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
     return counts;
   }, [documents, config.warnDays]);
 
-  const brands = useMemo(
-    () =>
-      Array.from(new Set(documents.map((doc) => doc.brand.trim()).filter(Boolean))).sort(
-        (a, b) => a.localeCompare(b, "es")
-      ),
-    [documents]
-  );
+  const brands = useMemo(() => {
+    const fromDocs = documents.map((doc) => normalizeBrand(doc.brand) || doc.brand.trim());
+    const seed = area === "ventas" ? [...AUTHORIZED_SALES_BRANDS] : [];
+    return Array.from(new Set([...seed, ...fromDocs].filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b, "es")
+    );
+  }, [documents, area]);
 
   const typeCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -421,36 +432,34 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
   }, [documents]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
     const rows = documents.filter((doc) => {
       if (typeFilter !== "all" && doc.docType !== typeFilter) return false;
-      if (brandFilter !== "all" && doc.brand.trim() !== brandFilter) return false;
+      if (brandFilter !== "all") {
+        const wanted = normalizeBrand(brandFilter) || brandFilter;
+        const actual = normalizeBrand(doc.brand) || doc.brand.trim();
+        if (actual !== wanted) return false;
+      }
       if (
         validityFilter !== "all" &&
         validityStatus(doc.validUntil, config.warnDays) !== validityFilter
       ) {
         return false;
       }
-      if (!q) return true;
-      return [
-        doc.title,
-        doc.brand,
-        doc.productLine,
-        doc.model,
-        doc.description,
-        doc.version,
-        doc.fileName,
-        catalogDocTypeLabel(doc.docType),
-        ...doc.tags,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
+      if (!search.trim()) return true;
+      return matchesBroadSearch(
+        `${documentSearchText(doc)} ${catalogDocTypeLabel(doc.docType)}`,
+        search
+      );
     });
     return [...rows].sort((a, b) => {
       if (sort === "titulo") return a.title.localeCompare(b.title, "es");
       if (sort === "marca") {
-        return (a.brand || "~").localeCompare(b.brand || "~", "es") || a.title.localeCompare(b.title, "es");
+        return (
+          (normalizeBrand(a.brand) || a.brand || "~").localeCompare(
+            normalizeBrand(b.brand) || b.brand || "~",
+            "es"
+          ) || a.title.localeCompare(b.title, "es")
+        );
       }
       if (sort === "vigencia") {
         return (a.validUntil || "9999").localeCompare(b.validUntil || "9999");
@@ -458,6 +467,11 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
       return b.createdAt.localeCompare(a.createdAt);
     });
   }, [documents, search, typeFilter, brandFilter, validityFilter, config.warnDays, sort]);
+
+  const orphanDocs = useMemo(
+    () => (area === "ventas" ? orphanSalesDocuments(filtered) : []),
+    [area, filtered]
+  );
 
   const groups = useMemo(
     () => groupDocuments(filtered, sort, config.warnDays),
@@ -671,31 +685,44 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
         ) : null}
 
         <div className="space-y-3 border-b border-border p-4">
-          <div className="grid gap-2 md:grid-cols-[1fr_200px_180px_auto]">
+          <div
+            className={cn(
+              "grid gap-2",
+              area === "ventas"
+                ? "md:grid-cols-[1fr_180px_auto]"
+                : "md:grid-cols-[1fr_200px_180px_auto]"
+            )}
+          >
             <label className="relative block">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por título, marca, modelo, etiqueta…"
+                placeholder={
+                  area === "ventas"
+                    ? "Buscar marca, modelo, línea, etiqueta o brochure…"
+                    : "Buscar por título, marca, modelo, etiqueta…"
+                }
                 className={cn(fieldClass, "pl-9")}
                 aria-label="Buscar documentos"
               />
             </label>
-            <select
-              value={brandFilter}
-              onChange={(e) => setBrandFilter(e.target.value)}
-              className={fieldClass}
-              aria-label="Filtrar por marca"
-            >
-              <option value="all">Todas las marcas</option>
-              {brands.map((brand) => (
-                <option key={brand} value={brand}>
-                  {brand}
-                </option>
-              ))}
-            </select>
+            {area !== "ventas" ? (
+              <select
+                value={brandFilter}
+                onChange={(e) => setBrandFilter(e.target.value)}
+                className={fieldClass}
+                aria-label="Filtrar por marca"
+              >
+                <option value="all">Todas las marcas</option>
+                {brands.map((brand) => (
+                  <option key={brand} value={brand}>
+                    {brand}
+                  </option>
+                ))}
+              </select>
+            ) : null}
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortId)}
@@ -727,33 +754,86 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
               />
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <TypeChip
-              active={typeFilter === "all"}
-              onClick={() => setTypeFilter("all")}
-              label="Todos"
-              count={documents.length}
-            />
-            {CATALOG_DOC_TYPES.filter((type) => typeCounts.get(type.id)).map((type) => (
+          {area !== "ventas" ? (
+            <div className="flex flex-wrap gap-1.5">
               <TypeChip
-                key={type.id}
-                active={typeFilter === type.id}
-                onClick={() => setTypeFilter(type.id)}
-                label={type.label}
-                count={typeCounts.get(type.id) ?? 0}
+                active={typeFilter === "all"}
+                onClick={() => setTypeFilter("all")}
+                label="Todos"
+                count={documents.length}
               />
-            ))}
-          </div>
+              {CATALOG_DOC_TYPES.filter((type) => typeCounts.get(type.id)).map((type) => (
+                <TypeChip
+                  key={type.id}
+                  active={typeFilter === type.id}
+                  onClick={() => setTypeFilter(type.id)}
+                  label={type.label}
+                  count={typeCounts.get(type.id) ?? 0}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
 
+        {area === "ventas" ? (
+          <SalesBrandIndex
+            documents={documents}
+            search={search}
+            brandFilter={brandFilter}
+            onBrandFilter={setBrandFilter}
+            canUpload={canCreate}
+            onUpload={(preset) =>
+              openCreate({
+                title: preset.title,
+                brand: preset.brand,
+                productLine: preset.productLine,
+                model: preset.model,
+                docType: preset.docType ?? "brochure",
+              })
+            }
+            onOpenDoc={(doc) => void openDocument(doc)}
+          />
+        ) : null}
+
         <div className="p-4">
+          {area === "ventas" ? (
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Documentos subidos</h3>
+                <p className="text-xs text-muted-foreground">
+                  Brochures y presentaciones vinculados al índice, o sin ficha aún.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <TypeChip
+                  active={typeFilter === "all"}
+                  onClick={() => setTypeFilter("all")}
+                  label="Todos"
+                  count={documents.length}
+                />
+                {CATALOG_DOC_TYPES.filter((type) => typeCounts.get(type.id)).map((type) => (
+                  <TypeChip
+                    key={type.id}
+                    active={typeFilter === type.id}
+                    onClick={() => setTypeFilter(type.id)}
+                    label={type.label}
+                    count={typeCounts.get(type.id) ?? 0}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
           {loading ? (
             <p className="text-sm text-muted-foreground">Cargando documentos…</p>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-12 text-center">
               <FileText className="size-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {hasFilters ? "Ningún documento coincide con los filtros." : config.emptyText}
+                {hasFilters
+                  ? "Ningún documento coincide con los filtros."
+                  : area === "ventas"
+                    ? "Aún no hay brochures subidos. Usa «Subir brochure» en cada equipo del índice."
+                    : config.emptyText}
               </p>
               {!hasFilters && canCreate ? (
                 <Button type="button" variant="outline" onClick={() => openCreate()}>
@@ -819,6 +899,35 @@ export function DocumentLibraryPanel({ area }: { area: DocArea }) {
                 ? ` · ${groups.length} ${groups.length === 1 ? "grupo" : "grupos"}`
                 : ""}
             </p>
+          ) : null}
+
+          {area === "ventas" && !loading && orphanDocs.length > 0 ? (
+            <div className="mt-6 space-y-3 border-t border-border pt-4">
+              <div>
+                <h4 className="text-sm font-semibold text-foreground">Otros documentos</h4>
+                <p className="text-xs text-muted-foreground">
+                  Archivos cuya marca o modelo no coinciden aún con una ficha del índice.
+                </p>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {orphanDocs.map((doc) => (
+                  <CatalogCard
+                    key={doc.id}
+                    doc={doc}
+                    config={config}
+                    copied={copiedId === doc.id}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    canExport={canExport}
+                    onOpen={() => openDocument(doc)}
+                    onDownload={() => void handleDownload(doc)}
+                    onCopy={() => void handleCopyLink(doc)}
+                    onEdit={() => openEdit(doc)}
+                    onDelete={() => void handleDelete(doc)}
+                  />
+                ))}
+              </ul>
+            </div>
           ) : null}
         </div>
       </section>

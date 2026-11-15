@@ -80,6 +80,11 @@ const BRAND_COLOR: Record<string, ProductColorId> = {
   Halyard: "rosa",
   "Edwards Lifesciences": "gris",
   "Hill-Rom": "rojo",
+  "Hill-Rom / Baxter": "rojo",
+  "Fisher & Paykel": "turquesa",
+  "B. Braun": "verde",
+  seca: "rojo",
+  Mortara: "azul",
 };
 
 export function isProductColorId(value: string | null | undefined): value is ProductColorId {

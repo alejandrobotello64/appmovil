@@ -10,6 +10,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { ScanBarcode } from "lucide-react";
 import { ScanDialog, type ScanRequest } from "@/components/scan/scan-dialog";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
@@ -68,7 +69,12 @@ export function ScanProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
 
-  /** Campo enfocado que procesa la lectura, buscador de la pantalla o ficha del producto. */
+  const inWarehouse = usePathname().startsWith("/dashboard/almacen");
+
+  /**
+   * Campo enfocado que procesa la lectura; en Almacén, el buscador de la pantalla;
+   * en el resto, la ventana de existencias del producto.
+   */
   const deliverScan = useCallback(
     (code: string) => {
       const target = document.activeElement;
@@ -76,14 +82,18 @@ export function ScanProvider({ children }: { children: ReactNode }) {
         target.dispatchEvent(new CustomEvent(SCAN_TARGET_EVENT, { detail: code }));
         return;
       }
-      const field = scanSearchMode(target) ? (target as HTMLInputElement) : findPageSearchField();
+      const field = scanSearchMode(target)
+        ? (target as HTMLInputElement)
+        : inWarehouse
+          ? findPageSearchField()
+          : null;
       if (field) {
         void fillSearchField(field, code);
         return;
       }
       openScanner(code);
     },
-    [openScanner]
+    [inWarehouse, openScanner]
   );
 
   const fillField = useCallback((input: HTMLInputElement, code: string) => {

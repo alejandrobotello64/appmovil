@@ -6,7 +6,8 @@ import { resolveScan } from "./lookup";
 /**
  * Buscadores que reciben lecturas del lector:
  * - `type="search"` o texto de ayuda que empieza por "Buscar"/"Busca": reciben la
- *   lectura con foco y, sin foco, si son el primer buscador visible de la pantalla.
+ *   lectura con foco y, sin foco (solo en Almacén), si son el primer buscador
+ *   visible de la pantalla.
  * - `data-scan-search="true"`: igual, para buscadores con otro texto de ayuda.
  * - `data-scan-search="focus"`: solo con foco (p. ej. el buscador global).
  * - `data-scan-search="off"`: nunca.
