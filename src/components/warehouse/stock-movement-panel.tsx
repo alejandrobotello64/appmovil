@@ -743,7 +743,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     if (value.trim() && first) setItemId(first.id);
                     else if (!value.trim()) setItemId("");
                   }}
-                  placeholder="Escanear o buscar por código, nombre, n.º de parte, marca, serie..."
+                  scanSearch="true"
+                  placeholder="Buscar o escanear por código, nombre, n.º de parte, marca, serie..."
                 />
               ) : null}
               <select
@@ -1239,6 +1240,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             value={historyQuery}
             onChange={setHistoryQuery}
             placeholder="Buscar folio, artículo, n.º de parte o motivo..."
+            scanSearch="off"
             className="mt-3"
           />
 

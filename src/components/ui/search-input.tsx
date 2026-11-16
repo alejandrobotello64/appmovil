@@ -9,6 +9,8 @@ type SearchInputProps = {
   placeholder?: string;
   className?: string;
   ariaLabel?: string;
+  /** `true` | `focus` | `off` — controla si el lector escribe aquí (ver scanSearchMode). */
+  scanSearch?: "true" | "focus" | "off";
 };
 
 export function SearchInput({
@@ -17,6 +19,7 @@ export function SearchInput({
   placeholder = "Buscar...",
   className,
   ariaLabel,
+  scanSearch,
 }: SearchInputProps) {
   return (
     <div className={cn("relative w-full", className)}>
@@ -27,6 +30,7 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
+        data-scan-search={scanSearch}
         className="h-10 w-full rounded-lg border border-input bg-background pr-9 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&::-webkit-search-cancel-button]:hidden"
       />
       {value ? (
