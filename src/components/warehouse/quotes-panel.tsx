@@ -12,9 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { QuoteFulfillmentSection } from "@/components/sales/quote-fulfillment";
 import {
-  QuoteLineStockHint,
-  QuoteProductSearch,
-} from "@/components/sales/quote-product-search";
+  emptyQuoteDraftLine,
+  QuoteLinesEditor,
+  type QuoteDraftLine,
+} from "@/components/sales/quote-lines-editor";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -37,19 +38,14 @@ import {
 import {
   QUOTE_PIPELINE_STATUSES,
   QUOTE_STATUSES,
-  clampAmount,
-  clampPercent,
   computeQuoteTotals,
   lineAmount,
-  lineDiscountAmount,
   lineDiscountLabel,
-  lineGrossAmount,
   lineHasDiscount,
   quoteLineIdentity,
   quoteStatusLabel,
   type Quote,
   type QuoteInput,
-  type QuoteLineInput,
   type QuoteStatus,
 } from "@/lib/quotes/types";
 import { cn } from "@/lib/utils";
@@ -57,10 +53,7 @@ import { cn } from "@/lib/utils";
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none";
 
-type DraftLine = QuoteLineInput & {
-  key: string;
-  discountMode?: "amount" | "percent";
-};
+type DraftLine = QuoteDraftLine;
 
 function money(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -77,19 +70,6 @@ function dueTone(date: string) {
   if (days <= 3) return "text-rose-700 dark:text-rose-300";
   if (days <= 7) return "text-amber-700 dark:text-amber-300";
   return "text-emerald-700 dark:text-emerald-300";
-}
-
-function emptyDraftLine(): DraftLine {
-  return {
-    key: crypto.randomUUID(),
-    description: "",
-    quantity: 1,
-    unitPrice: 0,
-    unit: "pza",
-    productId: null,
-    brand: "",
-    partNumber: "",
-  };
 }
 
 const EMPTY: QuoteInput = {
@@ -260,42 +240,6 @@ export function QuotesPanel() {
     setForm((prev) => ({ ...prev, discount: 0, discountPercent: 0 }));
   }
 
-  function changeLineDiscountMode(index: number, mode: "amount" | "percent") {
-    setLines((current) =>
-      current.map((row, i) =>
-        i === index && (row.discountMode ?? "percent") !== mode
-          ? { ...row, discountMode: mode, discountPercent: 0, discountAmount: 0 }
-          : row
-      )
-    );
-  }
-
-  function updateLineDiscount(index: number, value: string) {
-    setLines((current) =>
-      current.map((row, i) => {
-        if (i !== index) return row;
-        return row.discountMode === "amount"
-          ? { ...row, discountPercent: 0, discountAmount: clampAmount(value) }
-          : { ...row, discountPercent: clampPercent(value), discountAmount: 0 };
-      })
-    );
-  }
-
-  function applyProductToLine(line: DraftLine, product: InventoryItem | null): DraftLine {
-    if (!product) {
-      return { ...line, productId: null };
-    }
-    return {
-      ...line,
-      productId: product.id,
-      description: line.description || product.name,
-      unit: product.unit || line.unit,
-      unitPrice: product.unitPrice || line.unitPrice,
-      brand: product.brand,
-      partNumber: product.partNumber,
-    };
-  }
-
   function openCreate() {
     const session = getSession();
     setEditing(null);
@@ -305,7 +249,7 @@ export function QuotesPanel() {
       quoteDate: new Date().toISOString().slice(0, 10),
     });
     setDiscountMode("amount");
-    setLines([emptyDraftLine()]);
+    setLines([emptyQuoteDraftLine()]);
     setFormOpen(true);
   }
 
@@ -351,7 +295,7 @@ export function QuotesPanel() {
                 : ("percent" as const),
             notes: line.notes,
           }))
-        : [emptyDraftLine()]
+        : [emptyQuoteDraftLine()]
     );
     setFormOpen(true);
     setSelectedId(quote.id);
@@ -777,247 +721,35 @@ export function QuotesPanel() {
             </label>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold">Partidas</h4>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-8"
-                onClick={() =>
-                  setLines((current) => [...current, emptyDraftLine()])
-                }
-              >
-                <Plus className="size-3.5" />
-                Partida
-              </Button>
-            </div>
-            {lines.map((line, index) => {
-              const catalogItem = items.find((item) => item.id === line.productId) ?? null;
-              const available = catalogItem
-                ? (availableById.get(catalogItem.id) ?? catalogItem.quantity)
-                : 0;
-              return (
-              <div
-                key={line.key}
-                className="grid gap-2 rounded-xl border border-border bg-muted/20 p-3 lg:grid-cols-6"
-              >
-                <div className="lg:col-span-3">
-                  <QuoteProductSearch
-                    items={items}
-                    availableById={availableById}
-                    selectedId={line.productId ?? null}
-                    onSelect={(product) =>
-                      setLines((current) =>
-                        current.map((row, i) =>
-                          i === index ? applyProductToLine(row, product) : row
-                        )
-                      )
-                    }
-                  />
-                </div>
-                <label className="space-y-1 lg:col-span-3">
-                  <span className="text-xs text-muted-foreground">
-                    Descripción *
-                  </span>
-                  <input
-                    required
-                    value={line.description}
-                    onChange={(e) =>
-                      setLines((current) =>
-                        current.map((row, i) =>
-                          i === index
-                            ? { ...row, description: e.target.value }
-                            : row
-                        )
-                      )
-                    }
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="space-y-1 lg:col-span-3">
-                  <span className="text-xs text-muted-foreground">Marca</span>
-                  <input
-                    value={line.brand ?? ""}
-                    onChange={(e) =>
-                      setLines((current) =>
-                        current.map((row, i) =>
-                          i === index ? { ...row, brand: e.target.value } : row
-                        )
-                      )
-                    }
-                    placeholder="Marca del producto"
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="space-y-1 lg:col-span-3">
-                  <span className="text-xs text-muted-foreground">
-                    Referencia / n.º de parte
-                  </span>
-                  <input
-                    value={line.partNumber ?? ""}
-                    onChange={(e) =>
-                      setLines((current) =>
-                        current.map((row, i) =>
-                          i === index
-                            ? { ...row, partNumber: e.target.value }
-                            : row
-                        )
-                      )
-                    }
-                    placeholder="Referencia o n.º de parte"
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Cant.</span>
-                  <input
-                    type="number"
-                    min={0.01}
-                    step="0.01"
-                    value={line.quantity}
-                    onChange={(e) =>
-                      setLines((current) =>
-                        current.map((row, i) =>
-                          i === index
-                            ? { ...row, quantity: Number(e.target.value) }
-                            : row
-                        )
-                      )
-                    }
-                    className={fieldClass}
-                  />
-                  <QuoteLineStockHint
-                    item={catalogItem}
-                    available={available}
-                    requested={line.quantity}
-                  />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs text-muted-foreground">P. unit.</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={line.unitPrice}
-                    onChange={(e) =>
-                      setLines((current) =>
-                        current.map((row, i) =>
-                          i === index
-                            ? { ...row, unitPrice: Number(e.target.value) }
-                            : row
-                        )
-                      )
-                    }
-                    className={fieldClass}
-                  />
-                </label>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between gap-1">
-                    <label
-                      htmlFor={`line-discount-${line.key}`}
-                      className="text-xs text-muted-foreground"
-                    >
-                      Desc. {line.discountMode === "amount" ? "$" : "%"}
-                    </label>
-                    <div
-                      role="group"
-                      aria-label="Tipo de descuento de la partida"
-                      className="inline-flex rounded-md border border-input p-0.5 text-[10px]"
-                    >
-                      {(
-                        [
-                          { id: "amount", label: "$" },
-                          { id: "percent", label: "%" },
-                        ] as const
-                      ).map((option) => (
-                        <button
-                          key={option.id}
-                          type="button"
-                          aria-pressed={(line.discountMode ?? "percent") === option.id}
-                          onClick={() => changeLineDiscountMode(index, option.id)}
-                          className={cn(
-                            "rounded px-1.5 font-semibold leading-4 transition-colors",
-                            (line.discountMode ?? "percent") === option.id
-                              ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <input
-                    id={`line-discount-${line.key}`}
-                    type="number"
-                    min={0}
-                    max={line.discountMode === "amount" ? lineGrossAmount(line) : 100}
-                    step="0.01"
-                    value={
-                      (line.discountMode === "amount"
-                        ? line.discountAmount
-                        : line.discountPercent) || ""
-                    }
-                    placeholder="0"
-                    onChange={(e) => updateLineDiscount(index, e.target.value)}
-                    className={fieldClass}
-                  />
-                </div>
-                <div className="flex items-end justify-between gap-2 lg:col-span-3">
-                  <p className="text-sm text-muted-foreground">
-                    Importe:{" "}
-                    {lineHasDiscount(line) ? (
-                      <>
-                        <span className="line-through">{money(lineGrossAmount(line))}</span>{" "}
-                        <span className="font-medium text-foreground">{money(lineAmount(line))}</span>{" "}
-                        <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                          (−{money(lineDiscountAmount(line))})
-                        </span>
-                      </>
-                    ) : (
-                      money(lineAmount(line))
-                    )}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9"
-                    disabled={lines.length <= 1}
-                    onClick={() =>
-                      setLines((current) =>
-                        current.filter((_, i) => i !== index)
-                      )
-                    }
-                  >
-                    Quitar
-                  </Button>
-                </div>
-              </div>
-              );
-            })}
-            <div className="rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm">
-              {draftTotals.lineDiscounts > 0 ? (
-                <>
-                  <p>Precio de lista: {money(draftTotals.listAmount)}</p>
-                  <p>Descuentos por partida: - {money(draftTotals.lineDiscounts)}</p>
-                </>
-              ) : null}
-              {draftTotals.discountAmount > 0 ? (
-                <>
-                  <p>Suma de partidas: {money(draftTotals.gross)}</p>
-                  <p>
-                    {draftTotals.discountPercent > 0
-                      ? `Descuento general (${draftTotals.discountPercent}%)`
-                      : "Descuento general"}
-                    : - {money(draftTotals.discountAmount)}
-                  </p>
-                </>
-              ) : null}
-              <p>Subtotal: {money(draftTotals.subtotal)}</p>
-              <p>IVA: {money(draftTotals.taxAmount)}</p>
-              <p className="font-semibold">Total: {money(draftTotals.total)}</p>
-            </div>
+          <QuoteLinesEditor
+            lines={lines}
+            onChange={setLines}
+            items={items}
+            availableById={availableById}
+            disabled={!canWrite || submitting}
+          />
+
+          <div className="rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm">
+            {draftTotals.lineDiscounts > 0 ? (
+              <>
+                <p>Precio de lista: {money(draftTotals.listAmount)}</p>
+                <p>Descuentos por partida: - {money(draftTotals.lineDiscounts)}</p>
+              </>
+            ) : null}
+            {draftTotals.discountAmount > 0 ? (
+              <>
+                <p>Suma de partidas: {money(draftTotals.gross)}</p>
+                <p>
+                  {draftTotals.discountPercent > 0
+                    ? `Descuento general (${draftTotals.discountPercent}%)`
+                    : "Descuento general"}
+                  : - {money(draftTotals.discountAmount)}
+                </p>
+              </>
+            ) : null}
+            <p>Subtotal: {money(draftTotals.subtotal)}</p>
+            <p>IVA: {money(draftTotals.taxAmount)}</p>
+            <p className="font-semibold">Total: {money(draftTotals.total)}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
