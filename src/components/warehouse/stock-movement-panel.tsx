@@ -407,14 +407,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           manufacturedAt: manufactured,
           serialNumber: serial,
         });
-        setLines((current) => {
-          const merged = mergeMovementLine(current, next);
-          setScanHint(
-            `Agregado: ${local.sku} · ${merged.length} producto${merged.length === 1 ? "" : "s"} en la lista.${ambiguous}`
-          );
-          return merged;
-        });
+        setLines((current) => mergeMovementLine(current, next));
         clearDraft();
+        setScanHint(
+          `Agregado: ${local.sku}.${ambiguous} Escanea el siguiente o confirma la lista.`
+        );
         setError("");
         setMessage("");
         return;
@@ -658,15 +655,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (built.length === 0) {
         throw new Error("No hay datos para agregar.");
       }
+      let total = 0;
       setLines((current) => {
         let next = current;
         for (const line of built) next = mergeMovementLine(next, line);
-        setScanHint(
-          `Agregado: ${selected.sku} · ${next.length} producto${next.length === 1 ? "" : "s"} en la lista.`
-        );
+        total = next.length;
         return next;
       });
       clearDraft();
+      setScanHint(
+        `Agregado: ${selected.sku} · ${total} producto${total === 1 ? "" : "s"} en la lista.`
+      );
       setError("");
       setMessage("");
     } catch (err) {
@@ -1020,12 +1019,15 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   ) : (
                     stockedWarehouses.map((warehouse) => {
                       const qty = warehouseQty.get(warehouse.id);
+                      const showQty =
+                        Boolean(selected) &&
+                        lines.length === 0 &&
+                        qty != null &&
+                        qty > 0;
                       return (
                         <option key={warehouse.id} value={warehouse.id}>
                           {warehouse.code} — {warehouse.name}
-                          {qty != null && qty > 0
-                            ? ` · ${formatLotQty(qty, unitLabel)}`
-                            : ""}
+                          {showQty ? ` · ${formatLotQty(qty, unitLabel)}` : ""}
                         </option>
                       );
                     })
@@ -1061,226 +1063,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               </label>
             </div>
 
-            {!isEquipmentCatalog ? (
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Cantidad</span>
-                <input
-                  ref={quantityRef}
-                  required={lines.length === 0}
-                  type="number"
-                  min={1}
-                  value={quantity}
-                  disabled={!canWrite}
-                  onChange={(event) => setQuantity(Number(event.target.value))}
-                  className={fieldClass}
-                />
-              </label>
-            ) : mode === "entrada" ? (
-              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-                Cada línea de serie es una pieza. La cantidad de la entrada es el
-                número de series capturadas.
-              </p>
-            ) : (
-              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-                Las salidas de equipo se registran de 1 en 1, indicando la serie
-                de la pieza.
-              </p>
-            )}
-
-            {!isEquipmentCatalog ? (
-              mode === "salida" && lots.length > 0 ? (
-                <label className="space-y-1.5">
-                  <span className="text-sm font-medium">Lote (FEFO)</span>
-                  <select
-                    value={lotNumber}
-                    disabled={!canWrite}
-                    onChange={(event) => {
-                      const lot = lots.find(
-                        (item) => item.lotNumber === event.target.value
-                      );
-                      setLotNumber(event.target.value);
-                      setExpiryDate(lot?.expiryDate ?? "");
-                      setManufacturedAt(lot?.manufacturedAt ?? "");
-                    }}
-                    className={fieldClass}
-                  >
-                    <option value="">Sin lote / automático</option>
-                    {lots.map((lot) => (
-                      <option key={lot.id} value={lot.lotNumber}>
-                        {lotSelectLabel(lot, unitLabel, Boolean(warehouseId))}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedLot ? (
-                    <span className="block text-xs text-muted-foreground">
-                      {selectedLot.warehouseQuantity > 0
-                        ? `Hay ${formatLotQty(selectedLot.warehouseQuantity, unitLabel)} de este lote en el almacén.`
-                        : `No hay existencia de este lote en este almacén.`}
-                      {selectedLot.quantity !== selectedLot.warehouseQuantity
-                        ? ` Total: ${formatLotQty(selectedLot.quantity, unitLabel)}.`
-                        : null}
-                    </span>
-                  ) : null}
-                </label>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {lots.length > 0 ? (
-                    <label className="space-y-1.5 sm:col-span-2">
-                      <span className="text-sm font-medium">
-                        Lote existente
-                      </span>
-                      <select
-                        value={selectedLot?.lotNumber ?? ""}
-                        disabled={!canWrite}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          const lot = lots.find((item) => item.lotNumber === value);
-                          setLotNumber(value);
-                          setExpiryDate(lot?.expiryDate ?? "");
-                          setManufacturedAt(lot?.manufacturedAt ?? "");
-                        }}
-                        className={fieldClass}
-                      >
-                        <option value="">Nuevo lote…</option>
-                        {lots.map((lot) => (
-                          <option key={lot.id} value={lot.lotNumber}>
-                            {lotSelectLabel(lot, unitLabel, Boolean(warehouseId))}
-                          </option>
-                        ))}
-                      </select>
-                      {selectedLot ? (
-                        <span className="block text-xs text-muted-foreground">
-                          {selectedLot.warehouseQuantity > 0
-                            ? `Este lote ya tiene ${formatLotQty(selectedLot.warehouseQuantity, unitLabel)} en el almacén seleccionado.`
-                            : "Este lote no tiene existencia en el almacén seleccionado."}
-                          {selectedLot.quantity !== selectedLot.warehouseQuantity
-                            ? ` Total: ${formatLotQty(selectedLot.quantity, unitLabel)}.`
-                            : null}
-                        </span>
-                      ) : (
-                        <span className="block text-xs text-muted-foreground">
-                          Elige un lote para ver cuántas piezas hay, o captura uno nuevo abajo.
-                        </span>
-                      )}
-                    </label>
-                  ) : null}
-                  {selectedLot ? null : (
-                    <label className="space-y-1.5">
-                      <span className="text-sm font-medium">
-                        Lote
-                        {selected?.tracksLot ? " (obligatorio)" : ""}
-                      </span>
-                      <input
-                        ref={lotRef}
-                        value={lotNumber}
-                        disabled={!canWrite}
-                        required={
-                          lines.length === 0 &&
-                          Boolean(selected?.tracksLot && mode === "entrada")
-                        }
-                        onChange={(event) => setLotNumber(event.target.value)}
-                        placeholder={lots.length > 0 ? "Número del lote nuevo" : undefined}
-                        className={fieldClass}
-                      />
-                    </label>
-                  )}
-                  <label className="space-y-1.5">
-                    <span className="text-sm font-medium">
-                      Fecha de fabricación (opcional)
-                    </span>
-                    <input
-                      type="date"
-                      value={manufacturedAt}
-                      disabled={!canWrite}
-                      onChange={(event) => setManufacturedAt(event.target.value)}
-                      className={fieldClass}
-                    />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-sm font-medium">
-                      Caducidad (opcional)
-                    </span>
-                    <input
-                      type="date"
-                      value={expiryDate}
-                      disabled={!canWrite}
-                      onChange={(event) => setExpiryDate(event.target.value)}
-                      className={fieldClass}
-                    />
-                  </label>
-                </div>
-              )
-            ) : null}
-
-            {isEquipmentCatalog && mode === "entrada" ? (
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">
-                  Números de serie (obligatorio)
-                </span>
-                <textarea
-                  ref={serialAreaRef}
-                  value={serialNumber}
-                  disabled={!canWrite}
-                  required={lines.length === 0}
-                  rows={4}
-                  placeholder={"Una serie por línea\nSN-001\nSN-002"}
-                  onChange={(event) => setSerialNumber(event.target.value)}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
-                />
-                <span className="text-xs text-muted-foreground">
-                  {(() => {
-                    try {
-                      const count = parseSerialNumbers(serialNumber).length;
-                      return count
-                        ? `${count} pieza${count === 1 ? "" : "s"} en esta entrada.`
-                        : "Pega o escribe las series de las piezas que entran.";
-                    } catch (err) {
-                      return err instanceof Error
-                        ? err.message
-                        : "Revisa las series capturadas.";
-                    }
-                  })()}
-                </span>
-              </label>
-            ) : (
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">
-                  Número de serie
-                  {selected?.tracksSerial || isEquipmentCatalog
-                    ? " (obligatorio)"
-                    : ""}
-                </span>
-                <input
-                  ref={serialInputRef}
-                  value={serialNumber}
-                  disabled={!canWrite}
-                  required={
-                    lines.length === 0 &&
-                    Boolean(selected?.tracksSerial || isEquipmentCatalog)
-                  }
-                  onChange={(event) => setSerialNumber(event.target.value)}
-                  className={fieldClass}
-                />
-              </label>
-            )}
-
-            {canWrite && selected ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addDraftToLines}
-                  className="border-[#00BFFF]/40"
-                >
-                  <Plus className="size-4" />
-                  Agregar a la lista
-                </Button>
-                <span className="self-center text-xs text-muted-foreground">
-                  O escanea el siguiente producto para seguir acumulando.
-                </span>
-              </div>
-            ) : null}
-
             {lines.length > 0 ? (
               <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
                 <div className="flex items-center justify-between gap-2">
@@ -1299,73 +1081,279 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     Vaciar lista
                   </button>
                 </div>
-                <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
-                  {lines.map((line) => (
-                    <li
-                      key={line.key}
-                      className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          <span className="font-mono text-xs text-muted-foreground">
+                <div className="overflow-x-auto rounded-lg border border-border bg-background">
+                  <table className="w-full min-w-[32rem] border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
+                        <th className="px-3 py-2 font-medium">SKU</th>
+                        <th className="px-3 py-2 font-medium">Producto</th>
+                        <th className="px-3 py-2 font-medium">Lote / serie</th>
+                        <th className="px-3 py-2 font-medium">Cant.</th>
+                        <th className="px-3 py-2 font-medium">
+                          <span className="sr-only">Quitar</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lines.map((line) => (
+                        <tr key={line.key} className="border-b border-border last:border-0">
+                          <td className="px-3 py-2 align-middle font-mono text-xs whitespace-nowrap">
                             {line.sku}
-                          </span>{" "}
-                          {withPartNumber(line.name, line.partNumber, line.model)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {[
-                            line.lotNumber ? `Lote ${line.lotNumber}` : "",
-                            line.serialNumber ? `Serie ${line.serialNumber}` : "",
-                            line.expiryDate ? `Cad. ${line.expiryDate}` : "",
-                          ]
-                            .filter(Boolean)
-                            .join(" · ") || "Sin lote/serie"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {line.isEquipment ? (
-                          <span className="text-xs text-muted-foreground">1 pza</span>
-                        ) : (
-                          <input
-                            type="number"
-                            min={1}
-                            value={line.quantity}
-                            disabled={!canWrite || submitting}
-                            onChange={(event) => {
-                              const value = Number(event.target.value);
-                              setLines((current) =>
-                                current.map((row) =>
-                                  row.key === line.key
-                                    ? {
-                                        ...row,
-                                        quantity: value > 0 ? value : 1,
-                                      }
-                                    : row
+                          </td>
+                          <td className="max-w-[14rem] px-3 py-2 align-middle">
+                            <span className="line-clamp-2 font-medium">
+                              {line.partNumber.trim()
+                                ? `${line.name} · n.º ${line.partNumber.trim()}`
+                                : line.name}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 align-middle text-xs text-muted-foreground">
+                            {[
+                              line.lotNumber ? `Lote ${line.lotNumber}` : "",
+                              line.serialNumber ? `Serie ${line.serialNumber}` : "",
+                              line.expiryDate ? `Cad. ${line.expiryDate}` : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" · ") || "—"}
+                          </td>
+                          <td className="px-3 py-2 align-middle whitespace-nowrap">
+                            {line.isEquipment ? (
+                              <span className="text-xs text-muted-foreground">1 {line.unit}</span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={line.quantity}
+                                  disabled={!canWrite || submitting}
+                                  onChange={(event) => {
+                                    const value = Number(event.target.value);
+                                    setLines((current) =>
+                                      current.map((row) =>
+                                        row.key === line.key
+                                          ? { ...row, quantity: value > 0 ? value : 1 }
+                                          : row
+                                      )
+                                    );
+                                  }}
+                                  className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
+                                  aria-label={`Cantidad ${line.sku}`}
+                                />
+                                <span className="text-xs text-muted-foreground">{line.unit}</span>
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-2 py-2 align-middle">
+                            <button
+                              type="button"
+                              disabled={!canWrite || submitting}
+                              onClick={() =>
+                                setLines((current) =>
+                                  current.filter((row) => row.key !== line.key)
                                 )
-                              );
-                            }}
-                            className="h-8 w-20 rounded-md border border-input bg-background px-2 text-sm"
-                            aria-label={`Cantidad ${line.sku}`}
-                          />
-                        )}
-                        <button
-                          type="button"
-                          disabled={!canWrite || submitting}
-                          onClick={() =>
-                            setLines((current) =>
-                              current.filter((row) => row.key !== line.key)
-                            )
-                          }
-                          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive"
-                          aria-label={`Quitar ${line.sku}`}
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                              }
+                              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive"
+                              aria-label={`Quitar ${line.sku}`}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+            ) : null}
+
+            {selected ? (
+              <div className="grid gap-4 rounded-xl border border-dashed border-border p-3">
+                <p className="text-sm font-medium text-foreground">
+                  Detalle del artículo a agregar
+                </p>
+                {!isEquipmentCatalog ? (
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">Cantidad</span>
+                    <input
+                      ref={quantityRef}
+                      required={lines.length === 0}
+                      type="number"
+                      min={1}
+                      value={quantity}
+                      disabled={!canWrite}
+                      onChange={(event) => setQuantity(Number(event.target.value))}
+                      className={fieldClass}
+                    />
+                  </label>
+                ) : mode === "entrada" ? (
+                  <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                    Cada línea de serie es una pieza. La cantidad es el número de
+                    series capturadas.
+                  </p>
+                ) : (
+                  <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                    Las salidas de equipo se registran de 1 en 1, indicando la serie.
+                  </p>
+                )}
+
+                {!isEquipmentCatalog ? (
+                  mode === "salida" && lots.length > 0 ? (
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">Lote (FEFO)</span>
+                      <select
+                        value={lotNumber}
+                        disabled={!canWrite}
+                        onChange={(event) => {
+                          const lot = lots.find(
+                            (item) => item.lotNumber === event.target.value
+                          );
+                          setLotNumber(event.target.value);
+                          setExpiryDate(lot?.expiryDate ?? "");
+                          setManufacturedAt(lot?.manufacturedAt ?? "");
+                        }}
+                        className={fieldClass}
+                      >
+                        <option value="">Sin lote / automático</option>
+                        {lots.map((lot) => (
+                          <option key={lot.id} value={lot.lotNumber}>
+                            {lotSelectLabel(lot, unitLabel, Boolean(warehouseId))}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {lots.length > 0 ? (
+                        <label className="space-y-1.5 sm:col-span-2">
+                          <span className="text-sm font-medium">Lote existente</span>
+                          <select
+                            value={selectedLot?.lotNumber ?? ""}
+                            disabled={!canWrite}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              const lot = lots.find((item) => item.lotNumber === value);
+                              setLotNumber(value);
+                              setExpiryDate(lot?.expiryDate ?? "");
+                              setManufacturedAt(lot?.manufacturedAt ?? "");
+                            }}
+                            className={fieldClass}
+                          >
+                            <option value="">Nuevo lote…</option>
+                            {lots.map((lot) => (
+                              <option key={lot.id} value={lot.lotNumber}>
+                                {lotSelectLabel(lot, unitLabel, Boolean(warehouseId))}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : null}
+                      {selectedLot ? null : (
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium">
+                            Lote
+                            {selected.tracksLot ? " (obligatorio)" : ""}
+                          </span>
+                          <input
+                            ref={lotRef}
+                            value={lotNumber}
+                            disabled={!canWrite}
+                            required={
+                              lines.length === 0 &&
+                              Boolean(selected.tracksLot && mode === "entrada")
+                            }
+                            onChange={(event) => setLotNumber(event.target.value)}
+                            placeholder={
+                              lots.length > 0 ? "Número del lote nuevo" : undefined
+                            }
+                            className={fieldClass}
+                          />
+                        </label>
+                      )}
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium">
+                          Fecha de fabricación (opcional)
+                        </span>
+                        <input
+                          type="date"
+                          value={manufacturedAt}
+                          disabled={!canWrite}
+                          onChange={(event) => setManufacturedAt(event.target.value)}
+                          className={fieldClass}
+                        />
+                      </label>
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium">Caducidad (opcional)</span>
+                        <input
+                          type="date"
+                          value={expiryDate}
+                          disabled={!canWrite}
+                          onChange={(event) => setExpiryDate(event.target.value)}
+                          className={fieldClass}
+                        />
+                      </label>
+                    </div>
+                  )
+                ) : null}
+
+                {isEquipmentCatalog && mode === "entrada" ? (
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      Números de serie (obligatorio)
+                    </span>
+                    <textarea
+                      ref={serialAreaRef}
+                      value={serialNumber}
+                      disabled={!canWrite}
+                      required={lines.length === 0}
+                      rows={4}
+                      placeholder={"Una serie por línea\nSN-001\nSN-002"}
+                      onChange={(event) => setSerialNumber(event.target.value)}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
+                    />
+                  </label>
+                ) : (
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      Número de serie
+                      {selected.tracksSerial || isEquipmentCatalog
+                        ? " (obligatorio)"
+                        : ""}
+                    </span>
+                    <input
+                      ref={serialInputRef}
+                      value={serialNumber}
+                      disabled={!canWrite}
+                      required={
+                        lines.length === 0 &&
+                        Boolean(selected.tracksSerial || isEquipmentCatalog)
+                      }
+                      onChange={(event) => setSerialNumber(event.target.value)}
+                      className={fieldClass}
+                    />
+                  </label>
+                )}
+
+                {canWrite ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addDraftToLines}
+                      className="border-[#00BFFF]/40"
+                    >
+                      <Plus className="size-4" />
+                      Agregar a la lista
+                    </Button>
+                    <span className="self-center text-xs text-muted-foreground">
+                      O escanea el siguiente producto para seguir acumulando.
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            ) : lines.length > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Escanea otro código o busca un artículo para agregarlo a la lista.
+              </p>
             ) : null}
 
             {showServiceFields ? (
