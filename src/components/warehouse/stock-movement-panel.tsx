@@ -15,6 +15,7 @@ import {
   ImagePlus,
   Plus,
   ScanBarcode,
+  Trash2,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,12 @@ import { SearchInput } from "@/components/ui/search-input";
 import { parseSerialNumbers } from "@/lib/inventory/serials";
 import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
 import { useScanResolved } from "@/lib/scan/use-scan-resolved";
+import {
+  isEquipmentItem,
+  lineFromProduct,
+  mergeMovementLine,
+  type StockMovementLine,
+} from "@/components/warehouse/stock-movement-line";
 
 type MovementMode = "entrada" | "salida";
 
@@ -265,6 +272,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setReason(mode === "entrada" ? ENTRY_REASONS[0].id : ISSUE_REASONS[3].id);
     setMessage("");
     setError("");
+    setLines([]);
+    setScanHint("");
     if (mode !== "entrada") {
       setEvidenceFiles([]);
     }
@@ -307,12 +316,24 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [itemQuery, setItemQuery] = useState("");
   const [historyQuery, setHistoryQuery] = useState("");
   const [scanHint, setScanHint] = useState("");
-  const [continuousScan, setContinuousScan] = useState(true);
+  /** Al escanear, agrega directo a la lista multi-producto. */
+  const [autoAddOnScan, setAutoAddOnScan] = useState(true);
+  const [lines, setLines] = useState<StockMovementLine[]>([]);
   const quantityRef = useRef<HTMLInputElement>(null);
   const lotRef = useRef<HTMLInputElement>(null);
   const serialInputRef = useRef<HTMLInputElement>(null);
   const serialAreaRef = useRef<HTMLTextAreaElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
+
+  const clearDraft = useCallback(() => {
+    setItemId("");
+    setItemQuery("");
+    setQuantity(1);
+    setLotNumber("");
+    setExpiryDate("");
+    setManufacturedAt("");
+    setSerialNumber("");
+  }, []);
   const itemOptions = useMemo(
     () =>
       items.filter(
@@ -334,35 +355,84 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       }
       const { scan } = result;
       const local = items.find((item) => item.id === match.item.id) ?? match.item;
-      setItemId(local.id);
-      setItemQuery(local.sku);
       const lot = match.lotNumber || scan.gs1?.lot || "";
       const serial = match.serialNumber || scan.gs1?.serial || "";
       const expiry = match.expiryDate || scan.gs1?.expiry || "";
       const manufactured = scan.gs1?.productionDate || "";
-      if (lot) setLotNumber(lot);
-      if (serial) setSerialNumber(serial);
-      if (expiry) setExpiryDate(expiry);
-      if (manufactured) setManufacturedAt(manufactured);
       const qtyRaw = scan.gs1?.quantity;
-      let appliedQty = false;
+      let qty = 1;
       if (qtyRaw && /^\d+(\.\d+)?$/.test(qtyRaw)) {
-        const qty = Number(qtyRaw);
-        if (qty > 0) {
-          setQuantity(qty);
-          appliedQty = true;
-        }
+        const parsed = Number(qtyRaw);
+        if (parsed > 0) qty = parsed;
       }
-      const extras = [
-        lot ? `lote ${lot}` : "",
-        serial ? `serie ${serial}` : "",
-        expiry ? `cad. ${expiry}` : "",
-        appliedQty ? `cant. ${qtyRaw}` : "",
-      ].filter(Boolean);
       const ambiguous =
         result.matches.length > 1
           ? ` · ${result.matches.length} coincidencias (se usó la primera)`
           : "";
+
+      if (autoAddOnScan) {
+        const isEquip = isEquipmentItem(local);
+        if ((isEquip || local.tracksSerial) && !serial.trim() && mode === "entrada") {
+          setItemId(local.id);
+          setItemQuery(local.sku);
+          setLotNumber(lot);
+          setExpiryDate(expiry);
+          setManufacturedAt(manufactured);
+          setQuantity(qty);
+          setScanHint(
+            `Escaneado ${local.sku}: captura la serie y pulsa «Agregar a la lista».${ambiguous}`
+          );
+          window.setTimeout(() => {
+            (serialAreaRef.current ?? serialInputRef.current)?.focus();
+          }, 50);
+          return;
+        }
+        if (mode === "entrada" && local.tracksLot && !isEquip && !lot.trim()) {
+          setItemId(local.id);
+          setItemQuery(local.sku);
+          setExpiryDate(expiry);
+          setManufacturedAt(manufactured);
+          setQuantity(qty);
+          setSerialNumber(serial);
+          setScanHint(
+            `Escaneado ${local.sku}: captura el lote y pulsa «Agregar a la lista».${ambiguous}`
+          );
+          window.setTimeout(() => lotRef.current?.focus(), 50);
+          return;
+        }
+        const next = lineFromProduct(local, {
+          quantity: isEquip ? 1 : qty,
+          lotNumber: isEquip ? "" : lot,
+          expiryDate: isEquip ? "" : expiry,
+          manufacturedAt: manufactured,
+          serialNumber: serial,
+        });
+        setLines((current) => {
+          const merged = mergeMovementLine(current, next);
+          setScanHint(
+            `Agregado: ${local.sku} · ${merged.length} producto${merged.length === 1 ? "" : "s"} en la lista.${ambiguous}`
+          );
+          return merged;
+        });
+        clearDraft();
+        setError("");
+        setMessage("");
+        return;
+      }
+
+      setItemId(local.id);
+      setItemQuery(local.sku);
+      if (lot) setLotNumber(lot);
+      if (serial) setSerialNumber(serial);
+      if (expiry) setExpiryDate(expiry);
+      if (manufactured) setManufacturedAt(manufactured);
+      setQuantity(qty);
+      const extras = [
+        lot ? `lote ${lot}` : "",
+        serial ? `serie ${serial}` : "",
+        expiry ? `cad. ${expiry}` : "",
+        qty > 1 ? `cant. ${qty}` : "",
+      ].filter(Boolean);
       setScanHint(
         extras.length
           ? `Escaneado: ${local.sku} · ${extras.join(" · ")}${ambiguous}`
@@ -370,29 +440,20 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       );
       setError("");
       setMessage("");
-
-      const isEquip =
-        local.itemKind === "equipo" || local.category === "equipos";
       window.setTimeout(() => {
-        if (isEquip || local.tracksSerial) {
+        if (isEquipmentItem(local) || local.tracksSerial) {
           (serialAreaRef.current ?? serialInputRef.current)?.focus();
           return;
         }
-        if ((mode === "entrada" && local.tracksLot) || (!lot && mode === "entrada")) {
-          if (!lot) {
-            lotRef.current?.focus();
-            return;
-          }
-        }
-        if (!isEquip && !appliedQty) {
-          quantityRef.current?.focus();
-          quantityRef.current?.select();
+        if (mode === "entrada" && local.tracksLot && !lot) {
+          lotRef.current?.focus();
           return;
         }
-        submitRef.current?.focus();
+        quantityRef.current?.focus();
+        quantityRef.current?.select();
       }, 50);
     },
-    [equipmentFormOpen, items, mode]
+    [equipmentFormOpen, items, mode, autoAddOnScan, clearDraft]
   );
   useScanResolved(applyScanMatch, { enabled: !equipmentFormOpen });
   const visibleHistory = useMemo(
@@ -419,14 +480,18 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   }, [warehouseStock]);
 
   const stockedWarehouses = useMemo(() => {
+    // Con varias líneas el almacén es compartido; en entrada no filtramos por stock.
+    if (mode === "entrada" || lines.length > 0) return warehouses;
     if (!itemId || warehouseStock === null) return warehouses;
-    const withStock = warehouses.filter((warehouse) => (warehouseQty.get(warehouse.id) ?? 0) > 0);
-    if (withStock.length > 0) return withStock;
-    return mode === "entrada" ? warehouses : [];
-  }, [itemId, warehouseStock, warehouses, warehouseQty, mode]);
+    const withStock = warehouses.filter(
+      (warehouse) => (warehouseQty.get(warehouse.id) ?? 0) > 0
+    );
+    return withStock.length > 0 ? withStock : [];
+  }, [itemId, warehouseStock, warehouses, warehouseQty, mode, lines.length]);
 
   const listingStockedWarehouses =
     Boolean(itemId) &&
+    lines.length === 0 &&
     warehouseStock !== null &&
     stockedWarehouses.length > 0 &&
     stockedWarehouses.length < warehouses.length;
@@ -544,9 +609,122 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     }
   }
 
+  function buildLinesFromDraft(): StockMovementLine[] {
+    if (!selected) return [];
+    const isEquip = isEquipmentCatalog;
+    if (isEquip && mode === "entrada") {
+      const serials = parseSerialNumbers(serialNumber);
+      return serials.map((serial) =>
+        lineFromProduct(selected, {
+          quantity: 1,
+          serialNumber: serial,
+          manufacturedAt,
+        })
+      );
+    }
+    return [
+      lineFromProduct(selected, {
+        quantity: isEquip ? 1 : quantity,
+        lotNumber: isEquip ? "" : lotNumber,
+        expiryDate: isEquip ? "" : expiryDate,
+        manufacturedAt,
+        serialNumber: serialNumber.trim(),
+      }),
+    ];
+  }
+
+  function addDraftToLines() {
+    if (!canWrite || !selected) {
+      setError("Elige un artículo para agregarlo a la lista.");
+      return;
+    }
+    try {
+      if (mode === "entrada" && selected.tracksLot && !isEquipmentCatalog && !lotNumber.trim()) {
+        throw new Error("Este producto exige número de lote.");
+      }
+      if (isEquipmentCatalog && mode === "entrada") {
+        parseSerialNumbers(serialNumber);
+      } else if (
+        (selected.tracksSerial || isEquipmentCatalog) &&
+        !serialNumber.trim()
+      ) {
+        throw new Error(
+          isEquipmentCatalog
+            ? "Indica el número de serie."
+            : "Este producto exige número de serie."
+        );
+      }
+      const built = buildLinesFromDraft();
+      if (built.length === 0) {
+        throw new Error("No hay datos para agregar.");
+      }
+      setLines((current) => {
+        let next = current;
+        for (const line of built) next = mergeMovementLine(next, line);
+        setScanHint(
+          `Agregado: ${selected.sku} · ${next.length} producto${next.length === 1 ? "" : "s"} en la lista.`
+        );
+        return next;
+      });
+      clearDraft();
+      setError("");
+      setMessage("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo agregar.");
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selected || !canWrite) return;
+    if (!canWrite) return;
+
+    let pending = lines;
+    if (pending.length === 0 && selected) {
+      try {
+        if (mode === "entrada" && selected.tracksLot && !isEquipmentCatalog && !lotNumber.trim()) {
+          throw new Error("Este producto exige número de lote.");
+        }
+        if (isEquipmentCatalog && mode === "entrada") {
+          parseSerialNumbers(serialNumber);
+        } else if (
+          (selected.tracksSerial || isEquipmentCatalog) &&
+          !serialNumber.trim()
+        ) {
+          throw new Error(
+            isEquipmentCatalog
+              ? "Indica el número de serie de la pieza que sale."
+              : "Este producto exige número de serie."
+          );
+        }
+        pending = buildLinesFromDraft();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Revisa los datos.");
+        return;
+      }
+    }
+    if (pending.length === 0) {
+      setError("Agrega al menos un producto a la lista (escanea o pulsa «Agregar a la lista»).");
+      return;
+    }
+    if (!warehouseId) {
+      setError("Selecciona un almacén.");
+      return;
+    }
+
+    for (const line of pending) {
+      if (mode === "entrada" && line.tracksLot && !line.lotNumber.trim()) {
+        setError(`${line.sku}: exige número de lote.`);
+        return;
+      }
+      if (line.tracksSerial && !line.serialNumber.trim()) {
+        setError(`${line.sku}: exige número de serie.`);
+        return;
+      }
+      if (!line.isEquipment && line.quantity < 1) {
+        setError(`${line.sku}: la cantidad debe ser al menos 1.`);
+        return;
+      }
+    }
 
     setSubmitting(true);
     setError("");
@@ -556,28 +734,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       const session = getSession();
       if (!session?.username) {
         throw new Error("Inicia sesión para registrar el movimiento.");
-      }
-      if (mode === "entrada" && selected.tracksLot && !lotNumber.trim()) {
-        throw new Error("Este producto exige número de lote.");
-      }
-
-      const serials =
-        isEquipmentCatalog && mode === "entrada"
-          ? parseSerialNumbers(serialNumber)
-          : serialNumber.trim()
-            ? [serialNumber.trim()]
-            : [];
-      if (isEquipmentCatalog && mode === "entrada" && serials.length === 0) {
-        throw new Error(
-          "Captura al menos un número de serie. Una línea por pieza."
-        );
-      }
-      if (selected.tracksSerial && !(isEquipmentCatalog && mode === "entrada") && serials.length === 0) {
-        throw new Error(
-          isEquipmentCatalog
-            ? "Indica el número de serie de la pieza que sale."
-            : "Este producto exige número de serie."
-        );
       }
       const reasonLabel =
         mode === "entrada"
@@ -592,106 +748,82 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         .join(" · ");
 
       const { applyStockMovement } = await import("@/lib/warehouse/stock");
-      const movementBase = {
-        productId: selected.id,
-        movementType: mode,
-        createdBy: session.username,
-        note: extraNote,
-        reason: reasonLabel,
-        warehouseId: warehouseId || null,
-        locationId: locationId || null,
-        lotNumber: isEquipmentCatalog ? null : lotNumber || null,
-        expiryDate: isEquipmentCatalog ? null : expiryDate || null,
-        manufacturedAt: manufacturedAt || null,
-      } as const;
-
       const results: Array<{
         folio: string;
         movementId: string;
         newQuantity: number;
+        productId: string;
+        unit: string;
       }> = [];
-      if (isEquipmentCatalog && mode === "entrada") {
-        for (const serial of serials) {
-          results.push(
-            await applyStockMovement({
-              ...movementBase,
-              quantity: 1,
-              serialNumber: serial,
-            })
-          );
-        }
-      } else {
-        results.push(
-          await applyStockMovement({
-            ...movementBase,
-            quantity: isEquipmentCatalog ? 1 : quantity,
-            serialNumber: serials[0] ?? null,
-          })
-        );
-      }
-      const result = results[results.length - 1];
-      const folios = results.map((item) => item.folio);
-      const updated = {
-        ...selected,
-        quantity: result.newQuantity,
-      };
 
+      for (const line of pending) {
+        const movement = await applyStockMovement({
+          productId: line.productId,
+          movementType: mode,
+          createdBy: session.username,
+          note: extraNote,
+          reason: reasonLabel,
+          warehouseId: warehouseId || null,
+          locationId: locationId || null,
+          lotNumber: line.isEquipment ? null : line.lotNumber || null,
+          expiryDate: line.isEquipment ? null : line.expiryDate || null,
+          manufacturedAt: line.manufacturedAt || null,
+          quantity: line.isEquipment ? 1 : line.quantity,
+          serialNumber: line.serialNumber.trim() || null,
+        });
+        results.push({
+          ...movement,
+          productId: line.productId,
+          unit: line.unit,
+        });
+      }
+
+      const folios = results.map((item) => item.folio);
+      const qtyByProduct = new Map(
+        results.map((item) => [item.productId, item.newQuantity] as const)
+      );
       setItems((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item))
+        current.map((item) =>
+          qtyByProduct.has(item.id)
+            ? { ...item, quantity: qtyByProduct.get(item.id)! }
+            : item
+        )
       );
 
       let evidenceNote = "";
       if (requiresEvidence && evidenceFiles.length > 0) {
         try {
-          let lastTarget: "serie" | "lote" | "producto" = "producto";
           for (const movement of results) {
-            const evidence = await attachEntryEvidence(
-              movement.movementId,
-              evidenceFiles
-            );
-            lastTarget = evidence.target;
+            await attachEntryEvidence(movement.movementId, evidenceFiles);
           }
-          const targetLabel =
-            lastTarget === "serie"
-              ? serials.length > 1
-                ? "las series"
-                : "la serie"
-              : lastTarget === "lote"
-                ? "el lote"
-                : "el producto";
-          evidenceNote = ` Evidencia integrada a ${targetLabel}.`;
+          evidenceNote = " Evidencia integrada a los movimientos.";
           setEvidenceFiles([]);
         } catch (evidenceError) {
           setError(
-            `La entrada ${folios.join(", ")} se registró, pero no se pudo guardar la evidencia: ${
-              evidenceError instanceof Error ? evidenceError.message : "error desconocido"
+            `Se registraron ${folios.join(", ")}, pero no se pudo guardar la evidencia: ${
+              evidenceError instanceof Error
+                ? evidenceError.message
+                : "error desconocido"
             }`
           );
         }
       }
 
-      const folioLabel =
-        folios.length > 1 ? `Entradas ${folios.join(", ")}` : `Entrada ${result.folio}`;
-      setMessage(
+      const label =
         mode === "entrada"
-          ? `${folioLabel}. Nuevo stock: ${updated.quantity} ${updated.unit}.${evidenceNote}`
-          : `Salida ${result.folio}. Nuevo stock: ${updated.quantity} ${updated.unit}.`
-      );
-      setQuantity(1);
+          ? pending.length > 1
+            ? `${pending.length} entradas: ${folios.join(", ")}.`
+            : `Entrada ${folios[0]}.`
+          : pending.length > 1
+            ? `${pending.length} salidas: ${folios.join(", ")}.`
+            : `Salida ${folios[0]}.`;
+      setMessage(`${label}${evidenceNote}`);
+      setLines([]);
+      clearDraft();
       setNote("");
       setTechnician("");
       setRelatedSerial("");
-      setLotNumber("");
-      setExpiryDate("");
-      setManufacturedAt("");
-      setSerialNumber("");
-      if (continuousScan) {
-        setItemId("");
-        setItemQuery("");
-        setScanHint("Listo: escanea el siguiente código.");
-      } else {
-        setScanHint("");
-      }
+      setScanHint("Listo: escanea el siguiente lote de productos.");
       await Promise.all([loadHistory(), loadLots(), loadWarehouseStock()]);
     } catch (err) {
       setError(
@@ -730,8 +862,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {mode === "entrada"
-                    ? "Flujo con lector: escanea → revisa cantidad/lote → confirma. Con GS1 se rellenan solos. Los equipos se dan de alta por modelo; las series aquí."
-                    : "Flujo con lector: escanea → revisa cantidad/lote → confirma. El código puede traer lote y serie."}
+                    ? "Escanea varios productos a la lista, revisa cantidades y confirma todo de una vez. Con GS1 se rellenan lote/serie/caducidad."
+                    : "Escanea varios productos a la lista, revisa cantidades y confirma la salida en un solo paso."}
                 </p>
               </div>
               {canWrite ? (
@@ -758,21 +890,26 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             <div className="flex items-start gap-2 text-sm">
               <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
               <div>
-                <p className="font-medium text-foreground">Lector listo</p>
+                <p className="font-medium text-foreground">
+                  Lector listo
+                  {lines.length > 0
+                    ? ` · ${lines.length} en la lista`
+                    : ""}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {scanHint ||
-                    "Apunta al código del producto. Si es GS1, lote/serie/caducidad se cargan solos."}
+                    "Escanea para ir agregando productos. Si es GS1, lote/serie/caducidad se cargan solos."}
                 </p>
               </div>
             </div>
             <label className="inline-flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
               <input
                 type="checkbox"
-                checked={continuousScan}
-                onChange={(event) => setContinuousScan(event.target.checked)}
+                checked={autoAddOnScan}
+                onChange={(event) => setAutoAddOnScan(event.target.checked)}
                 className="size-3.5 rounded border-input"
               />
-              Tras guardar, preparar el siguiente escaneo
+              Al escanear, agregar a la lista
             </label>
           </div>
 
@@ -822,7 +959,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               ) : null}
               <select
                 id="stock-movement-item"
-                required
+                required={lines.length === 0}
                 value={itemId}
                 onChange={(event) => {
                   setItemId(event.target.value);
@@ -929,7 +1066,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 <span className="text-sm font-medium">Cantidad</span>
                 <input
                   ref={quantityRef}
-                  required
+                  required={lines.length === 0}
                   type="number"
                   min={1}
                   value={quantity}
@@ -1037,7 +1174,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                         ref={lotRef}
                         value={lotNumber}
                         disabled={!canWrite}
-                        required={Boolean(selected?.tracksLot && mode === "entrada")}
+                        required={
+                          lines.length === 0 &&
+                          Boolean(selected?.tracksLot && mode === "entrada")
+                        }
                         onChange={(event) => setLotNumber(event.target.value)}
                         placeholder={lots.length > 0 ? "Número del lote nuevo" : undefined}
                         className={fieldClass}
@@ -1081,7 +1221,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   ref={serialAreaRef}
                   value={serialNumber}
                   disabled={!canWrite}
-                  required
+                  required={lines.length === 0}
                   rows={4}
                   placeholder={"Una serie por línea\nSN-001\nSN-002"}
                   onChange={(event) => setSerialNumber(event.target.value)}
@@ -1114,12 +1254,119 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   ref={serialInputRef}
                   value={serialNumber}
                   disabled={!canWrite}
-                  required={Boolean(selected?.tracksSerial || isEquipmentCatalog)}
+                  required={
+                    lines.length === 0 &&
+                    Boolean(selected?.tracksSerial || isEquipmentCatalog)
+                  }
                   onChange={(event) => setSerialNumber(event.target.value)}
                   className={fieldClass}
                 />
               </label>
             )}
+
+            {canWrite && selected ? (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addDraftToLines}
+                  className="border-[#00BFFF]/40"
+                >
+                  <Plus className="size-4" />
+                  Agregar a la lista
+                </Button>
+                <span className="self-center text-xs text-muted-foreground">
+                  O escanea el siguiente producto para seguir acumulando.
+                </span>
+              </div>
+            ) : null}
+
+            {lines.length > 0 ? (
+              <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Lista a registrar ({lines.length})
+                  </h3>
+                  <button
+                    type="button"
+                    disabled={!canWrite || submitting}
+                    onClick={() => {
+                      setLines([]);
+                      setScanHint("Lista vaciada. Escanea de nuevo.");
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Vaciar lista
+                  </button>
+                </div>
+                <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+                  {lines.map((line) => (
+                    <li
+                      key={line.key}
+                      className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {line.sku}
+                          </span>{" "}
+                          {withPartNumber(line.name, line.partNumber, line.model)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {[
+                            line.lotNumber ? `Lote ${line.lotNumber}` : "",
+                            line.serialNumber ? `Serie ${line.serialNumber}` : "",
+                            line.expiryDate ? `Cad. ${line.expiryDate}` : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || "Sin lote/serie"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {line.isEquipment ? (
+                          <span className="text-xs text-muted-foreground">1 pza</span>
+                        ) : (
+                          <input
+                            type="number"
+                            min={1}
+                            value={line.quantity}
+                            disabled={!canWrite || submitting}
+                            onChange={(event) => {
+                              const value = Number(event.target.value);
+                              setLines((current) =>
+                                current.map((row) =>
+                                  row.key === line.key
+                                    ? {
+                                        ...row,
+                                        quantity: value > 0 ? value : 1,
+                                      }
+                                    : row
+                                )
+                              );
+                            }}
+                            className="h-8 w-20 rounded-md border border-input bg-background px-2 text-sm"
+                            aria-label={`Cantidad ${line.sku}`}
+                          />
+                        )}
+                        <button
+                          type="button"
+                          disabled={!canWrite || submitting}
+                          onClick={() =>
+                            setLines((current) =>
+                              current.filter((row) => row.key !== line.key)
+                            )
+                          }
+                          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive"
+                          aria-label={`Quitar ${line.sku}`}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             {showServiceFields ? (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -1274,18 +1521,27 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             <Button
               ref={submitRef}
               type="submit"
-              disabled={!canWrite || submitting || items.length === 0}
+              disabled={
+                !canWrite ||
+                submitting ||
+                items.length === 0 ||
+                (lines.length === 0 && !selected)
+              }
               className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
             >
               {submitting
                 ? "Guardando..."
-                : mode === "entrada"
-                  ? isEquipmentCatalog
-                    ? "Registrar entrada de equipo"
-                    : "Registrar entrada"
-                  : isEquipmentCatalog
-                    ? "Registrar salida de equipo"
-                    : "Registrar salida"}
+                : lines.length > 1
+                  ? mode === "entrada"
+                    ? `Registrar ${lines.length} entradas`
+                    : `Registrar ${lines.length} salidas`
+                  : mode === "entrada"
+                    ? isEquipmentCatalog
+                      ? "Registrar entrada de equipo"
+                      : "Registrar entrada"
+                    : isEquipmentCatalog
+                      ? "Registrar salida de equipo"
+                      : "Registrar salida"}
             </Button>
           </form>
         </section>
