@@ -98,8 +98,9 @@ export function ToolRequestsList({
           <span className="sr-only">Buscar vales</span>
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            type="search"
             className={cn(fieldClass, "pl-9")}
-            placeholder="Buscar por folio, persona, herramienta u orden de servicio"
+            placeholder="Buscar o escanear por folio, persona, herramienta u orden de servicio"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

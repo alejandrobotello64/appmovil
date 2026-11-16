@@ -148,8 +148,9 @@ export function ToolsCatalog({
           <span className="sr-only">Buscar herramienta</span>
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            type="search"
             className={cn(fieldClass, "pl-9")}
-            placeholder="Buscar por nombre, código, marca, serie o ubicación"
+            placeholder="Buscar o escanear por nombre, código, marca, serie o ubicación"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

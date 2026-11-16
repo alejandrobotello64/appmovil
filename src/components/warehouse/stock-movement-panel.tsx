@@ -1,8 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDownToLine, ArrowUpFromLine, ImagePlus, Plus, X } from "lucide-react";
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  ImagePlus,
+  Plus,
+  ScanBarcode,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CameraButton } from "@/components/media/camera-capture";
 import { ImageLightbox, type LightboxImage } from "@/components/ui/image-lightbox";
@@ -43,10 +57,8 @@ import {
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { parseSerialNumbers } from "@/lib/inventory/serials";
-import {
-  SCAN_RESOLVED_EVENT,
-  type ScanResolvedDetail,
-} from "@/lib/scan/search-fields";
+import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 
 type MovementMode = "entrada" | "salida";
 
@@ -295,6 +307,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [itemQuery, setItemQuery] = useState("");
   const [historyQuery, setHistoryQuery] = useState("");
   const [scanHint, setScanHint] = useState("");
+  const [continuousScan, setContinuousScan] = useState(true);
+  const quantityRef = useRef<HTMLInputElement>(null);
+  const lotRef = useRef<HTMLInputElement>(null);
+  const serialInputRef = useRef<HTMLInputElement>(null);
+  const serialAreaRef = useRef<HTMLTextAreaElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
   const itemOptions = useMemo(
     () =>
       items.filter(
@@ -305,22 +323,19 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     [items, itemQuery, itemId]
   );
 
-  /** Escáner: elige el artículo y aplica lote / serie / caducidad del código GS1. */
-  useEffect(() => {
-    function onScanResolved(event: Event) {
+  const applyScanMatch = useCallback(
+    ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
       if (equipmentFormOpen) return;
-      const detail = (event as CustomEvent<ScanResolvedDetail>).detail;
-      if (!detail?.result) return;
-      const match = detail.result.matches[0];
       if (!match) {
         setScanHint(
           "Código leído sin producto vinculado. Vincula el código en la ficha del escáner."
         );
         return;
       }
-      const { scan } = detail.result;
-      setItemId(match.item.id);
-      setItemQuery(match.item.sku);
+      const { scan } = result;
+      const local = items.find((item) => item.id === match.item.id) ?? match.item;
+      setItemId(local.id);
+      setItemQuery(local.sku);
       const lot = match.lotNumber || scan.gs1?.lot || "";
       const serial = match.serialNumber || scan.gs1?.serial || "";
       const expiry = match.expiryDate || scan.gs1?.expiry || "";
@@ -330,26 +345,56 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (expiry) setExpiryDate(expiry);
       if (manufactured) setManufacturedAt(manufactured);
       const qtyRaw = scan.gs1?.quantity;
+      let appliedQty = false;
       if (qtyRaw && /^\d+(\.\d+)?$/.test(qtyRaw)) {
         const qty = Number(qtyRaw);
-        if (qty > 0) setQuantity(qty);
+        if (qty > 0) {
+          setQuantity(qty);
+          appliedQty = true;
+        }
       }
       const extras = [
         lot ? `lote ${lot}` : "",
         serial ? `serie ${serial}` : "",
         expiry ? `cad. ${expiry}` : "",
+        appliedQty ? `cant. ${qtyRaw}` : "",
       ].filter(Boolean);
+      const ambiguous =
+        result.matches.length > 1
+          ? ` · ${result.matches.length} coincidencias (se usó la primera)`
+          : "";
       setScanHint(
         extras.length
-          ? `Escaneado: ${match.item.sku} · ${extras.join(" · ")}`
-          : `Escaneado: ${match.item.sku} — ${match.item.name}`
+          ? `Escaneado: ${local.sku} · ${extras.join(" · ")}${ambiguous}`
+          : `Escaneado: ${local.sku} — ${local.name}${ambiguous}`
       );
       setError("");
       setMessage("");
-    }
-    window.addEventListener(SCAN_RESOLVED_EVENT, onScanResolved);
-    return () => window.removeEventListener(SCAN_RESOLVED_EVENT, onScanResolved);
-  }, [equipmentFormOpen]);
+
+      const isEquip =
+        local.itemKind === "equipo" || local.category === "equipos";
+      window.setTimeout(() => {
+        if (isEquip || local.tracksSerial) {
+          (serialAreaRef.current ?? serialInputRef.current)?.focus();
+          return;
+        }
+        if ((mode === "entrada" && local.tracksLot) || (!lot && mode === "entrada")) {
+          if (!lot) {
+            lotRef.current?.focus();
+            return;
+          }
+        }
+        if (!isEquip && !appliedQty) {
+          quantityRef.current?.focus();
+          quantityRef.current?.select();
+          return;
+        }
+        submitRef.current?.focus();
+      }, 50);
+    },
+    [equipmentFormOpen, items, mode]
+  );
+  useScanResolved(applyScanMatch, { enabled: !equipmentFormOpen });
   const visibleHistory = useMemo(
     () =>
       history.filter((row) =>
@@ -636,10 +681,16 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       setNote("");
       setTechnician("");
       setRelatedSerial("");
-      if (mode === "entrada") {
-        setLotNumber("");
-        setExpiryDate("");
-        setSerialNumber("");
+      setLotNumber("");
+      setExpiryDate("");
+      setManufacturedAt("");
+      setSerialNumber("");
+      if (continuousScan) {
+        setItemId("");
+        setItemQuery("");
+        setScanHint("Listo: escanea el siguiente código.");
+      } else {
+        setScanHint("");
       }
       await Promise.all([loadHistory(), loadLots(), loadWarehouseStock()]);
     } catch (err) {
@@ -679,8 +730,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {mode === "entrada"
-                    ? "Escanea el código o busca el artículo. Con GS1 se rellenan lote, serie y caducidad. Los equipos se dan de alta por modelo; las series se capturan aquí."
-                    : "Escanea o busca para descontar. Insumos, medicamentos y reactivos usan caducidad; el escáner también puede traer lote y serie."}
+                    ? "Flujo con lector: escanea → revisa cantidad/lote → confirma. Con GS1 se rellenan solos. Los equipos se dan de alta por modelo; las series aquí."
+                    : "Flujo con lector: escanea → revisa cantidad/lote → confirma. El código puede traer lote y serie."}
                 </p>
               </div>
               {canWrite ? (
@@ -701,6 +752,28 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             {canSwitchModes ? (
               <ModeSwitch mode={mode} onChange={switchMode} />
             ) : null}
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2 text-sm">
+              <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
+              <div>
+                <p className="font-medium text-foreground">Lector listo</p>
+                <p className="text-xs text-muted-foreground">
+                  {scanHint ||
+                    "Apunta al código del producto. Si es GS1, lote/serie/caducidad se cargan solos."}
+                </p>
+              </div>
+            </div>
+            <label className="inline-flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={continuousScan}
+                onChange={(event) => setContinuousScan(event.target.checked)}
+                className="size-3.5 rounded border-input"
+              />
+              Tras guardar, preparar el siguiente escaneo
+            </label>
           </div>
 
           <div className="mt-4">
@@ -855,6 +928,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               <label className="space-y-1.5">
                 <span className="text-sm font-medium">Cantidad</span>
                 <input
+                  ref={quantityRef}
                   required
                   type="number"
                   min={1}
@@ -960,6 +1034,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                         {selected?.tracksLot ? " (obligatorio)" : ""}
                       </span>
                       <input
+                        ref={lotRef}
                         value={lotNumber}
                         disabled={!canWrite}
                         required={Boolean(selected?.tracksLot && mode === "entrada")}
@@ -1003,6 +1078,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   Números de serie (obligatorio)
                 </span>
                 <textarea
+                  ref={serialAreaRef}
                   value={serialNumber}
                   disabled={!canWrite}
                   required
@@ -1035,6 +1111,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     : ""}
                 </span>
                 <input
+                  ref={serialInputRef}
                   value={serialNumber}
                   disabled={!canWrite}
                   required={Boolean(selected?.tracksSerial || isEquipmentCatalog)}
@@ -1195,6 +1272,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             ) : null}
 
             <Button
+              ref={submitRef}
               type="submit"
               disabled={!canWrite || submitting || items.length === 0}
               className="w-fit border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"

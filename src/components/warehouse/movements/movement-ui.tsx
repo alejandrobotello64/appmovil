@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Search, X } from "lucide-react";
 import { daysUntilExpiry } from "@/lib/inventory/expiry";
 import { INVENTORY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 import { matchesSearch } from "@/lib/search";
 import { MOVEMENT_KIND_LABELS, type MovementKind } from "@/lib/warehouse/movements";
 import { catalogModelLabel } from "@/lib/inventory/product-label";
+import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
@@ -114,12 +116,12 @@ export function Alert({ tone, children }: { tone: "error" | "success"; children:
   );
 }
 
-/** Buscador de producto por SKU, nombre, marca, modelo o número de parte. */
+/** Buscador de producto por SKU, nombre, marca, modelo, n.º de parte o código de barras. */
 export function ProductPicker({
   products,
   value,
   onChange,
-  placeholder = "Buscar por SKU, nombre, marca, modelo o n.º de parte...",
+  placeholder = "Buscar o escanear por SKU, nombre, marca, modelo o n.º de parte...",
   disabled,
 }: {
   products: InventoryItem[];
@@ -129,6 +131,7 @@ export function ProductPicker({
   disabled?: boolean;
 }) {
   const [query, setQuery] = useState("");
+  const [scanHint, setScanHint] = useState("");
   const matches = useMemo(() => {
     if (!query.trim()) return [];
     return products
@@ -145,46 +148,76 @@ export function ProductPicker({
       .slice(0, 8);
   }, [products, query]);
 
+  const onScan = useCallback(
+    ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
+      if (disabled || value) return;
+      if (!match) {
+        setScanHint("Código sin producto vinculado.");
+        return;
+      }
+      const local = products.find((item) => item.id === match.item.id) ?? match.item;
+      onChange(local);
+      setQuery("");
+      const extra =
+        result.matches.length > 1
+          ? ` · ${result.matches.length} coincidencias, se tomó la primera`
+          : "";
+      setScanHint(`Escaneado: ${local.sku} — ${local.name}${extra}`);
+    },
+    [disabled, value, products, onChange]
+  );
+  useScanResolved(onScan, { enabled: !disabled && !value });
+
   if (value) {
     return (
-      <div className="flex items-start justify-between gap-3 rounded-xl border border-[#00BFFF]/40 bg-[#00BFFF]/5 px-3 py-2.5">
-        <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">
-            {value.partNumber.trim() ? `${value.name} · n.º ${value.partNumber.trim()}` : value.name}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            <span className="font-mono">{value.sku}</span> · {catalogModelLabel(value.model)} ·{" "}
-            {categoryLabel(value.category)} · {value.quantity} {value.unit} en total
-          </p>
+      <div className="space-y-1.5">
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-[#00BFFF]/40 bg-[#00BFFF]/5 px-3 py-2.5">
+          <div className="min-w-0">
+            <p className="truncate font-medium text-foreground">
+              {value.partNumber.trim() ? `${value.name} · n.º ${value.partNumber.trim()}` : value.name}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-mono">{value.sku}</span> · {catalogModelLabel(value.model)} ·{" "}
+              {categoryLabel(value.category)} · {value.quantity} {value.unit} en total
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              onChange(null);
+              setQuery("");
+              setScanHint("");
+            }}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-3.5" /> Cambiar
+          </button>
         </div>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => {
-            onChange(null);
-            setQuery("");
-          }}
-          className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          <X className="size-3.5" /> Cambiar
-        </button>
+        {scanHint ? (
+          <p className="text-xs font-medium text-[#00BFFF]">{scanHint}</p>
+        ) : null}
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <input
-        value={query}
-        disabled={disabled}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={placeholder}
-        data-scan-search="true"
-        className={cn(inputClass, "pl-9")}
-      />
-      {query.trim() ? (
-        <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
+    <div className="space-y-1.5">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          value={query}
+          disabled={disabled}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setScanHint("");
+          }}
+          placeholder={placeholder}
+          data-scan-search="true"
+          className={cn(inputClass, "pl-9")}
+        />
+        {query.trim() ? (
+          <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
           {matches.length === 0 ? (
             <p className="px-3 py-2 text-sm text-muted-foreground">Sin coincidencias.</p>
           ) : (
@@ -195,6 +228,7 @@ export function ProductPicker({
                 onClick={() => {
                   onChange(item);
                   setQuery("");
+                  setScanHint("");
                 }}
                 className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
               >
@@ -220,8 +254,16 @@ export function ProductPicker({
               </button>
             ))
           )}
-        </div>
-      ) : null}
+          </div>
+        ) : null}
+      </div>
+      {scanHint ? (
+        <p className="text-xs font-medium text-[#00BFFF]">{scanHint}</p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Escanea el código para seleccionar el producto al instante.
+        </p>
+      )}
     </div>
   );
 }

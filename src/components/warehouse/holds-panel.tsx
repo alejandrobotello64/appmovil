@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { BookmarkPlus, CheckCircle2, Plus, Search, Unlock, XCircle } from "lucide-react";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { Button } from "@/components/ui/button";
 import {
   DesktopTable,
@@ -86,6 +87,52 @@ export function HoldsPanel() {
       categoryFilter: "all",
     },
   ]);
+  const [scanHint, setScanHint] = useState("");
+
+  const onHoldScan = useCallback(
+    ({ match }: { match: { item: InventoryItem } | null }) => {
+      if (!formOpen || !canCreate) return;
+      if (!match) {
+        setScanHint("Código sin producto vinculado.");
+        return;
+      }
+      const product = items.find((item) => item.id === match.item.id) ?? match.item;
+      setLines((current) => {
+        const emptyIndex = current.findIndex((line) => !line.productId);
+        if (emptyIndex >= 0) {
+          return current.map((line, index) =>
+            index === emptyIndex
+              ? {
+                  ...line,
+                  productId: product.id,
+                  categoryFilter:
+                    product.itemKind === "equipo" || product.category === "equipos"
+                      ? "equipos"
+                      : product.category,
+                }
+              : line
+          );
+        }
+        return [
+          ...current,
+          {
+            key: crypto.randomUUID(),
+            productId: product.id,
+            quantity: 1,
+            notes: "",
+            categoryFilter:
+              product.itemKind === "equipo" || product.category === "equipos"
+                ? "equipos"
+                : product.category,
+          },
+        ];
+      });
+      setScanHint(`Escaneado: ${product.sku} — ${product.name}`);
+      setError("");
+    },
+    [formOpen, canCreate, items]
+  );
+  useScanResolved(onHoldScan, { enabled: formOpen && canCreate });
 
   async function refresh() {
     setLoading(true);
@@ -361,6 +408,7 @@ export function HoldsPanel() {
         <label className="relative mt-4 block">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar folio, proyecto o cliente..."
@@ -558,6 +606,10 @@ export function HoldsPanel() {
                 Línea
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              {scanHint ||
+                "Escanea un código para llenar la siguiente línea vacía (o agregar una nueva)."}
+            </p>
             {lines.map((line, index) => {
               const filteredItems = itemsForLine(line);
               return (

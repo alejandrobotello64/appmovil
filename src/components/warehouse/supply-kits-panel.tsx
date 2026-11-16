@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Boxes,
   ChevronDown,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
@@ -172,6 +173,7 @@ export function SupplyKitsPanel() {
           item.brand,
           item.model,
           item.partNumber,
+          ...(item.barcodes ?? []),
         ])
       )
       .slice(0, 12);
@@ -193,6 +195,28 @@ export function SupplyKitsPanel() {
     ]);
     setProductQuery("");
   }
+
+  const onKitScan = useCallback(
+    ({ match }: { match: { item: InventoryItem } | null }) => {
+      if (!canWrite || !openId) return;
+      if (!match) {
+        setError("Código sin producto vinculado para el kit.");
+        return;
+      }
+      const product =
+        products.find((item) => item.id === match.item.id) ?? match.item;
+      if (draftLines.some((line) => line.productId === product.id)) {
+        setError(`El producto ${product.sku} ya está en el kit.`);
+        return;
+      }
+      addProduct(product);
+      setError("");
+    },
+    // addProduct is stable enough via state setters; openId gates the listener.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canWrite, openId, products, draftLines]
+  );
+  useScanResolved(onKitScan, { enabled: Boolean(canWrite && openId) });
 
   async function createKit() {
     if (!canWrite || !createName.trim()) return;
@@ -633,7 +657,8 @@ export function SupplyKitsPanel() {
                         <SearchInput
                           value={productQuery}
                           onChange={setProductQuery}
-                          placeholder="SKU, nombre o número de parte…"
+                          scanSearch="true"
+                          placeholder="Buscar o escanear SKU, nombre o n.º de parte…"
                         />
                         {productQuery.trim() ? (
                           productMatches.length ? (
