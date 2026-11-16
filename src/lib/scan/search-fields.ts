@@ -1,7 +1,29 @@
 "use client";
 
 import { parseScan } from "./codes";
-import { resolveScan } from "./lookup";
+import { resolveScan, type ScanResult } from "./lookup";
+
+/** Detalle tras resolver una lectura (para que Entradas/Salidas apliquen lote/serie). */
+export type ScanResolvedDetail = {
+  raw: string;
+  result: ScanResult;
+  input: HTMLInputElement | null;
+};
+
+export const SCAN_RESOLVED_EVENT = "mas-scan-resolved";
+
+export function dispatchScanResolved(
+  raw: string,
+  result: ScanResult,
+  input: HTMLInputElement | null = null
+) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent<ScanResolvedDetail>(SCAN_RESOLVED_EVENT, {
+      detail: { raw, result, input },
+    })
+  );
+}
 
 /**
  * Buscadores que reciben lecturas del lector:
@@ -51,10 +73,13 @@ export async function fillSearchField(input: HTMLInputElement, raw: string) {
   if (!text) return;
   input.focus();
   setInputValue(input, text);
+  let result: ScanResult = { scan, matches: [] };
   try {
-    const match = (await resolveScan(raw)).matches[0];
-    if (match?.kind === "barcode" && input.value === text) setInputValue(input, match.item.sku);
+    result = await resolveScan(raw);
+    const match = result.matches[0];
+    if (match && input.value === text) setInputValue(input, match.item.sku);
   } catch {
     /* sin conexión: se queda el código leído */
   }
+  dispatchScanResolved(raw, result, input);
 }

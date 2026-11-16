@@ -17,6 +17,7 @@ import {
   SCAN_MATCH_LABELS,
   type ScanResult,
 } from "@/lib/scan/lookup";
+import { dispatchScanResolved } from "@/lib/scan/search-fields";
 import { useScanBurstInput, useScanTarget } from "@/lib/scan/use-barcode-scanner";
 import { useScanner } from "@/components/scan/scan-provider";
 import { SERIAL_BAUD_RATES } from "@/lib/scan/serial-scanner";
@@ -176,6 +177,8 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
         if (cancelled) return;
         setOutcome({ id: query.id, result, error: "" });
         if (result.matches.length === 1) setSelectedId(result.matches[0].item.id);
+        // Notifica a Entradas/Salidas para rellenar producto + GS1.
+        if (result.matches.length) dispatchScanResolved(query.code, result);
       })
       .catch((reason) => {
         if (!cancelled) {
@@ -495,23 +498,25 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
                     code={linkableCode(scan)}
                     onLinked={(item) => {
                       setLinking(false);
+                      const linked: ScanResult = {
+                        scan,
+                        matches: [
+                          {
+                            item,
+                            kind: "barcode",
+                            lotNumber: scan.gs1?.lot,
+                            serialNumber: scan.gs1?.serial,
+                            expiryDate: scan.gs1?.expiry,
+                          },
+                        ],
+                      };
                       setOutcome({
                         id: current!.id,
                         error: "",
-                        result: {
-                          scan,
-                          matches: [
-                            {
-                              item,
-                              kind: "barcode",
-                              lotNumber: scan.gs1?.lot,
-                              serialNumber: scan.gs1?.serial,
-                              expiryDate: scan.gs1?.expiry,
-                            },
-                          ],
-                        },
+                        result: linked,
                       });
                       setSelectedId(item.id);
+                      dispatchScanResolved(scan.raw, linked);
                     }}
                   />
                 ) : (

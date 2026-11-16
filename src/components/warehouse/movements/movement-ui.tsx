@@ -133,7 +133,14 @@ export function ProductPicker({
     if (!query.trim()) return [];
     return products
       .filter((item) =>
-        matchesSearch(query, [item.sku, item.name, item.brand, item.model, item.partNumber])
+        matchesSearch(query, [
+          item.sku,
+          item.name,
+          item.brand,
+          item.model,
+          item.partNumber,
+          ...(item.barcodes ?? []),
+        ])
       )
       .slice(0, 8);
   }, [products, query]);

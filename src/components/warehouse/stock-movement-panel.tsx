@@ -43,6 +43,10 @@ import {
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { parseSerialNumbers } from "@/lib/inventory/serials";
+import {
+  SCAN_RESOLVED_EVENT,
+  type ScanResolvedDetail,
+} from "@/lib/scan/search-fields";
 
 type MovementMode = "entrada" | "salida";
 
@@ -119,6 +123,7 @@ function articleFields(item: InventoryItem) {
     item.partNumber,
     item.category,
     categoryLabel(item),
+    ...(item.barcodes ?? []),
   ];
 }
 
@@ -289,6 +294,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   const [itemQuery, setItemQuery] = useState("");
   const [historyQuery, setHistoryQuery] = useState("");
+  const [scanHint, setScanHint] = useState("");
   const itemOptions = useMemo(
     () =>
       items.filter(
@@ -298,6 +304,52 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       ),
     [items, itemQuery, itemId]
   );
+
+  /** Escáner: elige el artículo y aplica lote / serie / caducidad del código GS1. */
+  useEffect(() => {
+    function onScanResolved(event: Event) {
+      if (equipmentFormOpen) return;
+      const detail = (event as CustomEvent<ScanResolvedDetail>).detail;
+      if (!detail?.result) return;
+      const match = detail.result.matches[0];
+      if (!match) {
+        setScanHint(
+          "Código leído sin producto vinculado. Vincula el código en la ficha del escáner."
+        );
+        return;
+      }
+      const { scan } = detail.result;
+      setItemId(match.item.id);
+      setItemQuery(match.item.sku);
+      const lot = match.lotNumber || scan.gs1?.lot || "";
+      const serial = match.serialNumber || scan.gs1?.serial || "";
+      const expiry = match.expiryDate || scan.gs1?.expiry || "";
+      const manufactured = scan.gs1?.productionDate || "";
+      if (lot) setLotNumber(lot);
+      if (serial) setSerialNumber(serial);
+      if (expiry) setExpiryDate(expiry);
+      if (manufactured) setManufacturedAt(manufactured);
+      const qtyRaw = scan.gs1?.quantity;
+      if (qtyRaw && /^\d+(\.\d+)?$/.test(qtyRaw)) {
+        const qty = Number(qtyRaw);
+        if (qty > 0) setQuantity(qty);
+      }
+      const extras = [
+        lot ? `lote ${lot}` : "",
+        serial ? `serie ${serial}` : "",
+        expiry ? `cad. ${expiry}` : "",
+      ].filter(Boolean);
+      setScanHint(
+        extras.length
+          ? `Escaneado: ${match.item.sku} · ${extras.join(" · ")}`
+          : `Escaneado: ${match.item.sku} — ${match.item.name}`
+      );
+      setError("");
+      setMessage("");
+    }
+    window.addEventListener(SCAN_RESOLVED_EVENT, onScanResolved);
+    return () => window.removeEventListener(SCAN_RESOLVED_EVENT, onScanResolved);
+  }, [equipmentFormOpen]);
   const visibleHistory = useMemo(
     () =>
       history.filter((row) =>
@@ -627,8 +679,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {mode === "entrada"
-                    ? "Busca el artículo o equipo en una sola lista. Los equipos se dan de alta por modelo; las series se capturan aquí."
-                    : "Busca y descuenta unidades de cualquier categoría. Insumos, medicamentos y reactivos usan caducidad."}
+                    ? "Escanea el código o busca el artículo. Con GS1 se rellenan lote, serie y caducidad. Los equipos se dan de alta por modelo; las series se capturan aquí."
+                    : "Escanea o busca para descontar. Insumos, medicamentos y reactivos usan caducidad; el escáner también puede traer lote y serie."}
                 </p>
               </div>
               {canWrite ? (
@@ -684,19 +736,24 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   value={itemQuery}
                   onChange={(value) => {
                     setItemQuery(value);
+                    setScanHint("");
                     const first = items.find((item) =>
                       matchesSearch(value, articleFields(item))
                     );
                     if (value.trim() && first) setItemId(first.id);
+                    else if (!value.trim()) setItemId("");
                   }}
-                  placeholder="Buscar por código, nombre, n.º de parte, marca, serie o categoría..."
+                  placeholder="Escanear o buscar por código, nombre, n.º de parte, marca, serie..."
                 />
               ) : null}
               <select
                 id="stock-movement-item"
                 required
                 value={itemId}
-                onChange={(event) => setItemId(event.target.value)}
+                onChange={(event) => {
+                  setItemId(event.target.value);
+                  setScanHint("");
+                }}
                 disabled={!canWrite}
                 className={fieldClass}
               >
@@ -717,15 +774,18 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   </>
                 )}
               </select>
-              {selected ? (
+              {scanHint ? (
+                <span className="block text-xs font-medium text-[#00BFFF]">{scanHint}</span>
+              ) : selected ? (
                 <span className="block text-xs text-muted-foreground">
                   Categoría: {categoryLabel(selected)}
                   {isEquipmentCatalog ? " · se capturan series" : ""}
+                  {" · "}puedes escanear el código para llenar lote/serie
                 </span>
               ) : (
                 <span className="block text-xs text-muted-foreground">
-                  Insumos, medicamentos, refacciones, accesorios, reactivos y
-                  equipos en la misma lista.
+                  Escanea el código del producto para seleccionarlo. Si el código
+                  trae lote/serie/caducidad (GS1), se rellenan solos.
                 </span>
               )}
             </div>

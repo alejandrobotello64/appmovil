@@ -16,7 +16,13 @@ import { ScanDialog, type ScanRequest } from "@/components/scan/scan-dialog";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { CATALOG_MODULES } from "@/lib/auth/permissions";
 import { SCAN_TARGET_EVENT, useBarcodeScanner } from "@/lib/scan/use-barcode-scanner";
-import { fillSearchField, findPageSearchField, scanSearchMode } from "@/lib/scan/search-fields";
+import {
+  dispatchScanResolved,
+  fillSearchField,
+  findPageSearchField,
+  scanSearchMode,
+} from "@/lib/scan/search-fields";
+import { resolveScan } from "@/lib/scan/lookup";
 import {
   connectSerialScanner,
   disconnectSerialScanner,
@@ -80,6 +86,10 @@ export function ScanProvider({ children }: { children: ReactNode }) {
       const target = document.activeElement;
       if (target instanceof HTMLElement && target.dataset.scanTarget === "true") {
         target.dispatchEvent(new CustomEvent(SCAN_TARGET_EVENT, { detail: code }));
+        // También notifica a paneles de entrada por si el target es solo barcodes.
+        void resolveScan(code)
+          .then((result) => dispatchScanResolved(code, result))
+          .catch(() => undefined);
         return;
       }
       const field = scanSearchMode(target)
@@ -89,6 +99,17 @@ export function ScanProvider({ children }: { children: ReactNode }) {
           : null;
       if (field) {
         void fillSearchField(field, code);
+        return;
+      }
+      // En Almacén sin buscador visible: igual resolvemos para entradas/salidas.
+      if (inWarehouse) {
+        void resolveScan(code)
+          .then((result) => {
+            dispatchScanResolved(code, result);
+            const match = result.matches[0];
+            if (!match) openScanner(code);
+          })
+          .catch(() => openScanner(code));
         return;
       }
       openScanner(code);
