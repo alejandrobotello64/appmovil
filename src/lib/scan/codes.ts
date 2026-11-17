@@ -155,14 +155,26 @@ function parseEmbeddedSerialPart(data: string): Record<string, string> | null {
   return null;
 }
 
-/** Aliases de catálogo para series / modelos Hill-Rom cama HR900 (Centuris Pro). */
+/**
+ * Aliases de catálogo solo para camas Centuris (series HRP… o modelo exacto).
+ * No aplicar a refacciones tipo HR900126 / HR900B2044.
+ */
 export function hillRomBedAliases(serialOrModel: string) {
   const value = serialOrModel.trim();
   if (!value) return [] as string[];
-  if (/^HRP\d{6,}$/i.test(value) || /^(HR|LI|CS)900\w*$/i.test(value)) {
-    return ["HR900", "Centuris", "Centuris Pro", "LI900B1", "CS900", "CS900B1"];
+  if (/^HRP\d{6,}$/i.test(value)) {
+    return ["Centuris", "Centuris Pro", "LI900B1", "CS900B1"];
+  }
+  // Modelo de familia exacto (placa / AI 241), no n.º de parte HR900…
+  if (/^(HR900|LI900|LI900B1|CS900|CS900B1)$/i.test(value)) {
+    return ["Centuris", "Centuris Pro", "LI900B1", "CS900B1"];
   }
   return [] as string[];
+}
+
+/** True si el código parece n.º de parte/refacción Hill-Rom (HR900126, HR900B2044…). */
+export function isHillRomPartNumber(value: string) {
+  return /^HR900[A-Z0-9].+/i.test(value.trim());
 }
 
 /** Interpreta un código GS1 (DataMatrix / GS1-128) si lo es. */
@@ -228,9 +240,11 @@ export function parseScan(raw: string): ParsedScan {
   add(code);
   if (code.startsWith("21") && code.length > 6) add(code.slice(2));
   if (/^\d{8,14}$/.test(code)) gtinVariants(code).forEach(add);
-  // Camas Hill-Rom: serie HRP… o modelo HR900 → candidatos de catálogo Centuris Pro
-  for (const seed of [gs1?.serial, gs1?.ais?.["241"], code, code.replace(/^21/i, "")]) {
-    for (const alias of hillRomBedAliases(seed ?? "")) add(alias);
+  // Camas Hill-Rom: solo series HRP… o modelo exacto HR900 (no refacciones HR900…)
+  if (!isHillRomPartNumber(code) && !isHillRomPartNumber(code.replace(/^21/i, ""))) {
+    for (const seed of [gs1?.serial, gs1?.ais?.["241"], code, code.replace(/^21/i, "")]) {
+      for (const alias of hillRomBedAliases(seed ?? "")) add(alias);
+    }
   }
   return { raw, code, gs1, candidates: [...candidates] };
 }

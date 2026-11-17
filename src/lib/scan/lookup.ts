@@ -6,6 +6,7 @@ import {
 import type { InventoryItem } from "@/lib/inventory/types";
 import {
   hillRomBedAliases,
+  isHillRomPartNumber,
   normalizeBarcode,
   parseScan,
   type ParsedScan,
@@ -86,7 +87,7 @@ function isEquipmentRow(item: InventoryItem) {
   return item.itemKind === "equipo" || item.category === "equipos";
 }
 
-function matchRank(match: ScanMatch) {
+function matchRank(match: ScanMatch, scannedCode = "") {
   const kindOrder: Record<ScanMatchKind, number> = {
     barcode: 0,
     sku: 1,
@@ -95,8 +96,19 @@ function matchRank(match: ScanMatch) {
     equipment_serial: 4,
     lot: 5,
   };
+  const code = scannedCode.trim().toLowerCase();
+  const exactCode =
+    !!code &&
+    [match.item.sku, match.item.partNumber, ...(match.item.barcodes ?? [])]
+      .filter(Boolean)
+      .some((value) => String(value).trim().toLowerCase() === code);
+  // Un n.º de parte exacto (refacción HR900…) gana a un alias de cama/equipo.
+  const exactPartBonus = exactCode && (match.kind === "part_number" || match.kind === "sku") ? -40 : 0;
+  const exactAnyBonus = exactCode ? -25 : 0;
   return (
     (match.item.isActive === false ? 100 : 0) +
+    exactPartBonus +
+    exactAnyBonus +
     (isEquipmentRow(match.item) ? 0 : 20) +
     (kindOrder[match.kind] ?? 9)
   );
@@ -121,10 +133,47 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
     expiryDate: gs1?.expiry,
   };
 
+  // Primero n.º de parte / SKU exactos del código crudo (evita que HR900… vaya a la cama).
+  {
+    const primaryKeys = [
+      ...new Set(
+        [scan.code, scan.code.replace(/^21/i, ""), partHint, serialHint].filter(Boolean)
+      ),
+    ];
+    if (primaryKeys.length) {
+      const rows = await idsWhere(
+        "inventory_items",
+        "id, sku, part_number, item_kind, category",
+        `${anyOf("sku", primaryKeys)},${anyOf("part_number", primaryKeys)}`
+      );
+      const lower = new Set(primaryKeys.map((value) => value.toLowerCase()));
+      for (const row of rows) {
+        const kind = lower.has(String(row.sku ?? "").toLowerCase())
+          ? "sku"
+          : "part_number";
+        add(row.id, { kind, ...fromGs1 });
+      }
+    }
+  }
+
+  // Si ya hay match exacto de refacción/parte, no ampliar con aliases de cama.
+  const skipBedAliasExpand = [...found.values()].some(
+    (match) => match.kind === "part_number" || match.kind === "sku"
+  ) || isHillRomPartNumber(scan.code);
+
+  const lookupCandidates = skipBedAliasExpand
+    ? candidates.filter(
+        (value) =>
+          !["centuris", "centuris pro", "li900b1", "cs900b1", "hr900", "cs900", "li900"].includes(
+            value.toLowerCase()
+          )
+      )
+    : candidates;
+
   const { data: byBarcode, error: barcodeError } = await supabase
     .from("inventory_items")
     .select("id")
-    .overlaps("barcodes", pgArray(caseVariants(candidates)))
+    .overlaps("barcodes", pgArray(caseVariants(lookupCandidates)))
     .limit(25);
   if (barcodeError) throw new Error(barcodeError.message);
   for (const row of byBarcode ?? []) {
@@ -135,9 +184,9 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
     });
   }
 
-  // SKU / n.º de parte (también con la ref embebida del DataMatrix).
-  {
-    const keys = [...new Set([...candidates, partHint].filter(Boolean))];
+  // SKU / n.º de parte restantes (candidatos amplios, sin pisar matches ya hallados).
+  if (!skipBedAliasExpand) {
+    const keys = [...new Set([...lookupCandidates, partHint].filter(Boolean))];
     if (keys.length) {
       const rows = await idsWhere(
         "inventory_items",
@@ -205,7 +254,7 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
   }
 
   // Serie registrada en equipos de cliente → producto de catálogo por modelo/nombre.
-  if (!found.size) {
+  if (!found.size && !isHillRomPartNumber(scan.code)) {
     const serials = [...new Set([serialHint, scan.code, scan.code.replace(/^21/i, "")].filter(Boolean))];
     if (serials.length) {
       const rows = await idsWhere(
@@ -225,9 +274,8 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
           const { data, error } = await db
             .from("inventory_items")
             .select("id, item_kind, category")
-            .or(
-              `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)},part_number.ilike.${quoted(pattern)},sku.ilike.${quoted(pattern)}`
-            )
+            .or(`model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)}`)
+            .eq("item_kind", "equipo")
             .limit(10);
           if (error) throw new Error(error.message);
           for (const item of (data ?? []) as Row[]) {
@@ -243,17 +291,17 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
     }
   }
 
-  // Último recurso: modelo / nombre (HR900, Centuris, Vista 120…) cuando el código no está ligado.
-  if (!found.size) {
-    const baseTokens = candidates.filter(
+  // Último recurso: modelo / nombre (Centuris, Vista 120…) — no buscar part_number con alias de cama.
+  if (!found.size && !isHillRomPartNumber(scan.code)) {
+    const baseTokens = lookupCandidates.filter(
       (value) => /[A-Za-z]/.test(value) && value.length >= 4 && !/^HRP\d+$/i.test(value)
     );
-    const tokens = [
-      ...baseTokens,
-      ...baseTokens.flatMap((token) => hillRomBedAliases(token)),
+    const bedTokens = [
       ...hillRomBedAliases(serialHint),
       ...hillRomBedAliases(partHint),
+      ...baseTokens.flatMap((token) => hillRomBedAliases(token)),
     ];
+    const tokens = [...baseTokens, ...bedTokens];
     const seenToken = new Set<string>();
     for (const token of tokens) {
       const key = token.toLowerCase();
@@ -261,15 +309,21 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
       seenToken.add(key);
       if (seenToken.size > 10) break;
       const pattern = `%${token.replace(/[%_]/g, "")}%`;
+      const isBedAlias = bedTokens.some((value) => value.toLowerCase() === key);
       const { data, error } = await db
         .from("inventory_items")
         .select("id, item_kind, category")
         .or(
-          `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)},part_number.ilike.${quoted(pattern)},sku.ilike.${quoted(pattern)}`
+          isBedAlias
+            ? `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)}`
+            : `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)},part_number.ilike.${quoted(pattern)},sku.ilike.${quoted(pattern)}`
         )
         .limit(15);
       if (error) throw new Error(error.message);
       for (const row of (data ?? []) as Row[]) {
+        const kind = String(row.item_kind ?? "");
+        const category = String(row.category ?? "");
+        if (isBedAlias && kind !== "equipo" && category !== "equipos") continue;
         add(row.id, {
           kind: "part_number",
           serialNumber: serialHint || undefined,
@@ -280,9 +334,10 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
   }
 
   const items = await getInventoryItemsByIds([...found.keys()]);
+  const preferredCode = scan.code.replace(/^21/i, "") || scan.code;
   const matches = items
     .map((item) => ({ item, ...found.get(item.id)! }))
-    .sort((a, b) => matchRank(a) - matchRank(b));
+    .sort((a, b) => matchRank(a, preferredCode) - matchRank(b, preferredCode));
   return { scan, matches };
 }
 
