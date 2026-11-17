@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronDown, Plus, Search } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
 import { getStockStatus } from "@/lib/inventory/storage";
 import {
   placementsFor,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/inventory/types";
 import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { matchesSearch } from "@/lib/search";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLES = {
@@ -147,6 +149,7 @@ export function ServiceCatalogPicker({
 }: ServiceCatalogPickerProps) {
   const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [scanHint, setScanHint] = useState("");
 
   const matches = useMemo(() => {
     const term = query.trim();
@@ -162,31 +165,56 @@ export function ServiceCatalogPicker({
     setOpenId(null);
   }
 
+  const onCatalogScan = useCallback(
+    ({
+      match,
+      raw,
+    }: {
+      match: { item: InventoryItem } | null;
+      raw: string;
+    }) => {
+      if (disabled) return;
+      const product =
+        (match && products.find((item) => item.id === match.item.id)) ||
+        products.find(
+          (item) =>
+            item.isActive &&
+            (item.sku.toUpperCase() === raw.trim().toUpperCase() ||
+              (item.partNumber || "").toUpperCase() === raw.trim().toUpperCase())
+        );
+      if (!product) {
+        setQuery(raw.trim());
+        setScanHint("Código leído sin producto en catálogo. Revisa o busca manualmente.");
+        return;
+      }
+      add(product);
+      setScanHint(`Agregado: ${product.sku} — ${product.name}`);
+    },
+    // add uses onAdd/setState; products+disabled are the scan gate
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [disabled, products, onAdd]
+  );
+  useScanResolved(onCatalogScan, { enabled: !disabled });
+
   return (
     <div className="space-y-2">
-      <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          placeholder="Buscar por código MAS o descripción del producto…"
-          value={query}
-          disabled={disabled}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setOpenId(null);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && matches[0]) {
-              event.preventDefault();
-              add(matches[0]);
-            }
-          }}
-          aria-label="Buscar producto por código o descripción"
-        />
-      </div>
+      <SearchInput
+        value={query}
+        onChange={(value) => {
+          setQuery(value);
+          setOpenId(null);
+          setScanHint("");
+        }}
+        scanSearch="true"
+        placeholder="Buscar o escanear por código MAS o descripción…"
+        className={disabled ? "pointer-events-none opacity-60" : undefined}
+      />
+      {scanHint ? (
+        <p className="text-xs font-medium text-[#00BFFF]">{scanHint}</p>
+      ) : null}
       {!query.trim() ? (
         <p className="text-xs text-muted-foreground">
-          Escribe el código o parte del nombre. No hace falta elegir si es insumo, refacción o accesorio.
+          Escanea o escribe el código. No hace falta elegir si es insumo, refacción o accesorio.
         </p>
       ) : matches.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">

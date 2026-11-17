@@ -1,9 +1,14 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
-import { History, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { useCallback, useMemo, useState, type FormEvent } from "react";
+import { History, Pencil, Plus, Printer, QrCode, ScanBarcode, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchByScanFields } from "@/lib/scan/match-local";
+import type { ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
+import { LABEL_FORMATS, printToolLabels, type LabelFormat } from "@/lib/tools/labels";
 import { deleteTool, saveTool } from "@/lib/tools/storage";
 import {
   lineOutstanding,
@@ -11,12 +16,14 @@ import {
   TOOL_CONDITIONS,
   toolCategoryLabel,
   toolConditionLabel,
+  type Tool,
   type ToolCategory,
   type ToolInput,
   type ToolRequest,
   type ToolWithAvailability,
 } from "@/lib/tools/types";
 import { cn } from "@/lib/utils";
+import { ToolQrDialog } from "./tool-qr-dialog";
 import {
   fieldClass,
   formatDate,
@@ -107,8 +114,35 @@ export function ToolsCatalog({
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [editing, setEditing] = useState<ToolWithAvailability | "new" | null>(null);
   const [historyFor, setHistoryFor] = useState<ToolWithAvailability | null>(null);
+  const [qrFor, setQrFor] = useState<{ tool: Tool; freshlyCreated?: boolean } | null>(null);
+  const [bulkPrinting, setBulkPrinting] = useState(false);
+  const [bulkFormat, setBulkFormat] = useState<LabelFormat>("sheet");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [scanHint, setScanHint] = useState("");
+
+  const onCatalogScan = useCallback(
+    ({ raw, result }: { raw: string; result: ScanResult }) => {
+      if (editing || qrFor) return;
+      const tool = matchByScanFields(
+        tools,
+        raw,
+        (item) => [item.code, item.serialNumber],
+        result
+      );
+      if (!tool) {
+        setQuery(raw.trim());
+        setScanHint(`Sin coincidencia exacta (${raw.trim() || "vacío"}). Filtrado por el código leído.`);
+        return;
+      }
+      setQuery(tool.code);
+      setCategory("todas");
+      setOnlyAvailable(false);
+      setScanHint(`Escaneada: ${tool.code} — ${tool.name} · ${tool.quantityAvailable} disponibles`);
+    },
+    [tools, editing, qrFor]
+  );
+  useScanResolved(onCatalogScan, { enabled: !editing && !qrFor });
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -141,20 +175,45 @@ export function ToolsCatalog({
     }
   }
 
+  async function printFilteredLabels() {
+    if (!filtered.length) return;
+    setBulkPrinting(true);
+    setError("");
+    try {
+      await printToolLabels(filtered, { format: bulkFormat, copies: 1 });
+      setMessage(
+        `Se generaron ${filtered.length} etiqueta${filtered.length === 1 ? "" : "s"} QR.`
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudieron generar las etiquetas.");
+    } finally {
+      setBulkPrinting(false);
+    }
+  }
+
   return (
     <section className="space-y-4">
+      <div className="flex items-start gap-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5 text-sm">
+        <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
+        <div>
+          <p className="font-medium text-foreground">Lector listo · QR de herramientas</p>
+          <p className="text-xs text-muted-foreground">
+            {scanHint ||
+              "Escanea la etiqueta QR (o el código/serie) para localizar la herramienta. Genera etiquetas desde cada ficha o en lote."}
+          </p>
+        </div>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
-        <label className="relative min-w-56 flex-1">
-          <span className="sr-only">Buscar herramienta</span>
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            className={cn(fieldClass, "pl-9")}
-            placeholder="Buscar o escanear por nombre, código, marca, serie o ubicación"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </label>
+        <SearchInput
+          value={query}
+          onChange={(value) => {
+            setQuery(value);
+            setScanHint("");
+          }}
+          scanSearch="true"
+          placeholder="Buscar o escanear por nombre, código, QR, marca, serie…"
+          className="min-w-56 flex-1"
+        />
         <label className="inline-flex h-10 items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm">
           <input
             type="checkbox"
@@ -163,6 +222,28 @@ export function ToolsCatalog({
           />
           Solo disponibles
         </label>
+        <select
+          className={cn(fieldClass, "w-auto")}
+          value={bulkFormat}
+          onChange={(e) => setBulkFormat(e.target.value as LabelFormat)}
+          aria-label="Formato de etiquetas QR"
+        >
+          {LABEL_FORMATS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-10 px-3"
+          disabled={bulkPrinting || filtered.length === 0}
+          onClick={() => void printFilteredLabels()}
+        >
+          <Printer className="size-4" />
+          {bulkPrinting ? "Generando…" : `QR filtradas (${filtered.length})`}
+        </Button>
         {canCreate ? (
           <Button type="button" className={cn("h-10 px-3", primaryButtonClass)} onClick={() => setEditing("new")}>
             <Plus className="size-4" /> Nueva herramienta
@@ -236,6 +317,9 @@ export function ToolsCatalog({
                 <p className="line-clamp-2 text-xs text-muted-foreground">{tool.description}</p>
               ) : null}
               <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
+                <Button type="button" variant="outline" size="sm" onClick={() => setQrFor({ tool })}>
+                  <QrCode className="size-3.5" /> QR
+                </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setHistoryFor(tool)}>
                   <History className="size-3.5" /> Historial
                 </Button>
@@ -260,12 +344,25 @@ export function ToolsCatalog({
           tool={editing === "new" ? null : editing}
           actor={actor}
           onClose={() => setEditing(null)}
-          onSaved={(name, isNew) => {
+          onSaved={(saved, isNew) => {
             setEditing(null);
             setError("");
-            setMessage(isNew ? `${name} se agregó al catálogo.` : `${name} se actualizó.`);
+            setMessage(
+              isNew
+                ? `${saved.name} se agregó al catálogo. Genera su etiqueta QR.`
+                : `${saved.name} se actualizó.`
+            );
             onChanged();
+            if (isNew) setQrFor({ tool: saved, freshlyCreated: true });
           }}
+        />
+      ) : null}
+
+      {qrFor ? (
+        <ToolQrDialog
+          tool={qrFor.tool}
+          freshlyCreated={qrFor.freshlyCreated}
+          onClose={() => setQrFor(null)}
         />
       ) : null}
 
@@ -293,7 +390,7 @@ function ToolForm({
   tool: ToolWithAvailability | null;
   actor: string;
   onClose: () => void;
-  onSaved: (name: string, isNew: boolean) => void;
+  onSaved: (saved: Tool, isNew: boolean) => void;
 }) {
   const [form, setForm] = useState<ToolInput>(() => (tool ? toInput(tool) : emptyInput()));
   const [saving, setSaving] = useState(false);
@@ -308,8 +405,8 @@ function ToolForm({
     setSaving(true);
     setError("");
     try {
-      await saveTool(tool?.id ?? null, form, actor);
-      onSaved(form.name.trim(), !tool);
+      const saved = await saveTool(tool?.id ?? null, form, actor);
+      onSaved(saved, !tool);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar.");
       setSaving(false);
@@ -353,13 +450,16 @@ function ToolForm({
           </select>
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">Código</span>
+          <span className="mb-1 block text-muted-foreground">Código (QR)</span>
           <input
             className={fieldClass}
             value={form.code}
             onChange={(e) => set("code", e.target.value)}
             placeholder={tool ? "" : "Automático (HER-0001)"}
           />
+          <span className="mt-1 block text-xs text-muted-foreground">
+            El QR usa este código. Déjalo vacío al crear para asignar HER-####.
+          </span>
         </label>
         <label className="block text-sm">
           <span className="mb-1 block text-muted-foreground">Marca</span>

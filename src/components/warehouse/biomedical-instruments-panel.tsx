@@ -1,18 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   Camera,
   FileDown,
   FileText,
   Pencil,
   Plus,
-  Search,
+  ScanBarcode,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CameraButton } from "@/components/media/camera-capture";
+import { SearchInput } from "@/components/ui/search-input";
 import { openStoredFileOnMobile } from "@/lib/print/open-pdf";
+import { matchByScanFields } from "@/lib/scan/match-local";
+import type { ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions } from "@/lib/auth/use-permissions";
@@ -68,6 +72,7 @@ export function BiomedicalInstrumentsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [scanHint, setScanHint] = useState("");
   const [typeFilter, setTypeFilter] = useState<
     BiomedicalInstrumentType | "todos"
   >("todos");
@@ -112,6 +117,35 @@ export function BiomedicalInstrumentsPanel() {
   useEffect(() => {
     void reload();
   }, []);
+
+  const onInstrumentScan = useCallback(
+    ({ raw, result }: { raw: string; result: ScanResult }) => {
+      if (formOpen) return;
+      const instrument = matchByScanFields(
+        items,
+        raw,
+        (item) => [item.serialNumber, item.assetTag, item.certificateNumber],
+        result
+      );
+      if (!instrument) {
+        setQuery(raw.trim());
+        setScanHint(
+          `Código leído sin coincidencia exacta (${raw.trim() || "vacío"}). Filtrado por la lectura.`
+        );
+        return;
+      }
+      setQuery(instrument.serialNumber || instrument.assetTag || instrument.name);
+      setTypeFilter("todos");
+      setSelected(instrument);
+      setScanHint(
+        `Escaneado: ${instrument.name}${
+          instrument.serialNumber ? ` · S/N ${instrument.serialNumber}` : ""
+        }`
+      );
+    },
+    [items, formOpen]
+  );
+  useScanResolved(onInstrumentScan, { enabled: !formOpen });
 
   useEffect(() => {
     if (!pendingImage) return;
@@ -551,16 +585,28 @@ export function BiomedicalInstrumentsPanel() {
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            className={cn(fieldClass, "pl-9")}
-            placeholder="Buscar por nombre, serie, certificado…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+      <div className="flex items-start gap-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5 text-sm">
+        <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
+        <div>
+          <p className="font-medium text-foreground">Lector listo</p>
+          <p className="text-xs text-muted-foreground">
+            {scanHint ||
+              "Escanea serie, etiqueta o certificado para localizar el instrumento."}
+          </p>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <SearchInput
+          value={query}
+          onChange={(value) => {
+            setQuery(value);
+            setScanHint("");
+          }}
+          scanSearch="true"
+          placeholder="Buscar o escanear por nombre, serie, certificado…"
+          className="min-w-[200px] flex-1"
+        />
         <select
           className={cn(fieldClass, "w-auto")}
           value={typeFilter}

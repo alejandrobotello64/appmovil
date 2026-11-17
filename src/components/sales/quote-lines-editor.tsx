@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type DragEvent } from "react";
 import {
   ChevronDown,
   ChevronUp,
   Copy,
+  GripVertical,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -106,6 +107,8 @@ export function QuoteLinesEditor({
   disabled,
 }: QuoteLinesEditorProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   function update(index: number, patch: Partial<QuoteDraftLine>) {
     onChange(lines.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -137,13 +140,58 @@ export function QuoteLinesEditor({
     }
   }
 
+  function clearDrag() {
+    setDragIndex(null);
+    setOverIndex(null);
+  }
+
+  function handleDragStart(index: number, event: DragEvent<HTMLButtonElement>) {
+    if (disabled) {
+      event.preventDefault();
+      return;
+    }
+    setDragIndex(index);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(index));
+    // Mejora el fantasma de arrastre en algunos navegadores.
+    if (event.currentTarget.parentElement) {
+      event.dataTransfer.setDragImage(
+        event.currentTarget.closest("li") ?? event.currentTarget,
+        24,
+        24
+      );
+    }
+  }
+
+  function handleDragOver(index: number, event: DragEvent<HTMLLIElement>) {
+    if (disabled || dragIndex === null) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    if (overIndex !== index) setOverIndex(index);
+  }
+
+  function handleDrop(index: number, event: DragEvent<HTMLLIElement>) {
+    if (disabled) return;
+    event.preventDefault();
+    const raw = event.dataTransfer.getData("text/plain");
+    const from = Number(raw);
+    const origin = Number.isFinite(from) ? from : dragIndex;
+    if (origin == null || Number.isNaN(origin)) {
+      clearDrag();
+      return;
+    }
+    onChange(moveItem(lines, origin, index));
+    clearDrag();
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h4 className="text-sm font-semibold">Partidas</h4>
           <p className="text-xs text-muted-foreground">
-            Ordena con ↑ ↓, duplica o quita. Expande una fila para marca y referencia.
+            Arrastra el asa ⋮⋮ para reordenar. También puedes usar ↑ ↓, duplicar o
+            quitar.
           </p>
         </div>
         <Button
@@ -159,8 +207,8 @@ export function QuoteLinesEditor({
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border">
-        <div className="hidden grid-cols-[2.25rem_minmax(0,1.4fr)_4.5rem_6.5rem_6.5rem_minmax(5.5rem,auto)_auto] gap-2 border-b border-border bg-muted/40 px-3 py-2 text-[11px] font-medium text-muted-foreground md:grid">
-          <span>#</span>
+        <div className="hidden grid-cols-[2.75rem_minmax(0,1.4fr)_4.5rem_6.5rem_6.5rem_minmax(5.5rem,auto)_auto] gap-2 border-b border-border bg-muted/40 px-3 py-2 text-[11px] font-medium text-muted-foreground md:grid">
+          <span>Orden</span>
           <span>Producto / descripción</span>
           <span>Cant.</span>
           <span>P. unit.</span>
@@ -178,11 +226,41 @@ export function QuoteLinesEditor({
               : 0;
             const isOpen = expanded[line.key] ?? !line.productId;
             const discountMode = line.discountMode ?? "percent";
+            const isDragging = dragIndex === index;
+            const isDropTarget =
+              overIndex === index && dragIndex !== null && dragIndex !== index;
 
             return (
-              <li key={line.key} className="bg-card px-3 py-3">
-                <div className="grid gap-2 md:grid-cols-[2.25rem_minmax(0,1.4fr)_4.5rem_6.5rem_6.5rem_minmax(5.5rem,auto)_auto] md:items-start">
-                  <div className="flex items-center gap-1 md:flex-col md:pt-1">
+              <li
+                key={line.key}
+                onDragOver={(event) => handleDragOver(index, event)}
+                onDragLeave={() => {
+                  if (overIndex === index) setOverIndex(null);
+                }}
+                onDrop={(event) => handleDrop(index, event)}
+                className={cn(
+                  "bg-card px-3 py-3 transition-colors",
+                  isDragging && "opacity-45",
+                  isDropTarget && "bg-[#00BFFF]/10 ring-1 ring-inset ring-[#00BFFF]/40"
+                )}
+              >
+                <div className="grid gap-2 md:grid-cols-[2.75rem_minmax(0,1.4fr)_4.5rem_6.5rem_6.5rem_minmax(5.5rem,auto)_auto] md:items-start">
+                  <div className="flex items-center gap-1 md:flex-col md:items-center md:pt-1">
+                    <button
+                      type="button"
+                      draggable={!disabled}
+                      disabled={disabled}
+                      onDragStart={(event) => handleDragStart(index, event)}
+                      onDragEnd={clearDrag}
+                      className={cn(
+                        "inline-flex size-8 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30",
+                        isDragging && "cursor-grabbing bg-muted text-foreground"
+                      )}
+                      aria-label={`Arrastrar partida ${index + 1}`}
+                      title="Arrastrar para reordenar"
+                    >
+                      <GripVertical className="size-4" />
+                    </button>
                     <span className="inline-flex size-7 items-center justify-center rounded-md bg-muted text-xs font-semibold tabular-nums">
                       {index + 1}
                     </span>

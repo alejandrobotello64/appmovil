@@ -13,6 +13,8 @@ export type StockMovementLine = {
   expiryDate: string;
   manufacturedAt: string;
   serialNumber: string;
+  /** Ubicación destino/origen de esta línea (puede diferir del default del formulario). */
+  locationId: string;
   isEquipment: boolean;
   tracksLot: boolean;
   tracksSerial: boolean;
@@ -32,6 +34,7 @@ export function lineFromProduct(
       | "expiryDate"
       | "manufacturedAt"
       | "serialNumber"
+      | "locationId"
     >
   > = {}
 ): StockMovementLine {
@@ -49,18 +52,20 @@ export function lineFromProduct(
     expiryDate: extras.expiryDate ?? "",
     manufacturedAt: extras.manufacturedAt ?? "",
     serialNumber: extras.serialNumber ?? "",
+    locationId: extras.locationId ?? "",
     isEquipment,
     tracksLot: Boolean(item.tracksLot) && !isEquipment,
     tracksSerial: Boolean(item.tracksSerial) || isEquipment,
   };
 }
 
-/** Misma identidad de línea: producto + lote + serie (para sumar cantidades). */
+/** Misma identidad de línea: producto + lote + serie + ubicación (para sumar cantidades). */
 export function sameLineIdentity(a: StockMovementLine, b: StockMovementLine) {
   return (
     a.productId === b.productId &&
     a.lotNumber.trim() === b.lotNumber.trim() &&
-    a.serialNumber.trim() === b.serialNumber.trim()
+    a.serialNumber.trim() === b.serialNumber.trim() &&
+    a.locationId === b.locationId
   );
 }
 

@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Loader2, PackageCheck, Printer, RefreshCw, ShoppingCart, XCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CheckCircle2,
+  Loader2,
+  PackageCheck,
+  Printer,
+  RefreshCw,
+  ScanBarcode,
+  ShoppingCart,
+  XCircle,
+} from "lucide-react";
 import { QuickBoxOpenButton } from "@/components/warehouse/quick-box-open";
 import { Button } from "@/components/ui/button";
 import { PurchaseRequestForm } from "@/components/purchasing/purchase-request-form";
@@ -44,6 +53,9 @@ import {
   type RequisitionStatus,
   type ServiceOrderRequisition,
 } from "@/lib/service-orders/requisitions";
+import { matchByScanFields, scanTokens } from "@/lib/scan/match-local";
+import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { listStaffMembers, type StaffMember } from "@/lib/users/staff";
 import {
   allocateFulfillmentLots,
@@ -57,6 +69,44 @@ import { SearchInput } from "@/components/ui/search-input";
 import { matchesSearch } from "@/lib/search";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { requisitionStatusTone as statusTone } from "@/components/sales/quote-fulfillment";
+
+function scanQuantity(result: ScanResult) {
+  const raw = result.scan.gs1?.quantity;
+  if (!raw || !/^\d+(\.\d+)?$/.test(raw)) return 1;
+  const parsed = Number(raw);
+  return parsed > 0 ? parsed : 1;
+}
+
+function findPickGroup(
+  groups: GroupedRequisitionLine[],
+  raw: string,
+  result: ScanResult,
+  match: ScanMatch | null
+) {
+  if (match?.item?.id) {
+    const byId = groups.find((group) => group.productId === match.item.id);
+    if (byId) return byId;
+  }
+  const byFields = matchByScanFields(
+    groups,
+    raw,
+    (group) => [group.productSku, group.partNumber, group.productId],
+    result
+  );
+  if (byFields) return byFields;
+  if (match?.item) {
+    const sku = match.item.sku?.trim().toUpperCase();
+    const part = (match.item.partNumber || "").trim().toUpperCase();
+    return (
+      groups.find(
+        (group) =>
+          (sku && group.productSku.trim().toUpperCase() === sku) ||
+          (part && group.partNumber.trim().toUpperCase() === part)
+      ) ?? null
+    );
+  }
+  return null;
+}
 
 function mexicoDay(offset = 0) {
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" });
@@ -187,7 +237,7 @@ export function ServiceRequisitionsPanel({
   permissionModule = "solicitudes",
   allowFulfill,
   title = "Solicitudes de surtimiento",
-  subtitle = "Elige una solicitud y luego otra para surtirlas juntas. El mismo código suma en una sola cantidad y verás cuánto hay disponible en almacén. Imprime la suma para verificar productos, o cada orden por su folio.",
+  subtitle = "Escanea o elige una solicitud; puedes juntar varias del mismo solicitante. El mismo código suma en una sola cantidad. Escanea SKUs para ir contando el surtido, o captura cantidades a mano.",
 }: {
   /** Limita la bandeja a un origen; sin valor se muestran todos con filtro. */
   source?: RequisitionSource;
@@ -215,6 +265,7 @@ export function ServiceRequisitionsPanel({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [personFilter, setPersonFilter] = useState("todas");
   const [query, setQuery] = useState("");
+  const [scanHint, setScanHint] = useState("");
   const [qtyDraft, setQtyDraft] = useState<Record<string, string>>({});
   const [groupQtyDraft, setGroupQtyDraft] = useState<Record<string, string>>({});
   const [warehouseNotes, setWarehouseNotes] = useState("");
@@ -227,6 +278,8 @@ export function ServiceRequisitionsPanel({
   const [originLoading, setOriginLoading] = useState(false);
   const [stockEpoch, setStockEpoch] = useState(0);
   const raisedPieces = useRef(new Set<string>());
+  /** Tras el primer escaneo de producto en el detalle, las cantidades parten de 0 y se van sumando. */
+  const scanPickingRef = useRef(false);
   const [purchaseForm, setPurchaseForm] = useState<{
     jobs: { requisition: ServiceOrderRequisition; shortages: RequisitionShortage[] }[];
   } | null>(null);
@@ -552,10 +605,156 @@ export function ServiceRequisitionsPanel({
 
   function applySelection(next: ServiceOrderRequisition[], added?: ServiceOrderRequisition) {
     setError("");
+    scanPickingRef.current = false;
     setSelectedIds(next.map((item) => item.id));
     if (added && next.length > 1) mergeDrafts([added], false);
     else mergeDrafts(next, true);
   }
+
+  function resetScanPicking() {
+    if (!selectedOpen.length) return;
+    const groups = groupRequisitionLines(selectedOpen);
+    scanPickingRef.current = true;
+    const nextGroup: Record<string, string> = {};
+    const nextQty: Record<string, string> = {};
+    for (const group of groups) {
+      nextGroup[group.key] = "0";
+      for (const source of group.sources) {
+        if (
+          isRequisitionOpen(source.requisition.status) &&
+          requisitionLinePending(source.line) > 0
+        ) {
+          nextQty[source.line.id] = "0";
+        }
+      }
+    }
+    setGroupQtyDraft(nextGroup);
+    setQtyDraft((current) => ({ ...current, ...nextQty }));
+    setScanHint("Conteo en cero. Escanea cada producto para ir sumando.");
+  }
+
+  const onRequisitionScan = useCallback(
+    ({
+      raw,
+      result,
+      match,
+    }: {
+      raw: string;
+      result: ScanResult;
+      match: ScanMatch | null;
+    }) => {
+      const addQty = scanQuantity(result);
+
+      // Con detalle abierto y permiso de surtir: escanear productos para sumar cantidades.
+      if (canFulfill && selectedOpen.length > 0) {
+        const groups = groupRequisitionLines(selectedOpen);
+        const group = findPickGroup(groups, raw, result, match);
+        if (!group) {
+          setScanHint(
+            `Código leído sin partida en esta solicitud (${raw.trim() || "vacío"}).`
+          );
+          setQuery(raw.trim());
+          return;
+        }
+        if (group.pending <= 0) {
+          setScanHint(
+            `${group.productSku || group.description}: ya no tiene pendiente.`
+          );
+          return;
+        }
+
+        const startingFresh = !scanPickingRef.current;
+        if (startingFresh) scanPickingRef.current = true;
+
+        setGroupQtyDraft((draft) => {
+          const quantities: Record<string, number> = {};
+          for (const row of groups) {
+            if (startingFresh) {
+              quantities[row.key] = row.key === group.key ? addQty : 0;
+            } else {
+              quantities[row.key] =
+                Number(draft[row.key] || 0) + (row.key === group.key ? addQty : 0);
+            }
+          }
+          const nextGroup: Record<string, string> = {};
+          const nextQty: Record<string, string> = {};
+          let applied = 0;
+          for (const row of groups) {
+            const amount = Math.min(
+              fulfillCap(row, availableByProduct),
+              Math.max(0, quantities[row.key] ?? 0)
+            );
+            if (row.key === group.key) applied = amount;
+            nextGroup[row.key] = formatQty(amount);
+            const allocated = allocateFulfillmentQty(
+              row.sources.map((source) => source.line),
+              amount
+            );
+            for (const [lineId, value] of Object.entries(allocated)) {
+              nextQty[lineId] = formatQty(value);
+            }
+          }
+          setQtyDraft((current) => ({ ...current, ...nextQty }));
+          setScanHint(
+            applied >= fulfillCap(group, availableByProduct)
+              ? `Escaneado ${group.productSku || group.description}: ${formatQty(applied)} ${group.unit} (máximo).`
+              : `Escaneado ${group.productSku || group.description}: ${formatQty(applied)} / ${formatQty(group.pending)} ${group.unit}.`
+          );
+          setError("");
+          return nextGroup;
+        });
+        return;
+      }
+
+      // Sin detalle: localizar solicitud por folio / OS / cotización / SKU de línea.
+      const byFolio = matchByScanFields(
+        items,
+        raw,
+        (item) => [item.folio, item.serviceOrderFolio, item.quoteFolio],
+        result
+      );
+      let found = byFolio;
+      if (!found) {
+        const tokens = new Set(scanTokens(raw, result));
+        if (match?.item) {
+          tokens.add(match.item.sku.trim().toUpperCase());
+          if (match.item.partNumber)
+            tokens.add(match.item.partNumber.trim().toUpperCase());
+          tokens.add(match.item.id.toUpperCase());
+        }
+        found =
+          items.find(
+            (item) =>
+              isRequisitionOpen(item.status) &&
+              item.lines.some((line) =>
+                [line.productSku, line.partNumber, line.productId ?? ""]
+                  .map((value) => value.trim().toUpperCase())
+                  .some((value) => value !== "" && tokens.has(value))
+              )
+          ) ?? null;
+      }
+      if (!found) {
+        setQuery(raw.trim());
+        setScanHint(
+          `Sin coincidencia exacta (${raw.trim() || "vacío"}). Filtrado por la lectura.`
+        );
+        return;
+      }
+      setStatusFilter("abiertas");
+      setPersonFilter("todas");
+      setQuery(found.folio);
+      applySelection([found]);
+      setScanHint(
+        `Solicitud ${found.folio}${
+          found.clientName ? ` · ${found.clientName}` : ""
+        }. Escanea productos para ir sumando el surtido.`
+      );
+      setError("");
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canFulfill, selectedOpen, availableByProduct, items]
+  );
+  useScanResolved(onRequisitionScan, { enabled: !purchaseForm && !busy });
 
   function selectPersonGroup(person: string, extra?: ServiceOrderRequisition) {
     const group = openFromPerson(person);
@@ -780,8 +979,12 @@ export function ServiceRequisitionsPanel({
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <SearchInput
             value={query}
-            onChange={setQuery}
-            placeholder="Buscar folio, OS, cotización, cliente o material..."
+            onChange={(value) => {
+              setQuery(value);
+              setScanHint("");
+            }}
+            scanSearch="true"
+            placeholder="Buscar o escanear folio, OS, cotización, SKU o n.º de parte…"
             className="sm:w-80"
           />
           {people.length > 1 ? (
@@ -831,6 +1034,39 @@ export function ServiceRequisitionsPanel({
             <RefreshCw className={cn("size-4", refreshing && "animate-spin")} /> Actualizar
           </Button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5 text-sm">
+        <div className="flex items-start gap-2">
+          <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
+          <div>
+            <p className="font-medium text-foreground">
+              Lector listo
+              {selectedOpen.length
+                ? ` · surtiendo ${selectedOpen.length} solicitud${selectedOpen.length === 1 ? "" : "es"}`
+                : ""}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {scanHint ||
+                (canFulfill
+                  ? selectedOpen.length
+                    ? "Escanea cada SKU o n.º de parte para ir sumando cantidades. El primer escaneo reinicia el conteo desde cero."
+                    : "Escanea un folio, OS, cotización o SKU para abrir la solicitud. Luego escanea productos para surtir."
+                  : "Escanea folio, OS, cotización o material para localizar la solicitud.")}
+            </p>
+          </div>
+        </div>
+        {canFulfill && selectedOpen.length > 0 ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={resetScanPicking}
+          >
+            Reiniciar conteo
+          </Button>
+        ) : null}
       </div>
 
       {error ? (

@@ -208,7 +208,7 @@ function toolRow(input: ToolInput) {
   };
 }
 
-export async function saveTool(id: string | null, input: ToolInput, actor: string): Promise<void> {
+export async function saveTool(id: string | null, input: ToolInput, actor: string): Promise<Tool> {
   if (!input.name.trim()) throw new Error("Escribe el nombre de la herramienta.");
   const code = input.code.trim().toUpperCase() || (id ? "" : await nextToolCode());
   const row: Row = toolRow(input);
@@ -221,12 +221,17 @@ export async function saveTool(id: string | null, input: ToolInput, actor: strin
         `Hay ${out} pieza(s) prestadas. La cantidad total no puede ser menor mientras no se devuelvan.`
       );
     }
-    const { error } = await db.from("tools").update(row).eq("id", id);
+    const { data, error } = await db.from("tools").update(row).eq("id", id).select("*").single();
     if (error) throw new Error(friendlyError(error.message));
-    return;
+    return mapTool(data as Row);
   }
-  const { error } = await db.from("tools").insert({ ...row, created_by: actor });
+  const { data, error } = await db
+    .from("tools")
+    .insert({ ...row, created_by: actor })
+    .select("*")
+    .single();
   if (error) throw new Error(friendlyError(error.message));
+  return mapTool(data as Row);
 }
 
 export async function deleteTool(id: string): Promise<void> {

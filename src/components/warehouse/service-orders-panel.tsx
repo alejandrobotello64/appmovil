@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   Camera,
   FileDown,
   Plus,
-  Search,
+  ScanBarcode,
   Trash2,
   ArrowLeft,
   MessageSquarePlus,
@@ -24,7 +24,11 @@ import {
 import { ServicePricingSummary } from "@/components/service-orders/service-pricing-summary";
 import { Button } from "@/components/ui/button";
 import { CameraButton } from "@/components/media/camera-capture";
+import { SearchInput } from "@/components/ui/search-input";
 import { SortableTable } from "@/components/ui/sortable-table";
+import { matchByScanFields } from "@/lib/scan/match-local";
+import type { ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { getSession } from "@/lib/auth";
 import { usePermissions, useSessionAccess } from "@/lib/auth/use-permissions";
@@ -119,10 +123,12 @@ import {
   computeServiceTotals,
   formatValidInterval,
   hasValidInterval,
+  inferEquipmentKind,
   isHospitalSignedDocument,
   isImageDocumentFile,
   lineAmount,
   parseOptionalNumber,
+  preferChecklistTemplate,
   pricingFromOrder,
   serviceLineKindLabel,
   serviceOrderStatusLabel,
@@ -269,6 +275,7 @@ export function ServiceOrdersPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [scanHint, setScanHint] = useState("");
   const [statusFilter, setStatusFilter] = useState<ServiceOrderStatus | "todas">(
     "todas"
   );
@@ -439,6 +446,31 @@ export function ServiceOrdersPanel({
     });
   }, [orders, query, statusFilter]);
 
+  const onOrderScan = useCallback(
+    ({ raw, result }: { raw: string; result: ScanResult }) => {
+      if (showReception || selectedId) return;
+      const order = matchByScanFields(
+        orders,
+        raw,
+        (item) => [item.folio, item.equipmentSerial, item.contractNumber],
+        result
+      );
+      if (!order) {
+        setQuery(raw.trim());
+        setScanHint(
+          `Código leído sin coincidencia exacta (${raw.trim() || "vacío"}). Filtrado por la lectura.`
+        );
+        return;
+      }
+      setQuery(order.equipmentSerial || order.folio);
+      setStatusFilter("todas");
+      setSelectedId(order.id);
+      setScanHint(`Escaneada: ${order.folio}${order.equipmentSerial ? ` · Serie ${order.equipmentSerial}` : ""}`);
+    },
+    [orders, showReception, selectedId]
+  );
+  useScanResolved(onOrderScan, { enabled: !showReception && !selectedId });
+
   const pricedLines = useMemo(
     () => draftLines.filter((line) => line.description.trim()),
     [draftLines]
@@ -477,13 +509,26 @@ export function ServiceOrdersPanel({
     [templates]
   );
 
+  function templatesForEquipment(name: string, brand: string, model: string) {
+    const kind = inferEquipmentKind(name, brand, model);
+    return {
+      checklistTemplateId:
+        preferChecklistTemplate(verificationTemplates, kind, name, brand, model)
+          ?.id ?? null,
+      functionTestTemplateId:
+        preferChecklistTemplate(functionTemplates, kind, name, brand, model)
+          ?.id ?? null,
+    };
+  }
+
   function openReception(asQuote: boolean) {
+    const defaults = templatesForEquipment("", "", "");
     setForm({
       ...emptyForm(),
       orderKind: asQuote ? "cotizacion" : "servicio",
       status: asQuote ? "cotizacion" : "recibido",
-      checklistTemplateId: verificationTemplates[0]?.id ?? null,
-      functionTestTemplateId: functionTemplates[0]?.id ?? null,
+      checklistTemplateId: defaults.checklistTemplateId,
+      functionTestTemplateId: defaults.functionTestTemplateId,
       createdBy: actor,
     });
     setShowReception(true);
@@ -1081,16 +1126,22 @@ export function ServiceOrdersPanel({
     const contract = eq?.contractId
       ? contracts.find((item) => item.id === eq.contractId)
       : null;
+    const name = eq?.name ?? "";
+    const brand = eq?.brand ?? "";
+    const model = eq?.model ?? "";
+    const tpl = templatesForEquipment(name, brand, model);
     setForm((f) => ({
       ...f,
       equipmentId: equipmentId || null,
-      equipmentName: eq?.name ?? "",
-      equipmentBrand: eq?.brand ?? "",
-      equipmentModel: eq?.model ?? "",
+      equipmentName: name,
+      equipmentBrand: brand,
+      equipmentModel: model,
       equipmentSerial: eq?.serialNumber ?? "",
       equipmentLocation: eq?.location ?? "",
       contractId: contract?.id ?? null,
       contractNumber: contract?.contractNumber ?? "",
+      checklistTemplateId: tpl.checklistTemplateId,
+      functionTestTemplateId: tpl.functionTestTemplateId,
     }));
   }
 
@@ -3309,16 +3360,28 @@ export function ServiceOrdersPanel({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            className={cn(fieldClass, "pl-9")}
-            placeholder="Buscar orden, cliente, serie…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+      <div className="flex items-start gap-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5 text-sm">
+        <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
+        <div>
+          <p className="font-medium text-foreground">Lector listo</p>
+          <p className="text-xs text-muted-foreground">
+            {scanHint ||
+              "Escanea folio o serie del equipo para abrir la orden de servicio."}
+          </p>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <SearchInput
+          value={query}
+          onChange={(value) => {
+            setQuery(value);
+            setScanHint("");
+          }}
+          scanSearch="true"
+          placeholder="Buscar o escanear orden, cliente, serie…"
+          className="min-w-[220px] flex-1"
+        />
       </div>
 
       <div className="flex flex-wrap gap-1.5">

@@ -69,11 +69,15 @@ export function ScanProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
 
-  const inWarehouse = usePathname().startsWith("/dashboard/almacen");
+  const pathname = usePathname();
+  // Almacén y Biomédica: sin foco, la lectura va al buscador visible de la pantalla/modal.
+  const pageSearchRoutes =
+    pathname.startsWith("/dashboard/almacen") ||
+    pathname.startsWith("/dashboard/ordenes-servicio");
 
   /**
-   * Campo enfocado que procesa la lectura; en Almacén, el buscador de la pantalla;
-   * en el resto, la ventana de existencias del producto.
+   * Campo enfocado que procesa la lectura; en Almacén/Biomédica, el buscador de la
+   * pantalla; en el resto, la ventana de existencias del producto.
    */
   const deliverScan = useCallback(
     (code: string) => {
@@ -84,7 +88,7 @@ export function ScanProvider({ children }: { children: ReactNode }) {
       }
       const field = scanSearchMode(target)
         ? (target as HTMLInputElement)
-        : inWarehouse
+        : pageSearchRoutes
           ? findPageSearchField()
           : null;
       if (field) {
@@ -93,7 +97,7 @@ export function ScanProvider({ children }: { children: ReactNode }) {
       }
       openScanner(code);
     },
-    [inWarehouse, openScanner]
+    [pageSearchRoutes, openScanner]
   );
 
   const fillField = useCallback((input: HTMLInputElement, code: string) => {

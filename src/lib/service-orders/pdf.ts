@@ -27,6 +27,12 @@ import {
   type ServiceOrderChecklistItem,
   type ServiceOrderImage,
 } from "./types";
+import {
+  WARRANTY_TERMS_CLAUSES,
+  WARRANTY_TERMS_COMPANY,
+  WARRANTY_TERMS_IMPORTANT,
+  WARRANTY_TERMS_TITLE,
+} from "./warranty-terms";
 
 function money(value: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -761,6 +767,81 @@ function drawHospitalSignatures(doc: jsPDF, y: number, technician: SignatureBox)
   );
 }
 
+/** Leyenda legal de garantía, tipografía compacta, justo después de firmas. */
+function drawEquipmentWarrantyTerms(doc: jsPDF, y: number) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 14;
+  const maxW = pageW - margin * 2;
+  const bodySize = 5.4;
+  const bodyLeading = 2.15;
+  const clauseGap = 1.1;
+  const footerReserve = 16;
+
+  const ensure = (need: number) => {
+    if (y + need < pageH - footerReserve) return;
+    doc.addPage();
+    y = 16;
+  };
+
+  ensure(18);
+  doc.setDrawColor(210, 214, 222);
+  doc.setLineWidth(0.2);
+  doc.line(margin, y, pageW - margin, y);
+  y += 3.2;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6.2);
+  doc.setTextColor(40, 40, 40);
+  doc.text(WARRANTY_TERMS_COMPANY, margin, y);
+  y += 2.6;
+
+  doc.setFontSize(5.6);
+  doc.setTextColor(59, 70, 165);
+  const titleLines = doc.splitTextToSize(WARRANTY_TERMS_TITLE, maxW) as string[];
+  doc.text(titleLines, margin, y);
+  y += titleLines.length * 2.2 + 1.6;
+  doc.setTextColor(55, 55, 55);
+
+  for (const clause of WARRANTY_TERMS_CLAUSES) {
+    const full = `${clause.title} ${clause.body}`;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(bodySize);
+    const lines = doc.splitTextToSize(full, maxW) as string[];
+    ensure(lines.length * bodyLeading + clauseGap + 2);
+    // Título en negrita solo en la primera línea (aproximación compacta).
+    if (lines.length) {
+      const first = lines[0] as string;
+      const titlePrefix = clause.title;
+      if (first.startsWith(titlePrefix)) {
+        const rest = first.slice(titlePrefix.length);
+        doc.setFont("helvetica", "bold");
+        doc.text(titlePrefix, margin, y);
+        const titleW = doc.getTextWidth(titlePrefix);
+        doc.setFont("helvetica", "normal");
+        if (rest) doc.text(rest, margin + titleW, y);
+      } else {
+        doc.text(first, margin, y);
+      }
+      if (lines.length > 1) {
+        doc.text(lines.slice(1), margin, y + bodyLeading);
+      }
+      y += lines.length * bodyLeading + clauseGap;
+    }
+  }
+
+  ensure(14);
+  y += 0.8;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(5.4);
+  doc.setTextColor(40, 40, 40);
+  const important = doc.splitTextToSize(WARRANTY_TERMS_IMPORTANT, maxW) as string[];
+  doc.text(important, margin, y);
+  y += important.length * bodyLeading + 3;
+  doc.setTextColor(0, 0, 0);
+  return y;
+}
+
 /** Cotización / propuesta económica para el cliente. */
 export async function downloadServiceQuotePdf(order: ServiceOrder) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -903,6 +984,7 @@ export async function downloadServiceWorkOrderPdf(order: ServiceOrder) {
     await technicianBox(order),
     { kind: "blank", title: "Vo.Bo. calidad" },
   ]);
+  y = drawEquipmentWarrantyTerms(doc, y);
   await drawCompanySealBlock(doc, y);
 
   drawBrandedFooter(doc);
@@ -1000,7 +1082,7 @@ export async function downloadServiceDeliveryPdf(order: ServiceOrder) {
     "Espacio del cliente en blanco para llenado manuscrito.",
     [{ kind: "blank", title: "Recibe por el cliente" }, technician]
   );
-
+  y = drawEquipmentWarrantyTerms(doc, y);
   await drawStampsSection(doc, y, "Sello del cliente / institución");
 
   drawBrandedFooter(doc);
@@ -1085,6 +1167,7 @@ export async function downloadServiceHospitalPdf(order: ServiceOrder) {
   const technician = await technicianBox(order);
   y = ensureSpace(doc, y, SIGNATURE_BLOCK_H + STAMPS_BLOCK_H);
   y = drawHospitalSignatures(doc, y, technician);
+  y = drawEquipmentWarrantyTerms(doc, y);
   await drawStampsSection(doc, y, "Sello del hospital / institución");
 
   drawBrandedFooter(doc);

@@ -108,12 +108,23 @@ export type ServiceOrderDocument = {
 export const EQUIPMENT_KINDS = [
   { id: "general", label: "General" },
   { id: "monitor", label: "Monitor" },
+  { id: "fetal", label: "Monitor fetal" },
   { id: "ventilador", label: "Ventilador" },
+  { id: "anestesia", label: "Máquina de anestesia" },
+  { id: "vaporizador", label: "Vaporizador" },
   { id: "desfibrilador", label: "Desfibrilador" },
   { id: "bomba_infusion", label: "Bomba de infusión" },
-  { id: "autoclave", label: "Autoclave" },
+  { id: "autoclave", label: "Autoclave / esterilización" },
   { id: "ecg", label: "Electrocardiógrafo" },
   { id: "imagen", label: "Imagenología" },
+  { id: "cama", label: "Cama / camilla" },
+  { id: "mesa_quirurgica", label: "Mesa quirúrgica" },
+  { id: "lampara", label: "Lámpara quirúrgica" },
+  { id: "alto_flujo", label: "Alto flujo / humidificación" },
+  { id: "calentamiento", label: "Calentamiento paciente" },
+  { id: "incubadora", label: "Incubadora / cuna radiante" },
+  { id: "antropometria", label: "Antropometría / esfigmo" },
+  { id: "electrocirugia", label: "Electrocirugía" },
 ] as const;
 
 export type EquipmentKind = (typeof EQUIPMENT_KINDS)[number]["id"];
@@ -545,14 +556,72 @@ export function inferEquipmentKind(
   model = ""
 ): EquipmentKind {
   const t = `${name} ${brand} ${model}`.toLowerCase();
-  if (/ventil|respir/.test(t)) return "ventilador";
-  if (/desfibr|dea/.test(t)) return "desfibrilador";
-  if (/bomba|infus/.test(t)) return "bomba_infusion";
-  if (/monitor|multipar|spo2/.test(t)) return "monitor";
-  if (/autocl|esteril/.test(t)) return "autoclave";
-  if (/ecg|electrocard/.test(t)) return "ecg";
+  if (/anestesi|atlan|fabius/.test(t)) return "anestesia";
+  if (/vaporiz|vapor\b|d-vapor|scio\b/.test(t)) return "vaporizador";
+  if (/fetal|avalon|fm20|fm30/.test(t)) return "fetal";
+  if (/desfibr|dea|dfm100/.test(t)) return "desfibrilador";
+  if (/bomba|infus|perfusor|infusomat/.test(t)) return "bomba_infusion";
+  if (/incub|cuna radiante|baby\s*leo|tn500/.test(t)) return "incubadora";
+  if (/airvo|alto\s*flujo|humidific|mr850/.test(t)) return "alto_flujo";
+  if (/bair\s*hugger|calentamient|warming/.test(t)) return "calentamiento";
+  if (/polaris|l[aá]mpara/.test(t)) return "lampara";
+  if (/mesa\s*(de\s*)?(cirug|quir)|pst\s*500/.test(t)) return "mesa_quirurgica";
+  if (/cama|camilla|affinity|centuris|progressa|accella|p8040|p8000/.test(t)) {
+    return "cama";
+  }
+  if (/electrocirug|electrobistur|bistur[ií]\s*el[eé]ctrico/.test(t)) {
+    return "electrocirugia";
+  }
+  if (/ventil|respir|evita|babylog/.test(t)) return "ventilador";
+  if (
+    /monitor|multipar|spo2|ox[ií]metr|radical|rad-g|mightysat|sedline|\bo3\b|root|connex|vista\s*120|intellivue|mx550|mx100|m540|emma|tofscan|invivo/.test(
+      t
+    )
+  ) {
+    return "monitor";
+  }
+  if (/autocl|esteril|sterrad/.test(t)) return "autoclave";
+  if (/ecg|electrocard|cardioperfect|eli\s*280|eli\s*150/.test(t)) return "ecg";
+  if (/esfigmo|b[aá]scula|antropometr|seca\b|7670|ds44/.test(t)) {
+    return "antropometria";
+  }
   if (/rayos|ultrason|imagen|rx\b/.test(t)) return "imagen";
   return "general";
+}
+
+/** Elige la plantilla más adecuada por familia y, si aplica, por modelo. */
+export function preferChecklistTemplate<
+  T extends { id: string; code: string; equipmentKind: string },
+>(
+  templates: T[],
+  kind: EquipmentKind,
+  name = "",
+  brand = "",
+  model = ""
+): T | undefined {
+  if (!templates.length) return undefined;
+  const byKind = templates.filter((tpl) => tpl.equipmentKind === kind);
+  const pool = byKind.length
+    ? byKind
+    : templates.filter((tpl) => tpl.equipmentKind === "general");
+  const search = `${name} ${brand} ${model}`.toLowerCase();
+
+  if (/affinity|p3700/.test(search)) {
+    const hit = pool.find((tpl) => /affinity/.test(tpl.code));
+    if (hit) return hit;
+  }
+  if (/p8040|8040/.test(search)) {
+    const hit = pool.find((tpl) => /8040|camilla_8040|pruebas_camilla_8040/.test(tpl.code));
+    if (hit) return hit;
+  }
+  if (kind === "cama") {
+    const generic = pool.find((tpl) =>
+      /cama_hospitalaria|pruebas_cama_hospitalaria/.test(tpl.code)
+    );
+    if (generic) return generic;
+  }
+
+  return pool[0] ?? templates[0];
 }
 
 export function parseOptionalNumber(value: string): number | null {

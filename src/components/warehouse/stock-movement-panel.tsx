@@ -293,8 +293,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     void getWarehouseLocations(warehouseId)
       .then((rows) => {
         setLocations(rows);
+        const fallback = rows[0]?.id ?? "";
         setLocationId((current) =>
-          rows.some((row) => row.id === current) ? current : rows[0]?.id ?? ""
+          rows.some((row) => row.id === current) ? current : fallback
+        );
+        // Si cambió el almacén, reasigna ubicaciones inválidas de líneas ya agregadas.
+        setLines((current) =>
+          current.map((line) =>
+            rows.some((row) => row.id === line.locationId)
+              ? line
+              : { ...line, locationId: fallback }
+          )
         );
       })
       .catch((err) =>
@@ -337,15 +346,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setManufacturedAt("");
     setSerialNumber("");
   }, []);
-  const itemOptions = useMemo(
-    () =>
-      items.filter(
-        (item) =>
-          item.id === itemId ||
-          matchesSearch(itemQuery, articleFields(item))
-      ),
-    [items, itemQuery, itemId]
-  );
+  const itemOptions = useMemo(() => {
+    const filtered = items.filter(
+      (item) =>
+        item.id === itemId ||
+        !itemQuery.trim() ||
+        matchesSearch(itemQuery, articleFields(item))
+    );
+    // Sin búsqueda: muestra un recorte del catálogo para no saturar.
+    if (!itemQuery.trim()) return filtered.slice(0, 60);
+    return filtered.slice(0, 80);
+  }, [items, itemQuery, itemId]);
 
   const applyScanMatch = useCallback(
     ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
@@ -440,6 +451,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           expiryDate: isEquip ? "" : expiry,
           manufacturedAt: manufactured,
           serialNumber: serial,
+          locationId,
         });
         setLines((current) => mergeMovementLine(current, next));
         clearDraft();
@@ -484,7 +496,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         quantityRef.current?.select();
       }, 50);
     },
-    [equipmentFormOpen, items, mode, autoAddOnScan, clearDraft]
+    [equipmentFormOpen, items, mode, autoAddOnScan, clearDraft, locationId]
   );
   useScanResolved(applyScanMatch, { enabled: !equipmentFormOpen });
   const visibleHistory = useMemo(
@@ -650,6 +662,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           quantity: 1,
           serialNumber: serial,
           manufacturedAt,
+          locationId,
         })
       );
     }
@@ -660,6 +673,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         expiryDate: isEquip ? "" : expiryDate,
         manufacturedAt,
         serialNumber: serialNumber.trim(),
+        locationId,
       }),
     ];
   }
@@ -797,7 +811,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           note: extraNote,
           reason: reasonLabel,
           warehouseId: warehouseId || null,
-          locationId: locationId || null,
+          locationId: line.locationId || locationId || null,
           lotNumber: line.isEquipment ? null : line.lotNumber || null,
           expiryDate: line.isEquipment ? null : line.expiryDate || null,
           manufacturedAt: line.manufacturedAt || null,
@@ -988,243 +1002,194 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               </select>
             </label>
 
-            <div className="space-y-1.5">
-              <label htmlFor="stock-movement-item" className="text-sm font-medium">
-                Artículo o equipo
-              </label>
-              {items.length > 0 ? (
-                <SearchInput
-                  value={itemQuery}
-                  onChange={(value) => {
-                    setItemQuery(value);
-                    setScanHint("");
-                    const first = items.find((item) =>
-                      matchesSearch(value, articleFields(item))
-                    );
-                    if (value.trim() && first) setItemId(first.id);
-                    else if (!value.trim()) setItemId("");
-                  }}
-                  scanSearch="true"
-                  placeholder="Buscar o escanear por código, nombre, n.º de parte, marca, serie..."
-                />
-              ) : null}
-              <select
-                id="stock-movement-item"
-                required={lines.length === 0}
-                value={itemId}
-                onChange={(event) => {
-                  setItemId(event.target.value);
-                  setScanHint("");
-                }}
-                disabled={!canWrite}
-                className={fieldClass}
-              >
-                {items.length === 0 ? (
-                  <option value="">No hay artículos en el catálogo.</option>
-                ) : itemOptions.length === 0 ? (
-                  <option value="">Sin coincidencias. Prueba otro término.</option>
-                ) : (
-                  <>
-                    <option value="">Busca o elige un artículo…</option>
-                    {itemOptions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {categoryLabel(item)} · {item.sku} —{" "}
-                        {withPartNumber(item.name, item.partNumber, item.model)} (
-                        {item.quantity} {item.unit})
-                      </option>
-                    ))}
-                  </>
-                )}
-              </select>
-              {scanHint ? (
-                <span className="block text-xs font-medium text-[#00BFFF]">{scanHint}</span>
-              ) : selected ? (
-                <span className="block text-xs text-muted-foreground">
-                  Categoría: {categoryLabel(selected)}
-                  {isEquipmentCatalog ? " · se capturan series" : ""}
-                  {" · "}puedes escanear el código para llenar lote/serie
-                </span>
-              ) : (
-                <span className="block text-xs text-muted-foreground">
-                  Escanea el código del producto para seleccionarlo. Si el código
-                  trae lote/serie/caducidad (GS1), se rellenan solos.
-                </span>
-              )}
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Almacén</span>
-                <select
-                  required
-                  value={warehouseId}
-                  onChange={(event) => setWarehouseId(event.target.value)}
-                  disabled={!canWrite || stockedWarehouses.length === 0}
-                  className={fieldClass}
-                >
-                  {stockedWarehouses.length === 0 ? (
-                    <option value="">
-                      {mode === "salida"
-                        ? "Sin existencia en ningún almacén"
-                        : "No hay almacenes disponibles"}
-                    </option>
-                  ) : (
-                    stockedWarehouses.map((warehouse) => {
-                      const qty = warehouseQty.get(warehouse.id);
-                      const showQty =
-                        Boolean(selected) &&
-                        lines.length === 0 &&
-                        qty != null &&
-                        qty > 0;
-                      return (
-                        <option key={warehouse.id} value={warehouse.id}>
-                          {warehouse.code} — {warehouse.name}
-                          {showQty ? ` · ${formatLotQty(qty, unitLabel)}` : ""}
-                        </option>
-                      );
-                    })
-                  )}
-                </select>
-                {listingStockedWarehouses ? (
-                  <span className="block text-xs text-muted-foreground">
-                    Solo almacenes con existencia de este artículo.
-                  </span>
-                ) : mode === "entrada" &&
-                  warehouseStock !== null &&
-                  warehouseStock.length === 0 ? (
-                  <span className="block text-xs text-muted-foreground">
-                    Este artículo aún no tiene existencia; elige el almacén de la
-                    entrada.
-                  </span>
-                ) : null}
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Ubicación</span>
-                <select
-                  value={locationId}
-                  onChange={(event) => setLocationId(event.target.value)}
-                  disabled={!canWrite}
-                  className={fieldClass}
-                >
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.code} — {location.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            {lines.length > 0 ? (
-              <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
-                <div className="flex items-center justify-between gap-2">
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+              {/* Izquierda: buscador + indicadores de almacén */}
+              <div className="space-y-3 rounded-xl border border-border bg-muted/10 p-3">
+                <div>
                   <h3 className="text-sm font-semibold text-foreground">
-                    Lista a registrar ({lines.length})
+                    Buscador y almacén
                   </h3>
-                  <button
-                    type="button"
-                    disabled={!canWrite || submitting}
-                    onClick={() => {
-                      setLines([]);
-                      setScanHint("Lista vaciada. Escanea de nuevo.");
-                    }}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Vaciar lista
-                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    Escanea o busca; a la derecha verás lo ya añadido.
+                  </p>
                 </div>
-                <div className="overflow-x-auto rounded-lg border border-border bg-background">
-                  <table className="w-full min-w-[32rem] border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
-                        <th className="px-3 py-2 font-medium">SKU</th>
-                        <th className="px-3 py-2 font-medium">Producto</th>
-                        <th className="px-3 py-2 font-medium">Lote / serie / fab.</th>
-                        <th className="px-3 py-2 font-medium">Cant.</th>
-                        <th className="px-3 py-2 font-medium">
-                          <span className="sr-only">Quitar</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lines.map((line) => (
-                        <tr key={line.key} className="border-b border-border last:border-0">
-                          <td className="px-3 py-2 align-middle font-mono text-xs whitespace-nowrap">
-                            {line.sku}
-                          </td>
-                          <td className="max-w-[14rem] px-3 py-2 align-middle">
-                            <span className="line-clamp-2 font-medium">
-                              {line.partNumber.trim()
-                                ? `${line.name} · n.º ${line.partNumber.trim()}`
-                                : line.name}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 align-middle text-xs text-muted-foreground">
-                            {[
-                              line.lotNumber ? `Lote ${line.lotNumber}` : "",
-                              line.serialNumber ? `Serie ${line.serialNumber}` : "",
-                              line.manufacturedAt
-                                ? `Fab. ${line.manufacturedAt}`
-                                : "",
-                              line.expiryDate ? `Cad. ${line.expiryDate}` : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" · ") || "—"}
-                          </td>
-                          <td className="px-3 py-2 align-middle whitespace-nowrap">
-                            {line.isEquipment ? (
-                              <span className="text-xs text-muted-foreground">1 {line.unit}</span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1">
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={line.quantity}
-                                  disabled={!canWrite || submitting}
-                                  onChange={(event) => {
-                                    const value = Number(event.target.value);
-                                    setLines((current) =>
-                                      current.map((row) =>
-                                        row.key === line.key
-                                          ? { ...row, quantity: value > 0 ? value : 1 }
-                                          : row
-                                      )
-                                    );
-                                  }}
-                                  className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
-                                  aria-label={`Cantidad ${line.sku}`}
-                                />
-                                <span className="text-xs text-muted-foreground">{line.unit}</span>
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-2 py-2 align-middle">
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">Almacén</span>
+                    <select
+                      required
+                      value={warehouseId}
+                      onChange={(event) => setWarehouseId(event.target.value)}
+                      disabled={!canWrite || stockedWarehouses.length === 0}
+                      className={fieldClass}
+                    >
+                      {stockedWarehouses.length === 0 ? (
+                        <option value="">
+                          {mode === "salida"
+                            ? "Sin existencia en ningún almacén"
+                            : "No hay almacenes disponibles"}
+                        </option>
+                      ) : (
+                        stockedWarehouses.map((warehouse) => {
+                          const qty = warehouseQty.get(warehouse.id);
+                          const showQty =
+                            Boolean(selected) &&
+                            lines.length === 0 &&
+                            qty != null &&
+                            qty > 0;
+                          return (
+                            <option key={warehouse.id} value={warehouse.id}>
+                              {warehouse.code} — {warehouse.name}
+                              {showQty
+                                ? ` · ${formatLotQty(qty, unitLabel)}`
+                                : ""}
+                            </option>
+                          );
+                        })
+                      )}
+                    </select>
+                    {listingStockedWarehouses ? (
+                      <span className="block text-xs text-muted-foreground">
+                        Solo almacenes con existencia de este artículo.
+                      </span>
+                    ) : mode === "entrada" &&
+                      warehouseStock !== null &&
+                      warehouseStock.length === 0 ? (
+                      <span className="block text-xs text-muted-foreground">
+                        Este artículo aún no tiene existencia; elige el almacén
+                        de la entrada.
+                      </span>
+                    ) : null}
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      Ubicación por defecto
+                    </span>
+                    <select
+                      value={locationId}
+                      onChange={(event) => setLocationId(event.target.value)}
+                      disabled={!canWrite}
+                      className={fieldClass}
+                    >
+                      {locations.length === 0 ? (
+                        <option value="">Sin ubicaciones</option>
+                      ) : (
+                        locations.map((location) => (
+                          <option key={location.id} value={location.id}>
+                            {location.code} — {location.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                    <span className="block text-xs text-muted-foreground">
+                      Se aplica a productos nuevos; cámbiala por línea a la
+                      derecha.
+                    </span>
+                  </label>
+                </div>
+
+                {selected || lines.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-background p-2.5 text-xs sm:grid-cols-3">
+                    <div>
+                      <p className="text-muted-foreground">En lista</p>
+                      <p className="text-sm font-semibold tabular-nums">
+                        {lines.length}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Almacenes</p>
+                      <p className="text-sm font-semibold tabular-nums">
+                        {stockedWarehouses.length || warehouses.length}
+                      </p>
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                      <p className="text-muted-foreground">
+                        {selected ? `Stock ${selected.sku}` : "Stock catálogo"}
+                      </p>
+                      <p className="text-sm font-semibold tabular-nums">
+                        {selected
+                          ? `${selected.quantity} ${selected.unit || "pza"}`
+                          : "—"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+
+                {items.length > 0 ? (
+                  <SearchInput
+                    value={itemQuery}
+                    onChange={(value) => {
+                      setItemQuery(value);
+                      setScanHint("");
+                      const first = items.find((item) =>
+                        matchesSearch(value, articleFields(item))
+                      );
+                      if (value.trim() && first) setItemId(first.id);
+                      else if (!value.trim()) setItemId("");
+                    }}
+                    scanSearch="true"
+                    placeholder="Buscar o escanear por código, nombre, n.º de parte..."
+                  />
+                ) : null}
+                {scanHint ? (
+                  <p className="text-xs font-medium text-[#00BFFF]">{scanHint}</p>
+                ) : null}
+                <div className="max-h-[22rem] overflow-y-auto rounded-lg border border-border bg-background">
+                  {items.length === 0 ? (
+                    <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                      No hay artículos en el catálogo.
+                    </p>
+                  ) : itemOptions.length === 0 ? (
+                    <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                      Sin coincidencias. Prueba otro término.
+                    </p>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {itemOptions.map((item) => {
+                        const active = item.id === itemId;
+                        return (
+                          <li key={item.id}>
                             <button
                               type="button"
-                              disabled={!canWrite || submitting}
-                              onClick={() =>
-                                setLines((current) =>
-                                  current.filter((row) => row.key !== line.key)
-                                )
-                              }
-                              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive"
-                              aria-label={`Quitar ${line.sku}`}
+                              disabled={!canWrite}
+                              onClick={() => {
+                                setItemId(item.id);
+                                setItemQuery(item.sku);
+                                setScanHint("");
+                              }}
+                              className={cn(
+                                "flex w-full flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-muted/60",
+                                active && "bg-[#00BFFF]/10"
+                              )}
                             >
-                              <Trash2 className="size-3.5" />
+                              <span className="text-sm font-medium text-foreground">
+                                {withPartNumber(item.name, item.partNumber, item.model)}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                <span className="font-mono">{item.sku}</span>
+                                {" · "}
+                                {categoryLabel(item)}
+                                {" · "}
+                                {item.quantity} {item.unit}
+                              </span>
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
-              </div>
-            ) : null}
+                {!itemQuery.trim() && items.length > 60 ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    Mostrando 60 de {items.length}. Escribe para filtrar el resto.
+                  </p>
+                ) : null}
 
             {selected ? (
-              <div className="grid gap-4 rounded-xl border border-dashed border-border p-3">
+              <div className="grid gap-4 rounded-xl border border-dashed border-border bg-background p-3">
                 <p className="text-sm font-medium text-foreground">
-                  Detalle del artículo a agregar
+                  Detalle para agregar · {selected.sku}
                 </p>
                 {!isEquipmentCatalog ? (
                   <label className="space-y-1.5">
@@ -1440,11 +1405,185 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   </div>
                 ) : null}
               </div>
-            ) : lines.length > 0 ? (
+            ) : (
               <p className="text-sm text-muted-foreground">
-                Escanea otro código o busca un artículo para agregarlo a la lista.
+                Elige un artículo del catálogo o escanea un código para capturar
+                cantidad, lote o serie.
               </p>
-            ) : null}
+            )}
+              </div>
+
+              {/* Derecha: listado ya escaneado */}
+              <div className="space-y-3 rounded-xl border border-[#00BFFF]/25 bg-muted/10 p-3 lg:min-h-[28rem]">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Escaneados ({lines.length})
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Equipos y productos listos para esta{" "}
+                      {mode === "entrada" ? "entrada" : "salida"}.
+                    </p>
+                  </div>
+                  {lines.length > 0 ? (
+                    <button
+                      type="button"
+                      disabled={!canWrite || submitting}
+                      onClick={() => {
+                        setLines([]);
+                        setScanHint("Lista vaciada. Escanea de nuevo.");
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Vaciar
+                    </button>
+                  ) : null}
+                </div>
+                {lines.length === 0 ? (
+                  <div className="flex min-h-[16rem] flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-background px-4 py-8 text-center lg:min-h-[22rem]">
+                    <p className="text-sm text-muted-foreground">
+                      Escanea o busca a la izquierda. Aquí aparecerán los
+                      productos y equipos ya añadidos.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-[36rem] overflow-auto rounded-lg border border-border bg-background">
+                    <table className="w-full min-w-[28rem] border-collapse text-sm">
+                      <thead className="sticky top-0 z-10">
+                        <tr className="border-b border-border bg-muted/60 text-left text-xs text-muted-foreground">
+                          <th className="px-3 py-2 font-medium">Producto</th>
+                          <th className="px-3 py-2 font-medium">Detalle</th>
+                          <th className="px-3 py-2 font-medium">Ubicación</th>
+                          <th className="px-3 py-2 font-medium">Cant.</th>
+                          <th className="px-2 py-2 font-medium">
+                            <span className="sr-only">Quitar</span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lines.map((line) => (
+                          <tr
+                            key={line.key}
+                            className="border-b border-border last:border-0"
+                          >
+                            <td className="max-w-[10rem] px-3 py-2 align-middle">
+                              <span className="line-clamp-2 font-medium">
+                                {line.partNumber.trim()
+                                  ? `${line.name} · n.º ${line.partNumber.trim()}`
+                                  : line.name}
+                              </span>
+                              <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">
+                                {line.sku}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 align-middle text-xs text-muted-foreground">
+                              {[
+                                line.lotNumber ? `Lote ${line.lotNumber}` : "",
+                                line.serialNumber
+                                  ? `Serie ${line.serialNumber}`
+                                  : "",
+                                line.manufacturedAt
+                                  ? `Fab. ${line.manufacturedAt}`
+                                  : "",
+                                line.expiryDate
+                                  ? `Cad. ${line.expiryDate}`
+                                  : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" · ") || "—"}
+                            </td>
+                            <td className="px-3 py-2 align-middle">
+                              <select
+                                value={line.locationId}
+                                disabled={!canWrite || submitting || locations.length === 0}
+                                onChange={(event) => {
+                                  const nextLocationId = event.target.value;
+                                  setLines((current) =>
+                                    current.map((row) =>
+                                      row.key === line.key
+                                        ? { ...row, locationId: nextLocationId }
+                                        : row
+                                    )
+                                  );
+                                }}
+                                className="h-8 max-w-[10rem] rounded-md border border-input bg-background px-2 text-xs"
+                                aria-label={`Ubicación ${line.sku}`}
+                              >
+                                {locations.length === 0 ? (
+                                  <option value="">Sin ubicaciones</option>
+                                ) : (
+                                  <>
+                                    {!locations.some((loc) => loc.id === line.locationId) ? (
+                                      <option value={line.locationId || ""}>
+                                        {line.locationId ? "Ubicación anterior" : "Elegir…"}
+                                      </option>
+                                    ) : null}
+                                    {locations.map((location) => (
+                                      <option key={location.id} value={location.id}>
+                                        {location.code} — {location.name}
+                                      </option>
+                                    ))}
+                                  </>
+                                )}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2 align-middle whitespace-nowrap">
+                              {line.isEquipment ? (
+                                <span className="text-xs text-muted-foreground">
+                                  1 {line.unit}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={line.quantity}
+                                    disabled={!canWrite || submitting}
+                                    onChange={(event) => {
+                                      const value = Number(event.target.value);
+                                      setLines((current) =>
+                                        current.map((row) =>
+                                          row.key === line.key
+                                            ? {
+                                                ...row,
+                                                quantity: value > 0 ? value : 1,
+                                              }
+                                            : row
+                                        )
+                                      );
+                                    }}
+                                    className="h-8 w-14 rounded-md border border-input bg-background px-2 text-sm"
+                                    aria-label={`Cantidad ${line.sku}`}
+                                  />
+                                  <span className="text-xs text-muted-foreground">
+                                    {line.unit}
+                                  </span>
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-2 py-2 align-middle">
+                              <button
+                                type="button"
+                                disabled={!canWrite || submitting}
+                                onClick={() =>
+                                  setLines((current) =>
+                                    current.filter((row) => row.key !== line.key)
+                                  )
+                                }
+                                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive"
+                                aria-label={`Quitar ${line.sku}`}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {showServiceFields ? (
               <div className="grid gap-4 sm:grid-cols-2">

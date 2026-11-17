@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Minus, Plus, Search, Trash2, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Minus, Plus, ScanBarcode, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { SearchInput } from "@/components/ui/search-input";
+import { matchByScanFields } from "@/lib/scan/match-local";
+import type { ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import {
   createToolRequest,
   getOpenServiceOrdersForTools,
@@ -39,6 +43,7 @@ export function ToolRequestForm({
   const [orders, setOrders] = useState<ServiceOrderOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [scanHint, setScanHint] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -65,18 +70,75 @@ export function ToolRequestForm({
       .filter(
         (tool) =>
           !q ||
-          [tool.code, tool.name, tool.brand, tool.model, toolCategoryLabel(tool.category)]
+          [tool.code, tool.name, tool.brand, tool.model, tool.serialNumber, toolCategoryLabel(tool.category)]
             .join(" ")
             .toLowerCase()
             .includes(q)
       )
-      .slice(0, 8);
+      .slice(0, 40);
   }, [requestable, query, lines]);
 
-  function addTool(tool: ToolWithAvailability) {
-    setLines((current) => [...current, { toolId: tool.id, quantity: 1 }]);
+  function addTool(tool: ToolWithAvailability, fromScan = false) {
+    setLines((current) => {
+      const existing = current.find((line) => line.toolId === tool.id);
+      if (existing) {
+        const max = tool.quantityTotal;
+        return current.map((line) =>
+          line.toolId === tool.id
+            ? { ...line, quantity: Math.min(max, line.quantity + 1) }
+            : line
+        );
+      }
+      return [...current, { toolId: tool.id, quantity: 1 }];
+    });
     setQuery("");
+    if (fromScan) {
+      setScanHint(`Agregada: ${tool.code} — ${tool.name}`);
+      setError("");
+    }
   }
+
+  const onToolScan = useCallback(
+    ({ raw, result }: { raw: string; result: ScanResult }) => {
+      const tool = matchByScanFields(
+        requestable,
+        raw,
+        (item) => [item.code, item.serialNumber],
+        result
+      );
+      if (!tool) {
+        setQuery(raw.trim());
+        setScanHint(
+          `Código leído sin coincidencia en herramientas (${raw.trim() || "vacío"}). Busca o escanea de nuevo.`
+        );
+        return;
+      }
+      setLines((current) => {
+        const existing = current.find((line) => line.toolId === tool.id);
+        if (existing) {
+          if (tool.quantityTotal <= 1) {
+            setScanHint(`${tool.code} ya está en la lista.`);
+            return current;
+          }
+          setScanHint(`+1 ${tool.code} — ${tool.name}`);
+          return current.map((line) =>
+            line.toolId === tool.id
+              ? {
+                  ...line,
+                  quantity: Math.min(tool.quantityTotal, line.quantity + 1),
+                }
+              : line
+          );
+        }
+        setScanHint(`Agregada: ${tool.code} — ${tool.name}`);
+        return [...current, { toolId: tool.id, quantity: 1 }];
+      });
+      setQuery("");
+      setError("");
+    },
+    [requestable]
+  );
+  useScanResolved(onToolScan);
 
   function setQuantity(toolId: string, quantity: number) {
     const tool = byId.get(toolId);
@@ -114,8 +176,8 @@ export function ToolRequestForm({
   return (
     <ModalShell
       title="Solicitar herramientas a almacén"
-      description="Se genera un vale con folio. Almacén confirma la entrega y registra la devolución en el mismo vale."
-      className="max-w-4xl"
+      description="Escanea o busca herramientas. Se genera un vale con folio; almacén confirma entrega y devolución."
+      className="max-w-5xl"
       headerAction={
         <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar">
           <X className="size-4" />
@@ -123,117 +185,174 @@ export function ToolRequestForm({
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Herramientas</p>
-          <label className="relative block">
-            <span className="sr-only">Buscar en el catálogo</span>
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              className={cn(fieldClass, "pl-9")}
+        <div className="flex items-start gap-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5 text-sm">
+          <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
+          <div>
+            <p className="font-medium text-foreground">
+              Lector listo
+              {lines.length > 0 ? ` · ${lines.length} en la lista` : ""}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {scanHint ||
+                "Escanea la etiqueta QR, el código o la serie para agregarla al vale."}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <div className="space-y-3 rounded-xl border border-border bg-muted/10 p-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Catálogo</h3>
+              <p className="text-xs text-muted-foreground">
+                Busca o escanea y elige la herramienta.
+              </p>
+            </div>
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              scanSearch="true"
               placeholder={
                 requestable.length
-                  ? "Busca en el catálogo: desarmador, llave, multímetro…"
+                  ? "Buscar o escanear por código, nombre, serie…"
                   : "Almacén aún no registra herramientas"
               }
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              disabled={!requestable.length}
+              className={!requestable.length ? "pointer-events-none opacity-60" : undefined}
             />
-          </label>
-          {results.length && (query || !lines.length) ? (
-            <ul className="max-h-64 divide-y divide-border overflow-y-auto rounded-xl border border-border">
-              {results.map((tool) => (
-                <li key={tool.id}>
-                  <button
-                    type="button"
-                    onClick={() => addTool(tool)}
-                    className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted/50"
-                  >
-                    <Plus className="size-4 shrink-0 text-[#3B46A5]" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{tool.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {tool.code} · {toolCategoryLabel(tool.category)}
-                        {tool.brand ? ` · ${tool.brand}` : ""}
-                        {tool.location ? ` · ${tool.location}` : ""}
-                      </span>
-                    </span>
-                    <AvailabilityPill tool={tool} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+            <div className="max-h-[18rem] overflow-y-auto rounded-lg border border-border bg-background">
+              {!requestable.length ? (
+                <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                  No hay herramientas disponibles.
+                </p>
+              ) : results.length === 0 ? (
+                <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                  Sin coincidencias. Prueba otro término o escaneo.
+                </p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {results.map((tool) => (
+                    <li key={tool.id}>
+                      <button
+                        type="button"
+                        onClick={() => addTool(tool)}
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50"
+                      >
+                        <Plus className="size-4 shrink-0 text-[#3B46A5]" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">{tool.name}</span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {tool.code} · {toolCategoryLabel(tool.category)}
+                            {tool.brand ? ` · ${tool.brand}` : ""}
+                            {tool.location ? ` · ${tool.location}` : ""}
+                          </span>
+                        </span>
+                        <AvailabilityPill tool={tool} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
 
-          {lines.length ? (
-            <ul className="space-y-2">
-              {lines.map((line) => {
-                const tool = byId.get(line.toolId);
-                if (!tool) return null;
-                const short = line.quantity > tool.quantityAvailable;
-                return (
-                  <li
-                    key={line.toolId}
-                    className={cn(
-                      "flex flex-wrap items-center gap-3 rounded-xl border bg-background p-3",
-                      short ? "border-amber-500/40" : "border-border"
-                    )}
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{tool.name}</span>
-                      <span className="block text-xs text-muted-foreground">
-                        {tool.code} · {tool.quantityAvailable} disponibles de {tool.quantityTotal}
-                      </span>
-                    </span>
-                    <span className="inline-flex items-center rounded-lg border border-input">
-                      <button
-                        type="button"
-                        className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
-                        onClick={() => setQuantity(line.toolId, line.quantity - 1)}
-                        aria-label="Quitar una pieza"
-                      >
-                        <Minus className="size-4" />
-                      </button>
-                      <input
-                        type="number"
-                        min={1}
-                        max={tool.quantityTotal}
-                        aria-label={`Piezas de ${tool.name}`}
-                        className="h-9 w-12 border-x border-input bg-transparent text-center text-sm tabular-nums outline-none"
-                        value={line.quantity}
-                        onChange={(e) => setQuantity(line.toolId, Number(e.target.value))}
-                      />
-                      <button
-                        type="button"
-                        className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
-                        onClick={() => setQuantity(line.toolId, line.quantity + 1)}
-                        aria-label="Agregar una pieza"
-                      >
-                        <Plus className="size-4" />
-                      </button>
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Quitar ${tool.name}`}
-                      onClick={() => setLines((current) => current.filter((l) => l.toolId !== line.toolId))}
+          <div className="space-y-3 rounded-xl border border-border bg-muted/10 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Ya añadidas ({lines.length})
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Herramientas listas para el vale.
+                </p>
+              </div>
+              {lines.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLines([]);
+                    setScanHint("Lista vaciada.");
+                  }}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Vaciar
+                </button>
+              ) : null}
+            </div>
+            {lines.length === 0 ? (
+              <div className="flex min-h-[12rem] items-center justify-center rounded-lg border border-dashed border-border bg-background px-4 py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Escanea o elige herramientas a la izquierda.
+                </p>
+              </div>
+            ) : (
+              <ul className="max-h-[22rem] space-y-2 overflow-y-auto">
+                {lines.map((line) => {
+                  const tool = byId.get(line.toolId);
+                  if (!tool) return null;
+                  const short = line.quantity > tool.quantityAvailable;
+                  return (
+                    <li
+                      key={line.toolId}
+                      className={cn(
+                        "flex flex-wrap items-center gap-3 rounded-xl border bg-background p-3",
+                        short ? "border-amber-500/40" : "border-border"
+                      )}
                     >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="text-xs text-muted-foreground">Busca y agrega las herramientas que necesitas.</p>
-          )}
-          {shortages.length ? (
-            <p className="text-xs text-amber-700 dark:text-amber-300">
-              Algunas piezas están prestadas en este momento. Puedes enviar la solicitud; almacén entregará
-              lo que tenga disponible.
-            </p>
-          ) : null}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{tool.name}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {tool.code} · {tool.quantityAvailable} disponibles de {tool.quantityTotal}
+                        </span>
+                      </span>
+                      <span className="inline-flex items-center rounded-lg border border-input">
+                        <button
+                          type="button"
+                          className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
+                          onClick={() => setQuantity(line.toolId, line.quantity - 1)}
+                          aria-label="Quitar una pieza"
+                        >
+                          <Minus className="size-4" />
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={tool.quantityTotal}
+                          aria-label={`Piezas de ${tool.name}`}
+                          className="h-9 w-12 border-x border-input bg-transparent text-center text-sm tabular-nums outline-none"
+                          value={line.quantity}
+                          onChange={(e) => setQuantity(line.toolId, Number(e.target.value))}
+                        />
+                        <button
+                          type="button"
+                          className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
+                          onClick={() => setQuantity(line.toolId, line.quantity + 1)}
+                          aria-label="Agregar una pieza"
+                        >
+                          <Plus className="size-4" />
+                        </button>
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Quitar ${tool.name}`}
+                        onClick={() =>
+                          setLines((current) => current.filter((l) => l.toolId !== line.toolId))
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {shortages.length ? (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Algunas piezas están prestadas. Puedes enviar la solicitud; almacén entregará lo
+                disponible.
+              </p>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
