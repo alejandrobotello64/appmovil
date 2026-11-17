@@ -67,7 +67,7 @@ export const SALES_EQUIPMENT_CATALOG: SalesEquipmentEntry[] = [
   entry("Dräger", "Ventilación", "Babylog VN600", "Ventilador neonatal Babylog VN600", ["Babylog"], ["neonatal", "UCI"]),
 
   // Hill-Rom / Baxter
-  entry("Hill-Rom / Baxter", "Camas hospitalarias", "Centuris Pro", "Cama clínica Centuris Pro", ["Centuris"], ["cama", "piso"]),
+  entry("Hill-Rom / Baxter", "Camas hospitalarias", "Centuris Pro", "Cama clínica Centuris Pro / HR900", ["Centuris", "HR900", "LI900", "LI900B1", "CS900", "CS900B1"], ["cama", "piso"]),
   entry("Hill-Rom / Baxter", "Camas hospitalarias", "Progressa", "Cama de cuidados intensivos Progressa", ["Progresa"], ["UCI", "cama"]),
   entry("Hill-Rom / Baxter", "Camas hospitalarias", "Accella", "Cama hospitalaria Accella", ["Accela"], ["cama", "piso"]),
   entry("Hill-Rom / Baxter", "Camas obstétricas", "Affinity 4", "Cama obstétrica Affinity 4", ["Affinity", "P3700"], ["parto", "obstetricia"]),

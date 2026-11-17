@@ -566,7 +566,7 @@ export function inferEquipmentKind(
   if (/bair\s*hugger|calentamient|warming/.test(t)) return "calentamiento";
   if (/polaris|l[aá]mpara/.test(t)) return "lampara";
   if (/mesa\s*(de\s*)?(cirug|quir)|pst\s*500/.test(t)) return "mesa_quirurgica";
-  if (/cama|camilla|affinity|centuris|progressa|accella|p8040|p8000/.test(t)) {
+  if (/cama|camilla|affinity|centuris|progressa|accella|p8040|p8000|hr900|li900|cs900|hrp00/.test(t)) {
     return "cama";
   }
   if (/electrocirug|electrobistur|bistur[ií]\s*el[eé]ctrico/.test(t)) {

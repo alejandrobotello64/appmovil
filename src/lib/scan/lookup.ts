@@ -4,7 +4,12 @@ import {
   setInventoryItemBarcodes,
 } from "@/lib/inventory/storage";
 import type { InventoryItem } from "@/lib/inventory/types";
-import { normalizeBarcode, parseScan, type ParsedScan } from "./codes";
+import {
+  hillRomBedAliases,
+  normalizeBarcode,
+  parseScan,
+  type ParsedScan,
+} from "./codes";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -199,16 +204,68 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
     }
   }
 
-  // Último recurso: modelo / nombre (HR900, Vista 120…) cuando el código no está ligado.
+  // Serie registrada en equipos de cliente → producto de catálogo por modelo/nombre.
   if (!found.size) {
-    const tokens = candidates.filter((value) => /[A-Za-z]/.test(value) && value.length >= 4);
-    for (const token of tokens.slice(0, 4)) {
+    const serials = [...new Set([serialHint, scan.code, scan.code.replace(/^21/i, "")].filter(Boolean))];
+    if (serials.length) {
+      const rows = await idsWhere(
+        "client_equipment",
+        "serial_number, name, brand, model",
+        anyOf("serial_number", serials)
+      );
+      for (const row of rows) {
+        const needles = [
+          String(row.model ?? ""),
+          String(row.name ?? ""),
+          ...hillRomBedAliases(String(row.serial_number ?? "")),
+          ...hillRomBedAliases(String(row.model ?? "")),
+        ].filter((value) => value.trim().length >= 3);
+        for (const needle of needles.slice(0, 6)) {
+          const pattern = `%${needle.replace(/[%_]/g, "")}%`;
+          const { data, error } = await db
+            .from("inventory_items")
+            .select("id, item_kind, category")
+            .or(
+              `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)},part_number.ilike.${quoted(pattern)},sku.ilike.${quoted(pattern)}`
+            )
+            .limit(10);
+          if (error) throw new Error(error.message);
+          for (const item of (data ?? []) as Row[]) {
+            add(item.id, {
+              kind: "equipment_serial",
+              serialNumber: String(row.serial_number ?? serialHint ?? scan.code),
+            });
+          }
+          if (found.size) break;
+        }
+        if (found.size) break;
+      }
+    }
+  }
+
+  // Último recurso: modelo / nombre (HR900, Centuris, Vista 120…) cuando el código no está ligado.
+  if (!found.size) {
+    const baseTokens = candidates.filter(
+      (value) => /[A-Za-z]/.test(value) && value.length >= 4 && !/^HRP\d+$/i.test(value)
+    );
+    const tokens = [
+      ...baseTokens,
+      ...baseTokens.flatMap((token) => hillRomBedAliases(token)),
+      ...hillRomBedAliases(serialHint),
+      ...hillRomBedAliases(partHint),
+    ];
+    const seenToken = new Set<string>();
+    for (const token of tokens) {
+      const key = token.toLowerCase();
+      if (seenToken.has(key) || token.length < 4) continue;
+      seenToken.add(key);
+      if (seenToken.size > 10) break;
       const pattern = `%${token.replace(/[%_]/g, "")}%`;
       const { data, error } = await db
         .from("inventory_items")
         .select("id, item_kind, category")
         .or(
-          `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)},sku.ilike.${quoted(pattern)}`
+          `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)},part_number.ilike.${quoted(pattern)},sku.ilike.${quoted(pattern)}`
         )
         .limit(15);
       if (error) throw new Error(error.message);

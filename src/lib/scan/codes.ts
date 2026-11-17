@@ -133,16 +133,36 @@ function parseConcatenated(data: string) {
 /**
  * Códigos Dräger / Hill-Rom sin FNC1: "21" + serie + ("93" + ref) o ref MS/HR…
  * Ej. 21S2SRC109693MS32997-12 → serie S2SRC1096, ref MS32997-12
+ * Ej. 21HRP004355736HR900 → serie HRP004355736, modelo HR900
+ * Ej. 21HRP004355736 → serie HRP… (cama Centuris / HR900 sin sufijo de modelo)
  */
 function parseEmbeddedSerialPart(data: string): Record<string, string> | null {
   const compact = data.replace(new RegExp(GS, "g"), "");
   const with93 = /^21([A-Za-z0-9._-]{4,30})93([A-Za-z0-9._-]{3,30})$/.exec(compact);
   if (with93) return { "21": with93[1], "241": with93[2] };
-  const withRef = /^21([A-Za-z0-9._-]{4,24})((?:MS|HR|PN|P\/N)[A-Za-z0-9._-]{2,24})$/i.exec(
+  // Serie + modelo corto al final (…HR900 / …LI900B1), sin comerse series HRP…
+  const withModel =
+    /^21(HRP\d{6,20}|[A-Za-z0-9._-]{4,24})((?:HR|LI|CS)\d{2,6}[A-Za-z0-9._-]{0,8}|MS[A-Za-z0-9._-]{2,24}|PN[A-Za-z0-9._-]{2,24}|P\/N[A-Za-z0-9._-]{2,24})$/i.exec(
+      compact
+    );
+  if (withModel) return { "21": withModel[1], "241": withModel[2] };
+  const withRef = /^21([A-Za-z0-9._-]{4,24})((?:MS|PN|P\/N)[A-Za-z0-9._-]{2,24})$/i.exec(
     compact
   );
   if (withRef) return { "21": withRef[1], "241": withRef[2] };
+  const hrpOnly = /^21(HRP\d{6,20})$/i.exec(compact);
+  if (hrpOnly) return { "21": hrpOnly[1], "241": "HR900" };
   return null;
+}
+
+/** Aliases de catálogo para series / modelos Hill-Rom cama HR900 (Centuris Pro). */
+export function hillRomBedAliases(serialOrModel: string) {
+  const value = serialOrModel.trim();
+  if (!value) return [] as string[];
+  if (/^HRP\d{6,}$/i.test(value) || /^(HR|LI|CS)900\w*$/i.test(value)) {
+    return ["HR900", "Centuris", "Centuris Pro", "LI900B1", "CS900", "CS900B1"];
+  }
+  return [] as string[];
 }
 
 /** Interpreta un código GS1 (DataMatrix / GS1-128) si lo es. */
@@ -208,5 +228,9 @@ export function parseScan(raw: string): ParsedScan {
   add(code);
   if (code.startsWith("21") && code.length > 6) add(code.slice(2));
   if (/^\d{8,14}$/.test(code)) gtinVariants(code).forEach(add);
+  // Camas Hill-Rom: serie HRP… o modelo HR900 → candidatos de catálogo Centuris Pro
+  for (const seed of [gs1?.serial, gs1?.ais?.["241"], code, code.replace(/^21/i, "")]) {
+    for (const alias of hillRomBedAliases(seed ?? "")) add(alias);
+  }
   return { raw, code, gs1, candidates: [...candidates] };
 }
