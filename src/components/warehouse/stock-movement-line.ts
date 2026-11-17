@@ -59,19 +59,24 @@ export function lineFromProduct(
   };
 }
 
-/** Misma identidad de línea: producto + lote + serie + ubicación (para sumar cantidades). */
+function normExpiry(value: string) {
+  return value.trim().slice(0, 10);
+}
+
+/** Misma identidad de línea: producto + lote + caducidad + serie + ubicación. */
 export function sameLineIdentity(a: StockMovementLine, b: StockMovementLine) {
   return (
     a.productId === b.productId &&
     a.lotNumber.trim() === b.lotNumber.trim() &&
+    normExpiry(a.expiryDate) === normExpiry(b.expiryDate) &&
     a.serialNumber.trim() === b.serialNumber.trim() &&
     a.locationId === b.locationId
   );
 }
 
 /**
- * Agrega una línea al carrito. Si ya existe la misma identidad y no es equipo
- * con serie distinta, suma la cantidad.
+ * Agrega una línea al carrito. Solo suma cantidad si lote y caducidad coinciden;
+ * distintos lotes/fechas quedan como renglones separados.
  */
 export function mergeMovementLine(
   lines: StockMovementLine[],
@@ -93,8 +98,10 @@ export function mergeMovementLine(
       ? {
           ...line,
           quantity: line.quantity + next.quantity,
-          expiryDate: next.expiryDate || line.expiryDate,
-          manufacturedAt: next.manufacturedAt || line.manufacturedAt,
+          // Conservar metadatos del primer escaneo; no pisar con el último.
+          lotNumber: line.lotNumber || next.lotNumber,
+          expiryDate: line.expiryDate || next.expiryDate,
+          manufacturedAt: line.manufacturedAt || next.manufacturedAt,
         }
       : line
   );
