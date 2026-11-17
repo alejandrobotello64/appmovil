@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  History,
   ImagePlus,
   Plus,
   ScanBarcode,
@@ -319,6 +320,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   /** Al escanear, agrega directo a la lista multi-producto. */
   const [autoAddOnScan, setAutoAddOnScan] = useState(true);
   const [lines, setLines] = useState<StockMovementLine[]>([]);
+  /** Historial oculto por defecto para dejar espacio al formulario. */
+  const [showHistory, setShowHistory] = useState(false);
   const quantityRef = useRef<HTMLInputElement>(null);
   const lotRef = useRef<HTMLInputElement>(null);
   const serialInputRef = useRef<HTMLInputElement>(null);
@@ -349,14 +352,19 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (equipmentFormOpen) return;
       if (!match) {
         setScanHint(
-          "Código leído sin producto vinculado. Vincula el código en la ficha del escáner."
+          "Código leído sin producto vinculado. Vincula el código en la ficha del escáner o elige el modelo y captura la serie."
         );
         return;
       }
       const { scan } = result;
       const local = items.find((item) => item.id === match.item.id) ?? match.item;
       const lot = match.lotNumber || scan.gs1?.lot || "";
-      const serial = match.serialNumber || scan.gs1?.serial || "";
+      const serial =
+        match.serialNumber ||
+        scan.gs1?.serial ||
+        (match.kind === "equipment_serial" || match.kind === "serial"
+          ? scan.code
+          : "");
       const expiry = match.expiryDate || scan.gs1?.expiry || "";
       const manufactured = scan.gs1?.productionDate || "";
       const qtyRaw = scan.gs1?.quantity;
@@ -365,10 +373,36 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         const parsed = Number(qtyRaw);
         if (parsed > 0) qty = parsed;
       }
+      const samePartModels = result.matches.filter(
+        (row) =>
+          isEquipmentItem(row.item) &&
+          (row.item.partNumber || "").trim() &&
+          (row.item.partNumber || "").trim() === (local.partNumber || "").trim()
+      );
+      const needsModelConfirm = samePartModels.length > 1;
       const ambiguous =
         result.matches.length > 1
-          ? ` · ${result.matches.length} coincidencias (se usó la primera)`
+          ? needsModelConfirm
+            ? ` · Hay ${samePartModels.length} modelos con la misma ref. (${samePartModels
+                .map((row) => row.item.model || row.item.name)
+                .slice(0, 3)
+                .join(", ")}). Confirma el correcto.`
+            : ` · ${result.matches.length} coincidencias (se eligió la más probable)`
           : "";
+
+      if (autoAddOnScan && needsModelConfirm) {
+        setItemId(local.id);
+        setItemQuery(local.sku);
+        if (lot) setLotNumber(lot);
+        if (serial) setSerialNumber(serial);
+        if (expiry) setExpiryDate(expiry);
+        if (manufactured) setManufacturedAt(manufactured);
+        setQuantity(qty);
+        setScanHint(`Escaneado ${local.sku}${ambiguous}`);
+        setError("");
+        setMessage("");
+        return;
+      }
 
       if (autoAddOnScan) {
         const isEquip = isEquipmentItem(local);
@@ -851,7 +885,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   return (
     <>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(280px,0.95fr)] lg:items-start">
+      <div
+        className={cn(
+          "grid gap-4 lg:items-start",
+          showHistory
+            ? "lg:grid-cols-[minmax(0,1.05fr)_minmax(280px,0.95fr)]"
+            : "grid-cols-1"
+        )}
+      >
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -865,20 +906,31 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     : "Escanea varios productos a la lista, revisa cantidades y confirma la salida en un solo paso."}
                 </p>
               </div>
-              {canWrite ? (
+              <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    setError("");
-                    setEquipmentFormOpen(true);
-                  }}
+                  onClick={() => setShowHistory((current) => !current)}
                   className="shrink-0"
                 >
-                  <Plus className="size-4" />
-                  Dar de alta equipo
+                  <History className="size-4" />
+                  {showHistory ? "Ocultar historial" : "Ver historial"}
                 </Button>
-              ) : null}
+                {canWrite ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setError("");
+                      setEquipmentFormOpen(true);
+                    }}
+                    className="shrink-0"
+                  >
+                    <Plus className="size-4" />
+                    Dar de alta equipo
+                  </Button>
+                ) : null}
+              </div>
             </div>
             {canSwitchModes ? (
               <ModeSwitch mode={mode} onChange={switchMode} />
@@ -1087,7 +1139,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       <tr className="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
                         <th className="px-3 py-2 font-medium">SKU</th>
                         <th className="px-3 py-2 font-medium">Producto</th>
-                        <th className="px-3 py-2 font-medium">Lote / serie</th>
+                        <th className="px-3 py-2 font-medium">Lote / serie / fab.</th>
                         <th className="px-3 py-2 font-medium">Cant.</th>
                         <th className="px-3 py-2 font-medium">
                           <span className="sr-only">Quitar</span>
@@ -1111,6 +1163,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                             {[
                               line.lotNumber ? `Lote ${line.lotNumber}` : "",
                               line.serialNumber ? `Serie ${line.serialNumber}` : "",
+                              line.manufacturedAt
+                                ? `Fab. ${line.manufacturedAt}`
+                                : "",
                               line.expiryDate ? `Cad. ${line.expiryDate}` : "",
                             ]
                               .filter(Boolean)
@@ -1296,41 +1351,76 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 ) : null}
 
                 {isEquipmentCatalog && mode === "entrada" ? (
-                  <label className="space-y-1.5">
-                    <span className="text-sm font-medium">
-                      Números de serie (obligatorio)
-                    </span>
-                    <textarea
-                      ref={serialAreaRef}
-                      value={serialNumber}
-                      disabled={!canWrite}
-                      required={lines.length === 0}
-                      rows={4}
-                      placeholder={"Una serie por línea\nSN-001\nSN-002"}
-                      onChange={(event) => setSerialNumber(event.target.value)}
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
-                    />
-                  </label>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-1.5 sm:col-span-2">
+                      <span className="text-sm font-medium">
+                        Números de serie (obligatorio)
+                      </span>
+                      <textarea
+                        ref={serialAreaRef}
+                        value={serialNumber}
+                        disabled={!canWrite}
+                        required={lines.length === 0}
+                        rows={4}
+                        placeholder={"Una serie por línea\nSN-001\nSN-002"}
+                        onChange={(event) => setSerialNumber(event.target.value)}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">
+                        Fecha de fabricación (opcional)
+                      </span>
+                      <input
+                        type="date"
+                        value={manufacturedAt}
+                        disabled={!canWrite}
+                        onChange={(event) => setManufacturedAt(event.target.value)}
+                        className={fieldClass}
+                      />
+                      <span className="block text-xs text-muted-foreground">
+                        Se guarda en cada serie registrada en esta entrada.
+                      </span>
+                    </label>
+                  </div>
                 ) : (
-                  <label className="space-y-1.5">
-                    <span className="text-sm font-medium">
-                      Número de serie
-                      {selected.tracksSerial || isEquipmentCatalog
-                        ? " (obligatorio)"
-                        : ""}
-                    </span>
-                    <input
-                      ref={serialInputRef}
-                      value={serialNumber}
-                      disabled={!canWrite}
-                      required={
-                        lines.length === 0 &&
-                        Boolean(selected.tracksSerial || isEquipmentCatalog)
-                      }
-                      onChange={(event) => setSerialNumber(event.target.value)}
-                      className={fieldClass}
-                    />
-                  </label>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">
+                        Número de serie
+                        {selected.tracksSerial || isEquipmentCatalog
+                          ? " (obligatorio)"
+                          : ""}
+                      </span>
+                      <input
+                        ref={serialInputRef}
+                        value={serialNumber}
+                        disabled={!canWrite}
+                        required={
+                          lines.length === 0 &&
+                          Boolean(selected.tracksSerial || isEquipmentCatalog)
+                        }
+                        onChange={(event) => setSerialNumber(event.target.value)}
+                        className={fieldClass}
+                      />
+                    </label>
+                    {isEquipmentCatalog ? (
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium">
+                          Fecha de fabricación (opcional)
+                        </span>
+                        <input
+                          type="date"
+                          value={manufacturedAt}
+                          disabled={!canWrite}
+                          onChange={(event) =>
+                            setManufacturedAt(event.target.value)
+                          }
+                          className={fieldClass}
+                        />
+                      </label>
+                    ) : null}
+                  </div>
                 )}
 
                 {canWrite ? (
@@ -1534,6 +1624,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           </form>
         </section>
 
+        {showHistory ? (
         <aside className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:sticky lg:top-4">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -1544,13 +1635,22 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 Últimos movimientos registrados en esta pantalla.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => void loadHistory()}
-              className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              Actualizar
-            </button>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => void loadHistory()}
+                className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                Actualizar
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowHistory(false)}
+                className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                Ocultar
+              </button>
+            </div>
           </div>
           {canSwitchModes ? (
             <div className="mt-3 lg:hidden">
@@ -1653,6 +1753,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             )}
           </div>
         </aside>
+        ) : null}
       </div>
 
       {evidenceViewer && evidenceViewer.images[evidenceViewer.index] ? (

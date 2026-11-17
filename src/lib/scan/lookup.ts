@@ -77,6 +77,26 @@ async function idsWhere(table: string, select: string, filter: string) {
   return (data ?? []) as Row[];
 }
 
+function isEquipmentRow(item: InventoryItem) {
+  return item.itemKind === "equipo" || item.category === "equipos";
+}
+
+function matchRank(match: ScanMatch) {
+  const kindOrder: Record<ScanMatchKind, number> = {
+    barcode: 0,
+    sku: 1,
+    part_number: 2,
+    serial: 3,
+    equipment_serial: 4,
+    lot: 5,
+  };
+  return (
+    (match.item.isActive === false ? 100 : 0) +
+    (isEquipmentRow(match.item) ? 0 : 20) +
+    (kindOrder[match.kind] ?? 9)
+  );
+}
+
 export async function resolveScan(raw: string): Promise<ScanResult> {
   const scan = parseScan(raw);
   const candidates = scan.candidates;
@@ -88,9 +108,11 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
     if (id && !found.has(id)) found.set(id, match);
   };
   const gs1 = scan.gs1;
+  const serialHint = gs1?.serial || "";
+  const partHint = gs1?.ais?.["241"] || "";
   const fromGs1 = {
     lotNumber: gs1?.lot,
-    serialNumber: gs1?.serial,
+    serialNumber: serialHint || undefined,
     expiryDate: gs1?.expiry,
   };
 
@@ -100,35 +122,49 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
     .overlaps("barcodes", pgArray(caseVariants(candidates)))
     .limit(25);
   if (barcodeError) throw new Error(barcodeError.message);
-  for (const row of byBarcode ?? []) add(row.id, { kind: "barcode", ...fromGs1 });
+  for (const row of byBarcode ?? []) {
+    add(row.id, {
+      kind: "barcode",
+      ...fromGs1,
+      serialNumber: serialHint || fromGs1.serialNumber,
+    });
+  }
 
-  if (!found.size) {
-    const rows = await idsWhere(
-      "inventory_items",
-      "id, sku, part_number",
-      `${anyOf("sku", candidates)},${anyOf("part_number", candidates)}`
-    );
-    const lower = new Set(candidates.map((value) => value.toLowerCase()));
-    for (const row of rows) {
-      const kind = lower.has(String(row.sku ?? "").toLowerCase()) ? "sku" : "part_number";
-      add(row.id, { kind, ...fromGs1 });
+  // SKU / n.º de parte (también con la ref embebida del DataMatrix).
+  {
+    const keys = [...new Set([...candidates, partHint].filter(Boolean))];
+    if (keys.length) {
+      const rows = await idsWhere(
+        "inventory_items",
+        "id, sku, part_number, item_kind, category",
+        `${anyOf("sku", keys)},${anyOf("part_number", keys)}`
+      );
+      const lower = new Set(keys.map((value) => value.toLowerCase()));
+      for (const row of rows) {
+        const kind = lower.has(String(row.sku ?? "").toLowerCase())
+          ? "sku"
+          : "part_number";
+        add(row.id, { kind, ...fromGs1 });
+      }
     }
   }
 
-  if (!found.size) {
-    const serials = [...new Set([gs1?.serial, scan.code].filter(Boolean) as string[])];
-    const rows = await idsWhere(
-      "serial_numbers",
-      "product_id, serial_number",
-      anyOf("serial_number", serials)
-    );
-    for (const row of rows) {
-      add(row.product_id, {
-        kind: "serial",
-        serialNumber: String(row.serial_number ?? ""),
-        lotNumber: gs1?.lot,
-        expiryDate: gs1?.expiry,
-      });
+  if (!found.size || serialHint) {
+    const serials = [...new Set([serialHint, scan.code].filter(Boolean))];
+    if (serials.length) {
+      const rows = await idsWhere(
+        "serial_numbers",
+        "product_id, serial_number",
+        anyOf("serial_number", serials)
+      );
+      for (const row of rows) {
+        add(row.product_id, {
+          kind: "serial",
+          serialNumber: String(row.serial_number ?? ""),
+          lotNumber: gs1?.lot,
+          expiryDate: gs1?.expiry,
+        });
+      }
     }
   }
 
@@ -149,18 +185,47 @@ export async function resolveScan(raw: string): Promise<ScanResult> {
   }
 
   if (!found.size) {
+    const serials = [...new Set([serialHint, scan.code].filter(Boolean))];
     const rows = await idsWhere(
       "inventory_items",
       "id",
-      anyOf("serial_number", [scan.code])
+      anyOf("serial_number", serials)
     );
-    for (const row of rows) add(row.id, { kind: "equipment_serial", serialNumber: scan.code });
+    for (const row of rows) {
+      add(row.id, {
+        kind: "equipment_serial",
+        serialNumber: serialHint || scan.code,
+      });
+    }
+  }
+
+  // Último recurso: modelo / nombre (HR900, Vista 120…) cuando el código no está ligado.
+  if (!found.size) {
+    const tokens = candidates.filter((value) => /[A-Za-z]/.test(value) && value.length >= 4);
+    for (const token of tokens.slice(0, 4)) {
+      const pattern = `%${token.replace(/[%_]/g, "")}%`;
+      const { data, error } = await db
+        .from("inventory_items")
+        .select("id, item_kind, category")
+        .or(
+          `model.ilike.${quoted(pattern)},name.ilike.${quoted(pattern)},sku.ilike.${quoted(pattern)}`
+        )
+        .limit(15);
+      if (error) throw new Error(error.message);
+      for (const row of (data ?? []) as Row[]) {
+        add(row.id, {
+          kind: "part_number",
+          serialNumber: serialHint || undefined,
+        });
+      }
+      if (found.size) break;
+    }
   }
 
   const items = await getInventoryItemsByIds([...found.keys()]);
   const matches = items
     .map((item) => ({ item, ...found.get(item.id)! }))
-    .sort((a, b) => Number(b.item.isActive) - Number(a.item.isActive));
+    .sort((a, b) => matchRank(a) - matchRank(b));
   return { scan, matches };
 }
 

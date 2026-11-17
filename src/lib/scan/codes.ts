@@ -130,6 +130,21 @@ function parseConcatenated(data: string) {
   return Object.keys(ais).length ? ais : null;
 }
 
+/**
+ * Códigos Dräger / Hill-Rom sin FNC1: "21" + serie + ("93" + ref) o ref MS/HR…
+ * Ej. 21S2SRC109693MS32997-12 → serie S2SRC1096, ref MS32997-12
+ */
+function parseEmbeddedSerialPart(data: string): Record<string, string> | null {
+  const compact = data.replace(new RegExp(GS, "g"), "");
+  const with93 = /^21([A-Za-z0-9._-]{4,30})93([A-Za-z0-9._-]{3,30})$/.exec(compact);
+  if (with93) return { "21": with93[1], "241": with93[2] };
+  const withRef = /^21([A-Za-z0-9._-]{4,24})((?:MS|HR|PN|P\/N)[A-Za-z0-9._-]{2,24})$/i.exec(
+    compact
+  );
+  if (withRef) return { "21": withRef[1], "241": withRef[2] };
+  return null;
+}
+
 /** Interpreta un código GS1 (DataMatrix / GS1-128) si lo es. */
 export function parseGs1(raw: string): Gs1Data | null {
   const data = cleanRaw(raw);
@@ -140,10 +155,12 @@ export function parseGs1(raw: string): Gs1Data | null {
     ais = parseConcatenated(data);
   } else if (data.includes(GS) && /^\d{2}/.test(data)) {
     ais = parseConcatenated(data);
+  } else if (/^21[A-Za-z0-9._-]{6,}/.test(data.replace(new RegExp(GS, "g"), ""))) {
+    ais = parseEmbeddedSerialPart(data);
   }
   if (!ais) return null;
   const gtin = ais["01"] ?? ais["02"];
-  if (!gtin && !ais["10"] && !ais["21"]) return null;
+  if (!gtin && !ais["10"] && !ais["21"] && !ais["241"]) return null;
   return {
     gtin,
     lot: ais["10"],
@@ -185,7 +202,11 @@ export function parseScan(raw: string): ParsedScan {
     }
   };
   if (gs1?.gtin) gtinVariants(gs1.gtin).forEach(add);
+  // Serie y n.º de parte embebidos (Dräger Vista / Hill-Rom HR…)
+  add(gs1?.serial);
+  add(gs1?.ais?.["241"]);
   add(code);
+  if (code.startsWith("21") && code.length > 6) add(code.slice(2));
   if (/^\d{8,14}$/.test(code)) gtinVariants(code).forEach(add);
   return { raw, code, gs1, candidates: [...candidates] };
 }
