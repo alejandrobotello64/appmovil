@@ -117,6 +117,122 @@ export const DEFAULT_LOCATION_CODES = [
   "EQUIPOS",
 ];
 
+const PREFERRED_ENTRY_WAREHOUSE_CODE = "VSA";
+
+/** Almacén preferido para entradas (VSA / Villahermosa). */
+export function pickPreferredEntryWarehouse(
+  warehouses: Warehouse[]
+): Warehouse | undefined {
+  if (warehouses.length === 0) return undefined;
+  const byCode = warehouses.find(
+    (row) => row.code.toUpperCase() === PREFERRED_ENTRY_WAREHOUSE_CODE
+  );
+  if (byCode) return byCode;
+  return warehouses.find((row) => row.isDefault) ?? warehouses[0];
+}
+
+export function categoryLocationCode(category?: string | null): string {
+  const key = String(category ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  if (key === "insumos" || key === "insumo") return "INSUMOS";
+  if (key === "medicamentos" || key === "medicamento") return "MEDICAMENTOS";
+  if (key === "refacciones" || key === "refaccion") return "REFACCIONES";
+  if (key === "accesorios" || key === "accesorio") return "ACCESORIOS";
+  if (key === "equipos" || key === "equipo") return "EQUIPOS";
+  return "GENERAL";
+}
+
+function foldLocationLabel(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+/**
+ * Ubicación sugerida para una entrada:
+ * 1) donde ya hay más existencia del producto en ese almacén (prioriza físicas)
+ * 2) coincidencia con la ubicación de catálogo
+ * 3) ubicación genérica de la categoría
+ */
+export async function resolveEntryLocationId(input: {
+  productId: string;
+  warehouseId: string;
+  locations: WarehouseLocation[];
+  category?: string | null;
+  catalogLocation?: string | null;
+}): Promise<string> {
+  const { productId, warehouseId, locations } = input;
+  if (!warehouseId || locations.length === 0) return "";
+
+  try {
+    const { data, error } = await db
+      .from("inventory_balances")
+      .select("location_id, qty_on_hand")
+      .eq("product_id", productId)
+      .eq("warehouse_id", warehouseId)
+      .gt("qty_on_hand", 0);
+    if (error) throw new Error(error.message);
+
+    const qtyByLocation = new Map<string, number>();
+    for (const row of (data ?? []) as Record<string, unknown>[]) {
+      const locationId = String(row.location_id ?? "");
+      if (!locationId) continue;
+      qtyByLocation.set(
+        locationId,
+        (qtyByLocation.get(locationId) ?? 0) + (Number(row.qty_on_hand ?? 0) || 0)
+      );
+    }
+
+    if (qtyByLocation.size > 0) {
+      const ranked = [...qtyByLocation.entries()]
+        .map(([locationId, qty]) => {
+          const loc = locations.find((row) => row.id === locationId);
+          const generic = loc
+            ? DEFAULT_LOCATION_CODES.includes(loc.code.toUpperCase())
+            : true;
+          return { locationId, qty, generic };
+        })
+        .filter((row) => locations.some((loc) => loc.id === row.locationId))
+        .sort(
+          (a, b) =>
+            Number(a.generic) - Number(b.generic) || b.qty - a.qty
+        );
+      if (ranked[0]) return ranked[0].locationId;
+    }
+  } catch {
+    /* fallback local */
+  }
+
+  const catalog = String(input.catalogLocation ?? "").trim();
+  if (catalog) {
+    const folded = foldLocationLabel(catalog);
+    const match = locations.find(
+      (loc) =>
+        foldLocationLabel(loc.code) === folded ||
+        foldLocationLabel(loc.name) === folded ||
+        foldLocationLabel(loc.name).includes(folded) ||
+        folded.includes(foldLocationLabel(loc.name))
+    );
+    if (match) return match.id;
+  }
+
+  const categoryCode = categoryLocationCode(input.category);
+  const byCategory = locations.find(
+    (loc) => loc.code.toUpperCase() === categoryCode
+  );
+  if (byCategory) return byCategory.id;
+
+  const physical = locations.find(
+    (loc) => !DEFAULT_LOCATION_CODES.includes(loc.code.toUpperCase())
+  );
+  return physical?.id ?? locations[0]?.id ?? "";
+}
+
 function locationCode(name: string) {
   return name
     .normalize("NFD")

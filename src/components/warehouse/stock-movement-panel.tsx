@@ -47,11 +47,15 @@ import {
   isServiceIssue,
 } from "@/lib/warehouse/reasons";
 import {
+  createWarehouseLocation,
+  DEFAULT_LOCATION_CODES,
   getEntryExitHistory,
   getProductLots,
   getProductWarehouseQuantities,
   getWarehouseLocations,
   getWarehouses,
+  pickPreferredEntryWarehouse,
+  resolveEntryLocationId,
   type KardexRow,
   type ProductLot,
   type Warehouse,
@@ -76,6 +80,8 @@ type MovementMode = "entrada" | "salida";
 type StockMovementPanelProps = {
   mode: MovementMode;
 };
+
+const NEW_LOCATION = "__new_location__";
 
 const MODE_TABS: {
   id: MovementMode;
@@ -194,6 +200,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [itemId, setItemId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
   const [locationId, setLocationId] = useState("");
+  const [newLocationName, setNewLocationName] = useState("");
+  const [creatingLocation, setCreatingLocation] = useState(false);
+  const [lineCreatingLocationKey, setLineCreatingLocationKey] = useState("");
+  const [lineNewLocationName, setLineNewLocationName] = useState("");
+  const locationAutoKeyRef = useRef("");
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState("");
   const [reason, setReason] = useState<string>(
@@ -292,20 +303,26 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   }
 
   useEffect(() => {
-    if (!warehouseId) return;
+    if (!warehouseId) {
+      setLocations([]);
+      setLocationId("");
+      return;
+    }
     void getWarehouseLocations(warehouseId)
       .then((rows) => {
         setLocations(rows);
-        const fallback = rows[0]?.id ?? "";
         setLocationId((current) =>
-          rows.some((row) => row.id === current) ? current : fallback
+          current &&
+          current !== NEW_LOCATION &&
+          rows.some((row) => row.id === current)
+            ? current
+            : ""
         );
-        // Si cambió el almacén, reasigna ubicaciones inválidas de líneas ya agregadas.
         setLines((current) =>
           current.map((line) =>
             rows.some((row) => row.id === line.locationId)
               ? line
-              : { ...line, locationId: fallback }
+              : { ...line, locationId: "" }
           )
         );
       })
@@ -404,7 +421,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   }, [items, itemQuery, itemId]);
 
   const applyScanMatch = useCallback(
-    ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
+    async ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
       if (equipmentFormOpen) return;
       if (!match) {
         setScanHint(
@@ -497,13 +514,23 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           window.setTimeout(() => lotRef.current?.focus(), 50);
           return;
         }
+        const resolvedLocation =
+          mode === "entrada" && warehouseId
+            ? await resolveEntryLocationId({
+                productId: local.id,
+                warehouseId,
+                locations,
+                category: local.category,
+                catalogLocation: local.location,
+              })
+            : locationId;
         const next = lineFromProduct(local, {
           quantity: isEquip ? 1 : qty,
           lotNumber: isEquip ? "" : lot,
           expiryDate: isEquip ? "" : expiry,
           manufacturedAt: manufactured,
           serialNumber: serial,
-          locationId,
+          locationId: resolvedLocation || locationId,
           partNumber: partRef,
         });
         setLines((current) => mergeMovementLine(current, next));
@@ -551,7 +578,16 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         quantityRef.current?.select();
       }, 50);
     },
-    [equipmentFormOpen, items, mode, autoAddOnScan, clearDraft, locationId]
+    [
+      equipmentFormOpen,
+      items,
+      mode,
+      autoAddOnScan,
+      clearDraft,
+      locationId,
+      warehouseId,
+      locations,
+    ]
   );
   useScanResolved(applyScanMatch, { enabled: !equipmentFormOpen });
   const visibleHistory = useMemo(
@@ -619,12 +655,137 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (mode === "salida") setWarehouseId("");
       return;
     }
-    setWarehouseId((current) =>
-      stockedWarehouses.some((warehouse) => warehouse.id === current)
-        ? current
-        : stockedWarehouses[0].id
-    );
+    setWarehouseId((current) => {
+      if (stockedWarehouses.some((warehouse) => warehouse.id === current)) {
+        return current;
+      }
+      if (mode === "entrada") {
+        return pickPreferredEntryWarehouse(stockedWarehouses)?.id ?? stockedWarehouses[0].id;
+      }
+      return stockedWarehouses[0].id;
+    });
   }, [stockedWarehouses, mode]);
+
+  // En entradas, productos ya registrados prefieren VSA (si aún no hay líneas en otro almacén).
+  useEffect(() => {
+    if (mode !== "entrada" || lines.length > 0 || warehouses.length === 0) return;
+    const preferred = pickPreferredEntryWarehouse(warehouses);
+    if (!preferred) return;
+    const registered = (warehouseStock ?? []).some((row) => row.quantity > 0);
+    if (registered || !itemId) {
+      setWarehouseId(preferred.id);
+    }
+  }, [mode, itemId, warehouseStock, warehouses, lines.length]);
+
+  const physicalLocations = useMemo(
+    () =>
+      locations.filter(
+        (loc) => !DEFAULT_LOCATION_CODES.includes(loc.code.toUpperCase())
+      ),
+    [locations]
+  );
+  const genericLocations = useMemo(
+    () =>
+      locations.filter((loc) =>
+        DEFAULT_LOCATION_CODES.includes(loc.code.toUpperCase())
+      ),
+    [locations]
+  );
+
+  const resolveLocationForProduct = useCallback(
+    async (product: InventoryItem) => {
+      if (!warehouseId || locations.length === 0) return locationId || "";
+      return resolveEntryLocationId({
+        productId: product.id,
+        warehouseId,
+        locations,
+        category: product.category,
+        catalogLocation: product.location,
+      });
+    },
+    [warehouseId, locations, locationId]
+  );
+
+  useEffect(() => {
+    if (mode !== "entrada" || !warehouseId || locations.length === 0) return;
+    const autoKey = `${warehouseId}::${itemId || "none"}::${locations.length}`;
+    if (locationAutoKeyRef.current === autoKey) return;
+    locationAutoKeyRef.current = autoKey;
+    let cancelled = false;
+    void (async () => {
+      if (selected) {
+        const next = await resolveEntryLocationId({
+          productId: selected.id,
+          warehouseId,
+          locations,
+          category: selected.category,
+          catalogLocation: selected.location,
+        });
+        if (!cancelled && next) setLocationId(next);
+        return;
+      }
+      if (!cancelled) {
+        setLocationId(
+          physicalLocations[0]?.id || genericLocations[0]?.id || ""
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    mode,
+    warehouseId,
+    itemId,
+    selected,
+    locations,
+    physicalLocations,
+    genericLocations,
+  ]);
+
+  async function handleCreateLocation(name: string, applyToLineKey?: string) {
+    const trimmed = name.trim();
+    if (!warehouseId || !trimmed) {
+      setError("Escribe el nombre de la nueva ubicación.");
+      return;
+    }
+    setCreatingLocation(true);
+    setError("");
+    try {
+      const created = await createWarehouseLocation(warehouseId, trimmed);
+      setLocations((current) =>
+        [...current, created].sort((a, b) => a.name.localeCompare(b.name, "es"))
+      );
+      setLocationId(created.id);
+      setNewLocationName("");
+      if (applyToLineKey) {
+        setLines((current) =>
+          current.map((line) =>
+            line.key === applyToLineKey
+              ? { ...line, locationId: created.id }
+              : line
+          )
+        );
+        setLineCreatingLocationKey("");
+        setLineNewLocationName("");
+      } else {
+        setLines((current) =>
+          current.map((line) =>
+            !line.locationId || line.locationId === NEW_LOCATION
+              ? { ...line, locationId: created.id }
+              : line
+          )
+        );
+      }
+      setMessage(`Ubicación «${created.name}» creada.`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo crear la ubicación."
+      );
+    } finally {
+      setCreatingLocation(false);
+    }
+  }
 
   const loadLots = useCallback(async () => {
     if (!itemId || isEquipmentCatalog) {
@@ -707,9 +868,13 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     }
   }
 
-  function buildLinesFromDraft(): StockMovementLine[] {
+  async function buildLinesFromDraft(): Promise<StockMovementLine[]> {
     if (!selected) return [];
     const isEquip = isEquipmentCatalog;
+    const resolvedLocation =
+      mode === "entrada"
+        ? (await resolveLocationForProduct(selected)) || locationId
+        : locationId;
     if (isEquip && mode === "entrada") {
       const serials = parseSerialNumbers(serialNumber);
       return serials.map((serial) =>
@@ -717,7 +882,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           quantity: 1,
           serialNumber: serial,
           manufacturedAt,
-          locationId,
+          locationId: resolvedLocation,
         })
       );
     }
@@ -728,12 +893,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         expiryDate: isEquip ? "" : expiryDate,
         manufacturedAt,
         serialNumber: serialNumber.trim(),
-        locationId,
+        locationId: resolvedLocation,
       }),
     ];
   }
 
-  function addDraftToLines() {
+  async function addDraftToLines() {
     if (!canWrite || !selected) {
       setError("Elige un artículo para agregarlo a la lista.");
       return;
@@ -754,7 +919,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             : "Este producto exige número de serie."
         );
       }
-      const built = buildLinesFromDraft();
+      const built = await buildLinesFromDraft();
       if (built.length === 0) {
         throw new Error("No hay datos para agregar.");
       }
@@ -798,7 +963,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               : "Este producto exige número de serie."
           );
         }
-        pending = buildLinesFromDraft();
+        pending = await buildLinesFromDraft();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Revisa los datos.");
         return;
@@ -814,6 +979,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     }
 
     for (const line of pending) {
+      if (mode === "entrada" && (!line.locationId || line.locationId === NEW_LOCATION)) {
+        setError(
+          `${line.sku}: elige una ubicación o crea una nueva antes de registrar la entrada.`
+        );
+        return;
+      }
       if (mode === "entrada" && line.tracksLot && !line.lotNumber.trim()) {
         setError(`${line.sku}: exige número de lote.`);
         return;
@@ -1137,12 +1308,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       <span className="block text-xs text-muted-foreground">
                         Solo almacenes con existencia de este artículo.
                       </span>
-                    ) : mode === "entrada" &&
-                      warehouseStock !== null &&
-                      warehouseStock.length === 0 ? (
+                    ) : mode === "entrada" ? (
                       <span className="block text-xs text-muted-foreground">
-                        Este artículo aún no tiene existencia; elige el almacén
-                        de la entrada.
+                        Preferencia: VSA (Villahermosa). Puedes cambiarlo si la
+                        entrada va a otro almacén.
                       </span>
                     ) : null}
                   </label>
@@ -1152,26 +1321,88 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     </span>
                     <select
                       value={locationId}
-                      onChange={(event) => setLocationId(event.target.value)}
-                      disabled={!canWrite}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setLocationId(value);
+                        if (value !== NEW_LOCATION) setNewLocationName("");
+                      }}
+                      disabled={!canWrite || !warehouseId}
                       className={fieldClass}
                     >
-                      {locations.length === 0 ? (
-                        <option value="">Sin ubicaciones</option>
+                      {!warehouseId ? (
+                        <option value="">Elige un almacén primero</option>
+                      ) : locations.length === 0 ? (
+                        <option value="">Sin ubicaciones — crea una</option>
                       ) : (
-                        locations.map((location) => (
-                          <option key={location.id} value={location.id}>
-                            {location.code} — {location.name}
-                          </option>
-                        ))
+                        <>
+                          <option value="">Elegir ubicación…</option>
+                          {physicalLocations.length > 0 ? (
+                            <optgroup label="Ubicaciones físicas">
+                              {physicalLocations.map((location) => (
+                                <option key={location.id} value={location.id}>
+                                  {location.code} — {location.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ) : null}
+                          {genericLocations.length > 0 ? (
+                            <optgroup label="Genéricas por categoría">
+                              {genericLocations.map((location) => (
+                                <option key={location.id} value={location.id}>
+                                  {location.code} — {location.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ) : null}
+                        </>
                       )}
+                      {warehouseId ? (
+                        <option value={NEW_LOCATION}>+ Nueva ubicación…</option>
+                      ) : null}
                     </select>
                     <span className="block text-xs text-muted-foreground">
-                      Se aplica a productos nuevos; cámbiala por línea a la
-                      derecha.
+                      Se toma sola si el producto ya tiene ubicación en este
+                      almacén; si no, elige o crea una.
                     </span>
                   </label>
                 </div>
+
+                {mode === "entrada" && locationId === NEW_LOCATION ? (
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <label className="min-w-0 flex-1 space-y-1.5">
+                      <span className="text-sm font-medium">
+                        Nombre de la nueva ubicación
+                      </span>
+                      <input
+                        value={newLocationName}
+                        onChange={(event) =>
+                          setNewLocationName(event.target.value)
+                        }
+                        placeholder="Ej. Rack A / Nivel 2"
+                        disabled={!canWrite || creatingLocation}
+                        className={fieldClass}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void handleCreateLocation(newLocationName);
+                          }
+                        }}
+                      />
+                    </label>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={
+                        !canWrite ||
+                        creatingLocation ||
+                        !newLocationName.trim()
+                      }
+                      onClick={() => void handleCreateLocation(newLocationName)}
+                    >
+                      {creatingLocation ? "Creando…" : "Crear ubicación"}
+                    </Button>
+                  </div>
+                ) : null}
 
                 {selected || lines.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-background p-2.5 text-xs sm:grid-cols-3">
@@ -1589,39 +1820,88 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                 .join(" · ") || "—"}
                             </td>
                             <td className="px-3 py-2 align-middle">
-                              <select
-                                value={line.locationId}
-                                disabled={!canWrite || submitting || locations.length === 0}
-                                onChange={(event) => {
-                                  const nextLocationId = event.target.value;
-                                  setLines((current) =>
-                                    current.map((row) =>
-                                      row.key === line.key
-                                        ? { ...row, locationId: nextLocationId }
-                                        : row
-                                    )
-                                  );
-                                }}
-                                className="h-8 max-w-[10rem] rounded-md border border-input bg-background px-2 text-xs"
-                                aria-label={`Ubicación ${line.sku}`}
-                              >
-                                {locations.length === 0 ? (
-                                  <option value="">Sin ubicaciones</option>
-                                ) : (
-                                  <>
-                                    {!locations.some((loc) => loc.id === line.locationId) ? (
-                                      <option value={line.locationId || ""}>
-                                        {line.locationId ? "Ubicación anterior" : "Elegir…"}
-                                      </option>
-                                    ) : null}
-                                    {locations.map((location) => (
-                                      <option key={location.id} value={location.id}>
-                                        {location.code} — {location.name}
-                                      </option>
-                                    ))}
-                                  </>
-                                )}
-                              </select>
+                              <div className="space-y-1">
+                                <select
+                                  value={
+                                    lineCreatingLocationKey === line.key
+                                      ? NEW_LOCATION
+                                      : line.locationId
+                                  }
+                                  disabled={!canWrite || submitting || !warehouseId}
+                                  onChange={(event) => {
+                                    const nextLocationId = event.target.value;
+                                    if (nextLocationId === NEW_LOCATION) {
+                                      setLineCreatingLocationKey(line.key);
+                                      setLineNewLocationName("");
+                                      return;
+                                    }
+                                    setLineCreatingLocationKey("");
+                                    setLines((current) =>
+                                      current.map((row) =>
+                                        row.key === line.key
+                                          ? { ...row, locationId: nextLocationId }
+                                          : row
+                                      )
+                                    );
+                                  }}
+                                  className="h-8 max-w-[12rem] rounded-md border border-input bg-background px-2 text-xs"
+                                  aria-label={`Ubicación ${line.sku}`}
+                                >
+                                  <option value="">Elegir…</option>
+                                  {physicalLocations.map((location) => (
+                                    <option key={location.id} value={location.id}>
+                                      {location.name}
+                                    </option>
+                                  ))}
+                                  {genericLocations.map((location) => (
+                                    <option key={location.id} value={location.id}>
+                                      {location.name}
+                                    </option>
+                                  ))}
+                                  <option value={NEW_LOCATION}>+ Nueva…</option>
+                                </select>
+                                {lineCreatingLocationKey === line.key ? (
+                                  <div className="flex max-w-[14rem] items-center gap-1">
+                                    <input
+                                      value={lineNewLocationName}
+                                      onChange={(event) =>
+                                        setLineNewLocationName(event.target.value)
+                                      }
+                                      placeholder="Nueva ubicación"
+                                      disabled={!canWrite || creatingLocation}
+                                      className="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+                                      onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                          event.preventDefault();
+                                          void handleCreateLocation(
+                                            lineNewLocationName,
+                                            line.key
+                                          );
+                                        }
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="secondary"
+                                      className="h-8 px-2 text-xs"
+                                      disabled={
+                                        !canWrite ||
+                                        creatingLocation ||
+                                        !lineNewLocationName.trim()
+                                      }
+                                      onClick={() =>
+                                        void handleCreateLocation(
+                                          lineNewLocationName,
+                                          line.key
+                                        )
+                                      }
+                                    >
+                                      OK
+                                    </Button>
+                                  </div>
+                                ) : null}
+                              </div>
                             </td>
                             <td className="px-3 py-2 align-middle whitespace-nowrap">
                               {line.isEquipment ? (
