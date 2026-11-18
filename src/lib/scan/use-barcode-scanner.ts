@@ -9,10 +9,10 @@ import {
 import { scanSearchMode } from "./search-fields";
 
 /** Máximo entre teclas de una ráfaga de lector (una persona escribe más lento). */
-const MAX_KEY_GAP_MS = 60;
-const MAX_AVG_GAP_MS = 35;
+const MAX_KEY_GAP_MS = 90;
+const MAX_AVG_GAP_MS = 45;
 /** Sin Enter/Tab de sufijo, la lectura se da por terminada tras este silencio. */
-const IDLE_MS = 120;
+const IDLE_MS = 200;
 const MIN_LENGTH = 4;
 const MIN_LENGTH_WITHOUT_SUFFIX = 6;
 const GS = "\u001d";

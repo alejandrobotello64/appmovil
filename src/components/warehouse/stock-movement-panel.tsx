@@ -479,7 +479,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (manufactured) setManufacturedAt(manufactured);
       setQuantity(qty);
       const extras = [
+        partRef ? `ref. ${partRef}` : "",
         lot ? `lote ${lot}` : "",
+        manufactured ? `fab. ${manufactured}` : "",
         serial ? `serie ${serial}` : "",
         expiry ? `cad. ${expiry}` : "",
         qty > 1 ? `cant. ${qty}` : "",

@@ -30,6 +30,8 @@ export function CameraCodeReader({ onDetected }: CameraCodeReaderProps) {
       ]);
       const hints = new Map();
       hints.set(DecodeHintType.TRY_HARDER, true);
+      // Conserva FNC1/GS en DataMatrix GS1 para no perder lote y fechas.
+      hints.set(DecodeHintType.ASSUME_GS1, true);
       const reader = new BrowserMultiFormatReader(hints);
 
       const tick = () => {

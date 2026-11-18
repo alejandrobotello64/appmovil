@@ -105,22 +105,19 @@ function parseParenthesized(data: string) {
 }
 
 /**
- * Sin FNC1, los AI de longitud variable (p. ej. 240 = ref. de catálogo) se comen
- * lote (10) y fechas (11/17). Busca el siguiente AI plausible dentro del máximo.
+ * Sin FNC1, los AI de longitud variable se comen a los siguientes.
+ * - 240/241: se comen 11/17/10
+ * - 10 (lote): se come 11/17 si el lote va antes de la fecha en la etiqueta
+ * - 21 (serie): puede ir seguido de lote/fecha/ref
  */
 function nextAiBoundary(data: string, start: number, max: number, currentAi: string) {
   const gsIndex = data.indexOf(GS, start);
   let hardEnd = gsIndex === -1 ? data.length : gsIndex;
   if (hardEnd - start > max) hardEnd = start + max;
 
-  // 10/21 suelen ir al final: no partir salvo FNC1 / máximo.
-  const lookAhead =
-    currentAi === "240" ||
-    currentAi === "241" ||
-    currentAi === "250" ||
-    currentAi === "400" ||
-    currentAi === "22";
-  if (!lookAhead) return hardEnd;
+  const splitOnDates = ["10", "21", "22", "240", "241", "250", "400"].includes(currentAi);
+  const splitOnLotSerialRef = ["21", "22", "240", "241", "250", "400"].includes(currentAi);
+  if (!splitOnDates && !splitOnLotSerialRef) return hardEnd;
 
   // Refs de catálogo (p. ej. 2870173) suelen tener ≥5 chars; evita cortar a mitad del n.º.
   const minLen = currentAi === "240" || currentAi === "241" ? 5 : 1;
@@ -128,7 +125,7 @@ function nextAiBoundary(data: string, start: number, max: number, currentAi: str
     const two = data.slice(i, i + 2);
     const three = data.slice(i, i + 3);
 
-    if (["11", "12", "13", "15", "16", "17"].includes(two)) {
+    if (splitOnDates && ["11", "12", "13", "15", "16", "17"].includes(two)) {
       const stamp = data.slice(i + 2, i + 8);
       if (/^\d{6}$/.test(stamp) && gs1Date(stamp)) {
         // Tras la fecha debe seguir otro AI, fin de cadena o FNC1 — no basura.
@@ -142,6 +139,7 @@ function nextAiBoundary(data: string, start: number, max: number, currentAi: str
         }
       }
     }
+    if (!splitOnLotSerialRef) continue;
     if (two === "10" && /^[A-Za-z0-9]/.test(data[i + 2] ?? "")) return i;
     if (two === "21" && data.length - (i + 2) >= 4) return i;
     if (
@@ -238,6 +236,12 @@ export function parseGs1(raw: string): Gs1Data | null {
   } else if (/^(01|02)\d{14}/.test(data) && data.length > 16) {
     ais = parseConcatenated(data);
   } else if (data.includes(GS) && /^\d{2}/.test(data)) {
+    ais = parseConcatenated(data);
+  } else if (
+    // DataMatrix a veces llega sin GTIN inicial (solo 240/10/11/17…)
+    /^(240|241|10|11|17|15|13)\d/.test(data) &&
+    data.length >= 10
+  ) {
     ais = parseConcatenated(data);
   } else if (/^21[A-Za-z0-9._-]{6,}/.test(data.replace(new RegExp(GS, "g"), ""))) {
     ais = parseEmbeddedSerialPart(data);
