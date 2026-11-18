@@ -153,21 +153,43 @@ function foldLocationLabel(value: string) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+export type EntryLocationSuggestion = {
+  /** Ubicación ya registrada del producto. Vacío si hay que escribir una. */
+  locationId: string;
+  /** Nombre de catálogo que todavía no existe como ubicación. */
+  pendingName: string;
+};
+
+export function findLocationByLabel(
+  locations: WarehouseLocation[],
+  label: string
+): WarehouseLocation | undefined {
+  const folded = foldLocationLabel(label);
+  if (!folded) return undefined;
+  return locations.find((loc) => {
+    const name = foldLocationLabel(loc.name);
+    const code = foldLocationLabel(loc.code);
+    return name === folded || code === folded;
+  });
+}
+
 /**
- * Ubicación sugerida para una entrada:
- * 1) donde ya hay más existencia del producto en ese almacén (prioriza físicas)
- * 2) coincidencia con la ubicación de catálogo
- * 3) ubicación genérica de la categoría
+ * Ubicación de una entrada al escanear:
+ * 1) donde el producto ya tiene existencia en ese almacén (prioriza lugares físicos)
+ * 2) la ubicación escrita en la ficha, si coincide con una del almacén
+ * Si no hay ninguna, no inventa una genérica: el usuario escribe la nueva.
  */
-export async function resolveEntryLocationId(input: {
+export async function suggestEntryLocation(input: {
   productId: string;
   warehouseId: string;
   locations: WarehouseLocation[];
-  category?: string | null;
   catalogLocation?: string | null;
-}): Promise<string> {
+}): Promise<EntryLocationSuggestion> {
   const { productId, warehouseId, locations } = input;
-  if (!warehouseId || locations.length === 0) return "";
+  const catalog = String(input.catalogLocation ?? "").trim();
+  if (!warehouseId || locations.length === 0) {
+    return { locationId: "", pendingName: catalog };
+  }
 
   try {
     const { data, error } = await db
@@ -202,35 +224,27 @@ export async function resolveEntryLocationId(input: {
           (a, b) =>
             Number(a.generic) - Number(b.generic) || b.qty - a.qty
         );
-      if (ranked[0]) return ranked[0].locationId;
+      if (ranked[0]) return { locationId: ranked[0].locationId, pendingName: "" };
     }
   } catch {
-    /* fallback local */
+    /* la ficha sigue pudiendo proponer un nombre */
   }
 
-  const catalog = String(input.catalogLocation ?? "").trim();
-  if (catalog) {
-    const folded = foldLocationLabel(catalog);
-    const match = locations.find(
-      (loc) =>
-        foldLocationLabel(loc.code) === folded ||
-        foldLocationLabel(loc.name) === folded ||
-        foldLocationLabel(loc.name).includes(folded) ||
-        folded.includes(foldLocationLabel(loc.name))
-    );
-    if (match) return match.id;
-  }
+  const match = findLocationByLabel(locations, catalog);
+  if (match) return { locationId: match.id, pendingName: "" };
+  return { locationId: "", pendingName: catalog };
+}
 
-  const categoryCode = categoryLocationCode(input.category);
-  const byCategory = locations.find(
-    (loc) => loc.code.toUpperCase() === categoryCode
-  );
-  if (byCategory) return byCategory.id;
-
-  const physical = locations.find(
-    (loc) => !DEFAULT_LOCATION_CODES.includes(loc.code.toUpperCase())
-  );
-  return physical?.id ?? locations[0]?.id ?? "";
+/** Id de la ubicación ya registrada, o vacío si el usuario debe escribir una. */
+export async function resolveEntryLocationId(input: {
+  productId: string;
+  warehouseId: string;
+  locations: WarehouseLocation[];
+  category?: string | null;
+  catalogLocation?: string | null;
+}): Promise<string> {
+  const suggestion = await suggestEntryLocation(input);
+  return suggestion.locationId;
 }
 
 function locationCode(name: string) {

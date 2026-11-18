@@ -54,8 +54,9 @@ import {
   getProductWarehouseQuantities,
   getWarehouseLocations,
   getWarehouses,
+  findLocationByLabel,
   pickPreferredEntryWarehouse,
-  resolveEntryLocationId,
+  suggestEntryLocation,
   type KardexRow,
   type ProductLot,
   type Warehouse,
@@ -202,8 +203,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [locationId, setLocationId] = useState("");
   const [newLocationName, setNewLocationName] = useState("");
   const [creatingLocation, setCreatingLocation] = useState(false);
-  const [lineCreatingLocationKey, setLineCreatingLocationKey] = useState("");
-  const [lineNewLocationName, setLineNewLocationName] = useState("");
+  const [locationDrafts, setLocationDrafts] = useState<Record<string, string>>({});
   const locationAutoKeyRef = useRef("");
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState("");
@@ -469,6 +469,29 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 .join(", ")}). Confirma el correcto.`
             : ` · ${result.matches.length} coincidencias (se eligió la más probable)`
           : "";
+      const suggestion =
+        mode === "entrada" && warehouseId
+          ? await suggestEntryLocation({
+              productId: local.id,
+              warehouseId,
+              locations,
+              catalogLocation: local.location,
+            })
+          : { locationId: "", pendingName: "" };
+      const registeredName = suggestion.locationId
+        ? locations.find((row) => row.id === suggestion.locationId)?.name ?? ""
+        : "";
+      if (mode === "entrada") {
+        if (suggestion.locationId) {
+          setLocationId(suggestion.locationId);
+          setNewLocationName("");
+        } else if (suggestion.pendingName) {
+          setLocationId(NEW_LOCATION);
+          setNewLocationName(suggestion.pendingName);
+        } else {
+          setLocationId("");
+        }
+      }
 
       if (autoAddOnScan && needsModelConfirm) {
         setItemId(local.id);
@@ -514,29 +537,30 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           window.setTimeout(() => lotRef.current?.focus(), 50);
           return;
         }
-        const resolvedLocation =
-          mode === "entrada" && warehouseId
-            ? await resolveEntryLocationId({
-                productId: local.id,
-                warehouseId,
-                locations,
-                category: local.category,
-                catalogLocation: local.location,
-              })
-            : locationId;
         const next = lineFromProduct(local, {
           quantity: isEquip ? 1 : qty,
           lotNumber: isEquip ? "" : lot,
           expiryDate: isEquip ? "" : expiry,
           manufacturedAt: manufactured,
           serialNumber: serial,
-          locationId: resolvedLocation || locationId,
+          locationId: suggestion.locationId,
           partNumber: partRef,
         });
         setLines((current) => mergeMovementLine(current, next));
+        if (!suggestion.locationId) {
+          setLocationDrafts((current) => ({
+            ...current,
+            [next.key]: suggestion.pendingName,
+          }));
+        }
         clearDraft();
+        const placeHint = registeredName
+          ? ` Ubicación ${registeredName}.`
+          : suggestion.pendingName
+            ? ` Confirma o escribe la ubicación «${suggestion.pendingName}».`
+            : " Escribe la ubicación en la línea.";
         setScanHint(
-          `Agregado: ${partRef ? `ref. ${partRef} · ` : ""}${local.sku}.${ambiguous} Escanea el siguiente o confirma la lista.`
+          `Agregado: ${partRef ? `ref. ${partRef} · ` : ""}${local.sku}.${ambiguous}${placeHint} Escanea el siguiente o confirma la lista.`
         );
         setError("");
         setMessage("");
@@ -584,7 +608,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       mode,
       autoAddOnScan,
       clearDraft,
-      locationId,
       warehouseId,
       locations,
     ]
@@ -694,16 +717,16 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
   const resolveLocationForProduct = useCallback(
     async (product: InventoryItem) => {
-      if (!warehouseId || locations.length === 0) return locationId || "";
-      return resolveEntryLocationId({
+      if (!warehouseId || locations.length === 0) return "";
+      const suggestion = await suggestEntryLocation({
         productId: product.id,
         warehouseId,
         locations,
-        category: product.category,
         catalogLocation: product.location,
       });
+      return suggestion.locationId;
     },
-    [warehouseId, locations, locationId]
+    [warehouseId, locations]
   );
 
   useEffect(() => {
@@ -714,20 +737,25 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     let cancelled = false;
     void (async () => {
       if (selected) {
-        const next = await resolveEntryLocationId({
+        const suggestion = await suggestEntryLocation({
           productId: selected.id,
           warehouseId,
           locations,
-          category: selected.category,
           catalogLocation: selected.location,
         });
-        if (!cancelled && next) setLocationId(next);
+        if (cancelled) return;
+        if (suggestion.locationId) {
+          setLocationId(suggestion.locationId);
+          setNewLocationName("");
+        } else {
+          setLocationId(suggestion.pendingName ? NEW_LOCATION : "");
+          setNewLocationName(suggestion.pendingName);
+        }
         return;
       }
       if (!cancelled) {
-        setLocationId(
-          physicalLocations[0]?.id || genericLocations[0]?.id || ""
-        );
+        setLocationId("");
+        setNewLocationName("");
       }
     })();
     return () => {
@@ -739,8 +767,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     itemId,
     selected,
     locations,
-    physicalLocations,
-    genericLocations,
   ]);
 
   async function handleCreateLocation(name: string, applyToLineKey?: string) {
@@ -752,10 +778,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setCreatingLocation(true);
     setError("");
     try {
-      const created = await createWarehouseLocation(warehouseId, trimmed);
-      setLocations((current) =>
-        [...current, created].sort((a, b) => a.name.localeCompare(b.name, "es"))
-      );
+      const existing = findLocationByLabel(locations, trimmed);
+      const created =
+        existing ?? (await createWarehouseLocation(warehouseId, trimmed));
+      if (!existing) {
+        setLocations((current) =>
+          [...current, created].sort((a, b) => a.name.localeCompare(b.name, "es"))
+        );
+      }
       setLocationId(created.id);
       setNewLocationName("");
       if (applyToLineKey) {
@@ -766,8 +796,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               : line
           )
         );
-        setLineCreatingLocationKey("");
-        setLineNewLocationName("");
+        setLocationDrafts((current) => ({ ...current, [applyToLineKey]: "" }));
       } else {
         setLines((current) =>
           current.map((line) =>
@@ -1361,8 +1390,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       ) : null}
                     </select>
                     <span className="block text-xs text-muted-foreground">
-                      Se toma sola si el producto ya tiene ubicación en este
-                      almacén; si no, elige o crea una.
+                      Al escanear se pone la ubicación que el producto ya
+                      tiene. Si no tiene, escríbela en la línea.
                     </span>
                   </label>
                 </div>
@@ -1822,20 +1851,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                             <td className="px-3 py-2 align-middle">
                               <div className="space-y-1">
                                 <select
-                                  value={
-                                    lineCreatingLocationKey === line.key
-                                      ? NEW_LOCATION
-                                      : line.locationId
-                                  }
+                                  value={line.locationId}
                                   disabled={!canWrite || submitting || !warehouseId}
                                   onChange={(event) => {
                                     const nextLocationId = event.target.value;
-                                    if (nextLocationId === NEW_LOCATION) {
-                                      setLineCreatingLocationKey(line.key);
-                                      setLineNewLocationName("");
-                                      return;
-                                    }
-                                    setLineCreatingLocationKey("");
                                     setLines((current) =>
                                       current.map((row) =>
                                         row.key === line.key
@@ -1847,7 +1866,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                   className="h-8 max-w-[12rem] rounded-md border border-input bg-background px-2 text-xs"
                                   aria-label={`Ubicación ${line.sku}`}
                                 >
-                                  <option value="">Elegir…</option>
+                                  <option value="">
+                                    {line.locationId
+                                      ? "Elegir…"
+                                      : "Sin ubicación registrada"}
+                                  </option>
                                   {physicalLocations.map((location) => (
                                     <option key={location.id} value={location.id}>
                                       {location.name}
@@ -1858,26 +1881,32 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                       {location.name}
                                     </option>
                                   ))}
-                                  <option value={NEW_LOCATION}>+ Nueva…</option>
                                 </select>
-                                {lineCreatingLocationKey === line.key ? (
+                                {mode === "entrada" ? (
                                   <div className="flex max-w-[14rem] items-center gap-1">
                                     <input
-                                      value={lineNewLocationName}
+                                      value={locationDrafts[line.key] ?? ""}
                                       onChange={(event) =>
-                                        setLineNewLocationName(event.target.value)
+                                        setLocationDrafts((current) => ({
+                                          ...current,
+                                          [line.key]: event.target.value,
+                                        }))
                                       }
-                                      placeholder="Nueva ubicación"
+                                      placeholder={
+                                        line.locationId
+                                          ? "Escribir otra ubicación"
+                                          : "Escribe la ubicación"
+                                      }
                                       disabled={!canWrite || creatingLocation}
                                       className="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+                                      aria-label={`Nueva ubicación ${line.sku}`}
                                       onKeyDown={(event) => {
-                                        if (event.key === "Enter") {
-                                          event.preventDefault();
-                                          void handleCreateLocation(
-                                            lineNewLocationName,
-                                            line.key
-                                          );
-                                        }
+                                        if (event.key !== "Enter") return;
+                                        event.preventDefault();
+                                        void handleCreateLocation(
+                                          locationDrafts[line.key] ?? "",
+                                          line.key
+                                        );
                                       }}
                                     />
                                     <Button
@@ -1888,16 +1917,16 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                       disabled={
                                         !canWrite ||
                                         creatingLocation ||
-                                        !lineNewLocationName.trim()
+                                        !(locationDrafts[line.key] ?? "").trim()
                                       }
                                       onClick={() =>
                                         void handleCreateLocation(
-                                          lineNewLocationName,
+                                          locationDrafts[line.key] ?? "",
                                           line.key
                                         )
                                       }
                                     >
-                                      OK
+                                      Usar
                                     </Button>
                                   </div>
                                 ) : null}
