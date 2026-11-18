@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  Camera,
   History,
   ImagePlus,
   Plus,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CameraButton } from "@/components/media/camera-capture";
+import { CameraCodeReader } from "@/components/scan/camera-code-reader";
 import { ImageLightbox, type LightboxImage } from "@/components/ui/image-lightbox";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { attachEntryEvidence } from "@/lib/warehouse/entry-evidence";
@@ -59,7 +61,8 @@ import {
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { parseSerialNumbers } from "@/lib/inventory/serials";
-import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
+import { resolveScan, type ScanMatch, type ScanResult } from "@/lib/scan/lookup";
+import { dispatchScanResolved } from "@/lib/scan/search-fields";
 import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import {
   isEquipmentItem,
@@ -328,6 +331,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [scanHint, setScanHint] = useState("");
   /** Al escanear, agrega directo a la lista multi-producto. */
   const [autoAddOnScan, setAutoAddOnScan] = useState(true);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraKey, setCameraKey] = useState(0);
+  const [cameraBusy, setCameraBusy] = useState(false);
+  const lastCameraScanRef = useRef({ code: "", at: 0 });
   const [lines, setLines] = useState<StockMovementLine[]>([]);
   /** Historial oculto por defecto para dejar espacio al formulario. */
   const [showHistory, setShowHistory] = useState(false);
@@ -336,6 +343,44 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const serialInputRef = useRef<HTMLInputElement>(null);
   const serialAreaRef = useRef<HTMLTextAreaElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
+
+  const handleCameraCode = useCallback(
+    async (raw: string) => {
+      const code = raw.trim();
+      if (!code || cameraBusy) return;
+      const now = Date.now();
+      if (
+        code === lastCameraScanRef.current.code &&
+        now - lastCameraScanRef.current.at < 2500
+      ) {
+        setCameraKey((key) => key + 1);
+        return;
+      }
+      lastCameraScanRef.current = { code, at: now };
+      setCameraBusy(true);
+      setScanHint("Leyendo código con la cámara…");
+      try {
+        const result = await resolveScan(code);
+        dispatchScanResolved(code, result);
+        if (!result.matches.length) {
+          setScanHint(
+            `Código leído (${code}): sin producto vinculado. Vincula el código o elige el artículo.`
+          );
+        }
+      } catch (reason) {
+        setScanHint(
+          reason instanceof Error
+            ? reason.message
+            : "No se pudo resolver el código de la cámara."
+        );
+      } finally {
+        setCameraBusy(false);
+        // Remonta el lector para poder escanear el siguiente producto.
+        setCameraKey((key) => key + 1);
+      }
+    },
+    [cameraBusy]
+  );
 
   const clearDraft = useCallback(() => {
     setItemId("");
@@ -961,31 +1006,60 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             ) : null}
           </div>
 
-          <div className="mt-4 flex flex-col gap-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-2 text-sm">
-              <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
-              <div>
-                <p className="font-medium text-foreground">
-                  Lector listo
-                  {lines.length > 0
-                    ? ` · ${lines.length} en la lista`
-                    : ""}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {scanHint ||
-                    "Escanea para ir agregando productos. Si es GS1, lote/serie/caducidad se cargan solos."}
-                </p>
+          <div className="mt-4 space-y-2 rounded-xl border border-[#00BFFF]/35 bg-[#00BFFF]/5 px-3 py-2.5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2 text-sm">
+                <ScanBarcode className="mt-0.5 size-4 shrink-0 text-[#00BFFF]" />
+                <div>
+                  <p className="font-medium text-foreground">
+                    Lector listo
+                    {lines.length > 0
+                      ? ` · ${lines.length} en la lista`
+                      : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {scanHint ||
+                      "Usa el lector HID o la cámara del celular. Si es GS1, lote/serie/caducidad se cargan solos."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant={cameraOpen ? "secondary" : "default"}
+                  size="sm"
+                  disabled={!canWrite}
+                  onClick={() => setCameraOpen((open) => !open)}
+                  className="touch-target h-10 gap-1.5"
+                >
+                  <Camera className="size-4" />
+                  {cameraOpen ? "Cerrar cámara" : "Escanear con cámara"}
+                </Button>
+                <label className="inline-flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={autoAddOnScan}
+                    onChange={(event) => setAutoAddOnScan(event.target.checked)}
+                    className="size-3.5 rounded border-input"
+                  />
+                  Al escanear, agregar a la lista
+                </label>
               </div>
             </div>
-            <label className="inline-flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={autoAddOnScan}
-                onChange={(event) => setAutoAddOnScan(event.target.checked)}
-                className="size-3.5 rounded border-input"
-              />
-              Al escanear, agregar a la lista
-            </label>
+            {cameraOpen ? (
+              <div className="rounded-xl border border-border bg-background p-2">
+                <CameraCodeReader key={cameraKey} onDetected={(code) => void handleCameraCode(code)} />
+                {cameraBusy ? (
+                  <p className="mt-2 text-xs font-medium text-[#00BFFF]">
+                    Procesando código…
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Apunta al código de barras o DataMatrix; se agrega a la lista automáticamente.
+                  </p>
+                )}
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-4">
