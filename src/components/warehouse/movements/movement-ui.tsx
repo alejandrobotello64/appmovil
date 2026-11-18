@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Search, X } from "lucide-react";
+import { ScanCameraButton } from "@/components/scan/scan-camera-button";
 import { daysUntilExpiry } from "@/lib/inventory/expiry";
 import { INVENTORY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
 import { matchesSearch } from "@/lib/search";
@@ -214,8 +215,9 @@ export function ProductPicker({
           }}
           placeholder={placeholder}
           data-scan-search="true"
-          className={cn(inputClass, "pl-9")}
+          className={cn(inputClass, "pl-9 pr-11")}
         />
+        <ScanCameraButton disabled={disabled} />
         {query.trim() ? (
           <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg">
           {matches.length === 0 ? (

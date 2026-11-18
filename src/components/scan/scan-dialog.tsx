@@ -22,7 +22,12 @@ import { useScanBurstInput, useScanTarget } from "@/lib/scan/use-barcode-scanner
 import { useScanner } from "@/components/scan/scan-provider";
 import { SERIAL_BAUD_RATES } from "@/lib/scan/serial-scanner";
 
-export type ScanRequest = { code: string; nonce: number };
+export type ScanRequest = {
+  code?: string;
+  nonce: number;
+  /** Abrir el diálogo con la cámara lista (móvil / botón cámara). */
+  preferCamera?: boolean;
+};
 
 function errorText(reason: unknown, fallback: string) {
   return reason instanceof Error ? reason.message : fallback;
@@ -145,7 +150,7 @@ type LookupOutcome = { id: number; result: ScanResult | null; error: string };
 
 export function ScanDialog({ request, onClose }: ScanDialogProps) {
   const [manual, setManual] = useState("");
-  const [camera, setCamera] = useState(false);
+  const [camera, setCamera] = useState(Boolean(request?.preferCamera && !request?.code));
   const [query, setQuery] = useState<LookupQuery | null>(
     request?.code ? { code: request.code, id: 1 } : null
   );
@@ -167,6 +172,7 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
   if (request !== seenRequest) {
     setSeenRequest(request);
     if (request?.code) startLookup(request.code);
+    else if (request?.preferCamera) setCamera(true);
   }
 
   useEffect(() => {

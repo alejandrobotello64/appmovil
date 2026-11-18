@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { BookmarkPlus, CheckCircle2, Plus, Search, Unlock, XCircle } from "lucide-react";
+import { ScanCameraButton } from "@/components/scan/scan-camera-button";
 import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { Button } from "@/components/ui/button";
 import {
@@ -606,10 +607,13 @@ export function HoldsPanel() {
                 Línea
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {scanHint ||
-                "Escanea un código para llenar la siguiente línea vacía (o agregar una nueva)."}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+                {scanHint ||
+                  "Escanea un código (lector o cámara) para llenar la siguiente línea vacía."}
+              </p>
+              <ScanCameraButton className="static top-auto right-auto size-9 translate-y-0" />
+            </div>
             {lines.map((line, index) => {
               const filteredItems = itemsForLine(line);
               return (

@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { ScanCameraButton } from "@/components/scan/scan-camera-button";
 import { ServiceStockBadge } from "@/components/service-orders/service-catalog-picker";
 import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { INVENTORY_CATEGORIES, type InventoryItem } from "@/lib/inventory/types";
+import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { matchesSearch } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
@@ -81,6 +84,19 @@ export function QuoteProductSearch({
     setOpen(false);
   }
 
+  const onScan = useCallback(
+    ({ match }: { match: ScanMatch | null; result: ScanResult }) => {
+      if (disabled || selectedId || !match) return;
+      const local = items.find((item) => item.id === match.item.id) ?? match.item;
+      if (!local.isActive) return;
+      onSelect(local);
+      setQuery("");
+      setOpen(false);
+    },
+    [disabled, selectedId, items, onSelect]
+  );
+  useScanResolved(onScan, { enabled: !disabled && !selectedId });
+
   return (
     <div ref={rootRef} className="space-y-1.5">
       <span className="text-xs text-muted-foreground">Producto</span>
@@ -132,8 +148,9 @@ export function QuoteProductSearch({
             placeholder="SKU, nombre, marca o n.º de parte"
             data-scan-search="true"
             aria-label="Buscar producto del catálogo"
-            className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="h-10 w-full rounded-lg border border-input bg-background pr-11 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           />
+          <ScanCameraButton disabled={disabled} />
           {open && query.trim() ? (
             <ul className="absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-border bg-card shadow-lg">
               {matches.length === 0 ? (

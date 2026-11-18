@@ -13,6 +13,7 @@ import {
 import { usePathname } from "next/navigation";
 import { ScanBarcode } from "lucide-react";
 import { ScanDialog, type ScanRequest } from "@/components/scan/scan-dialog";
+import { prefersCameraScan } from "@/lib/scan/prefer-camera";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { CATALOG_MODULES } from "@/lib/auth/permissions";
 import { SCAN_TARGET_EVENT, useBarcodeScanner } from "@/lib/scan/use-barcode-scanner";
@@ -31,9 +32,15 @@ import {
 } from "@/lib/scan/serial-scanner";
 import { cn } from "@/lib/utils";
 
+export type OpenScannerOptions = {
+  code?: string;
+  /** Abrir ya con la cámara del celular (por defecto en pantallas táctiles). */
+  camera?: boolean;
+};
+
 type ScanContextValue = {
   allowed: boolean;
-  openScanner: (code?: string) => void;
+  openScanner: (input?: string | OpenScannerOptions) => void;
   serial: SerialScannerState;
   connectSerial: (options?: { replace?: boolean }) => Promise<void>;
   disconnectSerial: () => Promise<void>;
@@ -62,18 +69,29 @@ export function ScanProvider({ children }: { children: ReactNode }) {
     getServerSerialScannerState
   );
 
-  const openScanner = useCallback((code?: string) => {
-    setRequest((current) =>
-      code ? { code, nonce: (current?.nonce ?? 0) + 1 } : null
-    );
+  const openScanner = useCallback((input?: string | OpenScannerOptions) => {
+    const opts: OpenScannerOptions =
+      typeof input === "string" ? { code: input } : (input ?? {});
+    const code = opts.code?.trim() || undefined;
+    const preferCamera = opts.camera ?? (!code && prefersCameraScan());
+    setRequest((current) => ({
+      code,
+      preferCamera,
+      nonce: (current?.nonce ?? 0) + 1,
+    }));
     setOpen(true);
   }, []);
 
   const pathname = usePathname();
-  // Almacén y Biomédica: sin foco, la lectura va al buscador visible de la pantalla/modal.
+  // Sin foco, la lectura va al buscador visible de la pantalla/modal en estos módulos.
   const pageSearchRoutes =
     pathname.startsWith("/dashboard/almacen") ||
-    pathname.startsWith("/dashboard/ordenes-servicio");
+    pathname.startsWith("/dashboard/ordenes-servicio") ||
+    pathname.startsWith("/dashboard/inventario") ||
+    pathname.startsWith("/dashboard/herramientas") ||
+    pathname.startsWith("/dashboard/compras") ||
+    pathname.startsWith("/dashboard/ventas") ||
+    pathname.startsWith("/dashboard/cotizaciones");
 
   /**
    * Campo enfocado que procesa la lectura; en Almacén/Biomédica, el buscador de la
@@ -148,7 +166,7 @@ export function ScanButton() {
   return (
     <button
       type="button"
-      onClick={() => scanner.openScanner()}
+      onClick={() => scanner.openScanner({ camera: prefersCameraScan() })}
       className="touch-target relative inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
       aria-label="Escanear código de producto"
       title={connected ? "Lector conectado · Escanear código" : "Escanear código (lector o cámara)"}

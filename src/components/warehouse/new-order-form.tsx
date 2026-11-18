@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useState, type FormEvent } from "react";
 import { Minus, PackagePlus, Plus, Search, Trash2 } from "lucide-react";
+import { ScanCameraButton } from "@/components/scan/scan-camera-button";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
@@ -13,6 +14,8 @@ import {
   type InventoryItem,
   type SupplyCategoryId,
 } from "@/lib/inventory/types";
+import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import type { Supplier } from "@/lib/suppliers/types";
 import { createPurchaseOrderFromRequest } from "@/lib/compras/storage";
 import { createPurchaseOrder } from "@/lib/warehouse/orders";
@@ -187,6 +190,22 @@ export function NewOrderForm({
     setHint(`Agregado ${product.sku} · ${qty} ${product.unit}`);
     setError("");
   }
+
+  const onOrderScan = useCallback(
+    ({ match }: { match: ScanMatch | null; result: ScanResult }) => {
+      if (!match) {
+        setHint("Código sin producto vinculado.");
+        return;
+      }
+      const local = products.find((item) => item.id === match.item.id) ?? match.item;
+      addProduct(local);
+      setQuery("");
+    },
+    // quantity/products leídos al momento del escaneo
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [products, quantity, suppliers]
+  );
+  useScanResolved(onOrderScan);
 
   function updateLine(itemId: string, patch: Partial<DraftLine>) {
     setLines((current) =>
@@ -417,7 +436,7 @@ export function NewOrderForm({
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="SKU, nombre o marca"
                     data-scan-search="true"
-                    className={`${fieldClass} pl-10`}
+                    className={`${fieldClass} pl-10 pr-11`}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {
                         event.preventDefault();
@@ -425,6 +444,7 @@ export function NewOrderForm({
                       }
                     }}
                   />
+                  <ScanCameraButton />
                 </span>
               </label>
               <label className="space-y-1.5">

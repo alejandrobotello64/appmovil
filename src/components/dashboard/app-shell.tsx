@@ -16,6 +16,7 @@ import {
   type SessionData,
 } from "@/lib/auth";
 import { GlobalSearch } from "@/components/dashboard/global-search";
+import { ScanCameraButton } from "@/components/scan/scan-camera-button";
 import { ScanButton, ScanProvider } from "@/components/scan/scan-provider";
 
 type AppShellProps = {
@@ -142,7 +143,8 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
         </main>
       </div>
 
-      <div className="pointer-events-none fixed right-3 bottom-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] z-40 md:hidden">
+      <div className="pointer-events-none fixed right-3 bottom-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] z-40 flex flex-col items-end gap-2 md:hidden">
+        <ScanCameraButton size="fab" className="pointer-events-auto" title="Escanear con la cámara" />
         <ZoomControls
           showPercent="always"
           className="pointer-events-auto shadow-lg"

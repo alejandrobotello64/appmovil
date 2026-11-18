@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   Truck,
 } from "lucide-react";
+import { ScanCameraButton } from "@/components/scan/scan-camera-button";
 import { Button } from "@/components/ui/button";
 import { ReadOnlyBanner } from "@/components/warehouse/read-only-banner";
 import { Notice, StatCard, fieldClass, formatDate, primaryButtonClass } from "@/components/tools/tools-shared";
@@ -468,12 +469,13 @@ export function PurchaseRequestsPanel() {
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
-            className={cn(fieldClass, "pl-9")}
+            className={cn(fieldClass, "pl-9 pr-11")}
             placeholder="Folio, OS, cliente, material, proveedor…"
             data-scan-search="true"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <ScanCameraButton />
         </div>
         <select className={fieldClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}>
           <option value="abiertas">Abiertas</option>

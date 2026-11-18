@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   BellOff,
@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
 import { CameraButton } from "@/components/media/camera-capture";
+import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
+import { useScanResolved } from "@/lib/scan/use-scan-resolved";
 import { printProductLabels } from "@/lib/scan/label";
 import { catalogModelLabel } from "@/lib/inventory/product-label";
 import { InventoryStats } from "@/components/inventory/inventory-stats";
@@ -253,6 +255,18 @@ export function InventoryPanel({
   const selectedWarehouse = warehouses.find((w) => w.id === warehouseFilter);
   const trackingMode: TrackingDateMode = isEquipment ? "manufacture" : "both";
   const [search, setSearch] = useState(initialSearch);
+  const onInventoryScan = useCallback(
+    ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
+      const term =
+        match?.item.sku ||
+        result.scan.gs1?.gtin ||
+        result.scan.code ||
+        "";
+      if (term) setSearch(term);
+    },
+    []
+  );
+  useScanResolved(onInventoryScan);
   const [statusFilter, setStatusFilter] = useState<
     StockStatus | "all" | "sin_alerta"
   >("all");
@@ -1004,6 +1018,7 @@ export function InventoryPanel({
               <SearchInput
                 value={search}
                 onChange={setSearch}
+                scanSearch="true"
                 placeholder={
                   isCatalog
                     ? "Buscar por código, nombre, n.º de parte, marca o modelo..."
