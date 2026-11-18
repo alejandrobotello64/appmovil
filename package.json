@@ -1,6 +1,6 @@
 {
   "name": "appempresacelular",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0 --port 43145",
@@ -10,6 +10,7 @@
     "db:local": "bash scripts/setup-local-db.sh",
     "db:sync-cloud": "python3 scripts/sync-from-cloud.py",
     "db:push-cloud-cedros": "python3 scripts/push-cedros-to-cloud.py",
+    "db:masimo-equipos": "python3 scripts/import-masimo-equipos.py data/INVENTARIO_MASIMO_18022026_EQUIPOS.xlsx --apply",
     "db:cedros-stock": "node scripts/apply-cedros-stock.mjs",
     "db:alta-imss-veracruz": "node scripts/alta-hospitales-imss-veracruz.mjs",
     "db:corregir-nombres": "node scripts/corregir-nombres-catalogo.mjs",

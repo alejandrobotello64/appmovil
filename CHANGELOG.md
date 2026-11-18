@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.2
+
+- Se cargaron al almacén de Villahermosa las series del inventario Masimo del 18 de febrero de 2026.
+
 ## 1.1.1
 
 - Al escanear una entrada se pone la ubicación registrada del producto, o se escribe una nueva en la línea.
