@@ -1449,9 +1449,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   </div>
                 ) : (
                   <div className="max-h-[36rem] overflow-auto rounded-lg border border-border bg-background">
-                    <table className="w-full min-w-[28rem] border-collapse text-sm">
+                    <table className="w-full min-w-[32rem] border-collapse text-sm">
                       <thead className="sticky top-0 z-10">
                         <tr className="border-b border-border bg-muted/60 text-left text-xs text-muted-foreground">
+                          <th className="px-3 py-2 font-medium">Ref.</th>
                           <th className="px-3 py-2 font-medium">Producto</th>
                           <th className="px-3 py-2 font-medium">Detalle</th>
                           <th className="px-3 py-2 font-medium">Ubicación</th>
@@ -1467,11 +1468,19 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                             key={line.key}
                             className="border-b border-border last:border-0"
                           >
+                            <td className="max-w-[9rem] px-3 py-2 align-middle">
+                              <span className="block font-mono text-xs font-semibold tracking-tight text-foreground">
+                                {line.partNumber.trim() || "—"}
+                              </span>
+                              {line.model.trim() ? (
+                                <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                                  {catalogModelLabel(line.model)}
+                                </span>
+                              ) : null}
+                            </td>
                             <td className="max-w-[10rem] px-3 py-2 align-middle">
                               <span className="line-clamp-2 font-medium">
-                                {line.partNumber.trim()
-                                  ? `${line.name} · n.º ${line.partNumber.trim()}`
-                                  : line.name}
+                                {line.name}
                               </span>
                               <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">
                                 {line.sku}
