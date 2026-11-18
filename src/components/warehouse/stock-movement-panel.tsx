@@ -379,6 +379,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           : "");
       const expiry = scan.gs1?.expiry || match.expiryDate || "";
       const manufactured = scan.gs1?.productionDate || "";
+      const partRef = (
+        local.partNumber ||
+        scan.gs1?.ais?.["240"] ||
+        scan.gs1?.ais?.["241"] ||
+        ""
+      ).trim();
       const qtyRaw = scan.gs1?.quantity;
       let qty = 1;
       if (qtyRaw && /^\d+(\.\d+)?$/.test(qtyRaw)) {
@@ -453,11 +459,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           manufacturedAt: manufactured,
           serialNumber: serial,
           locationId,
+          partNumber: partRef,
         });
         setLines((current) => mergeMovementLine(current, next));
         clearDraft();
         setScanHint(
-          `Agregado: ${local.sku}.${ambiguous} Escanea el siguiente o confirma la lista.`
+          `Agregado: ${partRef ? `ref. ${partRef} · ` : ""}${local.sku}.${ambiguous} Escanea el siguiente o confirma la lista.`
         );
         setError("");
         setMessage("");
@@ -1452,7 +1459,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     <table className="w-full min-w-[32rem] border-collapse text-sm">
                       <thead className="sticky top-0 z-10">
                         <tr className="border-b border-border bg-muted/60 text-left text-xs text-muted-foreground">
-                          <th className="px-3 py-2 font-medium">Ref.</th>
+                          <th className="px-3 py-2 font-medium">Referencia</th>
                           <th className="px-3 py-2 font-medium">Producto</th>
                           <th className="px-3 py-2 font-medium">Detalle</th>
                           <th className="px-3 py-2 font-medium">Ubicación</th>
@@ -1468,22 +1475,25 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                             key={line.key}
                             className="border-b border-border last:border-0"
                           >
-                            <td className="max-w-[9rem] px-3 py-2 align-middle">
-                              <span className="block font-mono text-xs font-semibold tracking-tight text-foreground">
-                                {line.partNumber.trim() || "—"}
+                            <td className="max-w-[10rem] px-3 py-2 align-middle">
+                              <span className="inline-flex max-w-full items-center rounded-md bg-[#00BFFF]/12 px-2 py-1 font-mono text-sm font-bold tracking-tight text-foreground ring-1 ring-[#00BFFF]/25">
+                                {line.partNumber.trim() || "Sin ref."}
                               </span>
                               {line.model.trim() ? (
-                                <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                                <span className="mt-1 block text-[11px] text-muted-foreground">
                                   {catalogModelLabel(line.model)}
                                 </span>
                               ) : null}
                             </td>
-                            <td className="max-w-[10rem] px-3 py-2 align-middle">
+                            <td className="max-w-[11rem] px-3 py-2 align-middle">
                               <span className="line-clamp-2 font-medium">
                                 {line.name}
                               </span>
                               <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">
                                 {line.sku}
+                                {line.partNumber.trim()
+                                  ? ` · ref. ${line.partNumber.trim()}`
+                                  : ""}
                               </span>
                             </td>
                             <td className="px-3 py-2 align-middle text-xs text-muted-foreground">

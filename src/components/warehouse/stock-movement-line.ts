@@ -35,6 +35,8 @@ export function lineFromProduct(
       | "manufacturedAt"
       | "serialNumber"
       | "locationId"
+      | "partNumber"
+      | "model"
     >
   > = {}
 ): StockMovementLine {
@@ -44,8 +46,8 @@ export function lineFromProduct(
     productId: item.id,
     sku: item.sku,
     name: item.name,
-    partNumber: item.partNumber ?? "",
-    model: item.model ?? "",
+    partNumber: (extras.partNumber ?? item.partNumber ?? "").trim(),
+    model: (extras.model ?? item.model ?? "").trim(),
     unit: item.unit || "pza",
     quantity: extras.quantity && extras.quantity > 0 ? extras.quantity : 1,
     lotNumber: extras.lotNumber ?? "",
@@ -99,6 +101,7 @@ export function mergeMovementLine(
           ...line,
           quantity: line.quantity + next.quantity,
           // Conservar metadatos del primer escaneo; no pisar con el último.
+          partNumber: line.partNumber || next.partNumber,
           lotNumber: line.lotNumber || next.lotNumber,
           expiryDate: line.expiryDate || next.expiryDate,
           manufacturedAt: line.manufacturedAt || next.manufacturedAt,
