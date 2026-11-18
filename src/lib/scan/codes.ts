@@ -79,7 +79,10 @@ function gs1Date(value: string) {
   let dd = Number(value.slice(4, 6));
   if (mm < 1 || mm > 12) return undefined;
   const year = yy >= 51 ? 1900 + yy : 2000 + yy;
-  if (dd === 0) dd = new Date(year, mm, 0).getDate();
+  const daysInMonth = new Date(year, mm, 0).getDate();
+  // dd=00 = último día del mes (GS1); rechazar días imposibles (evita 17 dentro de refs).
+  if (dd === 0) dd = daysInMonth;
+  if (dd < 1 || dd > daysInMonth) return undefined;
   return `${year}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
 }
 
@@ -99,6 +102,56 @@ function parseParenthesized(data: string) {
     ais[match[1]] = match[2].replace(new RegExp(GS, "g"), "").trim();
   }
   return Object.keys(ais).length ? ais : null;
+}
+
+/**
+ * Sin FNC1, los AI de longitud variable (p. ej. 240 = ref. de catálogo) se comen
+ * lote (10) y fechas (11/17). Busca el siguiente AI plausible dentro del máximo.
+ */
+function nextAiBoundary(data: string, start: number, max: number, currentAi: string) {
+  const gsIndex = data.indexOf(GS, start);
+  let hardEnd = gsIndex === -1 ? data.length : gsIndex;
+  if (hardEnd - start > max) hardEnd = start + max;
+
+  // 10/21 suelen ir al final: no partir salvo FNC1 / máximo.
+  const lookAhead =
+    currentAi === "240" ||
+    currentAi === "241" ||
+    currentAi === "250" ||
+    currentAi === "400" ||
+    currentAi === "22";
+  if (!lookAhead) return hardEnd;
+
+  // Refs de catálogo (p. ej. 2870173) suelen tener ≥5 chars; evita cortar a mitad del n.º.
+  const minLen = currentAi === "240" || currentAi === "241" ? 5 : 1;
+  for (let i = start + minLen; i < hardEnd; i++) {
+    const two = data.slice(i, i + 2);
+    const three = data.slice(i, i + 3);
+
+    if (["11", "12", "13", "15", "16", "17"].includes(two)) {
+      const stamp = data.slice(i + 2, i + 8);
+      if (/^\d{6}$/.test(stamp) && gs1Date(stamp)) {
+        // Tras la fecha debe seguir otro AI, fin de cadena o FNC1 — no basura.
+        const after = i + 8;
+        if (
+          after >= data.length ||
+          data[after] === GS ||
+          aiAt(data, after) !== null
+        ) {
+          return i;
+        }
+      }
+    }
+    if (two === "10" && /^[A-Za-z0-9]/.test(data[i + 2] ?? "")) return i;
+    if (two === "21" && data.length - (i + 2) >= 4) return i;
+    if (
+      (three === "240" || three === "241" || three === "250" || three === "400") &&
+      data.length - (i + 3) >= 3
+    ) {
+      return i;
+    }
+  }
+  return hardEnd;
 }
 
 function parseConcatenated(data: string) {
@@ -121,9 +174,8 @@ function parseConcatenated(data: string) {
       continue;
     }
     const max = VARIABLE_LENGTH[ai];
-    const gsIndex = data.indexOf(GS, index);
-    let end = gsIndex === -1 ? data.length : gsIndex;
-    if (end - index > max) end = index + max;
+    const end = nextAiBoundary(data, index, max, ai);
+    if (end <= index) return Object.keys(ais).length ? ais : null;
     ais[ai] = data.slice(index, end);
     index = end;
   }
@@ -192,7 +244,7 @@ export function parseGs1(raw: string): Gs1Data | null {
   }
   if (!ais) return null;
   const gtin = ais["01"] ?? ais["02"];
-  if (!gtin && !ais["10"] && !ais["21"] && !ais["241"]) return null;
+  if (!gtin && !ais["10"] && !ais["21"] && !ais["240"] && !ais["241"]) return null;
   return {
     gtin,
     lot: ais["10"],
@@ -234,8 +286,10 @@ export function parseScan(raw: string): ParsedScan {
     }
   };
   if (gs1?.gtin) gtinVariants(gs1.gtin).forEach(add);
-  // Serie y n.º de parte embebidos (Dräger Vista / Hill-Rom HR…)
+  // Serie y n.º de parte embebidos (Dräger Vista / AI 240/241 / Hill-Rom HR…)
   add(gs1?.serial);
+  add(gs1?.lot);
+  add(gs1?.ais?.["240"]);
   add(gs1?.ais?.["241"]);
   add(code);
   if (code.startsWith("21") && code.length > 6) add(code.slice(2));
