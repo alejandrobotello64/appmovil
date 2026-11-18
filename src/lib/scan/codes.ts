@@ -46,6 +46,17 @@ const VARIABLE_LENGTH: Record<string, number> = {
   "241": 30,
   "250": 30,
   "400": 30,
+  // Uso interno del fabricante (Dräger AI 93 = REF-rev, etc.)
+  "90": 30,
+  "91": 30,
+  "92": 30,
+  "93": 30,
+  "94": 30,
+  "95": 30,
+  "96": 30,
+  "97": 30,
+  "98": 30,
+  "99": 30,
 };
 
 function cleanRaw(raw: string) {
@@ -104,19 +115,64 @@ function parseParenthesized(data: string) {
   return Object.keys(ais).length ? ais : null;
 }
 
+/** Tras una fecha GS1: fin, FNC1, AI conocido o AI interno 9x (p. ej. Dräger 93). */
+function looksLikeAiAfterDate(data: string, after: number) {
+  if (after >= data.length || data[after] === GS) return true;
+  if (aiAt(data, after) !== null) return true;
+  // AIs de 2 dígitos aún no catalogados: no dejar que el lote se coma la fecha.
+  const nextTwo = data.slice(after, after + 2);
+  return /^\d{2}$/.test(nextTwo) && after + 2 < data.length;
+}
+
 /**
  * Sin FNC1, los AI de longitud variable se comen a los siguientes.
  * - 240/241: se comen 11/17/10
  * - 10 (lote): se come 11/17 si el lote va antes de la fecha en la etiqueta
  * - 21 (serie): puede ir seguido de lote/fecha/ref
+ * Etiqueta Dräger típica: (01)(10)lote-con-guion(11)fab(93)ref-rev
  */
 function nextAiBoundary(data: string, start: number, max: number, currentAi: string) {
   const gsIndex = data.indexOf(GS, start);
   let hardEnd = gsIndex === -1 ? data.length : gsIndex;
   if (hardEnd - start > max) hardEnd = start + max;
 
-  const splitOnDates = ["10", "21", "22", "240", "241", "250", "400"].includes(currentAi);
-  const splitOnLotSerialRef = ["21", "22", "240", "241", "250", "400"].includes(currentAi);
+  const splitOnDates = [
+    "10",
+    "21",
+    "22",
+    "240",
+    "241",
+    "250",
+    "400",
+    "90",
+    "91",
+    "92",
+    "93",
+    "94",
+    "95",
+    "96",
+    "97",
+    "98",
+    "99",
+  ].includes(currentAi);
+  const splitOnLotSerialRef = [
+    "21",
+    "22",
+    "240",
+    "241",
+    "250",
+    "400",
+    "90",
+    "91",
+    "92",
+    "93",
+    "94",
+    "95",
+    "96",
+    "97",
+    "98",
+    "99",
+  ].includes(currentAi);
   if (!splitOnDates && !splitOnLotSerialRef) return hardEnd;
 
   // Refs de catálogo (p. ej. 2870173) suelen tener ≥5 chars; evita cortar a mitad del n.º.
@@ -127,21 +183,14 @@ function nextAiBoundary(data: string, start: number, max: number, currentAi: str
 
     if (splitOnDates && ["11", "12", "13", "15", "16", "17"].includes(two)) {
       const stamp = data.slice(i + 2, i + 8);
-      if (/^\d{6}$/.test(stamp) && gs1Date(stamp)) {
-        // Tras la fecha debe seguir otro AI, fin de cadena o FNC1 — no basura.
-        const after = i + 8;
-        if (
-          after >= data.length ||
-          data[after] === GS ||
-          aiAt(data, after) !== null
-        ) {
-          return i;
-        }
+      if (/^\d{6}$/.test(stamp) && gs1Date(stamp) && looksLikeAiAfterDate(data, i + 8)) {
+        return i;
       }
     }
     if (!splitOnLotSerialRef) continue;
     if (two === "10" && /^[A-Za-z0-9]/.test(data[i + 2] ?? "")) return i;
     if (two === "21" && data.length - (i + 2) >= 4) return i;
+    if (/^9\d$/.test(two) && data.length - (i + 2) >= 3) return i;
     if (
       (three === "240" || three === "241" || three === "250" || three === "400") &&
       data.length - (i + 3) >= 3
@@ -290,11 +339,15 @@ export function parseScan(raw: string): ParsedScan {
     }
   };
   if (gs1?.gtin) gtinVariants(gs1.gtin).forEach(add);
-  // Serie y n.º de parte embebidos (Dräger Vista / AI 240/241 / Hill-Rom HR…)
+  // Serie y n.º de parte embebidos (Dräger Vista / AI 240/241/93 / Hill-Rom HR…)
   add(gs1?.serial);
   add(gs1?.lot);
   add(gs1?.ais?.["240"]);
   add(gs1?.ais?.["241"]);
+  // AI 93 interno Dräger: "2870173-14" → también busca el REF sin revisión.
+  const ai93 = gs1?.ais?.["93"];
+  add(ai93);
+  if (ai93?.includes("-")) add(ai93.split("-")[0]);
   add(code);
   if (code.startsWith("21") && code.length > 6) add(code.slice(2));
   if (/^\d{8,14}$/.test(code)) gtinVariants(code).forEach(add);
