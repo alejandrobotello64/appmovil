@@ -526,15 +526,16 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       const { scan } = result;
       const local = items.find((item) => item.id === match.item.id) ?? match.item;
       // Priorizar GS1 del escaneo actual para no heredar lote/caducidad de otro match.
-      const lot = scan.gs1?.lot || match.lotNumber || "";
+      const lot = (scan.gs1?.lot || match.lotNumber || "").trim();
       const serial =
         scan.gs1?.serial ||
         match.serialNumber ||
         (match.kind === "equipment_serial" || match.kind === "serial"
           ? scan.code
           : "");
-      const expiry = scan.gs1?.expiry || match.expiryDate || "";
-      const manufactured = scan.gs1?.productionDate || "";
+      // Preferir fechas del escaneo actual (GS1 17/15/11/13); si faltan, lote ya conocido en BD.
+      const expiry = (scan.gs1?.expiry || match.expiryDate || "").trim();
+      const manufactured = (scan.gs1?.productionDate || "").trim();
       const partRef = (
         local.partNumber ||
         scan.gs1?.ais?.["240"] ||

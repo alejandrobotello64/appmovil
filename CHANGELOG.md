@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.9
+
+- Cámara en entradas: mejor extracción de lote, fabricación y caducidad (GS1, AI 15/11 y texto legible).
+
 ## 1.1.8
 
 - En órdenes de servicio: partidas ordenables por columna, n.º de referencia visible y layout móvil sin desborde.

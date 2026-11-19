@@ -59,11 +59,83 @@ const VARIABLE_LENGTH: Record<string, number> = {
   "99": 30,
 };
 
-function cleanRaw(raw: string) {
+/** Normaliza separadores FNC1/GS que la cámara o apps suelen devolver como texto. */
+function normalizeGroupSeparators(raw: string) {
   return raw
-    .replace(/\r|\n|\t/g, "")
-    .replace(/^\](?:d2|C1|Q3|e0|d1|Q1|E0|A0)/, "")
-    .trim();
+    .replace(/\{GS\}|<GS>|\[GS\]|\u241d/gi, GS)
+    // FNC1 (232) que a veces llega como Latin-1 sin convertir a GS.
+    .replace(/\u00e8/g, GS);
+}
+
+/**
+ * Compacta lecturas con espacios entre AIs
+ * ("01 0123… 10 LOT 17 251231") → concatenado usable por parseConcatenated.
+ */
+function collapseSpacedGs1(data: string) {
+  if (!/\s/.test(data)) return data;
+  // Formato con paréntesis: quitar solo espacios.
+  if (/\(\d{2,4}\)/.test(data)) return data.replace(/\s+/g, "");
+
+  const spaced = data.replace(/\s+/g, " ").trim();
+  // "01 01234567890128 10 LOTABC 17 251231 11 240115"
+  if (
+    /^(?:\(?\d{2,4}\)?\s+\S+)(?:\s+\(?\d{2,4}\)?\s+\S+)+$/.test(spaced) ||
+    /^(?:01|02|10|11|17|15|13|21|240|241)\s+\S+/.test(spaced)
+  ) {
+    const tokens = spaced.split(" ");
+    let out = "";
+    let i = 0;
+    while (i < tokens.length) {
+      const token = tokens[i].replace(/[()]/g, "");
+      if (/^\d{2,4}$/.test(token) && (token in FIXED_LENGTH || token in VARIABLE_LENGTH)) {
+        const ai = token;
+        i += 1;
+        const fixed = FIXED_LENGTH[ai];
+        if (fixed) {
+          const digits = (tokens[i] ?? "").replace(/\D/g, "");
+          if (digits.length >= fixed) {
+            out += ai + digits.slice(0, fixed);
+            i += 1;
+            continue;
+          }
+        }
+        // Variable: siguiente token(s) hasta el próximo AI.
+        const parts: string[] = [];
+        while (i < tokens.length) {
+          const next = tokens[i].replace(/[()]/g, "");
+          if (
+            /^\d{2,4}$/.test(next) &&
+            (next in FIXED_LENGTH || next in VARIABLE_LENGTH) &&
+            parts.length > 0
+          ) {
+            break;
+          }
+          parts.push(tokens[i]);
+          i += 1;
+        }
+        out += ai + parts.join("");
+        continue;
+      }
+      out += tokens[i];
+      i += 1;
+    }
+    if (out.length > 8) return out;
+  }
+  // Último recurso: quitar espacios si el resto parece GS1 dígitos/letras.
+  const compact = data.replace(/\s+/g, "");
+  if (/^(01|02)\d{14}/.test(compact) || /^(10|11|17|15|240|241)/.test(compact)) {
+    return compact;
+  }
+  return data;
+}
+
+function cleanRaw(raw: string) {
+  return collapseSpacedGs1(
+    normalizeGroupSeparators(raw)
+      .replace(/\r|\n|\t/g, "")
+      .replace(/^\](?:d2|C1|Q3|e0|d1|Q1|E0|A0)/i, "")
+      .trim()
+  );
 }
 
 export function normalizeBarcode(value: string) {
@@ -95,6 +167,105 @@ function gs1Date(value: string) {
   if (dd === 0) dd = daysInMonth;
   if (dd < 1 || dd > daysInMonth) return undefined;
   return `${year}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+}
+
+/** Fechas humanas / GS1 flexibles → ISO (YYYY-MM-DD). */
+function parseFlexibleDate(raw: string): string | undefined {
+  const value = raw.trim();
+  if (!value) return undefined;
+  const gs1 = gs1Date(value);
+  if (gs1) return gs1;
+  // YYYYMMDD / YYYY-MM-DD / YYYY/MM/DD
+  let match = /^(\d{4})[./-]?(\d{2})[./-]?(\d{2})$/.exec(value);
+  if (match) {
+    const [, y, m, d] = match;
+    const stamp = gs1Date(`${y.slice(2)}${m}${d}`);
+    if (stamp) return stamp;
+  }
+  // DD/MM/YYYY o DD-MM-YY
+  match = /^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/.exec(value);
+  if (match) {
+    const dd = match[1].padStart(2, "0");
+    const mm = match[2].padStart(2, "0");
+    let yyyy = match[3];
+    if (yyyy.length === 2) yyyy = String(Number(yyyy) >= 51 ? 1900 + Number(yyyy) : 2000 + Number(yyyy));
+    return gs1Date(`${yyyy.slice(2)}${mm}${dd}`);
+  }
+  // MM/YYYY o MM-YY (último día del mes = caducidad típica)
+  match = /^(\d{1,2})[./-](\d{2,4})$/.exec(value);
+  if (match) {
+    const mm = match[1].padStart(2, "0");
+    let yyyy = match[2];
+    if (yyyy.length === 2) yyyy = String(Number(yyyy) >= 51 ? 1900 + Number(yyyy) : 2000 + Number(yyyy));
+    return gs1Date(`${yyyy.slice(2)}${mm}00`);
+  }
+  return undefined;
+}
+
+/**
+ * Si el lote trae sufijos EXP/CAD/MFG pegados (común cuando falta FNC1),
+ * separa lote y fechas.
+ */
+function splitLotDateSuffix(lot: string): {
+  lot: string;
+  expiry?: string;
+  productionDate?: string;
+} {
+  let remaining = lot.trim();
+  let expiry: string | undefined;
+  let productionDate: string | undefined;
+
+  const expMatch =
+    /^(.*?)(?:EXP|CAD(?:UC(?:IDAD)?)?|USE\s*BY|BEST(?:\s*BEFORE)?|BB)[.\s:/_-]*([0-9./-]{6,10})$/i.exec(
+      remaining
+    );
+  if (expMatch) {
+    const date = parseFlexibleDate(expMatch[2]);
+    if (date) {
+      expiry = date;
+      remaining = expMatch[1].replace(/[-_/.\s]+$/, "");
+    }
+  }
+
+  const mfgMatch =
+    /^(.*?)(?:MFG|MFD|FAB(?:RIC(?:ATION|ACIÓN)?)?|PROD(?:UCTION|UCCION)?)[.\s:/_-]*([0-9./-]{6,10})$/i.exec(
+      remaining
+    );
+  if (mfgMatch) {
+    const date = parseFlexibleDate(mfgMatch[2]);
+    if (date) {
+      productionDate = date;
+      remaining = mfgMatch[1].replace(/[-_/.\s]+$/, "");
+    }
+  }
+
+  return { lot: remaining || lot.trim(), expiry, productionDate };
+}
+
+/** LOT / EXP / MFG impresos junto al código (texto legible). */
+function parseHumanReadableHints(raw: string): {
+  lot?: string;
+  expiry?: string;
+  productionDate?: string;
+} {
+  const text = raw.replace(/\r|\n/g, " ");
+  const lot =
+    /\b(?:LOT|LOTE|BATCH|LOT\s*NO\.?|L\.?\s*N\.?)\s*[:#.]?\s*([A-Za-z0-9][A-Za-z0-9._/-]{1,24})/i.exec(
+      text
+    )?.[1];
+  const expiryRaw =
+    /\b(?:EXP|CAD(?:UCIDAD)?|USE\s*BY|BEST\s*BEFORE|EXPIR(?:Y|ES)?)\s*[:#.]?\s*([0-9]{1,4}[./-][0-9]{1,4}(?:[./-][0-9]{1,4})?|[0-9]{6,8})/i.exec(
+      text
+    )?.[1];
+  const mfgRaw =
+    /\b(?:MFG|MFD|FAB(?:RICACIÓN)?|PROD(?:UCTION)?|MANUF)\s*[:#.]?\s*([0-9]{1,4}[./-][0-9]{1,4}(?:[./-][0-9]{1,4})?|[0-9]{6,8})/i.exec(
+      text
+    )?.[1];
+  return {
+    lot: lot?.trim(),
+    expiry: expiryRaw ? parseFlexibleDate(expiryRaw) : undefined,
+    productionDate: mfgRaw ? parseFlexibleDate(mfgRaw) : undefined,
+  };
 }
 
 function aiAt(data: string, index: number) {
@@ -279,6 +450,7 @@ export function isHillRomPartNumber(value: string) {
 /** Interpreta un código GS1 (DataMatrix / GS1-128) si lo es. */
 export function parseGs1(raw: string): Gs1Data | null {
   const data = cleanRaw(raw);
+  const human = parseHumanReadableHints(raw);
   let ais: Record<string, string> | null = null;
   if (/^\(\d{2,4}\)/.test(data)) {
     ais = parseParenthesized(data);
@@ -288,22 +460,53 @@ export function parseGs1(raw: string): Gs1Data | null {
     ais = parseConcatenated(data);
   } else if (
     // DataMatrix a veces llega sin GTIN inicial (solo 240/10/11/17…)
-    /^(240|241|10|11|17|15|13)\d/.test(data) &&
-    data.length >= 10
+    // Lotes suelen empezar con letra (10LOT…), no solo dígito.
+    /^(240|241|10|11|17|15|16|13)[\dA-Za-z]/.test(data) &&
+    data.length >= 8
   ) {
     ais = parseConcatenated(data);
   } else if (/^21[A-Za-z0-9._-]{6,}/.test(data.replace(new RegExp(GS, "g"), ""))) {
     ais = parseEmbeddedSerialPart(data);
   }
-  if (!ais) return null;
+  if (!ais) {
+    // Sin estructura GS1: aún podemos recuperar lote/fechas del texto legible.
+    if (!human.lot && !human.expiry && !human.productionDate) return null;
+    return {
+      lot: human.lot,
+      expiry: human.expiry,
+      productionDate: human.productionDate,
+      ais: {},
+    };
+  }
   const gtin = ais["01"] ?? ais["02"];
-  if (!gtin && !ais["10"] && !ais["21"] && !ais["240"] && !ais["241"]) return null;
+  if (!gtin && !ais["10"] && !ais["21"] && !ais["240"] && !ais["241"] && !human.lot) {
+    return null;
+  }
+
+  let lot = ais["10"] || human.lot;
+  let expiry =
+    (ais["17"] ? gs1Date(ais["17"]) : undefined) ||
+    (ais["15"] ? gs1Date(ais["15"]) : undefined) ||
+    (ais["16"] ? gs1Date(ais["16"]) : undefined) ||
+    human.expiry;
+  let productionDate =
+    (ais["11"] ? gs1Date(ais["11"]) : undefined) ||
+    (ais["13"] ? gs1Date(ais["13"]) : undefined) ||
+    human.productionDate;
+
+  if (lot) {
+    const split = splitLotDateSuffix(lot);
+    lot = split.lot || lot;
+    if (!expiry && split.expiry) expiry = split.expiry;
+    if (!productionDate && split.productionDate) productionDate = split.productionDate;
+  }
+
   return {
     gtin,
-    lot: ais["10"],
+    lot,
     serial: ais["21"],
-    expiry: ais["17"] ? gs1Date(ais["17"]) : undefined,
-    productionDate: ais["11"] ? gs1Date(ais["11"]) : undefined,
+    expiry,
+    productionDate,
     quantity: ais["30"] ?? ais["37"],
     ais,
   };
