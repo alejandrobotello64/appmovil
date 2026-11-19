@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.11
+
+- En salidas, al escanear se selecciona el producto y puedes elegir otro lote existente antes de agregar.
+
 ## 1.1.10
 
 - Corrige lectura GS1 de etiquetas tipo MP00303: el lote ya no se traga la ref (240) ni cambia el producto.

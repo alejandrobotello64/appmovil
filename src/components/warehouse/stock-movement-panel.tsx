@@ -379,6 +379,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     () => lots.find((lot) => lot.lotNumber === lotNumber) ?? null,
     [lots, lotNumber]
   );
+  const salidaLots = useMemo(() => {
+    const withStock = warehouseId
+      ? lots.filter((lot) => lot.warehouseQuantity > 0)
+      : lots.filter((lot) => lot.quantity > 0);
+    return withStock.length > 0 ? withStock : lots;
+  }, [lots, warehouseId]);
   const unitLabel = selected?.unit || "pza";
 
   const [itemQuery, setItemQuery] = useState("");
@@ -398,6 +404,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [showHistory, setShowHistory] = useState(false);
   const quantityRef = useRef<HTMLInputElement>(null);
   const lotRef = useRef<HTMLInputElement>(null);
+  const lotSelectRef = useRef<HTMLSelectElement>(null);
+  /** Lote preferido tras escanear (no lo pisa el FEFO al cargar lotes). */
+  const preferredLotRef = useRef("");
   const serialInputRef = useRef<HTMLInputElement>(null);
   const serialAreaRef = useRef<HTMLTextAreaElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -448,6 +457,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setExpiryDate("");
     setManufacturedAt("");
     setSerialNumber("");
+    preferredLotRef.current = "";
   }, []);
   const catalogCategories = useMemo(() => {
     const present = new Set(items.map((item) => item.category));
@@ -591,6 +601,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (autoAddOnScan && needsModelConfirm) {
         setItemId(local.id);
         setItemQuery(local.sku);
+        preferredLotRef.current = lot;
         if (lot) setLotNumber(lot);
         if (serial) setSerialNumber(serial);
         if (expiry) setExpiryDate(expiry);
@@ -599,6 +610,39 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setScanHint(`Escaneado ${local.sku}${ambiguous}`);
         setError("");
         setMessage("");
+        return;
+      }
+
+      // Salida: seleccionar el producto escaneado y dejar elegir lote entre existentes.
+      if (autoAddOnScan && mode === "salida") {
+        const isEquip = isEquipmentItem(local);
+        setItemId(local.id);
+        setItemQuery(local.sku);
+        setQuantity(isEquip ? 1 : qty);
+        setSerialNumber(serial);
+        preferredLotRef.current = isEquip ? "" : lot;
+        if (lot) setLotNumber(lot);
+        if (expiry) setExpiryDate(expiry);
+        if (manufactured) setManufacturedAt(manufactured);
+        setError("");
+        setMessage("");
+        if ((isEquip || local.tracksSerial) && !serial.trim()) {
+          setScanHint(
+            `Escaneado ${local.sku}: captura la serie y pulsa «Agregar a la lista».${ambiguous}`
+          );
+          window.setTimeout(() => {
+            (serialAreaRef.current ?? serialInputRef.current)?.focus();
+          }, 50);
+          return;
+        }
+        setScanHint(
+          lot
+            ? `Escaneado ${partRef ? `ref. ${partRef} · ` : ""}${local.sku}: lote leído ${lot}. Puedes elegir otro lote existente y pulsar «Agregar a la lista».${ambiguous}`
+            : `Escaneado ${partRef ? `ref. ${partRef} · ` : ""}${local.sku}: elige el lote existente y pulsa «Agregar a la lista».${ambiguous}`
+        );
+        window.setTimeout(() => {
+          (lotSelectRef.current ?? quantityRef.current)?.focus();
+        }, 80);
         return;
       }
 
@@ -664,6 +708,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
       setItemId(local.id);
       setItemQuery(local.sku);
+      preferredLotRef.current = mode === "salida" ? lot : "";
       if (lot) setLotNumber(lot);
       if (serial) setSerialNumber(serial);
       if (expiry) setExpiryDate(expiry);
@@ -678,15 +723,23 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         qty > 1 ? `cant. ${qty}` : "",
       ].filter(Boolean);
       setScanHint(
-        extras.length
-          ? `Escaneado: ${local.sku} · ${extras.join(" · ")}${ambiguous}`
-          : `Escaneado: ${local.sku} — ${local.name}${ambiguous}`
+        mode === "salida"
+          ? lot
+            ? `Escaneado ${local.sku}: lote leído ${lot}. Puedes elegir otro lote existente.${ambiguous}`
+            : `Escaneado ${local.sku}: elige el lote existente.${ambiguous}`
+          : extras.length
+            ? `Escaneado: ${local.sku} · ${extras.join(" · ")}${ambiguous}`
+            : `Escaneado: ${local.sku} — ${local.name}${ambiguous}`
       );
       setError("");
       setMessage("");
       window.setTimeout(() => {
         if (isEquipmentItem(local) || local.tracksSerial) {
           (serialAreaRef.current ?? serialInputRef.current)?.focus();
+          return;
+        }
+        if (mode === "salida") {
+          (lotSelectRef.current ?? quantityRef.current)?.focus();
           return;
         }
         if (mode === "entrada" && local.tracksLot && !lot) {
@@ -929,12 +982,34 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   useEffect(() => {
     void loadLots().then((rows) => {
       if (mode !== "salida") return;
-      const pick = rows[0];
+      const preferred = preferredLotRef.current.trim();
+      const withStock = rows.filter((row) =>
+        warehouseId ? row.warehouseQuantity > 0 : row.quantity > 0
+      );
+      const pool = withStock.length > 0 ? withStock : rows;
+      const matched =
+        (preferred &&
+          pool.find((row) => row.lotNumber === preferred)) ||
+        (preferred &&
+          rows.find((row) => row.lotNumber === preferred)) ||
+        null;
+      if (matched) {
+        setLotNumber(matched.lotNumber);
+        setExpiryDate(matched.expiryDate);
+        setManufacturedAt(matched.manufacturedAt);
+        return;
+      }
+      if (preferred) {
+        // Lote leído en el código: se conserva para que el usuario lo vea o cambie.
+        setLotNumber(preferred);
+        return;
+      }
+      const pick = pool[0];
       setLotNumber(pick?.lotNumber ?? "");
       setExpiryDate(pick?.expiryDate ?? "");
       setManufacturedAt(pick?.manufacturedAt ?? "");
     });
-  }, [loadLots, mode]);
+  }, [loadLots, mode, warehouseId]);
 
   useEffect(() => {
     if (mode !== "entrada") return;
@@ -1031,6 +1106,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       if (mode === "entrada" && selected.tracksLot && !isEquipmentCatalog && !lotNumber.trim()) {
         throw new Error("Este producto exige número de lote.");
       }
+      if (
+        mode === "salida" &&
+        !isEquipmentCatalog &&
+        salidaLots.length > 0 &&
+        !lotNumber.trim()
+      ) {
+        throw new Error("Elige un lote existente para la salida.");
+      }
       if (isEquipmentCatalog && mode === "entrada") {
         parseSerialNumbers(serialNumber);
       } else if (
@@ -1074,6 +1157,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       try {
         if (mode === "entrada" && selected.tracksLot && !isEquipmentCatalog && !lotNumber.trim()) {
           throw new Error("Este producto exige número de lote.");
+        }
+        if (
+          mode === "salida" &&
+          !isEquipmentCatalog &&
+          salidaLots.length > 0 &&
+          !lotNumber.trim()
+        ) {
+          throw new Error("Elige un lote existente para la salida.");
         }
         if (isEquipmentCatalog && mode === "entrada") {
           parseSerialNumbers(serialNumber);
@@ -1847,29 +1938,48 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 )}
 
                 {!isEquipmentCatalog ? (
-                  mode === "salida" && lots.length > 0 ? (
+                  mode === "salida" ? (
                     <label className="space-y-1.5">
-                      <span className="text-sm font-medium"><Ui>Lote (FEFO)</Ui></span>
+                      <span className="text-sm font-medium">
+                        Lote existente
+                      </span>
                       <select
+                        ref={lotSelectRef}
                         value={lotNumber}
                         disabled={!canWrite}
                         onChange={(event) => {
+                          const value = event.target.value;
                           const lot = lots.find(
-                            (item) => item.lotNumber === event.target.value
+                            (item) => item.lotNumber === value
                           );
-                          setLotNumber(event.target.value);
+                          preferredLotRef.current = value;
+                          setLotNumber(value);
                           setExpiryDate(lot?.expiryDate ?? "");
                           setManufacturedAt(lot?.manufacturedAt ?? "");
                         }}
                         className={fieldClass}
                       >
-                        <option value="">Sin lote / automático</option>
-                        {lots.map((lot) => (
+                        <option value="">Elegir lote…</option>
+                        {lotNumber &&
+                        !salidaLots.some((lot) => lot.lotNumber === lotNumber) ? (
+                          <option value={lotNumber}>
+                            {lotNumber} (leído / sin stock en lista)
+                          </option>
+                        ) : null}
+                        {salidaLots.map((lot) => (
                           <option key={lot.id} value={lot.lotNumber}>
-                            {lotSelectLabel(lot, unitLabel, Boolean(warehouseId))}
+                            {lotSelectLabel(
+                              lot,
+                              unitLabel,
+                              Boolean(warehouseId)
+                            )}
                           </option>
                         ))}
                       </select>
+                      <span className="block text-xs text-muted-foreground">
+                        Al escanear se selecciona el producto; aquí puedes cambiar
+                        el lote entre los que tienen existencia.
+                      </span>
                     </label>
                   ) : (
                     <div className="grid gap-4 sm:grid-cols-2">
