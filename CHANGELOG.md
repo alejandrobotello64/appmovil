@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.12
+
+- Las salidas descuentan del bin real con existencia (lote/ubicación física), sin exigir la ubicación de categoría.
+
 ## 1.1.11
 
 - En salidas, al escanear se selecciona el producto y puedes elegir otro lote existente antes de agregar.

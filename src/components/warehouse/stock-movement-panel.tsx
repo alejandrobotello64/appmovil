@@ -1070,10 +1070,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   async function buildLinesFromDraft(): Promise<StockMovementLine[]> {
     if (!selected) return [];
     const isEquip = isEquipmentCatalog;
+    // Salida: no forzar ubicación genérica; el RPC toma el bin con existencia.
     const resolvedLocation =
       mode === "entrada"
         ? (await resolveLocationForProduct(selected)) || locationId
-        : locationId;
+        : locationId || "";
     if (isEquip && mode === "entrada") {
       const serials = parseSerialNumbers(serialNumber);
       return serials.map((serial) =>
@@ -1254,7 +1255,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           note: extraNote,
           reason: reasonLabel,
           warehouseId: warehouseId || null,
-          locationId: line.locationId || locationId || null,
+          locationId:
+            mode === "salida"
+              ? line.locationId || null
+              : line.locationId || locationId || null,
           lotNumber: line.isEquipment ? null : line.lotNumber || null,
           expiryDate: line.isEquipment ? null : line.expiryDate || null,
           manufacturedAt: line.manufacturedAt || null,
@@ -1553,11 +1557,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                         Preferencia: VSA (Villahermosa). Puedes cambiarlo si la
                         entrada va a otro almacén.
                       </span>
-                    ) : null}
+                    ) : (
+                      <span className="block text-xs text-muted-foreground">
+                        La salida descuenta del lote/ubicación donde hay stock.
+                      </span>
+                    )}
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium">
-                      Ubicación por defecto
+                      {mode === "salida"
+                        ? "Ubicación (opcional)"
+                        : "Ubicación por defecto"}
                     </span>
                     <select
                       value={locationId}
