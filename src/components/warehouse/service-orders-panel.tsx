@@ -26,6 +26,10 @@ import { ServicePricingSummary } from "@/components/service-orders/service-prici
 import { Button } from "@/components/ui/button";
 import { CameraButton } from "@/components/media/camera-capture";
 import { SearchInput } from "@/components/ui/search-input";
+import {
+  DesktopTable,
+  ResponsiveDataList,
+} from "@/components/ui/responsive-data-list";
 import { SortableTable } from "@/components/ui/sortable-table";
 import { matchByScanFields } from "@/lib/scan/match-local";
 import type { ScanResult } from "@/lib/scan/lookup";
@@ -1504,7 +1508,7 @@ export function ServiceOrdersPanel({
     );
 
     return (
-      <section className="space-y-4">
+      <section className="w-full max-w-full min-w-0 space-y-4 overflow-x-hidden">
         {!canEdit ? (
           <ReadOnlyBanner
             visible
@@ -1521,8 +1525,8 @@ export function ServiceOrdersPanel({
           </p>
         ) : null}
 
-        <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <div>
+        <div className="flex w-full max-w-full min-w-0 flex-wrap items-start justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
+          <div className="min-w-0 flex-1 overflow-hidden">
             <button
               type="button"
               className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -1530,10 +1534,10 @@ export function ServiceOrdersPanel({
             >
               <ArrowLeft className="size-3.5" /> Lista de órdenes
             </button>
-            <h2 className="text-lg font-semibold">
+            <h2 className="break-words text-lg font-semibold [overflow-wrap:anywhere]">
               {selected.clientName || "Sin cliente"}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">
               {[selected.equipmentName, selected.equipmentBrand, selected.equipmentModel]
                 .filter(Boolean)
                 .join(" · ")}
@@ -1618,8 +1622,8 @@ export function ServiceOrdersPanel({
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-          <div className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <div className="grid w-full max-w-full min-w-0 gap-4 overflow-x-hidden lg:grid-cols-[1fr_280px]">
+          <div className="w-full max-w-full min-w-0 space-y-4 overflow-x-hidden rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
             <div className="flex flex-wrap gap-1 border-b border-border pb-2">
               {tabs.map((tab) => (
                 <button
@@ -2424,33 +2428,269 @@ export function ServiceOrdersPanel({
                     onAdd={addCatalogProduct}
                   />
                 ) : null}
-                <div className="overflow-x-auto rounded-xl border border-border">
-                  <table className="min-w-full text-sm">
+                {/* Mobile: fichas compactas */}
+                <div className="grid w-full max-w-full min-w-0 gap-2 overflow-x-hidden md:hidden">
+                  {draftLines.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-border px-3 py-8 text-center text-sm text-muted-foreground">
+                      Busca un código o descripción para agregar material a la orden.
+                    </p>
+                  ) : (
+                    draftLines.map((line) => {
+                      const product = line.productId
+                        ? productById.get(line.productId)
+                        : undefined;
+                      const partRef = (product?.partNumber || "").trim();
+                      return (
+                        <article
+                          key={line.key}
+                          className="w-full max-w-full min-w-0 overflow-hidden rounded-lg border border-border/80 bg-background/60 p-2.5"
+                        >
+                          <div className="flex min-w-0 items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1 overflow-hidden">
+                              {partRef ? (
+                                <span className="mb-1 inline-flex max-w-full items-center rounded-md bg-[#00BFFF]/12 px-2 py-0.5 font-mono text-xs font-bold tracking-tight text-foreground ring-1 ring-[#00BFFF]/25">
+                                  {partRef}
+                                </span>
+                              ) : null}
+                              {product || line.productId ? (
+                                <>
+                                  <p className="break-words text-sm font-medium [overflow-wrap:anywhere]">
+                                    {product?.name || line.description}
+                                  </p>
+                                  <p className="mt-0.5 break-words font-mono text-[11px] text-muted-foreground [overflow-wrap:anywhere]">
+                                    {product?.sku || "Catálogo"}
+                                    {product?.brand ? ` · ${product.brand}` : ""}
+                                    {` · ${catalogModelLabel(product?.model)}`}
+                                  </p>
+                                </>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {line.lineKind === "mano_obra" ||
+                                  line.lineKind === "otro" ? (
+                                    <select
+                                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-[11px]"
+                                      value={line.lineKind}
+                                      disabled={!canEdit}
+                                      onChange={(e) =>
+                                        setDraftLines((rows) =>
+                                          rows.map((r) =>
+                                            r.key === line.key
+                                              ? {
+                                                  ...r,
+                                                  lineKind: e.target
+                                                    .value as ServiceLineKind,
+                                                }
+                                              : r
+                                          )
+                                        )
+                                      }
+                                    >
+                                      <option value="mano_obra">Mano de obra</option>
+                                      <option value="otro">Línea libre</option>
+                                    </select>
+                                  ) : (
+                                    <p className="text-[11px] text-muted-foreground">
+                                      {serviceLineKindLabel(line.lineKind)}
+                                    </p>
+                                  )}
+                                  <input
+                                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
+                                    placeholder="Descripción"
+                                    value={line.description}
+                                    disabled={!canEdit}
+                                    onChange={(e) =>
+                                      setDraftLines((rows) =>
+                                        rows.map((r) =>
+                                          r.key === line.key
+                                            ? { ...r, description: e.target.value }
+                                            : r
+                                        )
+                                      )
+                                    }
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            {canEdit ? (
+                              <button
+                                type="button"
+                                className="shrink-0 text-destructive"
+                                onClick={() =>
+                                  setDraftLines((rows) =>
+                                    rows.filter((r) => r.key !== line.key)
+                                  )
+                                }
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            ) : null}
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            <div className="min-w-0">
+                              <p className="mb-0.5 text-[11px] text-muted-foreground">
+                                Existencia
+                              </p>
+                              <ServiceLineStockCell
+                                item={product}
+                                stock={
+                                  line.productId
+                                    ? stockByProduct?.get(line.productId)
+                                    : undefined
+                                }
+                                requested={Number(line.quantity) || 0}
+                              />
+                            </div>
+                            <label className="min-w-0 text-[11px] text-muted-foreground">
+                              Cant
+                              <input
+                                type="number"
+                                min={0.01}
+                                step="any"
+                                className="mt-0.5 h-9 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                value={line.quantity}
+                                disabled={!canEdit}
+                                onChange={(e) =>
+                                  setDraftLines((rows) =>
+                                    rows.map((r) =>
+                                      r.key === line.key
+                                        ? { ...r, quantity: Number(e.target.value) }
+                                        : r
+                                    )
+                                  )
+                                }
+                              />
+                            </label>
+                            {canViewPrices ? (
+                              <>
+                                <label className="min-w-0 text-[11px] text-muted-foreground">
+                                  P. unit.
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    step="any"
+                                    className="mt-0.5 h-9 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                    value={line.unitPrice}
+                                    disabled={!canEdit}
+                                    onChange={(e) =>
+                                      setDraftLines((rows) =>
+                                        rows.map((r) =>
+                                          r.key === line.key
+                                            ? {
+                                                ...r,
+                                                unitPrice: Number(e.target.value),
+                                              }
+                                            : r
+                                        )
+                                      )
+                                    }
+                                  />
+                                </label>
+                                <label className="min-w-0 text-[11px] text-muted-foreground">
+                                  Desc. %
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    step="any"
+                                    className="mt-0.5 h-9 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                    value={line.discountPercent ?? 0}
+                                    disabled={!canEdit}
+                                    onChange={(e) =>
+                                      setDraftLines((rows) =>
+                                        rows.map((r) =>
+                                          r.key === line.key
+                                            ? {
+                                                ...r,
+                                                discountPercent: clampPercent(
+                                                  e.target.value
+                                                ),
+                                              }
+                                            : r
+                                        )
+                                      )
+                                    }
+                                  />
+                                </label>
+                              </>
+                            ) : null}
+                            <label className="min-w-0 text-[11px] text-muted-foreground">
+                              Estatus
+                              <select
+                                className="mt-0.5 h-9 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                value={line.lineStatus}
+                                disabled={!canEdit}
+                                onChange={(e) =>
+                                  setDraftLines((rows) =>
+                                    rows.map((r) =>
+                                      r.key === line.key
+                                        ? {
+                                            ...r,
+                                            lineStatus: e.target
+                                              .value as ServiceOrderLineInput["lineStatus"],
+                                          }
+                                        : r
+                                    )
+                                  )
+                                }
+                              >
+                                {SERVICE_LINE_STATUSES.map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            {canViewPrices ? (
+                              <div className="min-w-0">
+                                <p className="mb-0.5 text-[11px] text-muted-foreground">
+                                  Importe
+                                </p>
+                                <p className="text-xs font-medium">
+                                  {money(lineAmount(line))}
+                                </p>
+                              </div>
+                            ) : null}
+                          </div>
+                        </article>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Desktop: tabla ordenable como entradas */}
+                <DesktopTable className="rounded-xl border border-border">
+                  <SortableTable className="w-full min-w-[40rem] border-collapse text-sm">
                     <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                       <tr>
-                        <th className="px-3 py-2">Producto</th>
-                        <th className="px-3 py-2">Existencia</th>
-                        <th className="px-3 py-2">Cant</th>
+                        <th className="px-3 py-2 font-medium">Referencia</th>
+                        <th className="px-3 py-2 font-medium">Producto</th>
+                        <th className="px-3 py-2 font-medium">Existencia</th>
+                        <th className="px-3 py-2 font-medium">Cant</th>
                         {canViewPrices ? (
                           <>
-                            <th className="px-3 py-2">P. unit.</th>
-                            <th className="px-3 py-2" title="Descuento de la partida">
+                            <th className="px-3 py-2 font-medium">P. unit.</th>
+                            <th
+                              className="px-3 py-2 font-medium"
+                              title="Descuento de la partida"
+                            >
                               Desc. %
                             </th>
                           </>
                         ) : null}
-                        <th className="px-3 py-2">Estatus</th>
+                        <th className="px-3 py-2 font-medium">Estatus</th>
                         {canViewPrices ? (
-                          <th className="px-3 py-2">Importe</th>
+                          <th className="px-3 py-2 font-medium">Importe</th>
                         ) : null}
-                        <th className="px-3 py-2" />
+                        <th className="px-2 py-2 font-medium" data-sort="off">
+                          <span className="sr-only">Quitar</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {draftLines.length === 0 ? (
                         <tr>
                           <td
-                            colSpan={canViewPrices ? 8 : 5}
+                            colSpan={canViewPrices ? 9 : 6}
                             className="px-3 py-8 text-center text-sm text-muted-foreground"
                           >
                             Busca un código o descripción para agregar material a la orden.
@@ -2461,10 +2701,30 @@ export function ServiceOrdersPanel({
                           const product = line.productId
                             ? productById.get(line.productId)
                             : undefined;
+                          const partRef = (product?.partNumber || "").trim();
                           return (
-                            <tr key={line.key} className="border-t border-border align-top">
-                              <td className="px-2 py-2">
-                                <div className="min-w-[180px] space-y-1">
+                            <tr
+                              key={line.key}
+                              className="border-t border-border align-top"
+                            >
+                              <td
+                                className="max-w-[9rem] px-3 py-2 align-middle"
+                                data-sort={partRef || product?.sku || line.description}
+                              >
+                                <span className="inline-flex max-w-full items-center rounded-md bg-[#00BFFF]/12 px-2 py-1 font-mono text-sm font-bold tracking-tight text-foreground ring-1 ring-[#00BFFF]/25">
+                                  {partRef || "Sin ref."}
+                                </span>
+                                {product?.model?.trim() ? (
+                                  <span className="mt-1 block text-[11px] text-muted-foreground">
+                                    {catalogModelLabel(product.model)}
+                                  </span>
+                                ) : null}
+                              </td>
+                              <td
+                                className="max-w-[12rem] px-2 py-2"
+                                data-sort={`${product?.name || line.description} ${product?.sku || ""}`}
+                              >
+                                <div className="min-w-0 space-y-1">
                                   {product || line.productId ? (
                                     <>
                                       <p className="font-medium">
@@ -2473,7 +2733,7 @@ export function ServiceOrdersPanel({
                                       <p className="font-mono text-[11px] text-muted-foreground">
                                         {product?.sku || "Catálogo"}
                                         {product?.brand ? ` · ${product.brand}` : ""}
-                                        {` · ${catalogModelLabel(product?.model)}`}
+                                        {partRef ? ` · ref. ${partRef}` : ""}
                                       </p>
                                     </>
                                   ) : (
@@ -2515,7 +2775,10 @@ export function ServiceOrdersPanel({
                                           setDraftLines((rows) =>
                                             rows.map((r) =>
                                               r.key === line.key
-                                                ? { ...r, description: e.target.value }
+                                                ? {
+                                                    ...r,
+                                                    description: e.target.value,
+                                                  }
                                                 : r
                                             )
                                           )
@@ -2525,7 +2788,10 @@ export function ServiceOrdersPanel({
                                   )}
                                 </div>
                               </td>
-                              <td className="px-2 py-2">
+                              <td
+                                className="px-2 py-2"
+                                data-sort={product?.quantity ?? -1}
+                              >
                                 <ServiceLineStockCell
                                   item={product}
                                   stock={
@@ -2536,7 +2802,10 @@ export function ServiceOrdersPanel({
                                   requested={Number(line.quantity) || 0}
                                 />
                               </td>
-                              <td className="px-2 py-2">
+                              <td
+                                className="px-2 py-2"
+                                data-sort={Number(line.quantity) || 0}
+                              >
                                 <input
                                   type="number"
                                   min={0.01}
@@ -2548,7 +2817,10 @@ export function ServiceOrdersPanel({
                                     setDraftLines((rows) =>
                                       rows.map((r) =>
                                         r.key === line.key
-                                          ? { ...r, quantity: Number(e.target.value) }
+                                          ? {
+                                              ...r,
+                                              quantity: Number(e.target.value),
+                                            }
                                           : r
                                       )
                                     )
@@ -2557,51 +2829,62 @@ export function ServiceOrdersPanel({
                               </td>
                               {canViewPrices ? (
                                 <>
-                              <td className="px-2 py-2">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  step="any"
-                                  className="h-9 w-24 rounded-md border border-input bg-background px-2 text-xs"
-                                  value={line.unitPrice}
-                                  disabled={!canEdit}
-                                  onChange={(e) =>
-                                    setDraftLines((rows) =>
-                                      rows.map((r) =>
-                                        r.key === line.key
-                                          ? { ...r, unitPrice: Number(e.target.value) }
-                                          : r
-                                      )
-                                    )
-                                  }
-                                />
-                              </td>
-                              <td className="px-2 py-2">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  step="any"
-                                  className="h-9 w-16 rounded-md border border-input bg-background px-2 text-xs"
-                                  value={line.discountPercent ?? 0}
-                                  disabled={!canEdit}
-                                  onChange={(e) =>
-                                    setDraftLines((rows) =>
-                                      rows.map((r) =>
-                                        r.key === line.key
-                                          ? {
-                                              ...r,
-                                              discountPercent: clampPercent(e.target.value),
-                                            }
-                                          : r
-                                      )
-                                    )
-                                  }
-                                />
-                              </td>
+                                  <td
+                                    className="px-2 py-2"
+                                    data-sort={Number(line.unitPrice) || 0}
+                                  >
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step="any"
+                                      className="h-9 w-24 rounded-md border border-input bg-background px-2 text-xs"
+                                      value={line.unitPrice}
+                                      disabled={!canEdit}
+                                      onChange={(e) =>
+                                        setDraftLines((rows) =>
+                                          rows.map((r) =>
+                                            r.key === line.key
+                                              ? {
+                                                  ...r,
+                                                  unitPrice: Number(e.target.value),
+                                                }
+                                              : r
+                                          )
+                                        )
+                                      }
+                                    />
+                                  </td>
+                                  <td
+                                    className="px-2 py-2"
+                                    data-sort={clampPercent(line.discountPercent)}
+                                  >
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={100}
+                                      step="any"
+                                      className="h-9 w-16 rounded-md border border-input bg-background px-2 text-xs"
+                                      value={line.discountPercent ?? 0}
+                                      disabled={!canEdit}
+                                      onChange={(e) =>
+                                        setDraftLines((rows) =>
+                                          rows.map((r) =>
+                                            r.key === line.key
+                                              ? {
+                                                  ...r,
+                                                  discountPercent: clampPercent(
+                                                    e.target.value
+                                                  ),
+                                                }
+                                              : r
+                                          )
+                                        )
+                                      }
+                                    />
+                                  </td>
                                 </>
                               ) : null}
-                              <td className="px-2 py-2">
+                              <td className="px-2 py-2" data-sort={line.lineStatus}>
                                 <select
                                   className="h-9 rounded-md border border-input bg-background px-2 text-xs"
                                   value={line.lineStatus}
@@ -2628,16 +2911,21 @@ export function ServiceOrdersPanel({
                                 </select>
                               </td>
                               {canViewPrices ? (
-                              <td className="px-3 py-2 text-xs">
-                                {money(lineAmount(line))}
-                                {clampPercent(line.discountPercent) > 0 ? (
-                                  <span className="block text-[10px] text-muted-foreground line-through">
-                                    {money(Number(line.quantity) * Number(line.unitPrice))}
-                                  </span>
-                                ) : null}
-                              </td>
+                                <td
+                                  className="px-3 py-2 text-xs"
+                                  data-sort={lineAmount(line)}
+                                >
+                                  {money(lineAmount(line))}
+                                  {clampPercent(line.discountPercent) > 0 ? (
+                                    <span className="block text-[10px] text-muted-foreground line-through">
+                                      {money(
+                                        Number(line.quantity) * Number(line.unitPrice)
+                                      )}
+                                    </span>
+                                  ) : null}
+                                </td>
                               ) : null}
-                              <td className="px-2 py-2">
+                              <td className="px-2 py-2" data-sort="off">
                                 {canEdit ? (
                                   <button
                                     type="button"
@@ -2657,8 +2945,8 @@ export function ServiceOrdersPanel({
                         })
                       )}
                     </tbody>
-                  </table>
-                </div>
+                  </SortableTable>
+                </DesktopTable>
                 {canEdit ? (
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -3128,10 +3416,12 @@ export function ServiceOrdersPanel({
             ) : null}
           </div>
 
-          <aside className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <aside className="w-full max-w-full min-w-0 space-y-3 overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
             <div>
               <p className="text-xs text-muted-foreground">No. Orden</p>
-              <p className="font-semibold">{selected.folio}</p>
+              <p className="break-words font-semibold [overflow-wrap:anywhere]">
+                {selected.folio}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground"><Ui>Tipo</Ui></p>
@@ -3322,7 +3612,7 @@ export function ServiceOrdersPanel({
   }
 
   return (
-    <section className="space-y-4">
+    <section className="w-full max-w-full min-w-0 space-y-4 overflow-x-hidden">
       {!canWrite ? <ReadOnlyBanner visible /> : null}
       {error ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
@@ -3331,7 +3621,7 @@ export function ServiceOrdersPanel({
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold">Órdenes y cotizaciones de servicio</h2>
           <p className="text-sm text-muted-foreground">
             Equipos médicos · revisión de puntos · evidencias · PDFs
@@ -3411,7 +3701,89 @@ export function ServiceOrdersPanel({
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
+      <ResponsiveDataList
+        emptyMessage={
+          loading
+            ? "Cargando…"
+            : "No hay órdenes. Usa Recepción para crear la primera."
+        }
+        items={
+          loading
+            ? []
+            : filtered.map((order) => ({
+                key: order.id,
+                title: order.clientName || "—",
+                subtitle: [
+                  order.folio,
+                  order.equipmentName,
+                  order.equipmentSerial,
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+                badge: (
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium",
+                      statusTone(order.status)
+                    )}
+                  >
+                    {serviceOrderStatusLabel(order.status)}
+                  </span>
+                ),
+                fields: [
+                  {
+                    label: "Equipo",
+                    value:
+                      [
+                        order.equipmentBrand,
+                        order.equipmentModel,
+                        order.equipmentSerial,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Sin datos",
+                  },
+                  {
+                    label: "Tipo",
+                    value: serviceTypeLabel(order.serviceType),
+                  },
+                  {
+                    label: "Total",
+                    value: money(
+                      computeServiceTotals(order.lines, pricingFromOrder(order))
+                        .total
+                    ),
+                  },
+                  {
+                    label: "Técnico",
+                    value: order.technician || "—",
+                  },
+                ],
+                actions: (
+                  <>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-full min-w-0 items-center justify-center rounded-md border border-border px-1.5 text-[11px] font-medium text-[#3B46A5]"
+                      onClick={() => openDetail(order)}
+                    >
+                      Detalles
+                    </button>
+                    {canDelete && !order.locked ? (
+                      <button
+                        type="button"
+                        className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1 rounded-md border border-destructive/30 px-1.5 text-[11px] font-medium text-destructive"
+                        onClick={() => void removeOrder(order.id)}
+                      >
+                        <Trash2 className="size-3 shrink-0" />
+                        Borrar
+                      </button>
+                    ) : null}
+                  </>
+                ),
+              }))
+        }
+      />
+
+      <DesktopTable className="rounded-2xl border border-border bg-card shadow-sm">
         <SortableTable className="min-w-full text-sm">
           <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
             <tr>
@@ -3566,7 +3938,7 @@ export function ServiceOrdersPanel({
             )}
           </tbody>
         </SortableTable>
-      </div>
+      </DesktopTable>
     </section>
   );
 }

@@ -147,6 +147,8 @@ const CHROME_EN: Record<string, string> = {
   Factura: "Invoice",
   Pendiente: "Pending",
   "P. unit.": "Unit price",
+  "Desc. %": "Disc. %",
+  "Sin ref.": "No ref.",
   Importe: "Amount",
   Monto: "Amount",
   Costo: "Cost",

@@ -289,10 +289,10 @@ export function ServiceLineStockCell({
   }
   const short = requested > 0 && item.quantity < requested;
   return (
-    <div className="min-w-[9rem]">
+    <div className="min-w-0 max-w-full md:min-w-[9rem]">
       <button
         type="button"
-        className="flex flex-col items-start gap-1 text-left"
+        className="flex max-w-full flex-col items-start gap-1 text-left"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-label={`Existencias de ${item.sku}`}

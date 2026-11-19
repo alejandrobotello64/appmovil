@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.8
+
+- En órdenes de servicio: partidas ordenables por columna, n.º de referencia visible y layout móvil sin desborde.
+
 ## 1.1.7
 
 - En celular, las fichas de inventario caben en el ancho de la pantalla (campos y botones sin desborde).
