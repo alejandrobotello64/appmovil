@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -418,7 +419,7 @@ export function ChecklistTemplatesPanel() {
             </span>
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Nombre</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Nombre</Ui></span>
             <input
               className={fieldClass}
               value={createName}
@@ -642,9 +643,7 @@ export function ChecklistTemplatesPanel() {
                     {canWrite ? (
                       <div className="grid gap-2 sm:grid-cols-2">
                         <label className="block text-sm">
-                          <span className="mb-1 block text-xs text-muted-foreground">
-                            Nombre
-                          </span>
+                          <span className="mb-1 block text-xs text-muted-foreground"><Ui>Nombre</Ui></span>
                           <input
                             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
                             defaultValue={tpl.name}
@@ -669,9 +668,7 @@ export function ChecklistTemplatesPanel() {
                           Plantilla activa
                         </label>
                         <label className="block text-sm sm:col-span-2">
-                          <span className="mb-1 block text-xs text-muted-foreground">
-                            Descripción
-                          </span>
+                          <span className="mb-1 block text-xs text-muted-foreground"><Ui>Descripción</Ui></span>
                           <textarea
                             className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                             defaultValue={tpl.description}
@@ -771,8 +768,7 @@ export function ChecklistTemplatesPanel() {
                                   disabled={saving || !editLabel.trim()}
                                   onClick={() => void saveEditedPoint(isFunction)}
                                 >
-                                  <Check className="size-3.5" /> Guardar
-                                </Button>
+                                  <Check className="size-3.5" /> <Ui>Guardar</Ui></Button>
                                 <Button
                                   type="button"
                                   size="sm"
@@ -780,8 +776,7 @@ export function ChecklistTemplatesPanel() {
                                   disabled={saving}
                                   onClick={cancelEditPoint}
                                 >
-                                  <X className="size-3.5" /> Cancelar
-                                </Button>
+                                  <X className="size-3.5" /> <Ui>Cancelar</Ui></Button>
                               </div>
                             </div>
                           ) : (
@@ -886,9 +881,7 @@ export function ChecklistTemplatesPanel() {
                               />
                             </label>
                             <label className="block text-xs">
-                              <span className="mb-1 block text-muted-foreground">
-                                Unidad
-                              </span>
+                              <span className="mb-1 block text-muted-foreground"><Ui>Unidad</Ui></span>
                               <input
                                 className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
                                 placeholder="mmHg, %, lpm…"

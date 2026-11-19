@@ -1,3 +1,4 @@
+import { Ui } from "@/components/ui/ui-text";
 import { Eye, Pencil } from "lucide-react";
 import { daysUntilExpiry } from "@/lib/inventory/expiry";
 import {
@@ -118,10 +119,10 @@ export function TrackingSummary({ item, tracking, mode }: TrackingProps) {
   if (lots.length > 0) {
     const hidden = lots.length - SUMMARY_LOTS;
     return (
-      <div className="space-y-1 text-xs">
+      <div className="max-w-full space-y-1 overflow-hidden text-xs">
         {lots.slice(0, SUMMARY_LOTS).map((lot) => (
-          <div key={lot.lotNumber}>
-            <p className="font-medium text-foreground">
+          <div key={lot.lotNumber} className="min-w-0">
+            <p className="break-words font-medium text-foreground [overflow-wrap:anywhere]">
               Lote {lot.lotNumber || "—"}
               <span className="font-normal text-muted-foreground">
                 {" "}
@@ -311,7 +312,7 @@ export function TrackingDetail({
                   ) : null}
                   {onOpenLot ? (
                     <th className="px-3 py-2 text-right font-medium" data-sort="off">
-                      <span className="sr-only">Acciones</span>
+                      <span className="sr-only"><Ui>Acciones</Ui></span>
                     </th>
                   ) : null}
                 </tr>
@@ -390,7 +391,7 @@ export function TrackingDetail({
                   ) : null}
                   {onOpenSerial ? (
                     <th className="px-3 py-2 text-right font-medium" data-sort="off">
-                      <span className="sr-only">Acciones</span>
+                      <span className="sr-only"><Ui>Acciones</Ui></span>
                     </th>
                   ) : null}
                 </tr>

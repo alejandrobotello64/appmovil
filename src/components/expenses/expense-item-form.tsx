@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Camera, FileCode2, FileText, Loader2 } from "lucide-react";
@@ -260,9 +261,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
       title={item ? "Editar gasto" : "Agregar gasto"}
       description={`${report.folio} · Sin factura, agrega una foto del ticket. El XML o un PDF con texto llena el gasto, incluidos IVA, IEPS y el impuesto de hospedaje.`}
       headerAction={
-        <Button type="button" variant="outline" size="sm" onClick={onClose}>
-          Cerrar
-        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onClose}><Ui>Cerrar</Ui></Button>
       }
     >
       <form onSubmit={submit} className="space-y-4">
@@ -511,9 +510,7 @@ export function ExpenseItemForm({ report, item, actor, onClose, onSaved }: Props
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving}><Ui>Cancelar</Ui></Button>
           <Button type="submit" disabled={saving}>
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
             {item ? "Guardar cambios" : "Agregar gasto"}

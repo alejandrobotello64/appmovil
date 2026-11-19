@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useState, type DragEvent } from "react";
 import {
@@ -188,7 +189,7 @@ export function QuoteLinesEditor({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h4 className="text-sm font-semibold">Partidas</h4>
+          <h4 className="text-sm font-semibold"><Ui>Partidas</Ui></h4>
           <p className="text-xs text-muted-foreground">
             Arrastra el asa ⋮⋮ para reordenar. También puedes usar ↑ ↓, duplicar o
             quitar.
@@ -210,11 +211,11 @@ export function QuoteLinesEditor({
         <div className="hidden grid-cols-[2.75rem_minmax(0,1.4fr)_4.5rem_6.5rem_6.5rem_minmax(5.5rem,auto)_auto] gap-2 border-b border-border bg-muted/40 px-3 py-2 text-[11px] font-medium text-muted-foreground md:grid">
           <span>Orden</span>
           <span>Producto / descripción</span>
-          <span>Cant.</span>
-          <span>P. unit.</span>
+          <span><Ui>Cant.</Ui></span>
+          <span><Ui>P. unit.</Ui></span>
           <span>Desc.</span>
-          <span>Importe</span>
-          <span className="text-right">Acciones</span>
+          <span><Ui>Importe</Ui></span>
+          <span className="text-right"><Ui>Acciones</Ui></span>
         </div>
 
         <ul className="divide-y divide-border">
@@ -316,9 +317,7 @@ export function QuoteLinesEditor({
                   </div>
 
                   <label className="space-y-1">
-                    <span className="text-xs text-muted-foreground md:sr-only">
-                      Cant.
-                    </span>
+                    <span className="text-xs text-muted-foreground md:sr-only"><Ui>Cant.</Ui></span>
                     <input
                       type="number"
                       min={0.01}
@@ -338,9 +337,7 @@ export function QuoteLinesEditor({
                   </label>
 
                   <label className="space-y-1">
-                    <span className="text-xs text-muted-foreground md:sr-only">
-                      P. unit.
-                    </span>
+                    <span className="text-xs text-muted-foreground md:sr-only"><Ui>P. unit.</Ui></span>
                     <input
                       type="number"
                       min={0}
@@ -477,7 +474,7 @@ export function QuoteLinesEditor({
                 {isOpen ? (
                   <div className="mt-3 grid gap-2 border-t border-dashed border-border pt-3 sm:grid-cols-2">
                     <label className="space-y-1">
-                      <span className="text-xs text-muted-foreground">Marca</span>
+                      <span className="text-xs text-muted-foreground"><Ui>Marca</Ui></span>
                       <input
                         disabled={disabled}
                         value={line.brand ?? ""}

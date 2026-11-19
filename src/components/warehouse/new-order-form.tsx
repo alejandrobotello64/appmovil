@@ -1,4 +1,6 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
+import { Th } from "@/components/ui/th";
 
 import Link from "next/link";
 import { useCallback, useMemo, useState, type FormEvent } from "react";
@@ -307,9 +309,7 @@ export function NewOrderForm({
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <Button type="button" variant="outline" className="h-9" onClick={onCancel}>
-            Volver
-          </Button>
+          <Button type="button" variant="outline" className="h-9" onClick={onCancel}><Ui>Volver</Ui></Button>
           <Button
             type="submit"
             disabled={!canCreate}
@@ -374,7 +374,7 @@ export function NewOrderForm({
               />
             </label>
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Notas</span>
+              <span className="text-sm font-medium"><Ui>Notas</Ui></span>
               <textarea
                 rows={2}
                 value={notes}
@@ -387,7 +387,7 @@ export function NewOrderForm({
 
           <div className="space-y-2">
             <div className="flex items-end justify-between gap-3">
-              <p className="text-sm font-medium">Catálogo</p>
+              <p className="text-sm font-medium"><Ui>Catálogo</Ui></p>
               <p className="text-xs text-muted-foreground">
                 {products.length.toLocaleString("es-MX")} productos
               </p>
@@ -448,9 +448,7 @@ export function NewOrderForm({
                 </span>
               </label>
               <label className="space-y-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Cant.
-                </span>
+                <span className="text-xs font-medium text-muted-foreground"><Ui>Cant.</Ui></span>
                 <input
                   type="number"
                   min={1}
@@ -647,15 +645,15 @@ export function NewOrderForm({
                 <table className="min-w-full text-sm">
                   <thead className="bg-muted/50 text-left text-muted-foreground">
                     <tr>
-                      <th className="px-3 py-2 font-medium">Producto</th>
+                      <Th className="px-3 py-2 font-medium">Producto</Th>
                       {suppliers.length > 0 ? (
-                        <th className="px-3 py-2 font-medium">Proveedor</th>
+                        <Th className="px-3 py-2 font-medium">Proveedor</Th>
                       ) : null}
-                      <th className="px-3 py-2 font-medium">Cant.</th>
+                      <Th className="px-3 py-2 font-medium">Cant.</Th>
                       {canViewPrices ? (
                         <>
-                          <th className="px-3 py-2 font-medium">P. unit.</th>
-                          <th className="px-3 py-2 font-medium">Importe</th>
+                          <Th className="px-3 py-2 font-medium">P. unit.</Th>
+                          <Th className="px-3 py-2 font-medium">Importe</Th>
                         </>
                       ) : null}
                       <th className="px-3 py-2 font-medium">
@@ -775,9 +773,7 @@ export function NewOrderForm({
                 variant="outline"
                 className="h-10 flex-1 sm:flex-none"
                 onClick={onCancel}
-              >
-                Cancelar
-              </Button>
+              ><Ui>Cancelar</Ui></Button>
               <Button
                 type="submit"
                 disabled={!canCreate}

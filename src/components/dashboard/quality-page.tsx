@@ -1,31 +1,29 @@
 "use client";
 
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useLocale } from "@/components/locale-provider";
 import { QualityPanel } from "@/components/warehouse/quality-panel";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 
 export function QualityPage() {
+  const { t } = useLocale();
   const access = useSessionAccess();
   const allowed = access.ready ? access.canView("calidad") : null;
 
   return (
-    <AppShell
-      title="Calidad"
-      subtitle="MAS · Encuestas de satisfacción del cliente"
-    >
+    <AppShell title={t("page.quality")} subtitle={t("page.qualitySubtitle")}>
       <div className="space-y-4 sm:space-y-6">
         {allowed === false ? (
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">Sin acceso a este módulo</h2>
+            <h2 className="text-lg font-semibold">{t("page.noAccess")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tu rol no puede abrir el apartado de calidad ni las encuestas de
-              satisfacción.
+              {t("page.noAccessHint")}
             </p>
           </section>
         ) : allowed ? (
           <QualityPanel />
         ) : (
-          <p className="text-sm text-muted-foreground">Cargando...</p>
+          <p className="text-sm text-muted-foreground">{t("ui.loading")}</p>
         )}
       </div>
     </AppShell>

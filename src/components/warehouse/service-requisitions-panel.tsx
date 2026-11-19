@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -1023,7 +1024,7 @@ export function ServiceRequisitionsPanel({
             onChange={(e) => setStatusFilter(e.target.value as RequisitionStatus | "abiertas" | "todas")}
           >
             <option value="abiertas">Abiertas</option>
-            <option value="todas">Todas</option>
+            <option value="todas"><Ui>Todas</Ui></option>
             {REQUISITION_STATUSES.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.label}
@@ -1031,8 +1032,7 @@ export function ServiceRequisitionsPanel({
             ))}
           </select>
           <Button type="button" variant="outline" onClick={refresh} disabled={refreshing}>
-            <RefreshCw className={cn("size-4", refreshing && "animate-spin")} /> Actualizar
-          </Button>
+            <RefreshCw className={cn("size-4", refreshing && "animate-spin")} /> <Ui>Actualizar</Ui></Button>
         </div>
       </div>
 
@@ -1341,22 +1341,22 @@ export function ServiceRequisitionsPanel({
                               <dd>{selected.quoteFolio || origin?.folio || "—"}</dd>
                             </div>
                             <div>
-                              <dt className="text-[11px] text-muted-foreground">Proyecto</dt>
+                              <dt className="text-[11px] text-muted-foreground"><Ui>Proyecto</Ui></dt>
                               <dd>{origin?.title || "—"}</dd>
                             </div>
                           </>
                         ) : (
                           <>
                             <div>
-                              <dt className="text-[11px] text-muted-foreground">Equipo</dt>
+                              <dt className="text-[11px] text-muted-foreground"><Ui>Equipo</Ui></dt>
                               <dd>{origin?.equipmentName || selected.equipmentName || "—"}</dd>
                             </div>
                             <div>
-                              <dt className="text-[11px] text-muted-foreground">Marca</dt>
+                              <dt className="text-[11px] text-muted-foreground"><Ui>Marca</Ui></dt>
                               <dd>{origin?.equipmentBrand || "—"}</dd>
                             </div>
                             <div>
-                              <dt className="text-[11px] text-muted-foreground">Modelo</dt>
+                              <dt className="text-[11px] text-muted-foreground"><Ui>Modelo</Ui></dt>
                               <dd>{origin?.equipmentModel || "—"}</dd>
                             </div>
                             <div>
@@ -1364,7 +1364,7 @@ export function ServiceRequisitionsPanel({
                               <dd className="font-mono text-xs">{origin?.equipmentSerial || "—"}</dd>
                             </div>
                             <div>
-                              <dt className="text-[11px] text-muted-foreground">Ubicación</dt>
+                              <dt className="text-[11px] text-muted-foreground"><Ui>Ubicación</Ui></dt>
                               <dd>{origin?.equipmentLocation || "—"}</dd>
                             </div>
                           </>
@@ -1373,17 +1373,17 @@ export function ServiceRequisitionsPanel({
                     )}
                   </div>
                   <div className="rounded-xl border border-border bg-background p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[#3B46A5]">Cliente</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#3B46A5]"><Ui>Cliente</Ui></p>
                     {originLoading && !origin ? (
                       <p className="mt-2 text-sm text-muted-foreground">Cargando cliente…</p>
                     ) : (
                       <dl className="mt-2 space-y-1.5 text-sm">
                         <div>
-                          <dt className="text-[11px] text-muted-foreground">Cliente</dt>
+                          <dt className="text-[11px] text-muted-foreground"><Ui>Cliente</Ui></dt>
                           <dd>{origin?.clientName || selected.clientName || "Sin cliente"}</dd>
                         </div>
                         <div>
-                          <dt className="text-[11px] text-muted-foreground">Dirección</dt>
+                          <dt className="text-[11px] text-muted-foreground"><Ui>Dirección</Ui></dt>
                           <dd>
                             {formatClientAddress(origin?.address ?? "", origin?.city ?? "") ||
                               selected.deliveryAddress ||
@@ -1391,7 +1391,7 @@ export function ServiceRequisitionsPanel({
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-[11px] text-muted-foreground">Estado</dt>
+                          <dt className="text-[11px] text-muted-foreground"><Ui>Estado</Ui></dt>
                           <dd>{origin?.state || "Sin estado"}</dd>
                         </div>
                         <div>
@@ -1685,8 +1685,7 @@ export function ServiceRequisitionsPanel({
                 ) : null}
                 {selectedItems.length === 1 && selected.status === "solicitada" && canCancel ? (
                   <Button type="button" variant="outline" disabled={busy} onClick={() => void onCancel()}>
-                    <XCircle className="size-4" /> Cancelar
-                  </Button>
+                    <XCircle className="size-4" /> <Ui>Cancelar</Ui></Button>
                 ) : null}
                 {selectedItems.length === 1 && selected.status === "surtida" ? (
                   <span className="inline-flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-300">

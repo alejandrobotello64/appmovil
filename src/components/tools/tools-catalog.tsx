@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useMemo, useState, type FormEvent } from "react";
 import { History, Pencil, Plus, Printer, QrCode, ScanBarcode, Trash2, X } from "lucide-react";
@@ -325,13 +326,11 @@ export function ToolsCatalog({
                 </Button>
                 {canEdit ? (
                   <Button type="button" variant="outline" size="sm" onClick={() => setEditing(tool)}>
-                    <Pencil className="size-3.5" /> Editar
-                  </Button>
+                    <Pencil className="size-3.5" /> <Ui>Editar</Ui></Button>
                 ) : null}
                 {canDelete ? (
                   <Button type="button" variant="destructive" size="sm" onClick={() => void onDelete(tool)}>
-                    <Trash2 className="size-3.5" /> Eliminar
-                  </Button>
+                    <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></Button>
                 ) : null}
               </div>
             </article>
@@ -436,7 +435,7 @@ function ToolForm({
           />
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">Categoría</span>
+          <span className="mb-1 block text-muted-foreground"><Ui>Categoría</Ui></span>
           <select
             className={fieldClass}
             value={form.category}
@@ -462,11 +461,11 @@ function ToolForm({
           </span>
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">Marca</span>
+          <span className="mb-1 block text-muted-foreground"><Ui>Marca</Ui></span>
           <input className={fieldClass} value={form.brand} onChange={(e) => set("brand", e.target.value)} />
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">Modelo</span>
+          <span className="mb-1 block text-muted-foreground"><Ui>Modelo</Ui></span>
           <input className={fieldClass} value={form.model} onChange={(e) => set("model", e.target.value)} />
         </label>
         <label className="block text-sm">
@@ -501,7 +500,7 @@ function ToolForm({
           ) : null}
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">Estado</span>
+          <span className="mb-1 block text-muted-foreground"><Ui>Estado</Ui></span>
           <select
             className={fieldClass}
             value={form.condition}
@@ -515,7 +514,7 @@ function ToolForm({
           </select>
         </label>
         <label className="block text-sm sm:col-span-2">
-          <span className="mb-1 block text-muted-foreground">Descripción</span>
+          <span className="mb-1 block text-muted-foreground"><Ui>Descripción</Ui></span>
           <textarea
             className={textareaClass}
             value={form.description}
@@ -536,9 +535,7 @@ function ToolForm({
           <Notice tone="error">{error}</Notice>
         </div>
         <div className="flex justify-end gap-2 sm:col-span-2">
-          <Button type="button" variant="outline" className="h-10 px-3" onClick={onClose}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" className="h-10 px-3" onClick={onClose}><Ui>Cancelar</Ui></Button>
           <Button type="submit" disabled={saving} className={cn("h-10 px-4", primaryButtonClass)}>
             {saving ? "Guardando…" : tool ? "Guardar cambios" : "Agregar al catálogo"}
           </Button>

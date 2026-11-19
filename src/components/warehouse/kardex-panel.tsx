@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -83,7 +84,7 @@ export function KardexPanel() {
     <section className="rounded-2xl border border-border bg-card shadow-sm">
       <div className="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Kardex</h2>
+          <h2 className="text-lg font-semibold text-foreground"><Ui>Kardex</Ui></h2>
           <p className="text-sm text-muted-foreground">
             Movimientos inalterables con folio. La existencia solo cambia por
             estos documentos.

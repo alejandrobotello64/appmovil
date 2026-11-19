@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState } from "react";
 import { ClipboardCheck, Hand, PackageCheck, Plus, Printer, ShoppingBag, X } from "lucide-react";
@@ -456,8 +457,7 @@ export function PurchaseRequestBatch({
                     }}
                   />
                   <Button type="button" variant="outline" onClick={addCustomSupplier} disabled={!customName.trim()}>
-                    <Plus className="size-4" /> Agregar
-                  </Button>
+                    <Plus className="size-4" /> <Ui>Agregar</Ui></Button>
                 </div>
               </div>
               <label className="block text-sm">
@@ -523,9 +523,7 @@ export function PurchaseRequestBatch({
               <Button type="button" variant="outline" onClick={() => setPanel("none")}>
                 Volver
               </Button>
-              <Button type="button" className={primaryButtonClass} disabled={busy} onClick={onReceive}>
-                Confirmar
-              </Button>
+              <Button type="button" className={primaryButtonClass} disabled={busy} onClick={onReceive}><Ui>Confirmar</Ui></Button>
             </div>
           </section>
         ) : null}

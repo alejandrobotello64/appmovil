@@ -1,4 +1,6 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
+import { Th } from "@/components/ui/th";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -446,8 +448,7 @@ function RequisitionCard({
               disabled={busy}
               onClick={onCancel}
             >
-              <XCircle className="size-3.5" /> Cancelar
-            </Button>
+              <XCircle className="size-3.5" /> <Ui>Cancelar</Ui></Button>
           ) : null}
         </div>
       </div>
@@ -682,7 +683,7 @@ function QuoteFulfillmentDialog({
                 <th className="px-3 py-2">Partida</th>
                 <th className="px-3 py-2 text-center">Cotizado</th>
                 <th className="px-3 py-2 text-center">Por pedir</th>
-                <th className="px-3 py-2 text-center">Disponible</th>
+                <Th className="px-3 py-2 text-center">Disponible</Th>
                 <th className="px-3 py-2">Solicitar</th>
               </tr>
             </thead>
@@ -825,9 +826,7 @@ function QuoteFulfillmentDialog({
           <span className="mr-auto text-xs text-muted-foreground">
             {selected.length} partida(s) · {formatQty(units)} unidad(es)
           </span>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onClose}><Ui>Cancelar</Ui></Button>
           <Button
             type="button"
             className={primaryButtonClass}

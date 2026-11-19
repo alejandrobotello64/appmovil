@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { BookmarkPlus, CheckCircle2, Plus, Search, Unlock, XCircle } from "lucide-react";
@@ -492,7 +493,7 @@ export function HoldsPanel() {
           <h3 className="text-base font-semibold">Nuevo apartado</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Proyecto *</span>
+              <span className="text-sm font-medium"><Ui>Proyecto *</Ui></span>
               <input
                 required
                 value={projectName}
@@ -502,7 +503,7 @@ export function HoldsPanel() {
               />
             </label>
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Cliente del catálogo</span>
+              <span className="text-sm font-medium"><Ui>Cliente del catálogo</Ui></span>
               <select
                 value={clientId}
                 onChange={(e) => applyClient(e.target.value)}
@@ -520,7 +521,7 @@ export function HoldsPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Cliente</span>
+              <span className="text-sm font-medium"><Ui>Cliente</Ui></span>
               <input
                 value={clientName}
                 onChange={(e) => {
@@ -531,7 +532,7 @@ export function HoldsPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Fecha requerida *</span>
+              <span className="text-sm font-medium"><Ui>Fecha requerida *</Ui></span>
               <input
                 required
                 type="date"
@@ -544,7 +545,7 @@ export function HoldsPanel() {
               </span>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Estado</span>
+              <span className="text-sm font-medium"><Ui>Estado</Ui></span>
               <select
                 value={clientState}
                 onChange={(e) => {
@@ -562,7 +563,7 @@ export function HoldsPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Ciudad</span>
+              <span className="text-sm font-medium"><Ui>Ciudad</Ui></span>
               <input
                 value={clientCity}
                 onChange={(e) => {
@@ -573,7 +574,7 @@ export function HoldsPanel() {
               />
             </label>
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Notas</span>
+              <span className="text-sm font-medium"><Ui>Notas</Ui></span>
               <textarea
                 rows={2}
                 value={notes}
@@ -585,7 +586,7 @@ export function HoldsPanel() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <h4 className="text-sm font-semibold">Artículos</h4>
+              <h4 className="text-sm font-semibold"><Ui>Artículos</Ui></h4>
               <Button
                 type="button"
                 variant="outline"
@@ -646,7 +647,7 @@ export function HoldsPanel() {
                       }}
                       className={fieldClass}
                     >
-                      <option value="all">Todos</option>
+                      <option value="all"><Ui>Todos</Ui></option>
                       {INVENTORY_CATEGORIES.map((category) => (
                         <option key={category.id} value={category.id}>
                           {category.label}
@@ -685,7 +686,7 @@ export function HoldsPanel() {
                     </select>
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Cant.</span>
+                    <span className="text-xs text-muted-foreground"><Ui>Cant.</Ui></span>
                     <input
                       required
                       type="number"
@@ -709,7 +710,7 @@ export function HoldsPanel() {
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs text-muted-foreground">Nota</span>
+                    <span className="text-xs text-muted-foreground"><Ui>Nota</Ui></span>
                     <input
                       value={line.notes ?? ""}
                       onChange={(e) =>
@@ -837,9 +838,7 @@ export function HoldsPanel() {
                           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
                           onClick={() => void handleCancel(hold)}
                         >
-                          <XCircle className="size-3.5" />
-                          Cancelar
-                        </button>
+                          <XCircle className="size-3.5" /> <Ui>Cancelar</Ui></button>
                       ) : null}
                     </div>
                   ) : undefined,

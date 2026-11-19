@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useMemo, useState, type FormEvent } from "react";
 import { Minus, Plus, Search, Trash2 } from "lucide-react";
@@ -151,9 +152,7 @@ export function NewPurchaseRequestForm({
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <Button type="button" variant="outline" className="h-9" onClick={onCancel}>
-            Volver
-          </Button>
+          <Button type="button" variant="outline" className="h-9" onClick={onCancel}><Ui>Volver</Ui></Button>
           <Button
             type="submit"
             disabled={!canCreate}
@@ -214,7 +213,7 @@ export function NewPurchaseRequestForm({
               }
               className="h-10 rounded-lg border border-input bg-background px-2 text-sm"
             >
-              <option value="all">Todas</option>
+              <option value="all"><Ui>Todas</Ui></option>
               {SUPPLY_CATEGORIES.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.label}
@@ -253,9 +252,7 @@ export function NewPurchaseRequestForm({
                     className="h-8"
                     onClick={() => addProduct(product)}
                   >
-                    <Plus className="size-3.5" />
-                    Agregar
-                  </Button>
+                    <Plus className="size-3.5" /> <Ui>Agregar</Ui></Button>
                 </li>
               ))
             )}

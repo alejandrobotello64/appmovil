@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -115,9 +116,7 @@ export function ServiceImageLightbox({
               })
             }
           >
-            <Printer className="size-4" />
-            Imprimir
-          </button>
+            <Printer className="size-4" /> <Ui>Imprimir</Ui></button>
         </figcaption>
       </figure>
     </div>,

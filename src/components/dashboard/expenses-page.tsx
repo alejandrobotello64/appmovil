@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useLocale } from "@/components/locale-provider";
 import { ExpenseReportsPanel } from "@/components/expenses/expense-reports-panel";
 import { ExpenseSummaryPanel } from "@/components/expenses/expense-summary-panel";
 import type { ExpenseViewer } from "@/components/expenses/use-expense-reports";
@@ -12,6 +13,7 @@ import { EXPENSE_TABS, normalizeExpenseTab, tabKind } from "@/lib/expenses/tabs"
 import { cn } from "@/lib/utils";
 
 export function ExpensesPage() {
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const tab = normalizeExpenseTab(searchParams.get("tab"));
   const kind = tabKind(tab);
@@ -38,14 +40,17 @@ export function ExpensesPage() {
   const current = EXPENSE_TABS.find((item) => item.id === tab) ?? EXPENSE_TABS[0];
 
   return (
-    <AppShell title="Gastos" subtitle={`MAS · ${current.description}`}>
+    <AppShell
+      title={t(`tab.expenses.${tab}`, current.label)}
+      subtitle={`${t("page.expenses")} · ${t(`tab.expenses.${tab}`, current.description)}`}
+    >
       <div className="space-y-4 sm:space-y-6">
         {!permissions.ready ? (
-          <p className="text-sm text-muted-foreground">Cargando...</p>
+          <p className="text-sm text-muted-foreground">{t("ui.loading")}</p>
         ) : !permissions.canView ? (
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">Sin acceso a este módulo</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Tu rol no puede abrir el control de gastos.</p>
+            <h2 className="text-lg font-semibold">{t("page.noAccess")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("page.noAccessHint")}</p>
           </section>
         ) : (
           <>

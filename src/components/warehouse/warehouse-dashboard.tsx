@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "@/components/locale-provider";
+import { Ui } from "@/components/ui/ui-text";
 import {
   AlertTriangle,
   Bookmark,
@@ -51,6 +53,7 @@ function formatCurrency(value: number) {
 }
 
 export function WarehouseDashboard() {
+  const { c } = useLocale();
   const { can } = useSessionAccess();
   const canViewPrices = can("precios.view");
   const [products, setProducts] = useState<InventoryItem[]>([]);
@@ -261,7 +264,7 @@ export function WarehouseDashboard() {
   if (loading) {
     return (
       <p className="text-sm text-muted-foreground">
-        Cargando dashboard del sistema interno...
+        {c("Cargando dashboard del sistema interno...")}
       </p>
     );
   }
@@ -269,12 +272,14 @@ export function WarehouseDashboard() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-border bg-[linear-gradient(135deg,rgba(0,191,255,0.08),rgba(59,70,165,0.12))] p-6">
-        <p className="text-sm text-muted-foreground">Sistema interno de almacén</p>
+        <p className="text-sm text-muted-foreground">
+          {c("Sistema interno de almacén")}
+        </p>
         <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-          Dashboard operativo
+          {c("Dashboard operativo")}
         </h2>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          El <strong>Inventario</strong> cubre insumos, medicamentos, refacciones,
+          El <strong><Ui>Inventario</Ui></strong> cubre insumos, medicamentos, refacciones,
           accesorios y reactivos. Los <strong>equipos médicos</strong> viven en su
           propio inventario, con series y estado aparte.
         </p>
@@ -291,9 +296,9 @@ export function WarehouseDashboard() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm text-muted-foreground">{card.label}</p>
+                  <p className="text-sm text-muted-foreground">{c(card.label)}</p>
                   <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                    {card.value}
+                    {typeof card.value === "string" ? c(card.value) : card.value}
                   </p>
                 </div>
                 <div className="rounded-xl bg-muted p-2.5">

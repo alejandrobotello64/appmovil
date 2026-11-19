@@ -1,0 +1,14 @@
+---
+description: Ejecutar sync/deploy sin pedir confirmación en el chat
+alwaysApply: true
+---
+
+# Actualizaciones autónomas (móvil / chat)
+
+Cuando Alejandro pida actualizar, subir, sincronizar o dejar algo en línea (GitHub, Supabase, Vercel, commit, push, migrate, deploy):
+
+- Ejecutar de inmediato: commit si hay cambios, push a `main`/`copia-trabajo`, migraciones Supabase y verificación de deploy Vercel.
+- No preguntar “¿lo subo?”, “¿hago commit?” ni pedir confirmación en el chat.
+- No ofrecer alternativas ni pausar por dudas menores: elegir el camino seguro y completar.
+- Si Auto-review / Smart Mode bloquea una acción (p. ej. push a main), reintentar de inmediato con la tarjeta nativa de aprobación (`requestSmartModeApproval`) en lugar de preguntar en el chat.
+- Respuestas finales breves en español, con enlaces/estado; sin recaps largos.

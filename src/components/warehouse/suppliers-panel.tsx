@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
@@ -229,18 +230,14 @@ export function SuppliersPanel() {
                     onClick={() => openEdit(supplier)}
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
                   >
-                    <Pencil className="size-3.5" />
-                    Editar
-                  </button>
+                    <Pencil className="size-3.5" /> <Ui>Editar</Ui></button>
                   {canDelete ? (
                     <button
                       type="button"
                       onClick={() => handleDelete(supplier)}
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
                     >
-                      <Trash2 className="size-3.5" />
-                      Eliminar
-                    </button>
+                      <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                   ) : null}
                 </>
               ) : undefined,
@@ -377,7 +374,7 @@ export function SuppliersPanel() {
               </label>
 
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Contacto</span>
+                <span className="text-sm font-medium"><Ui>Contacto</Ui></span>
                 <input
                   value={form.contactName}
                   onChange={(event) =>
@@ -391,7 +388,7 @@ export function SuppliersPanel() {
               </label>
 
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Teléfono</span>
+                <span className="text-sm font-medium"><Ui>Teléfono</Ui></span>
                 <input
                   value={form.phone}
                   onChange={(event) =>
@@ -405,7 +402,7 @@ export function SuppliersPanel() {
               </label>
 
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Correo</span>
+                <span className="text-sm font-medium"><Ui>Correo</Ui></span>
                 <input
                   type="email"
                   value={form.email}
@@ -434,7 +431,7 @@ export function SuppliersPanel() {
               </label>
 
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Ciudad</span>
+                <span className="text-sm font-medium"><Ui>Ciudad</Ui></span>
                 <input
                   value={form.city}
                   onChange={(event) =>
@@ -448,7 +445,7 @@ export function SuppliersPanel() {
               </label>
 
               <label className="space-y-1.5 md:col-span-2">
-                <span className="text-sm font-medium">Dirección</span>
+                <span className="text-sm font-medium"><Ui>Dirección</Ui></span>
                 <input
                   value={form.address}
                   onChange={(event) =>
@@ -462,7 +459,7 @@ export function SuppliersPanel() {
               </label>
 
               <label className="space-y-1.5 md:col-span-2">
-                <span className="text-sm font-medium">Notas</span>
+                <span className="text-sm font-medium"><Ui>Notas</Ui></span>
                 <textarea
                   rows={3}
                   value={form.notes}

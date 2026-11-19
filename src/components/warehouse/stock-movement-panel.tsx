@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import {
   useCallback,
@@ -21,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MovementVoucherActions } from "@/components/warehouse/movements/movement-pdf-actions";
 import { CameraButton } from "@/components/media/camera-capture";
 import { CameraCodeReader } from "@/components/scan/camera-code-reader";
 import { ImageLightbox, type LightboxImage } from "@/components/ui/image-lightbox";
@@ -63,8 +65,10 @@ import {
   type WarehouseLocation,
   type WarehouseStock,
 } from "@/lib/warehouse/stock";
+import { useLocale } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
+import { SortableTable } from "@/components/ui/sortable-table";
 import { parseSerialNumbers } from "@/lib/inventory/serials";
 import { resolveScan, type ScanMatch, type ScanResult } from "@/lib/scan/lookup";
 import { dispatchScanResolved } from "@/lib/scan/search-fields";
@@ -83,6 +87,15 @@ type StockMovementPanelProps = {
 };
 
 const NEW_LOCATION = "__new_location__";
+
+type CatalogSort = "categoria" | "nombre" | "sku" | "marca";
+
+const CATALOG_SORT_OPTIONS: { id: CatalogSort; label: string }[] = [
+  { id: "categoria", label: "Categoría" },
+  { id: "nombre", label: "Nombre" },
+  { id: "sku", label: "SKU" },
+  { id: "marca", label: "Marca" },
+];
 
 const MODE_TABS: {
   id: MovementMode;
@@ -143,6 +156,27 @@ function categoryLabel(item: InventoryItem) {
   );
 }
 
+function compareCatalogItems(
+  a: InventoryItem,
+  b: InventoryItem,
+  sort: CatalogSort
+) {
+  const byName = () => a.name.localeCompare(b.name, "es");
+  const bySku = () => a.sku.localeCompare(b.sku, "es");
+  const byBrand = () =>
+    (a.brand || "\uffff").localeCompare(b.brand || "\uffff", "es") || byName();
+  const byCategory = () =>
+    categoryLabel(a).localeCompare(categoryLabel(b), "es") ||
+    byBrand() ||
+    byName() ||
+    bySku();
+
+  if (sort === "nombre") return byName() || bySku();
+  if (sort === "sku") return bySku() || byName();
+  if (sort === "marca") return byBrand() || bySku();
+  return byCategory();
+}
+
 function articleFields(item: InventoryItem) {
   return [
     item.sku,
@@ -186,6 +220,7 @@ function lotSelectLabel(lot: ProductLot, unit: string, scopedToWarehouse: boolea
 
 export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const router = useRouter();
+  const { c } = useLocale();
   const access = useSessionAccess();
   const { canWrite } = usePermissions(mode === "entrada" ? "entradas" : "salidas");
   const canViewEntradas = !access.ready || access.canView("entradas");
@@ -220,6 +255,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [lastFolios, setLastFolios] = useState<string[]>([]);
+  const [printOnSave, setPrintOnSave] = useState(true);
   const [equipmentFormOpen, setEquipmentFormOpen] = useState(false);
   const [creatingEquipment, setCreatingEquipment] = useState(false);
   const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
@@ -287,6 +324,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setReason(mode === "entrada" ? ENTRY_REASONS[0].id : ISSUE_REASONS[3].id);
     setMessage("");
     setError("");
+    setLastFolios([]);
     setLines([]);
     setScanHint("");
     if (mode !== "entrada") {
@@ -344,6 +382,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const unitLabel = selected?.unit || "pza";
 
   const [itemQuery, setItemQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [brandFilter, setBrandFilter] = useState<string>("todas");
+  const [catalogSort, setCatalogSort] = useState<CatalogSort>("categoria");
   const [historyQuery, setHistoryQuery] = useState("");
   const [scanHint, setScanHint] = useState("");
   /** Al escanear, agrega directo a la lista multi-producto. */
@@ -408,17 +449,70 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setManufacturedAt("");
     setSerialNumber("");
   }, []);
-  const itemOptions = useMemo(() => {
-    const filtered = items.filter(
-      (item) =>
-        item.id === itemId ||
-        !itemQuery.trim() ||
-        matchesSearch(itemQuery, articleFields(item))
+  const catalogCategories = useMemo(() => {
+    const present = new Set(items.map((item) => item.category));
+    return CATALOG_CATEGORIES.filter((entry) => present.has(entry.id));
+  }, [items]);
+
+  const catalogBrands = useMemo(() => {
+    const brands = new Set(
+      items.map((item) => item.brand.trim()).filter(Boolean)
     );
-    // Sin búsqueda: muestra un recorte del catálogo para no saturar.
-    if (!itemQuery.trim()) return filtered.slice(0, 60);
-    return filtered.slice(0, 80);
-  }, [items, itemQuery, itemId]);
+    return [...brands].sort((a, b) => a.localeCompare(b, "es"));
+  }, [items]);
+
+  const hasCatalogFilters =
+    categoryFilter !== "all" || brandFilter !== "todas" || Boolean(itemQuery.trim());
+
+  const itemOptions = useMemo(() => {
+    const filtered = items.filter((item) => {
+      if (item.id === itemId) return true;
+      if (categoryFilter !== "all") {
+        const isEquipment =
+          item.itemKind === "equipo" || item.category === "equipos";
+        if (categoryFilter === "equipos") {
+          if (!isEquipment) return false;
+        } else if (item.category !== categoryFilter) {
+          return false;
+        }
+      }
+      if (brandFilter === "sin_marca") {
+        if (item.brand.trim()) return false;
+      } else if (brandFilter !== "todas" && item.brand.trim() !== brandFilter) {
+        return false;
+      }
+      if (itemQuery.trim() && !matchesSearch(itemQuery, articleFields(item))) {
+        return false;
+      }
+      return true;
+    });
+    const sorted = [...filtered].sort((a, b) =>
+      compareCatalogItems(a, b, catalogSort)
+    );
+    // Con filtros: muestra más resultados; sin filtros, recorta para no saturar.
+    const limit = hasCatalogFilters ? 200 : 60;
+    return sorted.slice(0, limit);
+  }, [
+    items,
+    itemQuery,
+    itemId,
+    categoryFilter,
+    brandFilter,
+    catalogSort,
+    hasCatalogFilters,
+  ]);
+
+  const groupedItemOptions = useMemo(() => {
+    if (catalogSort !== "categoria") return null;
+    const groups: { label: string; items: InventoryItem[] }[] = [];
+    for (const item of itemOptions) {
+      const label = categoryLabel(item);
+      const last = groups[groups.length - 1];
+      if (last && last.label === label) last.items.push(item);
+      else groups.push({ label, items: [item] });
+    }
+    return groups;
+  }, [itemOptions, catalogSort]);
 
   const applyScanMatch = useCallback(
     async ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
@@ -1058,6 +1152,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         unit: string;
       }> = [];
 
+      // Una sola entrada/salida: todas las partidas comparten el mismo folio.
+      let sharedFolio: string | null = null;
       for (const line of pending) {
         const movement = await applyStockMovement({
           productId: line.productId,
@@ -1072,7 +1168,9 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           manufacturedAt: line.manufacturedAt || null,
           quantity: line.isEquipment ? 1 : line.quantity,
           serialNumber: line.serialNumber.trim() || null,
+          folio: sharedFolio,
         });
+        if (!sharedFolio) sharedFolio = movement.folio;
         results.push({
           ...movement,
           productId: line.productId,
@@ -1080,7 +1178,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         });
       }
 
-      const folios = results.map((item) => item.folio);
+      const batchFolio = sharedFolio || results[0]?.folio || "";
       const qtyByProduct = new Map(
         results.map((item) => [item.productId, item.newQuantity] as const)
       );
@@ -1102,7 +1200,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           setEvidenceFiles([]);
         } catch (evidenceError) {
           setError(
-            `Se registraron ${folios.join(", ")}, pero no se pudo guardar la evidencia: ${
+            `Se registró ${batchFolio}, pero no se pudo guardar la evidencia: ${
               evidenceError instanceof Error
                 ? evidenceError.message
                 : "error desconocido"
@@ -1111,15 +1209,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         }
       }
 
+      const uniqueFolios = batchFolio ? [batchFolio] : [];
       const label =
         mode === "entrada"
           ? pending.length > 1
-            ? `${pending.length} entradas: ${folios.join(", ")}.`
-            : `Entrada ${folios[0]}.`
+            ? `Entrada ${batchFolio} · ${pending.length} productos.`
+            : `Entrada ${batchFolio}.`
           : pending.length > 1
-            ? `${pending.length} salidas: ${folios.join(", ")}.`
-            : `Salida ${folios[0]}.`;
+            ? `Salida ${batchFolio} · ${pending.length} productos.`
+            : `Salida ${batchFolio}.`;
       setMessage(`${label}${evidenceNote}`);
+      setLastFolios(uniqueFolios);
       setLines([]);
       clearDraft();
       setNote("");
@@ -1127,6 +1227,27 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       setRelatedSerial("");
       setScanHint("Listo: escanea el siguiente lote de productos.");
       await Promise.all([loadHistory(), loadLots(), loadWarehouseStock()]);
+
+      if (printOnSave && uniqueFolios.length > 0) {
+        try {
+          const [{ getMovementsByFolio }, { downloadMovementVoucherPdf }] =
+            await Promise.all([
+              import("@/lib/warehouse/movements"),
+              import("@/lib/warehouse/movements-pdf"),
+            ]);
+          const records = await getMovementsByFolio(uniqueFolios);
+          await downloadMovementVoucherPdf(records, {
+            warehouses,
+            output: "print",
+          });
+        } catch (printError) {
+          setError(
+            printError instanceof Error
+              ? `Registrado, pero no se pudo abrir el PDF: ${printError.message}`
+              : "Registrado, pero no se pudo abrir el PDF para imprimir."
+          );
+        }
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo registrar el movimiento."
@@ -1171,8 +1292,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {mode === "entrada"
-                    ? "Escanea varios productos a la lista, revisa cantidades y confirma todo de una vez. Con GS1 se rellenan lote/serie/caducidad."
-                    : "Escanea varios productos a la lista, revisa cantidades y confirma la salida en un solo paso."}
+                    ? "Escanea varios productos a la lista y confírmalos en una sola entrada (mismo folio). Con GS1 se rellenan lote/serie/caducidad."
+                    : "Escanea varios productos a la lista y confírmalos en una sola salida (mismo folio)."}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1195,9 +1316,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     }}
                     className="shrink-0"
                   >
-                    <Plus className="size-4" />
-                    Dar de alta equipo
-                  </Button>
+                    <Plus className="size-4" /> <Ui>Dar de alta equipo</Ui></Button>
                 ) : null}
               </div>
             </div>
@@ -1268,7 +1387,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
           <form onSubmit={handleSubmit} className="mt-5 grid gap-4">
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Tipo de registro</span>
+              <span className="text-sm font-medium"><Ui>Tipo de registro</Ui></span>
               <select
                 value={reason}
                 disabled={!canWrite}
@@ -1300,7 +1419,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Almacén</span>
+                    <span className="text-sm font-medium"><Ui>Almacén</Ui></span>
                     <select
                       required
                       value={warehouseId}
@@ -1461,20 +1580,134 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 ) : null}
 
                 {items.length > 0 ? (
-                  <SearchInput
-                    value={itemQuery}
-                    onChange={(value) => {
-                      setItemQuery(value);
-                      setScanHint("");
-                      const first = items.find((item) =>
-                        matchesSearch(value, articleFields(item))
-                      );
-                      if (value.trim() && first) setItemId(first.id);
-                      else if (!value.trim()) setItemId("");
-                    }}
-                    scanSearch="true"
-                    placeholder="Buscar o escanear por código, nombre, n.º de parte..."
-                  />
+                  <div className="space-y-2">
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <label className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {c("Categoría")}
+                        </span>
+                        <select
+                          value={categoryFilter}
+                          onChange={(event) =>
+                            setCategoryFilter(event.target.value)
+                          }
+                          className={fieldClass}
+                          aria-label={c("Categoría")}
+                        >
+                          <option value="all">{c("Todas")}</option>
+                          {catalogCategories.map((entry) => (
+                            <option key={entry.id} value={entry.id}>
+                              {c(entry.label)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {c("Marca")}
+                        </span>
+                        <select
+                          value={brandFilter}
+                          onChange={(event) =>
+                            setBrandFilter(event.target.value)
+                          }
+                          className={fieldClass}
+                          aria-label={c("Marca")}
+                        >
+                          <option value="todas">{c("Todas")}</option>
+                          {catalogBrands.map((brand) => (
+                            <option key={brand} value={brand}>
+                              {brand}
+                            </option>
+                          ))}
+                          {items.some((item) => !item.brand.trim()) ? (
+                            <option value="sin_marca">{c("Sin marca")}</option>
+                          ) : null}
+                        </select>
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {c("Ordenar")}
+                        </span>
+                        <select
+                          value={catalogSort}
+                          onChange={(event) =>
+                            setCatalogSort(event.target.value as CatalogSort)
+                          }
+                          className={fieldClass}
+                          aria-label={c("Ordenar")}
+                        >
+                          {CATALOG_SORT_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {c(option.label)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    {hasCatalogFilters ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-[11px] text-muted-foreground">
+                          {itemOptions.length}{" "}
+                          {itemOptions.length === 1
+                            ? c("Artículo").toLowerCase()
+                            : c("Artículos").toLowerCase()}
+                          {categoryFilter !== "all" || brandFilter !== "todas"
+                            ? ` · ${c("Filtros")} activos`
+                            : ""}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryFilter("all");
+                            setBrandFilter("todas");
+                            setItemQuery("");
+                            setItemId("");
+                            setScanHint("");
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                          <X className="size-3" />
+                          {c("Quitar filtros")}
+                        </button>
+                      </div>
+                    ) : null}
+                    <SearchInput
+                      value={itemQuery}
+                      onChange={(value) => {
+                        setItemQuery(value);
+                        setScanHint("");
+                        if (!value.trim()) {
+                          setItemId("");
+                          return;
+                        }
+                        const first = items.find((item) => {
+                          if (categoryFilter !== "all") {
+                            const isEquipment =
+                              item.itemKind === "equipo" ||
+                              item.category === "equipos";
+                            if (categoryFilter === "equipos") {
+                              if (!isEquipment) return false;
+                            } else if (item.category !== categoryFilter) {
+                              return false;
+                            }
+                          }
+                          if (brandFilter === "sin_marca") {
+                            if (item.brand.trim()) return false;
+                          } else if (
+                            brandFilter !== "todas" &&
+                            item.brand.trim() !== brandFilter
+                          ) {
+                            return false;
+                          }
+                          return matchesSearch(value, articleFields(item));
+                        });
+                        if (first) setItemId(first.id);
+                      }}
+                      scanSearch="true"
+                      placeholder="Buscar o escanear por código, nombre, n.º de parte..."
+                    />
+                  </div>
                 ) : null}
                 {scanHint ? (
                   <p className="text-xs font-medium text-[#00BFFF]">{scanHint}</p>
@@ -1486,8 +1719,54 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     </p>
                   ) : itemOptions.length === 0 ? (
                     <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                      Sin coincidencias. Prueba otro término.
+                      Sin coincidencias. Prueba otro filtro o término.
                     </p>
+                  ) : groupedItemOptions ? (
+                    <div className="divide-y divide-border">
+                      {groupedItemOptions.map((group) => (
+                        <div key={group.label}>
+                          <p className="sticky top-0 z-[1] bg-muted/90 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase backdrop-blur-sm">
+                            {c(group.label)} · {group.items.length}
+                          </p>
+                          <ul className="divide-y divide-border/70">
+                            {group.items.map((item) => {
+                              const active = item.id === itemId;
+                              return (
+                                <li key={item.id}>
+                                  <button
+                                    type="button"
+                                    disabled={!canWrite}
+                                    onClick={() => {
+                                      setItemId(item.id);
+                                      setItemQuery(item.sku);
+                                      setScanHint("");
+                                    }}
+                                    className={cn(
+                                      "flex w-full flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-muted/60",
+                                      active && "bg-[#00BFFF]/10"
+                                    )}
+                                  >
+                                    <span className="text-sm font-medium text-foreground">
+                                      {withPartNumber(
+                                        item.name,
+                                        item.partNumber,
+                                        item.model
+                                      )}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      <span className="font-mono">{item.sku}</span>
+                                      {item.brand ? ` · ${item.brand}` : ""}
+                                      {" · "}
+                                      {item.quantity} {item.unit}
+                                    </span>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <ul className="divide-y divide-border">
                       {itemOptions.map((item) => {
@@ -1508,12 +1787,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                               )}
                             >
                               <span className="text-sm font-medium text-foreground">
-                                {withPartNumber(item.name, item.partNumber, item.model)}
+                                {withPartNumber(
+                                  item.name,
+                                  item.partNumber,
+                                  item.model
+                                )}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 <span className="font-mono">{item.sku}</span>
                                 {" · "}
                                 {categoryLabel(item)}
+                                {item.brand ? ` · ${item.brand}` : ""}
                                 {" · "}
                                 {item.quantity} {item.unit}
                               </span>
@@ -1524,9 +1808,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     </ul>
                   )}
                 </div>
-                {!itemQuery.trim() && items.length > 60 ? (
+                {!hasCatalogFilters && items.length > 60 ? (
                   <p className="text-[11px] text-muted-foreground">
-                    Mostrando 60 de {items.length}. Escribe para filtrar el resto.
+                    Mostrando 60 de {items.length}. Filtra o escribe para ver el
+                    resto.
                   </p>
                 ) : null}
 
@@ -1537,7 +1822,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 </p>
                 {!isEquipmentCatalog ? (
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Cantidad</span>
+                    <span className="text-sm font-medium"><Ui>Cantidad</Ui></span>
                     <input
                       ref={quantityRef}
                       required={lines.length === 0}
@@ -1563,7 +1848,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 {!isEquipmentCatalog ? (
                   mode === "salida" && lots.length > 0 ? (
                     <label className="space-y-1.5">
-                      <span className="text-sm font-medium">Lote (FEFO)</span>
+                      <span className="text-sm font-medium"><Ui>Lote (FEFO)</Ui></span>
                       <select
                         value={lotNumber}
                         disabled={!canWrite}
@@ -1589,7 +1874,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     <div className="grid gap-4 sm:grid-cols-2">
                       {lots.length > 0 ? (
                         <label className="space-y-1.5 sm:col-span-2">
-                          <span className="text-sm font-medium">Lote existente</span>
+                          <span className="text-sm font-medium"><Ui>Lote existente</Ui></span>
                           <select
                             value={selectedLot?.lotNumber ?? ""}
                             disabled={!canWrite}
@@ -1634,9 +1919,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                         </label>
                       )}
                       <label className="space-y-1.5">
-                        <span className="text-sm font-medium">
-                          Fecha de fabricación (opcional)
-                        </span>
+                        <span className="text-sm font-medium"><Ui>Fecha de fabricación (opcional)</Ui></span>
                         <input
                           type="date"
                           value={manufacturedAt}
@@ -1646,7 +1929,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                         />
                       </label>
                       <label className="space-y-1.5">
-                        <span className="text-sm font-medium">Caducidad (opcional)</span>
+                        <span className="text-sm font-medium"><Ui>Caducidad (opcional)</Ui></span>
                         <input
                           type="date"
                           value={expiryDate}
@@ -1677,9 +1960,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       />
                     </label>
                     <label className="space-y-1.5">
-                      <span className="text-sm font-medium">
-                        Fecha de fabricación (opcional)
-                      </span>
+                      <span className="text-sm font-medium"><Ui>Fecha de fabricación (opcional)</Ui></span>
                       <input
                         type="date"
                         value={manufacturedAt}
@@ -1715,9 +1996,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     </label>
                     {isEquipmentCatalog ? (
                       <label className="space-y-1.5">
-                        <span className="text-sm font-medium">
-                          Fecha de fabricación (opcional)
-                        </span>
+                        <span className="text-sm font-medium"><Ui>Fecha de fabricación (opcional)</Ui></span>
                         <input
                           type="date"
                           value={manufacturedAt}
@@ -1792,7 +2071,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   </div>
                 ) : (
                   <div className="max-h-[36rem] overflow-auto rounded-lg border border-border bg-background">
-                    <table className="w-full min-w-[32rem] border-collapse text-sm">
+                    <SortableTable className="w-full min-w-[32rem] border-collapse text-sm">
                       <thead className="sticky top-0 z-10">
                         <tr className="border-b border-border bg-muted/60 text-left text-xs text-muted-foreground">
                           <th className="px-3 py-2 font-medium">Referencia</th>
@@ -1800,18 +2079,37 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                           <th className="px-3 py-2 font-medium">Detalle</th>
                           <th className="px-3 py-2 font-medium">Ubicación</th>
                           <th className="px-3 py-2 font-medium">Cant.</th>
-                          <th className="px-2 py-2 font-medium">
+                          <th className="px-2 py-2 font-medium" data-sort="off">
                             <span className="sr-only">Quitar</span>
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {lines.map((line) => (
+                        {lines.map((line) => {
+                          const locationName =
+                            locations.find((row) => row.id === line.locationId)
+                              ?.name ?? "";
+                          const detailSort = [
+                            line.lotNumber,
+                            line.serialNumber,
+                            line.manufacturedAt,
+                            line.expiryDate,
+                          ]
+                            .filter(Boolean)
+                            .join(" ");
+                          return (
                           <tr
                             key={line.key}
                             className="border-b border-border last:border-0"
                           >
-                            <td className="max-w-[10rem] px-3 py-2 align-middle">
+                            <td
+                              className="max-w-[10rem] px-3 py-2 align-middle"
+                              data-sort={
+                                line.partNumber.trim() ||
+                                line.model.trim() ||
+                                line.sku
+                              }
+                            >
                               <span className="inline-flex max-w-full items-center rounded-md bg-[#00BFFF]/12 px-2 py-1 font-mono text-sm font-bold tracking-tight text-foreground ring-1 ring-[#00BFFF]/25">
                                 {line.partNumber.trim() || "Sin ref."}
                               </span>
@@ -1821,7 +2119,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                 </span>
                               ) : null}
                             </td>
-                            <td className="max-w-[11rem] px-3 py-2 align-middle">
+                            <td
+                              className="max-w-[11rem] px-3 py-2 align-middle"
+                              data-sort={`${line.name} ${line.sku}`}
+                            >
                               <span className="line-clamp-2 font-medium">
                                 {line.name}
                               </span>
@@ -1832,7 +2133,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                   : ""}
                               </span>
                             </td>
-                            <td className="px-3 py-2 align-middle text-xs text-muted-foreground">
+                            <td
+                              className="px-3 py-2 align-middle text-xs text-muted-foreground"
+                              data-sort={detailSort || "—"}
+                            >
                               {[
                                 line.lotNumber ? `Lote ${line.lotNumber}` : "",
                                 line.serialNumber
@@ -1848,7 +2152,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                 .filter(Boolean)
                                 .join(" · ") || "—"}
                             </td>
-                            <td className="px-3 py-2 align-middle">
+                            <td
+                              className="px-3 py-2 align-middle"
+                              data-sort={locationName || "zzzz"}
+                            >
                               <div className="space-y-1">
                                 <select
                                   value={line.locationId}
@@ -1932,7 +2239,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                 ) : null}
                               </div>
                             </td>
-                            <td className="px-3 py-2 align-middle whitespace-nowrap">
+                            <td
+                              className="px-3 py-2 align-middle whitespace-nowrap"
+                              data-sort={line.isEquipment ? 1 : line.quantity}
+                            >
                               {line.isEquipment ? (
                                 <span className="text-xs text-muted-foreground">
                                   1 {line.unit}
@@ -1966,7 +2276,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                 </span>
                               )}
                             </td>
-                            <td className="px-2 py-2 align-middle">
+                            <td className="px-2 py-2 align-middle" data-sort="off">
                               <button
                                 type="button"
                                 disabled={!canWrite || submitting}
@@ -1982,9 +2292,10 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                               </button>
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
-                    </table>
+                    </SortableTable>
                   </div>
                 )}
               </div>
@@ -1993,7 +2304,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             {showServiceFields ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1.5">
-                  <span className="text-sm font-medium">Técnico</span>
+                  <span className="text-sm font-medium"><Ui>Técnico</Ui></span>
                   <input
                     value={technician}
                     disabled={!canWrite}
@@ -2016,7 +2327,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             ) : null}
 
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Nota (opcional)</span>
+              <span className="text-sm font-medium"><Ui>Nota (opcional)</Ui></span>
               <textarea
                 rows={2}
                 value={note}
@@ -2031,7 +2342,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               <div className="space-y-2 rounded-xl border border-dashed border-[#3B46A5]/40 bg-muted/20 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium">Fotos de evidencia (opcional)</p>
+                    <p className="text-sm font-medium"><Ui>Fotos de evidencia (opcional)</Ui></p>
                     <p className="text-xs text-muted-foreground">
                       Si las agregas, se guardan en el movimiento y en las fotos de la serie, del
                       lote o del producto recibido.
@@ -2135,10 +2446,37 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               </p>
             ) : null}
             {message ? (
-              <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
-                {message}
-              </p>
+              <div className="space-y-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                  {message}
+                </p>
+                {lastFolios.length > 0 ? (
+                  <MovementVoucherActions
+                    records={async () => {
+                      const { getMovementsByFolio } = await import(
+                        "@/lib/warehouse/movements"
+                      );
+                      return getMovementsByFolio(lastFolios);
+                    }}
+                    warehouses={warehouses}
+                    variant="button"
+                    onError={setError}
+                  />
+                ) : null}
+              </div>
             ) : null}
+
+            <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={printOnSave}
+                onChange={(event) => setPrintOnSave(event.target.checked)}
+                className="size-3.5 rounded border-input"
+              />
+              {mode === "entrada"
+                ? "Imprimir vale de entrada al registrar"
+                : "Imprimir vale de salida al registrar"}
+            </label>
 
             <Button
               ref={submitRef}
@@ -2155,8 +2493,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 ? "Guardando..."
                 : lines.length > 1
                   ? mode === "entrada"
-                    ? `Registrar ${lines.length} entradas`
-                    : `Registrar ${lines.length} salidas`
+                    ? `Registrar entrada · ${lines.length} productos`
+                    : `Registrar salida · ${lines.length} productos`
                   : mode === "entrada"
                     ? isEquipmentCatalog
                       ? "Registrar entrada de equipo"
@@ -2240,17 +2578,32 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                           {row.reason ? ` · ${row.reason}` : ""}
                         </p>
                       </div>
-                      <span
-                        className={cn(
-                          "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold",
-                          mode === "entrada"
-                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                            : "bg-amber-500/10 text-amber-800 dark:text-amber-200"
-                        )}
-                      >
-                        {mode === "entrada" ? "+" : "−"}
-                        {qty}
-                      </span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        {row.folio ? (
+                          <MovementVoucherActions
+                            records={async () => {
+                              const { getMovementsByFolio } = await import(
+                                "@/lib/warehouse/movements"
+                              );
+                              return getMovementsByFolio([row.folio]);
+                            }}
+                            warehouses={warehouses}
+                            variant="icon"
+                            onError={setError}
+                          />
+                        ) : null}
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-xs font-semibold",
+                            mode === "entrada"
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                              : "bg-amber-500/10 text-amber-800 dark:text-amber-200"
+                          )}
+                        >
+                          {mode === "entrada" ? "+" : "−"}
+                          {qty}
+                        </span>
+                      </div>
                     </div>
                     <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
                       <span>

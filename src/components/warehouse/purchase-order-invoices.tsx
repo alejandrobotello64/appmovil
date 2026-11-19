@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { FileCode2, FileText, Receipt, Trash2, X } from "lucide-react";
@@ -368,7 +369,7 @@ export function PurchaseOrderInvoicesModal({
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">Total</span>
+                <span className="mb-1 block text-muted-foreground"><Ui>Total</Ui></span>
                 <input
                   type="number"
                   min={0}
@@ -395,7 +396,7 @@ export function PurchaseOrderInvoicesModal({
               </p>
             ) : null}
             <label className="block text-sm">
-              <span className="mb-1 block text-muted-foreground">Notas</span>
+              <span className="mb-1 block text-muted-foreground"><Ui>Notas</Ui></span>
               <textarea className={textareaClass} value={form.notes} onChange={(e) => update({ notes: e.target.value })} />
             </label>
             <div className="flex justify-end">

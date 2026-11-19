@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -595,9 +596,7 @@ export function CalendarPanel() {
               onClick={() => openCreate(selectedDay)}
               className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"
             >
-              <Plus className="size-4" />
-              Nuevo evento
-            </Button>
+              <Plus className="size-4" /> <Ui>Nuevo evento</Ui></Button>
           ) : null}
         </div>
 

@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useState } from "react";
 import {
@@ -426,8 +427,7 @@ export function PurchaseRequestDetail({
                     }}
                   />
                   <Button type="button" variant="outline" onClick={addCustomSupplier} disabled={!customName.trim()}>
-                    <Plus className="size-4" /> Agregar
-                  </Button>
+                    <Plus className="size-4" /> <Ui>Agregar</Ui></Button>
                 </div>
               </div>
               <label className="block text-sm">
@@ -569,7 +569,7 @@ export function PurchaseRequestDetail({
 
         {request.events.length ? (
           <section>
-            <h4 className="mb-2 text-sm font-semibold">Seguimiento</h4>
+            <h4 className="mb-2 text-sm font-semibold"><Ui>Seguimiento</Ui></h4>
             <ol className="space-y-2 border-l border-border pl-4">
               {request.events.map((event) => (
                 <li key={event.id} className="text-sm">
@@ -587,14 +587,12 @@ export function PurchaseRequestDetail({
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
             {perms.canExport ? (
               <Button type="button" variant="outline" onClick={() => void onPdf()}>
-                <Printer className="size-4" /> Imprimir
-              </Button>
+                <Printer className="size-4" /> <Ui>Imprimir</Ui></Button>
             ) : null}
             {canClose ? (
               <>
                 <Button type="button" variant="destructive" onClick={() => setPanel("rechazada")}>
-                  <Ban className="size-4" /> Rechazar
-                </Button>
+                  <Ban className="size-4" /> <Ui>Rechazar</Ui></Button>
                 <Button type="button" variant="outline" onClick={() => setPanel("cancelada")}>
                   Cancelar solicitud
                 </Button>

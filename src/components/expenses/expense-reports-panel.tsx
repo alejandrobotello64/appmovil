@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useMemo, useState } from "react";
 import { Eye, Loader2, Plus } from "lucide-react";
@@ -189,7 +190,7 @@ export function ExpenseReportsPanel({ kind, access, viewer, actor }: Props) {
           <div className="flex gap-2">
             <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Estatus">
               <option value="vigentes">Vigentes</option>
-              <option value="todos">Todos</option>
+              <option value="todos"><Ui>Todos</Ui></option>
               {EXPENSE_STATUSES.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.label}

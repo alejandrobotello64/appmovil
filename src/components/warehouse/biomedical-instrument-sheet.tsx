@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useState } from "react";
 import { CalendarPlus, FileText } from "lucide-react";
@@ -85,13 +86,9 @@ export function BiomedicalInstrumentSheet({
       headerAction={
         <div className="flex gap-2">
           {canEdit ? (
-            <Button type="button" size="sm" variant="outline" onClick={onEdit}>
-              Editar
-            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={onEdit}><Ui>Editar</Ui></Button>
           ) : null}
-          <Button type="button" size="sm" variant="outline" onClick={onClose}>
-            Cerrar
-          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={onClose}><Ui>Cerrar</Ui></Button>
         </div>
       }
     >
@@ -144,7 +141,7 @@ export function BiomedicalInstrumentSheet({
           </p>
           <div className="mt-3 flex flex-wrap items-end gap-2">
             <label className="block text-sm">
-              <span className="mb-1 block text-muted-foreground">Fecha</span>
+              <span className="mb-1 block text-muted-foreground"><Ui>Fecha</Ui></span>
               <input
                 type="date"
                 className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
@@ -184,7 +181,7 @@ export function BiomedicalInstrumentSheet({
 
         {item.notes ? (
           <div>
-            <h4 className="text-sm font-medium">Notas</h4>
+            <h4 className="text-sm font-medium"><Ui>Notas</Ui></h4>
             <p className="mt-1 text-sm whitespace-pre-wrap text-muted-foreground">{item.notes}</p>
           </div>
         ) : null}

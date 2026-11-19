@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import {
   useEffect,
@@ -186,7 +187,7 @@ function SignaturePad({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-medium">Firma</span>
+        <span className="text-sm font-medium"><Ui>Firma</Ui></span>
         <div className="flex gap-2">
           <Button
             type="button"
@@ -581,9 +582,7 @@ export function EducationPanel() {
                           onClick={() => void handlePrint(item)}
                           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
                         >
-                          <Printer className="size-3.5" />
-                          Imprimir
-                        </button>
+                          <Printer className="size-3.5" /> <Ui>Imprimir</Ui></button>
                       ) : null}
                       {canWrite ? (
                         canDelete ? (
@@ -718,8 +717,7 @@ export function EducationPanel() {
                       setSigningAttendee(null);
                     }}
                   >
-                    <X className="size-4" /> Cerrar
-                  </Button>
+                    <X className="size-4" /> <Ui>Cerrar</Ui></Button>
                 </div>
               </div>
 
@@ -749,7 +747,7 @@ export function EducationPanel() {
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Fecha</span>
+                    <span className="text-sm font-medium"><Ui>Fecha</Ui></span>
                     <input
                       type="date"
                       disabled={!canWrite}
@@ -764,7 +762,7 @@ export function EducationPanel() {
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Duración (horas)</span>
+                    <span className="text-sm font-medium"><Ui>Duración (horas)</Ui></span>
                     <input
                       type="number"
                       min="0"
@@ -783,7 +781,7 @@ export function EducationPanel() {
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Lugar</span>
+                    <span className="text-sm font-medium"><Ui>Lugar</Ui></span>
                     <input
                       disabled={!canWrite}
                       className={inputClass}
@@ -797,7 +795,7 @@ export function EducationPanel() {
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Cliente / sede</span>
+                    <span className="text-sm font-medium"><Ui>Cliente / sede</Ui></span>
                     <input
                       disabled={!canWrite}
                       className={inputClass}
@@ -811,7 +809,7 @@ export function EducationPanel() {
                     />
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-sm font-medium">Instructor MAS</span>
+                    <span className="text-sm font-medium"><Ui>Instructor MAS</Ui></span>
                     <input
                       disabled={!canWrite}
                       className={inputClass}
@@ -825,7 +823,7 @@ export function EducationPanel() {
                     />
                   </label>
                   <label className="space-y-1.5 sm:col-span-2">
-                    <span className="text-sm font-medium">Notas / temario</span>
+                    <span className="text-sm font-medium"><Ui>Notas / temario</Ui></span>
                     <textarea
                       rows={3}
                       disabled={!canWrite}
@@ -880,7 +878,7 @@ export function EducationPanel() {
                               : "Agregar asistente"}
                           </p>
                           <label className="space-y-1.5 sm:col-span-2">
-                            <span className="text-sm font-medium">Nombre completo *</span>
+                            <span className="text-sm font-medium"><Ui>Nombre completo *</Ui></span>
                             <input
                               required
                               className={inputClass}
@@ -894,7 +892,7 @@ export function EducationPanel() {
                             />
                           </label>
                           <label className="space-y-1.5">
-                            <span className="text-sm font-medium">Puesto</span>
+                            <span className="text-sm font-medium"><Ui>Puesto</Ui></span>
                             <input
                               className={inputClass}
                               value={attendeeForm.jobTitle}
@@ -907,7 +905,7 @@ export function EducationPanel() {
                             />
                           </label>
                           <label className="space-y-1.5">
-                            <span className="text-sm font-medium">No. empleado</span>
+                            <span className="text-sm font-medium"><Ui>No. empleado</Ui></span>
                             <input
                               className={inputClass}
                               value={attendeeForm.employeeNumber}
@@ -920,7 +918,7 @@ export function EducationPanel() {
                             />
                           </label>
                           <label className="space-y-1.5">
-                            <span className="text-sm font-medium">Turno</span>
+                            <span className="text-sm font-medium"><Ui>Turno</Ui></span>
                             <select
                               className={inputClass}
                               value={attendeeForm.shift}
@@ -939,7 +937,7 @@ export function EducationPanel() {
                             </select>
                           </label>
                           <label className="space-y-1.5">
-                            <span className="text-sm font-medium">Teléfono</span>
+                            <span className="text-sm font-medium"><Ui>Teléfono</Ui></span>
                             <input
                               type="tel"
                               className={inputClass}
@@ -1098,9 +1096,7 @@ export function EducationPanel() {
                     <section className="space-y-3 rounded-xl border border-border p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <h4 className="text-sm font-semibold">
-                            Fotografías de la capacitación
-                          </h4>
+                          <h4 className="text-sm font-semibold"><Ui>Fotografías de la capacitación</Ui></h4>
                           <p className="text-xs text-muted-foreground">
                             Evidencias del evento (aparecen en el PDF).
                           </p>

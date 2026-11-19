@@ -5,12 +5,19 @@ import { createPortal } from "react-dom";
 import {
   Camera,
   KeyRound,
+  Languages,
+  Moon,
+  Palette,
   Settings,
+  Sun,
   UserRound,
   X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import { AppearancePanel } from "@/components/dashboard/appearance-panel";
+import { useLocale } from "@/components/locale-provider";
+import { useTheme } from "@/components/theme-provider";
 import { useZoom } from "@/components/zoom-provider";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -21,6 +28,7 @@ import {
   getSession,
   type SessionData,
 } from "@/lib/auth";
+import type { Locale } from "@/lib/i18n/messages";
 import { supabase } from "@/lib/supabase/client";
 import {
   removeUserPhoto,
@@ -72,7 +80,10 @@ type AccountMenuProps = {
 export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
   const { percent, canZoomIn, canZoomOut, zoomIn, zoomOut, resetZoom } =
     useZoom();
+  const { locale, setLocale, t } = useLocale();
+  const { mode, setMode } = useTheme();
   const [open, setOpen] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [panel, setPanel] = useState<"menu" | "profile" | "password" | null>(
     null
   );
@@ -161,7 +172,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
       });
       if (rpcError) throw new Error(rpcError.message);
       const row = data?.[0];
-      if (!row) throw new Error("No se encontró tu ficha de usuario.");
+      if (!row) throw new Error(t("account.userNotFound"));
       setProfile({
         fullName: row.full_name ?? "",
         email: row.email ?? "",
@@ -178,7 +189,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
       });
       setPhotoUrl(row.photo_url ?? "");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo cargar el perfil.");
+      setError(err instanceof Error ? err.message : t("account.profileLoadError"));
     } finally {
       setLoadingProfile(false);
     }
@@ -256,9 +267,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
         });
         onSessionUpdated?.(nextSession);
       }
-      setMessage("Datos personales actualizados.");
+      setMessage(t("account.profileSaved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron guardar los datos.");
+      setError(err instanceof Error ? err.message : t("account.profileSaveError"));
     } finally {
       setSubmitting(false);
     }
@@ -269,11 +280,11 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
     const session = getSession();
     if (!session) return;
     if (newPassword.length < 6) {
-      setError("La nueva contraseña debe tener al menos 6 caracteres.");
+      setError(t("account.passwordMin"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("La confirmación no coincide con la nueva contraseña.");
+      setError(t("account.passwordMismatch"));
       return;
     }
     setSubmitting(true);
@@ -289,14 +300,18 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setMessage("Contraseña actualizada correctamente.");
+      setMessage(t("account.passwordSaved"));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo cambiar la contraseña."
+        err instanceof Error ? err.message : t("account.passwordSaveError")
       );
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleLocaleChange(next: Locale) {
+    setLocale(next);
   }
 
   return (
@@ -307,7 +322,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
           type="button"
           onClick={() => setOpen((value) => !value)}
           className="touch-target inline-flex size-11 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted sm:size-9"
-          aria-label="Configuración de cuenta"
+          aria-label={t("account.settings")}
           aria-expanded={open}
         >
           <Settings className="size-4" />
@@ -318,11 +333,13 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
         ? createPortal(
             <div
               ref={menuRef}
-              className="fixed z-[110] w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg"
+              className="fixed z-[110] w-72 overflow-hidden rounded-xl border border-border bg-card shadow-lg"
               style={{ top: menuPos.top, right: menuPos.right }}
             >
               <div className="border-b border-border px-3 py-2">
-                <p className="truncate text-xs text-muted-foreground">Sesión</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {t("account.session")}
+                </p>
                 <p className="truncate text-sm font-medium">{username}</p>
               </div>
               <button
@@ -331,7 +348,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 onClick={() => openPanel("profile")}
               >
                 <UserRound className="size-4 text-muted-foreground" />
-                Datos personales
+                {t("account.profile")}
               </button>
               <button
                 type="button"
@@ -339,17 +356,95 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 onClick={() => openPanel("password")}
               >
                 <KeyRound className="size-4 text-muted-foreground" />
-                Cambiar contraseña
+                {t("account.password")}
               </button>
+              <div className="space-y-2 border-t border-border px-3 py-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Languages className="size-4 text-muted-foreground" />
+                  <span>{t("account.language")}</span>
+                </div>
+                <div className="inline-flex w-full overflow-hidden rounded-lg border border-border">
+                  {([
+                    { id: "es", label: t("account.lang.es") },
+                    { id: "en", label: t("account.lang.en") },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => handleLocaleChange(option.id)}
+                      className={cn(
+                        "flex-1 px-2 py-1.5 text-xs font-medium transition-colors",
+                        locale === option.id
+                          ? "brand-gradient text-[var(--brand-on)]"
+                          : "hover:bg-muted"
+                      )}
+                      aria-pressed={locale === option.id}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2 border-t border-border px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    {mode === "dark" ? (
+                      <Moon className="size-4 text-muted-foreground" />
+                    ) : (
+                      <Sun className="size-4 text-muted-foreground" />
+                    )}
+                    <span>{t("account.nightMode")}</span>
+                  </div>
+                  <div className="inline-flex overflow-hidden rounded-lg border border-border">
+                    <button
+                      type="button"
+                      onClick={() => setMode("light")}
+                      className={cn(
+                        "px-2.5 py-1 text-[11px] font-medium",
+                        mode === "light"
+                          ? "brand-gradient text-[var(--brand-on)]"
+                          : "hover:bg-muted"
+                      )}
+                      aria-pressed={mode === "light"}
+                    >
+                      {t("account.nightOff")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode("dark")}
+                      className={cn(
+                        "px-2.5 py-1 text-[11px] font-medium",
+                        mode === "dark"
+                          ? "brand-gradient text-[var(--brand-on)]"
+                          : "hover:bg-muted"
+                      )}
+                      aria-pressed={mode === "dark"}
+                    >
+                      {t("account.nightOn")}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setOpen(false);
+                    setAppearanceOpen(true);
+                  }}
+                >
+                  <Palette className="size-4 text-muted-foreground" />
+                  <span className="flex-1">{t("appearance.open")}</span>
+                </button>
+              </div>
               <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
-                <p className="text-sm">Zoom</p>
+                <p className="text-sm">{t("account.zoom")}</p>
                 <div className="inline-flex items-center overflow-hidden rounded-lg border border-border">
                   <button
                     type="button"
                     onClick={zoomOut}
                     disabled={!canZoomOut}
                     className="inline-flex size-8 items-center justify-center hover:bg-muted disabled:opacity-40"
-                    aria-label="Alejar"
+                    aria-label={t("account.zoomOut")}
                   >
                     <ZoomOut className="size-3.5" />
                   </button>
@@ -357,7 +452,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                     type="button"
                     onClick={resetZoom}
                     className="min-w-[2.5rem] px-1 text-center text-[11px] font-medium tabular-nums hover:bg-muted"
-                    aria-label="Restablecer zoom al 100%"
+                    aria-label={t("account.zoomReset")}
                   >
                     {percent}%
                   </button>
@@ -366,7 +461,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                     onClick={zoomIn}
                     disabled={!canZoomIn}
                     className="inline-flex size-8 items-center justify-center hover:bg-muted disabled:opacity-40"
-                    aria-label="Acercar"
+                    aria-label={t("account.zoomIn")}
                   >
                     <ZoomIn className="size-3.5" />
                   </button>
@@ -379,12 +474,12 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
 
       {panel === "profile" ? (
         <ModalShell
-          title="Mi cuenta"
-          description="Actualiza tus datos personales. El usuario de acceso y el rol solo los cambia un administrador."
+          title={t("account.profileTitle")}
+          description={t("account.profileDesc")}
           className="max-w-2xl"
           headerAction={
             <Button type="button" variant="outline" size="sm" onClick={closePanel}>
-              <X className="size-4" /> Cerrar
+              <X className="size-4" /> {t("account.close")}
             </Button>
           }
         >
@@ -399,7 +494,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
             </p>
           ) : null}
           {loadingProfile ? (
-            <p className="text-sm text-muted-foreground">Cargando ficha…</p>
+            <p className="text-sm text-muted-foreground">
+              {t("account.loadingProfile")}
+            </p>
           ) : (
             <form onSubmit={handleSaveProfile} className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-muted/20 p-3 sm:col-span-2">
@@ -409,11 +506,13 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                   size="lg"
                 />
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Tu foto</p>
+                  <p className="text-sm font-medium">{t("account.yourPhoto")}</p>
                   <div className="flex flex-wrap gap-2">
                     <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium hover:bg-muted">
                       <Camera className="size-3.5" />
-                      {photoFile || photoUrl ? "Cambiar foto" : "Agregar foto"}
+                      {photoFile || photoUrl
+                        ? t("account.changePhoto")
+                        : t("account.addPhoto")}
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/gif"
@@ -427,7 +526,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                       />
                     </label>
                     <CameraButton
-                      title="Tu foto"
+                      title={t("account.yourPhoto")}
                       className="h-9 text-xs"
                       onCapture={(files) => {
                         setPhotoFile(files[0] ?? null);
@@ -444,14 +543,16 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                           setRemovePhoto(true);
                         }}
                       >
-                        Quitar
+                        {t("account.removePhoto")}
                       </Button>
                     ) : null}
                   </div>
                 </div>
               </div>
               <label className="block text-sm sm:col-span-2">
-                <span className="mb-1 block text-muted-foreground">Nombre completo *</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.fullName")}
+                </span>
                 <input
                   required
                   className={fieldClass}
@@ -462,7 +563,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">Correo</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.email")}
+                </span>
                 <input
                   type="email"
                   className={fieldClass}
@@ -473,7 +576,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">Teléfono</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.phone")}
+                </span>
                 <input
                   className={fieldClass}
                   value={profile.phone}
@@ -483,7 +588,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">CURP</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.curp")}
+                </span>
                 <input
                   className={fieldClass}
                   value={profile.curp}
@@ -493,7 +600,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">RFC</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.rfc")}
+                </span>
                 <input
                   className={fieldClass}
                   value={profile.rfc}
@@ -503,7 +612,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">Fecha de nacimiento</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.birthDate")}
+                </span>
                 <input
                   type="date"
                   className={fieldClass}
@@ -514,7 +625,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">Tipo de sangre</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.bloodType")}
+                </span>
                 <select
                   className={fieldClass}
                   value={profile.bloodType}
@@ -524,13 +637,15 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 >
                   {BLOOD_TYPES.map((type) => (
                     <option key={type || "empty"} value={type}>
-                      {type || "Sin especificar"}
+                      {type || t("account.bloodUnspecified")}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="block text-sm sm:col-span-2">
-                <span className="mb-1 block text-muted-foreground">Dirección</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.address")}
+                </span>
                 <input
                   className={fieldClass}
                   value={profile.address}
@@ -541,7 +656,7 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
               </label>
               <label className="block text-sm">
                 <span className="mb-1 block text-muted-foreground">
-                  Contacto de emergencia
+                  {t("account.emergencyContact")}
                 </span>
                 <input
                   className={fieldClass}
@@ -555,7 +670,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-muted-foreground">Tel. emergencia</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.emergencyPhone")}
+                </span>
                 <input
                   className={fieldClass}
                   value={profile.emergencyContactPhone}
@@ -568,7 +685,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm sm:col-span-2">
-                <span className="mb-1 block text-muted-foreground">Parentesco</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.relation")}
+                </span>
                 <input
                   className={fieldClass}
                   value={profile.emergencyContactRelation}
@@ -581,7 +700,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
                 />
               </label>
               <label className="block text-sm sm:col-span-2">
-                <span className="mb-1 block text-muted-foreground">Notas</span>
+                <span className="mb-1 block text-muted-foreground">
+                  {t("account.notes")}
+                </span>
                 <textarea
                   className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   value={profile.notes}
@@ -592,14 +713,14 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
               </label>
               <div className="flex justify-end gap-2 sm:col-span-2">
                 <Button type="button" variant="outline" onClick={closePanel}>
-                  Cancelar
+                  {t("account.cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                  className="brand-gradient border-0 text-[var(--brand-on)]"
                 >
-                  {submitting ? "Guardando…" : "Guardar cambios"}
+                  {submitting ? t("account.saving") : t("account.saveChanges")}
                 </Button>
               </div>
             </form>
@@ -607,14 +728,19 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
         </ModalShell>
       ) : null}
 
+      <AppearancePanel
+        open={appearanceOpen}
+        onClose={() => setAppearanceOpen(false)}
+      />
+
       {panel === "password" ? (
         <ModalShell
-          title="Cambiar contraseña"
-          description="Ingresa tu contraseña actual y define una nueva de al menos 6 caracteres."
+          title={t("account.passwordTitle")}
+          description={t("account.passwordDesc")}
           className="max-w-md"
           headerAction={
             <Button type="button" variant="outline" size="sm" onClick={closePanel}>
-              <X className="size-4" /> Cerrar
+              <X className="size-4" /> {t("account.close")}
             </Button>
           }
         >
@@ -630,7 +756,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
           ) : null}
           <form onSubmit={handleChangePassword} className="space-y-3">
             <label className="block text-sm">
-              <span className="mb-1 block text-muted-foreground">Contraseña actual</span>
+              <span className="mb-1 block text-muted-foreground">
+                {t("account.currentPassword")}
+              </span>
               <input
                 required
                 type="password"
@@ -641,7 +769,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-muted-foreground">Nueva contraseña</span>
+              <span className="mb-1 block text-muted-foreground">
+                {t("account.newPassword")}
+              </span>
               <input
                 required
                 type="password"
@@ -652,7 +782,9 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-muted-foreground">Confirmar nueva</span>
+              <span className="mb-1 block text-muted-foreground">
+                {t("account.confirmPassword")}
+              </span>
               <input
                 required
                 type="password"
@@ -664,14 +796,14 @@ export function AccountMenu({ username, onSessionUpdated }: AccountMenuProps) {
             </label>
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={closePanel}>
-                Cancelar
+                {t("account.cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={submitting}
-                className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                className="brand-gradient border-0 text-[var(--brand-on)]"
               >
-                {submitting ? "Guardando…" : "Actualizar contraseña"}
+                {submitting ? t("account.saving") : t("account.updatePassword")}
               </Button>
             </div>
           </form>

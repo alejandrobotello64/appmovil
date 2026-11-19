@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Minus, Plus, ScanBarcode, Trash2, X } from "lucide-react";
@@ -202,7 +203,7 @@ export function ToolRequestForm({
         <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
           <div className="space-y-3 rounded-xl border border-border bg-muted/10 p-3">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Catálogo</h3>
+              <h3 className="text-sm font-semibold text-foreground"><Ui>Catálogo</Ui></h3>
               <p className="text-xs text-muted-foreground">
                 Busca o escanea y elige la herramienta.
               </p>
@@ -401,9 +402,7 @@ export function ToolRequestForm({
             Solicita: {session.fullName || session.username}
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" className="h-10 px-3" onClick={onClose}>
-              Cancelar
-            </Button>
+            <Button type="button" variant="outline" className="h-10 px-3" onClick={onClose}><Ui>Cancelar</Ui></Button>
             <Button
               type="submit"
               disabled={saving || !lines.length}

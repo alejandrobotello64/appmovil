@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
@@ -1226,7 +1227,7 @@ export function ServiceOrdersPanel({
         ) : null}
         <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Cliente</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Cliente</Ui></span>
             <div className="flex gap-2">
               <select
                 className={fieldClass}
@@ -1309,7 +1310,7 @@ export function ServiceOrdersPanel({
             </div>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Serie</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Serie</Ui></span>
             <input
               className={fieldClass}
               value={form.equipmentSerial ?? ""}
@@ -1457,9 +1458,7 @@ export function ServiceOrdersPanel({
               type="submit"
               disabled={!canCreate}
               className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-            >
-              Guardar
-            </Button>
+            ><Ui>Guardar</Ui></Button>
           </div>
         </form>
       </section>
@@ -1715,7 +1714,7 @@ export function ServiceOrdersPanel({
                   </span>
                 </label>
                 <label className="block text-sm">
-                  <span className="mb-1 block text-muted-foreground">Tipo</span>
+                  <span className="mb-1 block text-muted-foreground"><Ui>Tipo</Ui></span>
                   <select
                     className={fieldClass}
                     value={form.serviceType}
@@ -1764,7 +1763,7 @@ export function ServiceOrdersPanel({
 
                 <div className="sm:col-span-2 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
                   <div>
-                    <h3 className="text-sm font-medium">Equipos ligados</h3>
+                    <h3 className="text-sm font-medium"><Ui>Equipos ligados</Ui></h3>
                     <p className="text-xs text-muted-foreground">
                       Monitores, ventiladores u otros equipos asociados al principal
                       (por ejemplo monitor ↔ máquina de anestesia).
@@ -1889,7 +1888,7 @@ export function ServiceOrdersPanel({
                 <div className="sm:col-span-2">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h3 className="text-sm font-medium">Imágenes del equipo</h3>
+                      <h3 className="text-sm font-medium"><Ui>Imágenes del equipo</Ui></h3>
                       <p className="text-xs text-muted-foreground">
                         Haz clic en una foto para verla en grande.
                       </p>
@@ -2351,7 +2350,7 @@ export function ServiceOrdersPanel({
 
                 {canEdit ? (
                   <div className="space-y-2 rounded-xl border border-dashed border-teal-300 bg-teal-50/40 p-3 dark:border-teal-800 dark:bg-teal-950/10">
-                    <h4 className="text-sm font-medium">Agregar punto a revisar</h4>
+                    <h4 className="text-sm font-medium"><Ui>Agregar punto a revisar</Ui></h4>
                     <p className="text-xs text-muted-foreground">
                       Define el parámetro y el intervalo válido. En la orden se
                       captura el valor obtenido.
@@ -2739,8 +2738,7 @@ export function ServiceOrdersPanel({
                               )
                             }
                           >
-                            <FileDown className="size-3.5" /> Imprimir
-                          </button>
+                            <FileDown className="size-3.5" /> <Ui>Imprimir</Ui></button>
                         </li>
                       ))}
                     </ul>
@@ -2832,8 +2830,7 @@ export function ServiceOrdersPanel({
                       onChange={(e) => setNote(e.target.value)}
                     />
                     <Button type="button" onClick={() => void sendNote()}>
-                      <MessageSquarePlus className="size-4" /> Enviar
-                    </Button>
+                      <MessageSquarePlus className="size-4" /> <Ui>Enviar</Ui></Button>
                   </div>
                 ) : null}
                 <ul className="space-y-2">
@@ -2858,7 +2855,7 @@ export function ServiceOrdersPanel({
             {detailTab === "entrega" ? (
               <div className="space-y-4">
                 <div className="rounded-xl border border-border p-4">
-                  <h3 className="font-medium">Verificación de entrega</h3>
+                  <h3 className="font-medium"><Ui>Verificación de entrega</Ui></h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Revisa el checklist de verificación, las pruebas de
                     funcionamiento, la evidencia fotográfica y adjunta la orden
@@ -3137,11 +3134,11 @@ export function ServiceOrdersPanel({
               <p className="font-semibold">{selected.folio}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Tipo</p>
+              <p className="text-xs text-muted-foreground"><Ui>Tipo</Ui></p>
               <p className="text-sm">{serviceTypeLabel(selected.serviceType)}</p>
             </div>
             <div>
-              <p className="mb-1 text-xs text-muted-foreground">Estatus</p>
+              <p className="mb-1 text-xs text-muted-foreground"><Ui>Estatus</Ui></p>
               <select
                 className={fieldClass}
                 value={selected.status}

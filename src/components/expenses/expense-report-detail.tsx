@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useMemo, useState, type ReactNode } from "react";
 import {
@@ -248,7 +249,7 @@ export function ExpenseReportDetail({
             ) : null}
             {item.invoiceNumber ? <span className="text-muted-foreground">Factura {item.invoiceNumber}</span> : null}
             {!itemHasInvoice(item) ? (
-              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700 dark:text-amber-300">Sin factura</span>
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700 dark:text-amber-300"><Ui>Sin factura</Ui></span>
             ) : null}
           </div>
         </div>
@@ -295,9 +296,7 @@ export function ExpenseReportDetail({
         Aprobar
       </Button>,
       <Button key="reject" size="sm" variant="outline" onClick={() => setRejecting((v) => !v)} disabled={Boolean(busy)}>
-        <XCircle className="size-4" />
-        Rechazar
-      </Button>
+        <XCircle className="size-4" /> <Ui>Rechazar</Ui></Button>
     );
   }
   if (report.status === "por_revisar" && (access.canCreate || access.canEdit)) {
@@ -355,7 +354,7 @@ export function ExpenseReportDetail({
               <>
                 <Button size="sm" variant="outline" onClick={() => void pdf("print")} disabled={Boolean(busy)}>
                   {busy === "pdf-print" ? <Loader2 className="size-4 animate-spin" /> : <Printer className="size-4" />}
-                  <span className="hidden sm:inline">Imprimir</span>
+                  <span className="hidden sm:inline"><Ui>Imprimir</Ui></span>
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => void pdf("download")} disabled={Boolean(busy)}>
                   {busy === "pdf-download" ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
@@ -363,9 +362,7 @@ export function ExpenseReportDetail({
                 </Button>
               </>
             ) : null}
-            <Button size="sm" variant="outline" onClick={onClose}>
-              Cerrar
-            </Button>
+            <Button size="sm" variant="outline" onClick={onClose}><Ui>Cerrar</Ui></Button>
           </div>
         }
       >
@@ -391,9 +388,7 @@ export function ExpenseReportDetail({
             ) : null}
             {editable && access.canEdit ? (
               <button type="button" className="inline-flex items-center gap-1 text-[#3B46A5] hover:underline" onClick={onEditReport}>
-                <Pencil className="size-3.5" />
-                Editar datos
-              </button>
+                <Pencil className="size-3.5" /> <Ui>Editar datos</Ui></button>
             ) : null}
           </div>
 
@@ -511,7 +506,7 @@ export function ExpenseReportDetail({
 
               {statusButtons.length || (access.canDelete && (report.status === "en_captura" || report.status === "cancelado")) ? (
                 <section className="space-y-3 rounded-xl border border-border p-4">
-                  <h4 className="font-semibold">Acciones</h4>
+                  <h4 className="font-semibold"><Ui>Acciones</Ui></h4>
                   {report.status === "por_revisar" && access.canApprove ? (
                     <textarea
                       className={`${inputClass} h-16 py-2`}

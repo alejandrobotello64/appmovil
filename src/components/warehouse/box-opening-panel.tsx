@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Loader2, PackageOpen } from "lucide-react";
@@ -268,7 +269,7 @@ export function BoxOpeningPanel() {
             <PackageOpen className="size-5" />
           </span>
           <div>
-            <h2 className="text-lg font-semibold">Apertura de caja</h2>
+            <h2 className="text-lg font-semibold"><Ui>Apertura de caja</Ui></h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Descuenta artículos que están en caja y da de alta la misma cantidad convertida a su
               presentación en piezas, en el mismo almacén, ubicación y lote.

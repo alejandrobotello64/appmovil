@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
@@ -145,9 +146,7 @@ export function ExpenseReportForm({
       title={report ? `Editar ${report.folio}` : `Nuevo registro · ${meta.label}`}
       description={meta.description}
       headerAction={
-        <Button type="button" variant="outline" size="sm" onClick={onClose}>
-          Cerrar
-        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onClose}><Ui>Cerrar</Ui></Button>
       }
     >
       <form onSubmit={submit} className="space-y-4">
@@ -284,9 +283,7 @@ export function ExpenseReportForm({
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving}><Ui>Cancelar</Ui></Button>
           <Button type="submit" disabled={saving}>
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
             {report ? "Guardar cambios" : "Crear registro"}

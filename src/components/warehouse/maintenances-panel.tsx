@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -277,7 +278,7 @@ export function MaintenancesPanel() {
             <h3 className="text-lg font-semibold">Programar mantenimiento</h3>
             <div className="mt-4 grid gap-3">
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Equipo</span>
+                <span className="text-sm font-medium"><Ui>Equipo</Ui></span>
                 <select
                   required
                   value={equipmentId}
@@ -292,7 +293,7 @@ export function MaintenancesPanel() {
                 </select>
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Tipo</span>
+                <span className="text-sm font-medium"><Ui>Tipo</Ui></span>
                 <select
                   value={maintenanceType}
                   onChange={(event) =>
@@ -316,7 +317,7 @@ export function MaintenancesPanel() {
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Técnico</span>
+                <span className="text-sm font-medium"><Ui>Técnico</Ui></span>
                 <input
                   value={technician}
                   onChange={(event) => setTechnician(event.target.value)}
@@ -334,7 +335,7 @@ export function MaintenancesPanel() {
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Notas</span>
+                <span className="text-sm font-medium"><Ui>Notas</Ui></span>
                 <textarea
                   rows={2}
                   value={notes}
@@ -350,9 +351,7 @@ export function MaintenancesPanel() {
               <Button
                 type="submit"
                 className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-              >
-                Guardar
-              </Button>
+              ><Ui>Guardar</Ui></Button>
             </div>
           </form>
         </div>

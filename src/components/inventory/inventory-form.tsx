@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Camera, Trash2 } from "lucide-react";
@@ -288,7 +289,7 @@ export function InventoryForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">SKU</span>
+          <span className="text-sm font-medium"><Ui>SKU</Ui></span>
           <input
             required={Boolean(item)}
             value={form.sku}
@@ -325,7 +326,7 @@ export function InventoryForm({
 
         {showCategoryPicker ? (
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Categoría</span>
+            <span className="text-sm font-medium"><Ui>Categoría</Ui></span>
             <select
               value={form.category}
               onChange={(event) => {
@@ -350,7 +351,7 @@ export function InventoryForm({
           </label>
         ) : !isEquipment && lockedMeta ? (
           <div className="space-y-1.5">
-            <span className="text-sm font-medium">Categoría</span>
+            <span className="text-sm font-medium"><Ui>Categoría</Ui></span>
             <p className="flex h-10 items-center rounded-lg border border-input bg-muted/40 px-3 text-sm">
               {lockedMeta.label}
             </p>
@@ -380,7 +381,7 @@ export function InventoryForm({
         ) : null}
 
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">Unidad</span>
+          <span className="text-sm font-medium"><Ui>Unidad</Ui></span>
           <select
             value={form.unit}
             onChange={(event) =>
@@ -466,7 +467,7 @@ export function InventoryForm({
         )}
 
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">Ubicación</span>
+          <span className="text-sm font-medium"><Ui>Ubicación</Ui></span>
           <input
             value={form.location}
             onChange={(event) => handleChange("location", event.target.value)}
@@ -475,7 +476,7 @@ export function InventoryForm({
         </label>
         <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Marca</span>
+            <span className="text-sm font-medium"><Ui>Marca</Ui></span>
             <div className="mb-1.5 flex flex-wrap gap-1" aria-label="Marcas rápidas">
               {uniqueBrands([...(quickBrands ?? []), ...QUICK_BRANDS]).map((brand) => {
                 const active = normalizeBrand(form.brand) === brand;
@@ -583,7 +584,7 @@ export function InventoryForm({
           </div>
         </div>
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">Modelo</span>
+          <span className="text-sm font-medium"><Ui>Modelo</Ui></span>
           <input
             value={form.model}
             onChange={(event) => handleChange("model", event.target.value)}
@@ -643,7 +644,7 @@ export function InventoryForm({
           </>
         ) : null}
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">Proveedor</span>
+          <span className="text-sm font-medium"><Ui>Proveedor</Ui></span>
           <input
             value={form.supplier}
             onChange={(event) => handleChange("supplier", event.target.value)}
@@ -714,9 +715,7 @@ export function InventoryForm({
         ) : null}
 
         <label className="space-y-1.5 md:col-span-2">
-          <span className="text-sm font-medium">
-            Fecha de fabricación (opcional)
-          </span>
+          <span className="text-sm font-medium"><Ui>Fecha de fabricación (opcional)</Ui></span>
           <input
             type="date"
             value={form.manufacturedAt}
@@ -729,9 +728,7 @@ export function InventoryForm({
 
         {!isEquipment ? (
           <label className="space-y-1.5 md:col-span-2">
-            <span className="text-sm font-medium">
-              Fecha de caducidad (opcional)
-            </span>
+            <span className="text-sm font-medium"><Ui>Fecha de caducidad (opcional)</Ui></span>
             <input
               type="date"
               value={form.expiryDate}
@@ -771,7 +768,7 @@ export function InventoryForm({
         ) : null}
 
         <label className="space-y-1.5 md:col-span-2">
-          <span className="text-sm font-medium">Descripción</span>
+          <span className="text-sm font-medium"><Ui>Descripción</Ui></span>
           <textarea
             rows={3}
             value={form.description}
@@ -780,7 +777,7 @@ export function InventoryForm({
           />
         </label>
         <label className="space-y-1.5 md:col-span-2">
-          <span className="text-sm font-medium">Notas</span>
+          <span className="text-sm font-medium"><Ui>Notas</Ui></span>
           <textarea
             rows={2}
             value={form.notes}
@@ -791,9 +788,7 @@ export function InventoryForm({
       </div>
 
       <div className="flex justify-end gap-2 border-t border-border pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}><Ui>Cancelar</Ui></Button>
         <Button
           type="submit"
           className="border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white hover:opacity-90"

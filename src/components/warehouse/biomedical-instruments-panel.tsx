@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
@@ -315,7 +316,7 @@ export function BiomedicalInstrumentsPanel() {
               )}
             </div>
             <div className="min-w-0 flex-1 space-y-2">
-              <p className="text-sm font-medium">Foto y certificación</p>
+              <p className="text-sm font-medium"><Ui>Foto y certificación</Ui></p>
               <input
                 ref={imageRef}
                 type="file"
@@ -377,7 +378,7 @@ export function BiomedicalInstrumentsPanel() {
           </div>
 
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Tipo</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Tipo</Ui></span>
             <select
               className={fieldClass}
               value={form.instrumentType}
@@ -396,7 +397,7 @@ export function BiomedicalInstrumentsPanel() {
             </select>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Nombre</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Nombre</Ui></span>
             <input
               required
               className={fieldClass}
@@ -406,7 +407,7 @@ export function BiomedicalInstrumentsPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Marca</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Marca</Ui></span>
             <input
               className={fieldClass}
               value={form.brand ?? ""}
@@ -414,7 +415,7 @@ export function BiomedicalInstrumentsPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Modelo</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Modelo</Ui></span>
             <input
               className={fieldClass}
               value={form.model ?? ""}
@@ -448,7 +449,7 @@ export function BiomedicalInstrumentsPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Ubicación</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Ubicación</Ui></span>
             <input
               className={fieldClass}
               value={form.location ?? ""}
@@ -509,7 +510,7 @@ export function BiomedicalInstrumentsPanel() {
             Activo / disponible para órdenes
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Notas</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Notas</Ui></span>
             <textarea
               className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               value={form.notes ?? ""}
@@ -528,9 +529,7 @@ export function BiomedicalInstrumentsPanel() {
               type="submit"
               disabled={!canWrite}
               className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-            >
-              Guardar
-            </Button>
+            ><Ui>Guardar</Ui></Button>
           </div>
         </form>
       </section>
@@ -542,9 +541,7 @@ export function BiomedicalInstrumentsPanel() {
       {!canWrite ? <ReadOnlyBanner visible /> : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-[#3B46A5]">
-            Simuladores y analizadores
-          </h2>
+          <h2 className="text-lg font-semibold text-[#3B46A5]"><Ui>Simuladores y analizadores</Ui></h2>
           <p className="text-sm text-muted-foreground">
             Haz clic en un equipo para ver su ficha y los servicios en los que participó.
           </p>
@@ -624,7 +621,7 @@ export function BiomedicalInstrumentsPanel() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <p className="text-sm text-muted-foreground"><Ui>Cargando…</Ui></p>
       ) : filtered.length === 0 ? (
         <p className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
           No hay equipos registrados. Usa «Nuevo equipo» para dar de alta el
@@ -715,8 +712,7 @@ export function BiomedicalInstrumentsPanel() {
                       variant="outline"
                       onClick={() => openEdit(item)}
                     >
-                      <Pencil className="size-3.5" /> Editar
-                    </Button>
+                      <Pencil className="size-3.5" /> <Ui>Editar</Ui></Button>
                     <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-input px-2.5 py-1.5 text-xs hover:bg-muted">
                       <Camera className="size-3.5" /> Foto
                       <input
@@ -784,8 +780,7 @@ export function BiomedicalInstrumentsPanel() {
                         className="inline-flex items-center gap-1 text-xs text-destructive hover:underline"
                         onClick={() => void onDelete(item)}
                       >
-                        <Trash2 className="size-3.5" /> Eliminar
-                      </button>
+                        <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                     ) : null}
                   </div>
                 ) : null}

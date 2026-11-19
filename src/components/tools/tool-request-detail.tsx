@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useState } from "react";
 import {
@@ -503,8 +504,7 @@ export function ToolRequestDetail({
                     setMode("reject");
                   }}
                 >
-                  <Ban className="size-4" /> Rechazar
-                </Button>
+                  <Ban className="size-4" /> <Ui>Rechazar</Ui></Button>
               </>
             ) : null}
             {permissions.canManage && isOut && outstanding > 0 ? (

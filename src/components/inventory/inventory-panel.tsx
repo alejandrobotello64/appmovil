@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -18,6 +19,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { InventoryForm } from "@/components/inventory/inventory-form";
+import { useLocale } from "@/components/locale-provider";
 import { CameraButton } from "@/components/media/camera-capture";
 import type { ScanMatch, ScanResult } from "@/lib/scan/lookup";
 import { useScanResolved } from "@/lib/scan/use-scan-resolved";
@@ -186,6 +188,7 @@ export function InventoryPanel({
   initialCategory = null,
   initialSearch = "",
 }: InventoryPanelProps) {
+  const { t } = useLocale();
   const isCatalog = panelMode === "catalog";
   const isEquipment = panelMode === "equipment";
   const supplyCategory: SupplyCategoryId | null =
@@ -484,10 +487,13 @@ export function InventoryPanel({
     const shown = compact ? placements.slice(0, 2) : placements;
     const hidden = placements.length - shown.length;
     return (
-      <div className="space-y-1 text-xs">
+      <div className="max-w-full space-y-1 overflow-hidden text-xs">
         {shown.map((placement) => (
-          <div key={`${placement.warehouseId}-${placement.locationName}`}>
-            <p className="text-foreground">
+          <div
+            key={`${placement.warehouseId}-${placement.locationName}`}
+            className="min-w-0"
+          >
+            <p className="break-words text-foreground [overflow-wrap:anywhere]">
               <span className="font-medium">{placement.warehouseCode}</span>
               {" · "}
               {placement.unplaced && item.location ? item.location : placement.locationName}
@@ -542,12 +548,12 @@ export function InventoryPanel({
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+          "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium",
           color.chip
         )}
       >
-        <span className={cn("size-2.5 rounded-full", color.swatch)} />
-        {color.label}
+        <span className={cn("size-2.5 shrink-0 rounded-full", color.swatch)} />
+        <span className="truncate">{color.label}</span>
         {itemCan(item, "edit") ? (
           <button
             type="button"
@@ -743,7 +749,7 @@ export function InventoryPanel({
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="w-full max-w-full min-w-0 space-y-6 overflow-x-hidden">
         <InventoryStats items={items} />
 
         {error ? (
@@ -772,7 +778,7 @@ export function InventoryPanel({
           </p>
         ) : null}
 
-        <section className="rounded-2xl border border-border bg-card shadow-sm">
+        <section className="w-full max-w-full min-w-0 overflow-x-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-foreground">
@@ -1052,21 +1058,23 @@ export function InventoryPanel({
                   }
                   className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none"
                 >
-                  <option value="all">Todos los estados</option>
-                  <option value="disponible">Disponible</option>
-                  <option value="bajo_stock">Bajo stock</option>
-                  <option value="agotado">Agotado</option>
-                  <option value="sin_alerta">Alerta desactivada</option>
+                  <option value="all">{t("inv.allStatuses")}</option>
+                  <option value="disponible">{t("inv.available")}</option>
+                  <option value="bajo_stock">{t("inv.lowStock")}</option>
+                  <option value="agotado">{t("inv.outOfStock")}</option>
+                  <option value="sin_alerta">{t("inv.alertOff")}</option>
                 </select>
               ) : null}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-muted-foreground">
                 {loading
-                  ? "Cargando catálogo…"
+                  ? t("inv.loadingCatalog")
                   : filteredItems.length === items.length
-                    ? `${items.length} artículo${items.length === 1 ? "" : "s"}`
-                    : `${filteredItems.length} de ${items.length} artículos`}
+                    ? t("inv.articlesCount").replace("{n}", String(items.length))
+                    : t("inv.articlesFiltered")
+                        .replace("{shown}", String(filteredItems.length))
+                        .replace("{total}", String(items.length))}
               </p>
               {hasActiveFilters ? (
                 <button
@@ -1075,7 +1083,7 @@ export function InventoryPanel({
                   className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <X className="size-3" />
-                  Quitar filtros
+                  {t("ui.clearFilters")}
                 </button>
               ) : null}
             </div>
@@ -1084,11 +1092,11 @@ export function InventoryPanel({
           <ResponsiveDataList
             emptyMessage={
               hasActiveFilters
-                ? "Ningún artículo coincide con la búsqueda o los filtros. Prueba quitar filtros o buscar por SKU o n.º de parte."
+                ? t("inv.emptyFiltered")
                 : isCatalog
-                  ? "No hay artículos en el catálogo."
+                  ? t("inv.emptyCatalog")
                   : isEquipment
-                    ? "No hay equipos registrados."
+                    ? t("inv.emptyEquipment")
                     : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} registrados.`
             }
             items={filteredItems.map((item) => {
@@ -1096,22 +1104,22 @@ export function InventoryPanel({
               return {
                 key: item.id,
                 title: (
-                  <span className="flex items-center gap-2">
-                    <ProductThumb item={item} className="size-11" />
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <ProductThumb item={item} className="size-8 shrink-0" />
                     <span className="min-w-0 truncate">{item.name}</span>
                   </span>
                 ),
-                subtitle: `${item.sku}${item.partNumber ? ` · n.º ${item.partNumber}` : ""} · ${catalogModelLabel(item.model)} · ${item.brand || "Sin marca"}`,
+                subtitle: `${item.sku}${item.partNumber ? ` · ${item.partNumber}` : ""} · ${catalogModelLabel(item.model)} · ${item.brand || t("ui.noBrand")}`,
                 badge:
                   item.itemKind === "equipo" ? (
-                    <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs">
+                    <span className="inline-flex rounded-full bg-muted px-1.5 py-0.5 text-[10px]">
                       {ASSET_STATUS_OPTIONS.find((s) => s.id === item.assetStatus)
                         ?.label ?? item.assetStatus}
                     </span>
                   ) : (
                     <span
                       className={cn(
-                        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                        "inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium",
                         item.stockAlertsEnabled === false
                           ? "bg-muted text-muted-foreground"
                           : STATUS_STYLES[status]
@@ -1122,29 +1130,29 @@ export function InventoryPanel({
                   ),
                 fields: [
                   {
-                    label: "N.º de parte",
+                    label: t("ui.partNumber"),
                     value: item.partNumber || "—",
                   },
                   {
-                    label: "Color",
+                    label: t("ui.color"),
                     value: renderColorTag(item),
                   },
                   {
-                    label: "Marca",
-                    value: item.brand || "Sin marca",
+                    label: t("ui.brand"),
+                    value: item.brand || t("ui.noBrand"),
                   },
                   {
-                    label: "Modelo",
+                    label: t("ui.model"),
                     value: item.model.trim() || "—",
                   },
                   {
-                    label: isEquipment ? "Serie" : "Categoría",
+                    label: isEquipment ? t("ui.serial") : t("ui.category"),
                     value: isEquipment
-                      ? item.serialNumber || "Sin serie"
+                      ? item.serialNumber || t("ui.noSerial")
                       : getCategoryLabel(item.category),
                   },
                   {
-                    label: isEquipment ? "Próx. mant." : "Stock",
+                    label: isEquipment ? t("ui.nextMaint") : t("ui.stock"),
                     value:
                       item.itemKind === "equipo"
                         ? item.nextMaintenanceDate || "—"
@@ -1173,19 +1181,22 @@ export function InventoryPanel({
                         },
                       ]
                     : []),
-                  { label: "Almacén / ubicación", value: renderPlacements(item) },
+                  {
+                    label: t("ui.warehouseLocation"),
+                    value: renderPlacements(item),
+                  },
                   ...(canViewPrices
                     ? [
                         {
-                          label: "Costo",
+                          label: t("ui.cost"),
                           value: formatCurrency(item.costPrice),
                         },
                         {
-                          label: "Venta",
+                          label: t("ui.sale"),
                           value:
                             item.unitPrice > 0
                               ? formatCurrency(item.unitPrice)
-                              : "Pendiente",
+                              : t("ui.pending"),
                         },
                       ]
                     : []),
@@ -1195,35 +1206,37 @@ export function InventoryPanel({
                     <button
                       type="button"
                       onClick={() => handleView(item)}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                      className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1 truncate rounded-md border border-border px-1.5 text-[11px] font-medium"
                     >
-                      <Eye className="size-3.5" />
-                      Ficha
+                      <Eye className="size-3 shrink-0" />
+                      <span className="truncate">{t("ui.sheet")}</span>
                     </button>
                     {itemCan(item, "edit") && item.itemKind !== "equipo" ? (
                       <button
                         type="button"
                         onClick={() => void handleToggleAlerts(item)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                        className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1 truncate rounded-md border border-border px-1.5 text-[11px] font-medium"
                       >
                         {item.stockAlertsEnabled === false ? (
-                          <Bell className="size-3.5" />
+                          <Bell className="size-3 shrink-0" />
                         ) : (
-                          <BellOff className="size-3.5" />
+                          <BellOff className="size-3 shrink-0" />
                         )}
-                        {item.stockAlertsEnabled === false
-                          ? "Activar alerta"
-                          : "Silenciar alerta"}
+                        <span className="truncate">
+                          {item.stockAlertsEnabled === false
+                            ? t("ui.enableAlert")
+                            : t("ui.muteAlert")}
+                        </span>
                       </button>
                     ) : null}
                     {itemCan(item, "edit") ? (
                       <button
                         type="button"
                         onClick={() => openRelocate(item)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                        className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1 truncate rounded-md border border-border px-1.5 text-[11px] font-medium"
                       >
-                        <MapPin className="size-3.5" />
-                        Ubicar
+                        <MapPin className="size-3 shrink-0" />
+                        <span className="truncate">{t("ui.locate")}</span>
                       </button>
                     ) : null}
                     {itemCan(item, "edit") ? (
@@ -1231,19 +1244,19 @@ export function InventoryPanel({
                         <button
                           type="button"
                           onClick={() => handleEdit(item)}
-                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
+                          className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1 truncate rounded-md border border-border px-1.5 text-[11px] font-medium"
                         >
-                          <Pencil className="size-3.5" />
-                          Editar
+                          <Pencil className="size-3 shrink-0" />
+                          <span className="truncate">{t("ui.edit")}</span>
                         </button>
                         {itemCan(item, "delete") ? (
                           <button
                             type="button"
                             onClick={() => handleDelete(item)}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
+                            className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1 truncate rounded-md border border-destructive/30 px-1.5 text-[11px] font-medium text-destructive"
                           >
-                            <Trash2 className="size-3.5" />
-                            Desactivar
+                            <Trash2 className="size-3 shrink-0" />
+                            <span className="truncate">{t("ui.deactivate")}</span>
                           </button>
                         ) : null}
                       </>
@@ -1258,20 +1271,26 @@ export function InventoryPanel({
             <SortableTable className="min-w-full text-sm">
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-medium">SKU</th>
-                  <th className="px-4 py-3 font-medium">N.º de parte</th>
-                  <th className="px-4 py-3 font-medium">Foto</th>
-                  <th className="px-4 py-3 font-medium">Color</th>
+                  <th className="px-4 py-3 font-medium">{t("ui.sku")}</th>
+                  <th className="px-4 py-3 font-medium">{t("ui.partNumber")}</th>
+                  <th className="px-4 py-3 font-medium">{t("ui.photo")}</th>
+                  <th className="px-4 py-3 font-medium">{t("ui.color")}</th>
                   <th className="px-4 py-3 font-medium">
-                    {isCatalog ? "Artículo" : isEquipment ? "Equipo" : "Producto"}
+                    {isCatalog
+                      ? t("ui.article")
+                      : isEquipment
+                        ? t("ui.equipment")
+                        : t("ui.product")}
                   </th>
-                  <th className="px-4 py-3 font-medium">Marca</th>
-                  <th className="px-4 py-3 font-medium">Modelo</th>
+                  <th className="px-4 py-3 font-medium">{t("ui.brand")}</th>
+                  <th className="px-4 py-3 font-medium">{t("ui.model")}</th>
                   <th className="px-4 py-3 font-medium">
-                    {isEquipment && !isCatalog ? "Serie" : "Categoría"}
+                    {isEquipment && !isCatalog
+                      ? t("ui.serial")
+                      : t("ui.category")}
                   </th>
                   <th className="px-4 py-3 font-medium">
-                    {isEquipment ? "Estado" : "Stock"}
+                    {isEquipment ? t("ui.status") : t("ui.stock")}
                   </th>
                   {!isEquipment ? (
                     <th className="px-4 py-3 font-medium">
@@ -1279,12 +1298,14 @@ export function InventoryPanel({
                     </th>
                   ) : null}
                   {!isEquipment ? (
-                    <th className="px-4 py-3 font-medium">Alerta</th>
+                    <th className="px-4 py-3 font-medium">{t("ui.alert")}</th>
                   ) : (
-                    <th className="px-4 py-3 font-medium">Próx. mant.</th>
+                    <th className="px-4 py-3 font-medium">{t("ui.nextMaint")}</th>
                   )}
-                  <th className="px-4 py-3 font-medium">Almacén / ubicación</th>
-                  <th className="px-4 py-3 font-medium">Acciones</th>
+                  <th className="px-4 py-3 font-medium">
+                    {t("ui.warehouseLocation")}
+                  </th>
+                  <th className="px-4 py-3 font-medium">{t("ui.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1295,11 +1316,11 @@ export function InventoryPanel({
                       className="px-4 py-10 text-center text-muted-foreground"
                     >
                       {hasActiveFilters
-                        ? "Ningún artículo coincide con la búsqueda o los filtros. Prueba quitar filtros o buscar por SKU o n.º de parte."
+                        ? t("inv.emptyFiltered")
                         : isCatalog
-                          ? "No hay artículos en el catálogo."
+                          ? t("inv.emptyCatalog")
                           : isEquipment
-                            ? "No hay equipos registrados."
+                            ? t("inv.emptyEquipment")
                             : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} registrados.`}
                     </td>
                   </tr>
@@ -1351,7 +1372,7 @@ export function InventoryPanel({
                               {item.brand}
                             </span>
                           ) : (
-                            <span className="text-xs text-muted-foreground">Sin marca</span>
+                            <span className="text-xs text-muted-foreground"><Ui>Sin marca</Ui></span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm">
@@ -1506,31 +1527,31 @@ export function InventoryPanel({
       </div>
 
       {formOpen && canWrite ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-2 sm:items-center sm:p-4">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="inventory-form-title"
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl"
+            className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-2xl sm:rounded-2xl sm:p-5"
           >
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <h3
                 id="inventory-form-title"
-                className="text-lg font-semibold text-foreground"
+                className="text-base font-semibold text-foreground sm:text-lg"
               >
                 {editingItem
                   ? isCatalog
                     ? editingItem.itemKind === "equipo"
-                      ? "Editar equipo"
-                      : "Editar artículo"
+                      ? t("inv.editEquipment")
+                      : t("inv.editArticle")
                     : isEquipment
-                      ? "Editar equipo"
-                      : `Editar ${supplyMeta?.label.toLowerCase() ?? "artículo"}`
+                      ? t("inv.editEquipment")
+                      : `${t("ui.edit")} ${supplyMeta?.label.toLowerCase() ?? t("ui.article").toLowerCase()}`
                   : isCatalog
-                    ? "Nuevo artículo"
+                    ? t("inv.newArticle")
                     : isEquipment
-                      ? "Nuevo equipo médico"
-                      : `Nuevo ${supplyMeta?.label.toLowerCase() ?? "artículo"}`}
+                      ? t("inv.newEquipment")
+                      : `${t("ui.new")} ${supplyMeta?.label.toLowerCase() ?? t("ui.article").toLowerCase()}`}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {isCatalog
@@ -1569,57 +1590,64 @@ export function InventoryPanel({
       ) : null}
 
       {viewingItem ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-x-hidden bg-black/40 p-2 sm:items-center sm:p-4">
           <div
             role="dialog"
             aria-modal="true"
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl"
+            className="max-h-[92vh] w-full max-w-[min(100%,28rem)] overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-2xl sm:max-w-3xl sm:rounded-2xl sm:p-5"
           >
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Ficha de consulta
+            <div className="mb-3 flex min-w-0 flex-col gap-2 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">
+                  {t("inv.sheetTitle")}
                 </p>
-                <h3 className="text-lg font-semibold">{viewingItem.name}</h3>
-                <p className="font-mono text-sm text-muted-foreground">
-                  SKU {viewingItem.sku}
+                <h3 className="break-words text-base font-semibold [overflow-wrap:anywhere] sm:text-lg">
+                  {viewingItem.name}
+                </h3>
+                <p className="truncate font-mono text-xs text-muted-foreground sm:text-sm">
+                  {t("ui.sku")} {viewingItem.sku}
                 </p>
-                <p className="text-sm font-medium">
-                  N.º de parte{" "}
+                <p className="break-words text-xs font-medium [overflow-wrap:anywhere] sm:text-sm">
+                  {t("ui.partNumber")}{" "}
                   <span className="font-mono">
                     {viewingItem.partNumber || "—"}
                   </span>
                 </p>
-                <p className="text-sm font-medium">
+                <p className="truncate text-xs font-medium sm:text-sm">
                   {catalogModelLabel(viewingItem.model)}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex w-full flex-wrap gap-1.5 sm:w-auto sm:gap-2">
                 {itemCan(viewingItem, "edit") ? (
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
+                    className="h-8 flex-1 px-2.5 text-xs sm:h-9 sm:flex-none sm:px-3 sm:text-sm"
                     onClick={() => {
                       const item = viewingItem;
                       setViewingItem(null);
                       openRelocate(item);
                     }}
                   >
-                    <MapPin className="size-4" /> Ubicar
+                    <MapPin className="size-3.5 sm:size-4" /> {t("ui.locate")}
                   </Button>
                 ) : null}
                 {itemCan(viewingItem, "edit") ? (
                   <Button
                     type="button"
+                    size="sm"
                     onClick={() => handleEdit(viewingItem)}
-                    className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                    className="h-8 flex-1 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] px-2.5 text-xs text-white sm:h-9 sm:flex-none sm:px-3 sm:text-sm"
                   >
-                    <Pencil className="size-4" /> Editar datos
+                    <Pencil className="size-3.5 sm:size-4" /> {t("ui.editData")}
                   </Button>
                 ) : null}
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
+                  className="h-8 flex-1 px-2.5 text-xs sm:h-9 sm:flex-none sm:px-3 sm:text-sm"
                   onClick={() => {
                     setLightboxIndex(null);
                     setOpenSerial(null);
@@ -1627,17 +1655,17 @@ export function InventoryPanel({
                     setViewingItem(null);
                   }}
                 >
-                  Cerrar
+                  {t("ui.close")}
                 </Button>
               </div>
             </div>
 
-            <div className="mb-4 grid gap-4 sm:grid-cols-[200px_1fr]">
-              <div className="space-y-2">
+            <div className="mb-3 grid min-w-0 gap-3 overflow-hidden sm:mb-4 sm:grid-cols-[160px_1fr] sm:gap-4 md:grid-cols-[200px_1fr]">
+              <div className="mx-auto w-full max-w-[120px] space-y-1.5 sm:mx-0 sm:max-w-none sm:space-y-2">
                 {viewingImages[0] ? (
                   <button
                     type="button"
-                    className="group relative block aspect-square w-full overflow-hidden rounded-xl border border-border bg-muted/30"
+                    className="group relative block aspect-square w-full overflow-hidden rounded-lg border border-border bg-muted/30 sm:rounded-xl"
                     onClick={() => setLightboxIndex(0)}
                     aria-label="Ampliar imagen principal"
                   >
@@ -1648,16 +1676,16 @@ export function InventoryPanel({
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />
                     <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
-                      <ZoomIn className="size-7" />
+                      <ZoomIn className="size-5 sm:size-7" />
                     </span>
-                    <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white">
-                      Principal
+                    <span className="absolute left-1.5 top-1.5 rounded-full bg-black/55 px-1.5 py-0.5 text-[9px] font-medium text-white sm:left-2 sm:top-2 sm:px-2 sm:text-[10px]">
+                      {t("ui.primary")}
                     </span>
                   </button>
                 ) : (
-                  <div className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-border bg-muted/30">
-                    <span className="px-3 text-center text-xs text-muted-foreground">
-                      Sin imágenes
+                  <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 sm:rounded-xl">
+                    <span className="px-2 text-center text-[11px] text-muted-foreground sm:px-3 sm:text-xs">
+                      {t("ui.noImages")}
                     </span>
                   </div>
                 )}
@@ -1737,7 +1765,7 @@ export function InventoryPanel({
                 </Button>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid min-w-0 gap-3 overflow-hidden sm:grid-cols-2">
                 {[
                   ["N.º de parte", viewingItem.partNumber || "—"],
                   ["Códigos de barras", viewingItem.barcodes?.join(", ") || "—"],
@@ -1809,9 +1837,11 @@ export function InventoryPanel({
                       ]),
                   ["Próx. mant.", viewingItem.nextMaintenanceDate || "—"],
                 ].map(([label, value]) => (
-                  <div key={String(label)}>
+                  <div key={String(label)} className="min-w-0 overflow-hidden">
                     <p className="text-xs text-muted-foreground">{label}</p>
-                    <div className="text-sm font-medium">{value}</div>
+                    <div className="break-words text-sm font-medium [overflow-wrap:anywhere]">
+                      {value}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1833,7 +1863,7 @@ export function InventoryPanel({
 
             {viewingItem.description ? (
               <div className="mb-3">
-                <p className="text-xs text-muted-foreground">Descripción</p>
+                <p className="text-xs text-muted-foreground"><Ui>Descripción</Ui></p>
                 <p className="text-sm whitespace-pre-wrap">
                   {viewingItem.description}
                 </p>
@@ -1841,13 +1871,12 @@ export function InventoryPanel({
             ) : null}
             {viewingItem.notes ? (
               <div>
-                <p className="text-xs text-muted-foreground">Notas</p>
+                <p className="text-xs text-muted-foreground"><Ui>Notas</Ui></p>
                 <p className="text-sm whitespace-pre-wrap">{viewingItem.notes}</p>
               </div>
             ) : null}
-            <p className="mt-4 text-xs text-muted-foreground">
-              Esta ficha es de solo lectura. Usa &quot;Editar datos&quot; para
-              modificar el registro.
+            <p className="mt-3 text-[11px] text-muted-foreground sm:mt-4 sm:text-xs">
+              {t("inv.readonlyHint")}
             </p>
           </div>
         </div>

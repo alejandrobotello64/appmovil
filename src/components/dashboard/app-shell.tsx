@@ -6,6 +6,7 @@ import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AccountMenu } from "@/components/dashboard/account-menu";
 import { Sidebar } from "@/components/dashboard/sidebar";
+import { useLocale } from "@/components/locale-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ZoomControls } from "@/components/zoom-controls";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -27,6 +28,7 @@ type AppShellProps = {
 
 export function AppShell({ title, subtitle, children }: AppShellProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const [session, setSession] = useState<SessionData | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -73,7 +75,7 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
   if (!session) {
     return (
       <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">
-        Cargando...
+        {t("shell.loading")}
       </div>
     );
   }
@@ -91,14 +93,14 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
               type="button"
               onClick={() => setSidebarOpen((current) => !current)}
               className="touch-target inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
-              aria-label={sidebarOpen ? "Ocultar menú" : "Mostrar menú"}
+              aria-label={sidebarOpen ? t("nav.hideMenu") : t("nav.showMenu")}
               aria-expanded={sidebarOpen}
             >
               <Menu className="size-5" />
             </button>
             <div className="min-w-0">
               <p className="truncate text-[10px] tracking-wide text-muted-foreground uppercase sm:text-xs">
-                {subtitle ?? "Panel interno"}
+                {subtitle ?? t("shell.internalPanel")}
               </p>
               <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">
                 {title}
@@ -133,18 +135,18 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
               className="touch-target h-11 px-3 sm:h-9 sm:px-3"
             >
               <LogOut className="size-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Salir</span>
+              <span className="hidden sm:inline">{t("shell.logout")}</span>
             </Button>
           </div>
         </header>
 
-        <main className="app-main flex-1 overflow-auto">
+        <main className="app-main min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
           {children}
         </main>
       </div>
 
       <div className="pointer-events-none fixed right-3 bottom-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] z-40 flex flex-col items-end gap-2 md:hidden">
-        <ScanCameraButton size="fab" className="pointer-events-auto" title="Escanear con la cámara" />
+        <ScanCameraButton size="fab" className="pointer-events-auto" title={t("shell.scanCamera")} />
         <ZoomControls
           showPercent="always"
           className="pointer-events-auto shadow-lg"

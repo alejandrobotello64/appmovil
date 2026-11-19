@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Plus, Search, Trash2 } from "lucide-react";
@@ -270,7 +271,7 @@ export function ContractsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Título</span>
+            <span className="text-sm font-medium"><Ui>Título</Ui></span>
             <input
               value={form.title}
               onChange={(event) =>
@@ -281,7 +282,7 @@ export function ContractsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Cliente</span>
+            <span className="text-sm font-medium"><Ui>Cliente</Ui></span>
             <select
               value={form.clientId ?? ""}
               onChange={(event) =>
@@ -353,7 +354,7 @@ export function ContractsPanel() {
             Contrato vigente
           </label>
           <label className="space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Notas</span>
+            <span className="text-sm font-medium"><Ui>Notas</Ui></span>
             <textarea
               rows={2}
               value={form.notes}
@@ -525,9 +526,7 @@ export function ContractsPanel() {
                           className="h-8 text-destructive"
                           onClick={() => void handleDelete(contract)}
                         >
-                          <Trash2 className="size-3.5" />
-                          Eliminar
-                        </Button>
+                          <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></Button>
                       ) : null}
                     </div>
                   </td>

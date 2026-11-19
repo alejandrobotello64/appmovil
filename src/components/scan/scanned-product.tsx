@@ -1,4 +1,5 @@
 "use client";
+import { Th } from "@/components/ui/th";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -230,9 +231,9 @@ export function ScannedProduct({ match, onNavigate }: ScannedProductProps) {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/60 text-xs text-muted-foreground">
                     <tr>
-                      <th className="px-3 py-2 text-left font-medium">Almacén</th>
-                      <th className="px-3 py-2 text-left font-medium">Ubicación</th>
-                      <th className="px-3 py-2 text-right font-medium">Cantidad</th>
+                      <Th className="px-3 py-2 text-left font-medium">Almacén</Th>
+                      <Th className="px-3 py-2 text-left font-medium">Ubicación</Th>
+                      <Th className="px-3 py-2 text-right font-medium">Cantidad</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -268,10 +269,10 @@ export function ScannedProduct({ match, onNavigate }: ScannedProductProps) {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/60 text-xs text-muted-foreground">
                     <tr>
-                      <th className="px-3 py-2 text-left font-medium">Lote</th>
-                      <th className="px-3 py-2 text-left font-medium">Caducidad</th>
-                      <th className="px-3 py-2 text-right font-medium">Cantidad</th>
-                      <th className="hidden px-3 py-2 text-left font-medium sm:table-cell">Ubicación</th>
+                      <Th className="px-3 py-2 text-left font-medium">Lote</Th>
+                      <Th className="px-3 py-2 text-left font-medium">Caducidad</Th>
+                      <Th className="px-3 py-2 text-right font-medium">Cantidad</Th>
+                      <Th className="hidden px-3 py-2 text-left font-medium sm:table-cell">Ubicación</Th>
                     </tr>
                   </thead>
                   <tbody>

@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useMemo, useState } from "react";
 import { FileDown, Loader2, Printer } from "lucide-react";
@@ -135,7 +136,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
       <section className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Resumen de gastos</h2>
+            <h2 className="text-lg font-semibold"><Ui>Resumen de gastos</Ui></h2>
             <p className="text-sm text-muted-foreground">
               Totales, gráficas y desglose por tipo de gasto. Filtra y descarga o imprime el reporte.
               {!viewer.seeAll ? " Solo incluye tus registros." : ""}
@@ -208,7 +209,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
           </Field>
           <Field label="Tipo">
             <select className={inputClass} value={filters.kind} onChange={(e) => patch({ kind: e.target.value as ExpenseKind | "" })}>
-              <option value="">Todos</option>
+              <option value=""><Ui>Todos</Ui></option>
               {EXPENSE_KINDS.map((kind) => (
                 <option key={kind.id} value={kind.id}>
                   {kind.label}
@@ -218,7 +219,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
           </Field>
           <Field label="Categoría">
             <select className={inputClass} value={filters.category} onChange={(e) => patch({ category: e.target.value })}>
-              <option value="">Todas</option>
+              <option value=""><Ui>Todas</Ui></option>
               {EXPENSE_CATEGORIES.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.label}
@@ -228,7 +229,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
           </Field>
           <Field label="Colaborador">
             <select className={inputClass} value={filters.employee} onChange={(e) => patch({ employee: e.target.value })}>
-              <option value="">Todos</option>
+              <option value=""><Ui>Todos</Ui></option>
               {employees.map((name) => (
                 <option key={name} value={name}>
                   {name}
@@ -243,7 +244,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
               onChange={(e) => patch({ status: e.target.value as ExpenseStatus | "" | "vigentes" })}
             >
               <option value="vigentes">Vigentes</option>
-              <option value="">Todos</option>
+              <option value=""><Ui>Todos</Ui></option>
               {EXPENSE_STATUSES.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.label}
@@ -467,7 +468,7 @@ export function ExpenseSummaryPanel({ viewer, canExport }: Props) {
                           ) : itemHasInvoice(item) ? (
                             <span className="text-muted-foreground">XML</span>
                           ) : (
-                            <span className="text-amber-700 dark:text-amber-300">Sin factura</span>
+                            <span className="text-amber-700 dark:text-amber-300"><Ui>Sin factura</Ui></span>
                           )}
                         </td>
                         <td className="px-4 py-2.5 text-right font-medium whitespace-nowrap tabular-nums">

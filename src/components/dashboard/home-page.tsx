@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -21,6 +22,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useLocale } from "@/components/locale-provider";
 import {
   AlertsPanel,
   ClientActivityTable,
@@ -58,7 +60,8 @@ const CHART_MODES: { id: ChartMode; label: string; areas: HomeArea[] }[] = [
   { id: "montos", label: "Montos", areas: ["servicio", "ventas"] },
 ];
 
-function greeting(time: number) {
+
+function greetingKey(time: number) {
   const hour = new Date(time).getHours();
   if (hour < 12) return "Buenos días";
   if (hour < 19) return "Buenas tardes";
@@ -66,6 +69,7 @@ function greeting(time: number) {
 }
 
 export function DashboardHomePage() {
+  const { t, c, locale } = useLocale();
   const { session, ready, canView } = useSessionAccess();
   const allowedKey = ready ? allowedHomeAreas(canView).join(",") : "";
   const [data, setData] = useState<HomeData | null>(null);
@@ -106,20 +110,21 @@ export function DashboardHomePage() {
   }
 
   return (
-    <AppShell title="Panel principal" subtitle="Medical Advanced Supplies">
+    <AppShell title={t("page.home")} subtitle={t("page.homeSubtitle")}>
       <div className="space-y-6">
         <section className="flex flex-col gap-4 rounded-2xl border border-border bg-[linear-gradient(135deg,rgba(0,191,255,0.08),rgba(59,70,165,0.12))] p-5 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm text-muted-foreground">
-              {data ? greeting(data.loadedAt) : "Hola"}
+              {data ? c(greetingKey(data.loadedAt)) : c("Hola")}
               {firstName ? `, ${firstName}` : ""}
             </p>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-              Resumen general de la empresa
+              <Ui>Resumen general de la empresa</Ui>
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Indicadores acumulados de biomédica, ventas, almacén, calidad y clientes, con alertas de
-              todas las áreas que puedes ver.
+              {c(
+                "Indicadores acumulados de biomédica, ventas, almacén, calidad y clientes, con alertas de todas las áreas que puedes ver."
+              )}
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 md:items-end">
@@ -141,7 +146,7 @@ export function DashboardHomePage() {
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  {item.label}
+                  {c(item.label)}
                 </button>
               ))}
             </div>
@@ -153,7 +158,7 @@ export function DashboardHomePage() {
             >
               {loading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
               {data
-                ? `Actualizado ${new Date(data.loadedAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`
+                ? `${c("Actualizado")} ${new Date(data.loadedAt).toLocaleTimeString(locale === "en" ? "en-US" : "es-MX", { hour: "2-digit", minute: "2-digit" })}`
                 : "Cargando…"}
             </button>
           </div>
@@ -196,6 +201,7 @@ function HomeContent({
   chartMode: ChartMode | null;
   onChartMode: (mode: ChartMode) => void;
 }) {
+  const { c } = useLocale();
   const { can } = useSessionAccess();
   const canViewPrices = can("precios.view");
   const { has, period, service, sales, tenders, inventory, quality, clients } = metrics;
@@ -379,7 +385,7 @@ function HomeContent({
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      {item.label}
+                      {c(item.label)}
                     </button>
                   ))}
                 </div>

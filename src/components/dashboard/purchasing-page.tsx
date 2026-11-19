@@ -1,7 +1,9 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useLocale } from "@/components/locale-provider";
 import { PurchaseRequestsPanel, PurchasingDashboard } from "@/components/purchasing/purchase-requests-panel";
 import { OrdersPanel } from "@/components/warehouse/orders-panel";
 import { SuppliersPanel } from "@/components/warehouse/suppliers-panel";
@@ -9,6 +11,7 @@ import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { PURCHASING_TAB_MODULES, PURCHASING_TABS, normalizePurchasingTab } from "@/lib/purchasing/tabs";
 
 export function PurchasingPage() {
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const activeTab = normalizePurchasingTab(searchParams.get("tab"));
   const access = useSessionAccess();
@@ -17,18 +20,22 @@ export function PurchasingPage() {
     : null;
 
   const activeMeta = PURCHASING_TABS.find((tab) => tab.id === activeTab);
+  const tabTitle =
+    activeTab === "dashboard"
+      ? t("page.purchasing")
+      : t(`tab.purchasing.${activeTab}`, activeMeta?.label ?? t("page.purchasing"));
 
   return (
     <AppShell
-      title={activeTab === "dashboard" ? "Compras" : activeMeta?.label ?? "Compras"}
-      subtitle={activeMeta?.description ?? "MAS · Compras"}
+      title={tabTitle}
+      subtitle={t("page.purchasingSubtitle")}
     >
       <div className="space-y-4 sm:space-y-6">
         {allowed === false ? (
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">Sin acceso a este módulo</h2>
+            <h2 className="text-lg font-semibold">{t("page.noAccess")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tus permisos no incluyen {activeMeta?.label ?? "esta sección"}. Elige otra opción del menú de compras.
+              {t("page.noAccessHint")}
             </p>
           </section>
         ) : allowed ? (
@@ -39,7 +46,7 @@ export function PurchasingPage() {
             {activeTab === "proveedores" ? <SuppliersPanel /> : null}
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">Cargando...</p>
+          <p className="text-sm text-muted-foreground"><Ui>Cargando...</Ui></p>
         )}
       </div>
     </AppShell>

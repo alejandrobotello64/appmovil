@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Activity, Camera, Link2, Loader2, ScanBarcode, Search, Unplug, Usb, X } from "lucide-react";
@@ -273,9 +274,7 @@ export function ScanDialog({ request, onClose }: ScanDialogProps) {
               className="h-11 w-full rounded-lg border border-border bg-background pr-3 pl-9 font-mono text-sm"
             />
           </div>
-          <Button type="submit" disabled={!manual.trim() || loading} className="touch-target h-11 px-4">
-            Buscar
-          </Button>
+          <Button type="submit" disabled={!manual.trim() || loading} className="touch-target h-11 px-4"><Ui>Buscar</Ui></Button>
           <Button
             type="button"
             variant={camera ? "secondary" : "outline"}

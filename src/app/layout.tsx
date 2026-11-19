@@ -1,14 +1,49 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import {
+  DM_Sans,
+  IBM_Plex_Sans,
+  Inter,
+  Manrope,
+  Nunito,
+  Roboto,
+  Source_Sans_3,
+} from "next/font/google";
 import Script from "next/script";
 import { DocumentPreviewHost } from "@/components/print/document-preview-host";
+import { LocaleProvider, localeInitScript } from "@/components/locale-provider";
 import { ThemeProvider, themeInitScript } from "@/components/theme-provider";
 import { ZoomProvider, zoomInitScript } from "@/components/zoom-provider";
 import "./globals.css";
 
 const manrope = Manrope({
-  variable: "--font-sans",
+  variable: "--font-manrope",
   subsets: ["latin"],
+});
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+});
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
+  subsets: ["latin"],
+});
+const ibmPlex = IBM_Plex_Sans({
+  variable: "--font-ibm-plex",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+});
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -55,11 +90,21 @@ export const viewport: Viewport = {
   ],
 };
 
+const fontVariables = [
+  manrope.variable,
+  inter.variable,
+  dmSans.variable,
+  sourceSans.variable,
+  ibmPlex.variable,
+  nunito.variable,
+  roboto.variable,
+].join(" ");
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${manrope.variable} h-full antialiased`}
+      className={`${fontVariables} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-dvh flex-col bg-background text-foreground">
@@ -73,11 +118,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: zoomInitScript }}
         />
+        <Script
+          id="mas-locale-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: localeInitScript }}
+        />
         <ThemeProvider>
-          <ZoomProvider>
-            {children}
-            <DocumentPreviewHost />
-          </ZoomProvider>
+          <LocaleProvider>
+            <ZoomProvider>
+              {children}
+              <DocumentPreviewHost />
+            </ZoomProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

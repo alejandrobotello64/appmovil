@@ -16,6 +16,11 @@ import {
   type PdfPersonCard,
 } from "@/lib/brand/pdf-layout";
 import { catalogModelLabel } from "@/lib/inventory/product-label";
+import {
+  getStoredLocale,
+  localeTag,
+  translate,
+} from "@/lib/i18n/messages";
 import { loadStaffProfileLookup } from "@/lib/users/staff";
 import {
   MOVEMENT_KIND_LABELS,
@@ -115,17 +120,24 @@ const VOUCHER_COLUMNS: PdfColumn[] = [
   { key: "qty", label: "Cantidad", width: 18, align: "center" },
 ];
 
-const REPORT_COLUMNS: PdfColumn[] = [
-  { key: "date", label: "Fecha", width: 24 },
-  { key: "folio", label: "Folio", width: 27 },
-  { key: "kind", label: "Tipo", width: 24 },
-  { key: "product", label: "Producto", width: 58 },
-  { key: "qty", label: "Cant.", width: 12, align: "center" },
-  { key: "from", label: "Origen", width: 34 },
-  { key: "to", label: "Destino", width: 34 },
-  { key: "lot", label: "Lote", width: 22 },
-  { key: "user", label: "Usuario", width: 34 },
-];
+function reportColumns(locale: "es" | "en"): PdfColumn[] {
+  const en = locale === "en";
+  return [
+    { key: "date", label: en ? "Date" : "Fecha", width: 24 },
+    { key: "folio", label: "Folio", width: 27 },
+    { key: "kind", label: translate(locale, "ui.type", "Tipo"), width: 24 },
+    {
+      key: "product",
+      label: translate(locale, "ui.product", "Producto"),
+      width: 58,
+    },
+    { key: "qty", label: en ? "Qty" : "Cant.", width: 12, align: "center" },
+    { key: "from", label: en ? "From" : "Origen", width: 34 },
+    { key: "to", label: en ? "To" : "Destino", width: 34 },
+    { key: "lot", label: en ? "Lot" : "Lote", width: 22 },
+    { key: "user", label: en ? "User" : "Usuario", width: 34 },
+  ];
+}
 
 const MOVE_KINDS: MovementKind[] = ["traspaso", "cambio_ubicacion"];
 
@@ -281,14 +293,21 @@ export async function downloadMovementsReportPdf(
   records: MovementRecord[],
   options: { filters: MovementReportFilters; generatedBy: string; output?: PdfOutput }
 ) {
+  const locale = getStoredLocale();
+  const tag = localeTag(locale);
+  const tr = (key: string, fallback: string) => translate(locale, key, fallback);
   const lookup = await loadStaffProfileLookup();
   const nameOf = (user: string) => lookup(user)?.fullName || user;
   const now = new Date();
+  const external = locale === "en" ? "External" : "Externo";
 
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
   const start = await drawBrandedHeader(doc, {
-    title: "Reporte de movimientos de almacén",
-    rightLines: [options.filters.period, `Generado: ${formatPdfDate(now.toISOString(), true)}`],
+    title: tr("report.movementsTitle", "Reporte de movimientos de almacén"),
+    rightLines: [
+      options.filters.period,
+      `${tr("ui.generated", "Generado")}: ${formatPdfDate(now.toISOString(), true, tag)}`,
+    ],
   });
   const cursor = new PdfCursor(doc, start);
 
@@ -304,35 +323,38 @@ export async function downloadMovementsReportPdf(
   }
 
   drawFieldRow(cursor, [
-    ["Periodo", options.filters.period],
-    ["Tipo", options.filters.kind],
-    ["Almacén", options.filters.warehouse],
-    ["Búsqueda", options.filters.search || "Sin filtro"],
+    [tr("ui.period", "Periodo"), options.filters.period],
+    [tr("ui.type", "Tipo"), options.filters.kind],
+    [tr("ui.warehouse", "Almacén"), options.filters.warehouse],
+    [
+      tr("report.search", "Búsqueda"),
+      options.filters.search || tr("report.noFilter", "Sin filtro"),
+    ],
   ]);
   drawFieldRow(
     cursor,
     [
-      ["Movimientos", String(records.length)],
-      ["Unidades que entraron", formatPdfQty(unitsIn)],
-      ["Unidades que salieron", formatPdfQty(unitsOut)],
-      ["Unidades trasladadas", formatPdfQty(moved)],
+      [tr("report.movements", "Movimientos"), String(records.length)],
+      [tr("report.unitsIn", "Unidades que entraron"), formatPdfQty(unitsIn)],
+      [tr("report.unitsOut", "Unidades que salieron"), formatPdfQty(unitsOut)],
+      [tr("report.unitsMoved", "Unidades trasladadas"), formatPdfQty(moved)],
     ],
     5
   );
 
-  cursor.sectionTitle("Detalle");
+  cursor.sectionTitle(tr("ui.detail", "Detalle"));
   drawTable(
     cursor,
-    REPORT_COLUMNS,
+    reportColumns(locale),
     records.map((record) => ({
       cells: {
-        date: formatPdfDate(record.occurredAt, true),
+        date: formatPdfDate(record.occurredAt, true, tag),
         folio: record.folio || "—",
         kind: MOVEMENT_KIND_LABELS[record.kind] ?? record.kind,
         product: [record.productName, catalogModelLabel(record.productModel), record.productSku],
         qty: `${record.kind === "salida" ? "-" : record.kind === "entrada" ? "+" : ""}${formatPdfQty(record.quantity)}`,
-        from: placeLabel(record.from) || "Externo",
-        to: placeLabel(record.to) || "Externo",
+        from: placeLabel(record.from) || external,
+        to: placeLabel(record.to) || external,
         lot: record.lotNumber || "—",
         user: nameOf(record.createdBy) || "—",
       },
@@ -343,8 +365,8 @@ export async function downloadMovementsReportPdf(
   );
 
   drawSignatures(cursor, [
-    { title: "Elaboró", name: nameOf(options.generatedBy) },
-    { title: "Revisó (almacén)", name: "" },
+    { title: tr("ui.preparedBy", "Elaboró"), name: nameOf(options.generatedBy) },
+    { title: tr("ui.reviewedBy", "Revisó (almacén)"), name: "" },
   ]);
 
   drawBrandedFooter(doc);

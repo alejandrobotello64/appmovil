@@ -1,0 +1,374 @@
+import fs from "fs";
+import path from "path";
+
+const CHROME = [
+  "Acciones",
+  "Acción",
+  "Editar",
+  "Editar datos",
+  "Eliminar",
+  "Desactivar",
+  "Activar",
+  "Ver",
+  "Cerrar",
+  "Cancelar",
+  "Guardar",
+  "Guardar cambios",
+  "Buscar",
+  "Filtrar",
+  "Quitar filtros",
+  "Nuevo",
+  "Nueva",
+  "Agregar",
+  "Añadir",
+  "Crear",
+  "Imprimir",
+  "Exportar",
+  "Importar",
+  "Descargar",
+  "Subir",
+  "Confirmar",
+  "Aceptar",
+  "Rechazar",
+  "Aprobar",
+  "Enviar",
+  "Continuar",
+  "Volver",
+  "Siguiente",
+  "Anterior",
+  "Recargar",
+  "Actualizar",
+  "Ubicar",
+  "Ficha",
+  "Folio",
+  "Fecha",
+  "Fechas",
+  "Periodo",
+  "Estado",
+  "Estatus",
+  "Tipo",
+  "Producto",
+  "Productos",
+  "Artículo",
+  "Artículos",
+  "Equipo",
+  "Equipos",
+  "Cliente",
+  "Clientes",
+  "Proveedor",
+  "Proveedores",
+  "Contacto",
+  "Teléfono",
+  "Correo",
+  "Ciudad",
+  "Dirección",
+  "Descripción",
+  "Notas",
+  "Cantidad",
+  "Cant.",
+  "Cant",
+  "Unidad",
+  "Unidades",
+  "Stock",
+  "Existencia",
+  "Entrada",
+  "Entradas",
+  "Salida",
+  "Salidas",
+  "Origen",
+  "Destino",
+  "Origen → Destino",
+  "Lote",
+  "Caducidad",
+  "Serie",
+  "Usuario",
+  "Usuarios",
+  "Nombre",
+  "Marca",
+  "Modelo",
+  "Categoría",
+  "Color",
+  "Foto",
+  "Fotos",
+  "Imagen",
+  "Imágenes",
+  "Almacén",
+  "Ubicación",
+  "Almacén / ubicación",
+  "Referencia",
+  "Detalle",
+  "Técnico",
+  "Asesor",
+  "Vendedor",
+  "Responsable",
+  "Área",
+  "Rol",
+  "Puesto",
+  "Acceso",
+  "Proyecto",
+  "Requerido",
+  "Título",
+  "Vigencia",
+  "Seguimiento",
+  "Pedido",
+  "Total",
+  "Factura",
+  "Pendiente",
+  "P. unit.",
+  "Importe",
+  "Monto",
+  "Costo",
+  "Venta",
+  "Valor",
+  "Alerta",
+  "Insumo",
+  "Insumos",
+  "Capacitación",
+  "Lugar",
+  "Asistentes",
+  "Firma",
+  "Convocante",
+  "Propuestas",
+  "Avance",
+  "Solicitó",
+  "Fecha promesa",
+  "Identificadores",
+  "Partidas",
+  "Directorio",
+  "Tipo de registro",
+  "Nota",
+  "SKU",
+  "N.º de parte",
+  "Disponible",
+  "Bajo stock",
+  "Agotado",
+  "Todos los estados",
+  "Activar alerta",
+  "Silenciar alerta",
+  "Principal",
+  "Sin imágenes",
+  "Sin marca",
+  "Sin serie",
+  "Pedidos",
+  "Solicitudes",
+  "Cotizaciones",
+  "Mantenimientos",
+  "Herramientas",
+  "Kits",
+  "Kardex",
+  "Reporte",
+  "Dashboard",
+  "Inventario",
+  "Apartados",
+  "Surtimientos",
+  "Catálogo",
+  "Hoy",
+  "Semana",
+  "Mes",
+  "Año",
+  "Cargando…",
+  "Cargando...",
+  "Sin registros.",
+  "Sin registros",
+  "Todos",
+  "Todas",
+  "Ordenar",
+  "No. emp.",
+  "No. empleado",
+  "Turno",
+  "Instructor MAS",
+  "Cliente del catálogo",
+  "Cliente *",
+  "Cliente / detalle",
+  "Cliente / sede",
+  "Proyecto *",
+  "Fecha requerida *",
+  "Notas / condiciones",
+  "Notas / temario",
+  "Caducidad (opcional)",
+  "Lote (FEFO)",
+  "Lote existente",
+  "Nota (opcional)",
+  "Fotos de evidencia (opcional)",
+  "Fotos de evidencia",
+  "Quitar foto",
+  "Próx. mant.",
+  "Duración (horas)",
+  "Nombre completo",
+  "Nombre completo *",
+  "Próximo seguimiento",
+  "Registrar seguimiento",
+  "Tipo de documento",
+  "Línea / categoría",
+  "Vigente hasta",
+  "Etiquetas",
+  "Con factura",
+  "Sin factura",
+  "Total de gastos",
+  "Registros",
+  "Comprobantes",
+  "Resumen de gastos",
+  "Promedio diario",
+  "Por comprobante",
+  "Días con gasto",
+  "Ficha de consulta",
+  "Nuevo artículo",
+  "Editar artículo",
+  "Nuevo equipo médico",
+  "Editar equipo",
+  "Cargando catálogo…",
+  "Activar alerta de agotado",
+  "Silenciar alerta de agotado",
+  "Ubicar en almacén",
+  "Sin acceso a este módulo",
+  "Arrastra los archivos aquí",
+  "Agregar insumo del catálogo",
+  "Agregar punto a revisar",
+  "Verificación de entrega",
+  "Equipos ligados",
+  "Imágenes del equipo",
+  "Dar de alta equipo",
+  "Nuevo evento",
+  "Nueva encuesta de satisfacción",
+  "Editar datos del equipo",
+  "Bitácora de accesos",
+  "Foto y certificación",
+  "Foto del instrumento",
+  "Foto del colaborador",
+  "Fotografías de la capacitación",
+  "Orden firmada y sellada",
+  "Cambiar estatus",
+  "Fecha de fabricación (opcional)",
+  "Fecha de caducidad (opcional)",
+  "Panel principal",
+  "Resumen general de la empresa",
+  "Valor productos",
+  "Alertas stock",
+  "Equipos médicos",
+  "Categoría de producto",
+  "Generando reporte...",
+  "Reporte del sistema interno",
+  "Números de serie",
+  "Alta de colaborador",
+  "Activar / deshabilitar",
+  "Permisos de usuarios",
+  "Órdenes de servicio",
+  "Simuladores y analizadores",
+  "Pedidos a almacén",
+  "Solicitud de herramientas",
+  "Documentos técnicos",
+  "Contraseñas de servicio",
+  "Resumen y reportes",
+  "Viáticos",
+  "Gastos corrientes",
+  "Caja chica",
+  "Otros gastos",
+  "Solicitudes de compra",
+  "Órdenes de compra",
+  "Solicitar compra",
+  "Apertura de caja",
+  "Registros sanitarios",
+];
+
+CHROME.sort((a, b) => b.length - a.length);
+
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function walk(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (!["node_modules", ".next"].includes(entry.name)) walk(full, out);
+    } else if (entry.name.endsWith(".tsx")) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+function addImport(src, named, from) {
+  if (src.includes(`from "${from}"`)) return src;
+  const line = `import { ${named} } from "${from}";\n`;
+  if (src.includes('"use client"')) {
+    return src.replace(/("use client";\r?\n)/, `$1${line}`);
+  }
+  return line + src;
+}
+
+const files = walk(path.join("src", "components"));
+let filesChanged = 0;
+let thFiles = 0;
+let labelHits = 0;
+
+for (const file of files) {
+  const base = path.basename(file);
+  if (["sortable-table.tsx", "ui-text.tsx", "th.tsx", "responsive-data-list.tsx"].includes(base)) {
+    continue;
+  }
+
+  let src = fs.readFileSync(file, "utf8");
+  const original = src;
+  const usesSortable = src.includes("SortableTable");
+  let usedTh = false;
+  let usedUi = false;
+
+  if (!usesSortable && src.includes("<th")) {
+    for (const label of CHROME) {
+      const re = new RegExp(`(<th)(\\b[^>]*>)\\s*${escapeRe(label)}\\s*(</th>)`, "g");
+      const next = src.replace(re, `<Th$2${label}</Th>`);
+      if (next !== src) {
+        src = next;
+        usedTh = true;
+      }
+    }
+    if (usedTh) thFiles += 1;
+  }
+
+  for (const label of CHROME) {
+    const tagRe = new RegExp(
+      `(<(?:span|p|label|h[1-6]|dt|strong|legend)\\b[^>]*>)\\s*${escapeRe(label)}\\s*(</(?:span|p|label|h[1-6]|dt|strong|legend)>)`,
+      "g"
+    );
+    src = src.replace(tagRe, (full, open, close) => {
+      if (full.includes("<Ui>") || full.includes("{c(") || full.includes("chromeLabel")) {
+        return full;
+      }
+      labelHits += 1;
+      usedUi = true;
+      return `${open}<Ui>${label}</Ui>${close}`;
+    });
+
+    const btnRe = new RegExp(
+      `(<(?:button|Button)\\b[^>]*>)\\s*${escapeRe(label)}\\s*(</(?:button|Button)>)`,
+      "g"
+    );
+    src = src.replace(btnRe, (full, open, close) => {
+      if (full.includes("<Ui>") || full.includes("{c(")) return full;
+      labelHits += 1;
+      usedUi = true;
+      return `${open}<Ui>${label}</Ui>${close}`;
+    });
+
+    const optRe = new RegExp(
+      `(<option\\b[^>]*>)\\s*${escapeRe(label)}\\s*(</option>)`,
+      "g"
+    );
+    src = src.replace(optRe, (full, open, close) => {
+      if (full.includes("<Ui>")) return full;
+      labelHits += 1;
+      usedUi = true;
+      return `${open}<Ui>${label}</Ui>${close}`;
+    });
+  }
+
+  if (src !== original) {
+    if (usedTh) src = addImport(src, "Th", "@/components/ui/th");
+    if (usedUi) src = addImport(src, "Ui", "@/components/ui/ui-text");
+    fs.writeFileSync(file, src);
+    filesChanged += 1;
+  }
+}
+
+console.log(JSON.stringify({ filesChanged, thFiles, labelHits }, null, 2));

@@ -1,4 +1,5 @@
 "use client";
+import { Th } from "@/components/ui/th";
 
 import { useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
@@ -197,11 +198,11 @@ export function StockMoveForm({ products, warehouses, locations, canWrite, onDon
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="w-10 px-3 py-2" />
-                    <th className="px-3 py-2 font-medium">Almacén</th>
-                    <th className="px-3 py-2 font-medium">Ubicación</th>
-                    <th className="px-3 py-2 font-medium">Lote</th>
-                    <th className="px-3 py-2 font-medium">Caducidad</th>
-                    <th className="px-3 py-2 text-right font-medium">Disponible</th>
+                    <Th className="px-3 py-2 font-medium">Almacén</Th>
+                    <Th className="px-3 py-2 font-medium">Ubicación</Th>
+                    <Th className="px-3 py-2 font-medium">Lote</Th>
+                    <Th className="px-3 py-2 font-medium">Caducidad</Th>
+                    <Th className="px-3 py-2 text-right font-medium">Disponible</Th>
                   </tr>
                 </thead>
                 <tbody>

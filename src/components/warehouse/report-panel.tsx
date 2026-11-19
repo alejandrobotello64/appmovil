@@ -13,15 +13,18 @@ import {
   ResponsiveDataList,
 } from "@/components/ui/responsive-data-list";
 import { SortableTable } from "@/components/ui/sortable-table";
+import { useLocale } from "@/components/locale-provider";
+import { localeTag } from "@/lib/i18n/messages";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("es-MX", {
+function formatCurrency(value: number, locale: "es" | "en") {
+  return new Intl.NumberFormat(localeTag(locale), {
     style: "currency",
     currency: "MXN",
   }).format(value);
 }
 
 export function ReportPanel() {
+  const { t, locale } = useLocale();
   const { can } = useSessionAccess();
   const canViewPrices = can("precios.view");
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -66,48 +69,61 @@ export function ReportPanel() {
   }, [items]);
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Generando reporte...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">{t("report.generating")}</p>
+    );
   }
 
   return (
     <ModulePlaceholder
-      title="Reporte del sistema interno"
-      description="Separación entre productos consumibles y equipos médicos."
+      title={t("report.title")}
+      description={t("report.description")}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-xl border border-border p-4">
-          <p className="text-sm text-muted-foreground">Productos</p>
+          <p className="text-sm text-muted-foreground">{t("ui.products")}</p>
           <p className="mt-1 text-2xl font-semibold">{items.length}</p>
         </article>
         {canViewPrices ? (
           <article className="rounded-xl border border-border p-4">
-            <p className="text-sm text-muted-foreground">Valor productos</p>
+            <p className="text-sm text-muted-foreground">
+              {t("report.productValue")}
+            </p>
             <p className="mt-1 text-2xl font-semibold">
-              {formatCurrency(summary.value)}
+              {formatCurrency(summary.value, locale)}
             </p>
           </article>
         ) : null}
         <article className="rounded-xl border border-border p-4">
-          <p className="text-sm text-muted-foreground">Alertas stock</p>
+          <p className="text-sm text-muted-foreground">
+            {t("report.stockAlerts")}
+          </p>
           <p className="mt-1 text-2xl font-semibold">{summary.alerts}</p>
         </article>
         <article className="rounded-xl border border-border p-4">
-          <p className="text-sm text-muted-foreground">Equipos médicos</p>
+          <p className="text-sm text-muted-foreground">
+            {t("report.medicalEquipment")}
+          </p>
           <p className="mt-1 text-2xl font-semibold">{equipment.length}</p>
         </article>
       </div>
 
       <ResponsiveDataList
         className="mt-5 px-0 md:hidden"
-        emptyMessage="Sin categorías con existencias."
+        emptyMessage={t("report.emptyCategories")}
         items={summary.byCategory.map((row) => ({
           key: row.label,
           title: row.label,
           fields: [
-            { label: "SKUs", value: row.count },
-            { label: "Unidades", value: row.units },
+            { label: t("ui.sku") + "s", value: row.count },
+            { label: t("ui.units"), value: row.units },
             ...(canViewPrices
-              ? [{ label: "Valor", value: formatCurrency(row.value) }]
+              ? [
+                  {
+                    label: t("ui.value"),
+                    value: formatCurrency(row.value, locale),
+                  },
+                ]
               : []),
           ],
         }))}
@@ -117,11 +133,13 @@ export function ReportPanel() {
         <SortableTable className="min-w-full text-sm">
           <thead className="bg-muted/50 text-left text-muted-foreground">
             <tr>
-              <th className="px-3 py-2 font-medium">Categoría de producto</th>
-              <th className="px-3 py-2 font-medium">SKUs</th>
-              <th className="px-3 py-2 font-medium">Unidades</th>
+              <th className="px-3 py-2 font-medium">
+                {t("report.productCategory")}
+              </th>
+              <th className="px-3 py-2 font-medium">{t("ui.sku")}s</th>
+              <th className="px-3 py-2 font-medium">{t("ui.units")}</th>
               {canViewPrices ? (
-                <th className="px-3 py-2 font-medium">Valor</th>
+                <th className="px-3 py-2 font-medium">{t("ui.value")}</th>
               ) : null}
             </tr>
           </thead>
@@ -132,7 +150,9 @@ export function ReportPanel() {
                 <td className="px-3 py-2">{row.count}</td>
                 <td className="px-3 py-2">{row.units}</td>
                 {canViewPrices ? (
-                  <td className="px-3 py-2">{formatCurrency(row.value)}</td>
+                  <td className="px-3 py-2">
+                    {formatCurrency(row.value, locale)}
+                  </td>
                 ) : null}
               </tr>
             ))}

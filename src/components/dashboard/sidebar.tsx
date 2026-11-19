@@ -72,6 +72,7 @@ import {
   SERVICE_ORDER_TABS,
   normalizeServiceOrderTab,
 } from "@/lib/service-orders/tabs";
+import { useLocale } from "@/components/locale-provider";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { cn } from "@/lib/utils";
 import { AnesthesiaMachineIcon } from "@/components/icons/anesthesia-machine-icon";
@@ -151,6 +152,7 @@ type SidebarProps = {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useLocale();
   const activeWarehouseTab = normalizeWarehouseTab(searchParams.get("tab"));
   const activeUsersTab = normalizeUsersTab(searchParams.get("tab"));
   const activeServiceOrderTab = normalizeServiceOrderTab(searchParams.get("tab"));
@@ -286,7 +288,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             type="button"
             onClick={onClose}
             className="touch-target inline-flex size-11 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted lg:hidden"
-            aria-label="Cerrar menú"
+            aria-label={t("nav.closeMenu")}
           >
             <X className="size-4" />
           </button>
@@ -294,7 +296,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           <p className="px-3 py-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-            Menú principal
+            {t("nav.mainMenu")}
           </p>
 
           <Link
@@ -308,7 +310,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             )}
           >
             <LayoutDashboard className="size-4 shrink-0" />
-            Inicio
+            {t("nav.home")}
           </Link>
 
           <div className="mt-2">
@@ -324,7 +326,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               )}
             >
               <Warehouse className="size-4 shrink-0" />
-              <span className="flex-1">Almacén</span>
+              <span className="flex-1">{t("nav.warehouse")}</span>
               <ChevronDown
                 className={cn(
                   "size-4 transition-transform",
@@ -357,7 +359,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       )}
                     >
                       <Icon className="size-3.5 shrink-0" />
-                      {tab.label}
+                      {t(`tab.warehouse.${tab.id}`, tab.label)}
                     </Link>
                   );
                 })}
@@ -377,7 +379,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               )}
             >
               <CalendarDays className="size-4 shrink-0" />
-              Calendario
+              {t("nav.calendar")}
             </Link>
           ) : null}
 
@@ -393,7 +395,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               )}
             >
               <Building2 className="size-4 shrink-0" />
-              Clientes
+              {t("nav.clients")}
             </Link>
           ) : null}
 
@@ -409,7 +411,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               )}
             >
               <BadgeCheck className="size-4 shrink-0" />
-              Calidad
+              {t("nav.quality")}
             </Link>
           ) : null}
 
@@ -425,7 +427,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               )}
             >
               <Gavel className="size-4 shrink-0" />
-              Licitaciones
+              {t("nav.tenders")}
             </Link>
           ) : null}
 
@@ -443,7 +445,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 )}
               >
                 <ShoppingBag className="size-4 shrink-0" />
-                <span className="flex-1">Compras</span>
+                <span className="flex-1">{t("nav.purchasing")}</span>
                 <ChevronDown
                   className={cn(
                     "size-4 transition-transform",
@@ -471,7 +473,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                         )}
                       >
                         <Icon className="size-3.5 shrink-0" />
-                        {tab.label}
+                        {t(`tab.purchasing.${tab.id}`, tab.label)}
                       </Link>
                     );
                   })}
@@ -494,7 +496,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 )}
               >
                 <BadgeDollarSign className="size-4 shrink-0" />
-                <span className="flex-1">Ventas</span>
+                <span className="flex-1">{t("nav.sales")}</span>
                 <ChevronDown
                   className={cn(
                     "size-4 transition-transform",
@@ -522,7 +524,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                         )}
                       >
                         <Icon className="size-3.5 shrink-0" />
-                        {tab.label}
+                        {t(`tab.sales.${tab.id}`, tab.label)}
                       </Link>
                     );
                   })}
@@ -545,7 +547,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 )}
               >
                 <AnesthesiaMachineIcon className="size-4 shrink-0" />
-                <span className="flex-1">Biomédica</span>
+                <span className="flex-1">{t("nav.biomedical")}</span>
                 <ChevronDown
                   className={cn(
                     "size-4 transition-transform",
@@ -574,7 +576,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                         )}
                       >
                         <Icon className="size-3.5 shrink-0" />
-                        {tab.label}
+                        {t(`tab.service.${tab.id}`, tab.label)}
                       </Link>
                     );
                   })}
@@ -591,7 +593,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       )}
                     >
                       <GraduationCap className="size-3.5 shrink-0" />
-                      Educación
+                      {t("nav.education")}
                     </Link>
                   ) : null}
                 </div>
@@ -611,7 +613,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               )}
             >
               <Car className="size-4 shrink-0" />
-              Flotilla
+              {t("nav.fleet")}
             </Link>
           ) : null}
 
@@ -629,7 +631,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 )}
               >
                 <Wallet className="size-4 shrink-0" />
-                <span className="flex-1">Gastos</span>
+                <span className="flex-1">{t("nav.expenses")}</span>
                 <ChevronDown
                   className={cn("size-4 transition-transform", expensesOpen ? "rotate-180" : "rotate-0")}
                 />
@@ -653,7 +655,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                         )}
                       >
                         <Icon className="size-3.5 shrink-0" />
-                        {tab.label}
+                        {t(`tab.expenses.${tab.id}`, tab.label)}
                       </Link>
                     );
                   })}
@@ -676,7 +678,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 )}
               >
                 <Users className="size-4 shrink-0" />
-                <span className="flex-1">Usuarios</span>
+                <span className="flex-1">{t("nav.users")}</span>
                 <ChevronDown
                   className={cn(
                     "size-4 transition-transform",
@@ -704,7 +706,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                         )}
                       >
                         <Icon className="size-3.5 shrink-0" />
-                        {tab.label}
+                        {t(`tab.users.${tab.id}`, tab.label)}
                       </Link>
                     );
                   })}
@@ -715,9 +717,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
-          <p className="text-xs text-muted-foreground">
-            Panel principal, almacén, compras, ventas, biomédica, clientes, calidad y usuarios
-          </p>
+          <p className="text-xs text-muted-foreground">{t("nav.footer")}</p>
         </div>
       </aside>
     </>

@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
@@ -99,7 +100,7 @@ export function QuoteProductSearch({
 
   return (
     <div ref={rootRef} className="space-y-1.5">
-      <span className="text-xs text-muted-foreground">Producto</span>
+      <span className="text-xs text-muted-foreground"><Ui>Producto</Ui></span>
       {selected ? (
         <div className="rounded-lg border border-input bg-background px-3 py-2">
           <div className="flex items-start justify-between gap-2">

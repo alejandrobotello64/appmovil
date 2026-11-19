@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -447,7 +448,7 @@ export function PurchaseRequestsPanel() {
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-[#3B46A5]">Solicitudes de compra</h2>
+          <h2 className="text-lg font-semibold text-[#3B46A5]"><Ui>Solicitudes de compra</Ui></h2>
           <p className="text-sm text-muted-foreground">
             Elige una solicitud y luego otra para tomarlas juntas. El mismo código se suma en una sola cantidad.
             Imprime la suma para verificar productos, o cada solicitud por su folio.
@@ -455,8 +456,7 @@ export function PurchaseRequestsPanel() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" onClick={data.refresh} disabled={data.refreshing}>
-            <RefreshCw className={cn("size-4", data.refreshing && "animate-spin")} /> Actualizar
-          </Button>
+            <RefreshCw className={cn("size-4", data.refreshing && "animate-spin")} /> <Ui>Actualizar</Ui></Button>
           {perms.canCreate ? (
             <Button type="button" className={primaryButtonClass} onClick={() => ui.setFormOpen(true)}>
               <Plus className="size-4" /> Nueva solicitud
@@ -479,7 +479,7 @@ export function PurchaseRequestsPanel() {
         </div>
         <select className={fieldClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}>
           <option value="abiertas">Abiertas</option>
-          <option value="todas">Todas</option>
+          <option value="todas"><Ui>Todas</Ui></option>
           {PURCHASE_REQUEST_STATUSES.map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}
@@ -658,8 +658,7 @@ export function PurchasingDashboard() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" onClick={data.refresh} disabled={data.refreshing}>
-            <RefreshCw className={cn("size-4", data.refreshing && "animate-spin")} /> Actualizar
-          </Button>
+            <RefreshCw className={cn("size-4", data.refreshing && "animate-spin")} /> <Ui>Actualizar</Ui></Button>
           {perms.canCreate ? (
             <Button type="button" className={primaryButtonClass} onClick={() => ui.setFormOpen(true)}>
               <Plus className="size-4" /> Nueva solicitud

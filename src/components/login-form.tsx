@@ -115,7 +115,7 @@ export function LoginForm() {
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                   placeholder="correo@empresa.com"
-                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#00BFFF] focus:ring-3 focus:ring-[#00BFFF]/30"
+                  className="brand-ring-focus h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground"
                   required
                 />
               </label>
@@ -131,7 +131,7 @@ export function LoginForm() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
-                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-[#00BFFF] focus:ring-3 focus:ring-[#00BFFF]/30"
+                  className="brand-ring-focus h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground"
                   required
                 />
               </label>
@@ -148,7 +148,7 @@ export function LoginForm() {
                     className={cn(
                       "flex size-5 items-center justify-center rounded-md border-2 transition-colors",
                       remember
-                        ? "border-[#00BFFF] bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                        ? "border-[var(--brand-from)] brand-gradient text-[var(--brand-on)]"
                         : "border-input bg-background"
                     )}
                     aria-hidden
@@ -173,7 +173,7 @@ export function LoginForm() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-11 w-full rounded-lg border-0 bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white shadow-md hover:opacity-90"
+                className="brand-gradient h-11 w-full rounded-lg border-0 text-[var(--brand-on)] shadow-md hover:opacity-90"
               >
                 {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
               </Button>

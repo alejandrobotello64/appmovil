@@ -11,6 +11,9 @@ import {
   type ReactNode,
 } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { useLocale } from "@/components/locale-provider";
+import { chromeLabel } from "@/lib/i18n/chrome";
+import type { Locale } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
 
 type SortState = { column: number; direction: "asc" | "desc" } | null;
@@ -189,10 +192,16 @@ function isSortableHeader(cell: AnyElement) {
   return !hasInteractive(cell.props.children);
 }
 
+function translateHeaderChildren(children: ReactNode, locale: Locale): ReactNode {
+  if (typeof children === "string") return chromeLabel(locale, children);
+  return children;
+}
+
 function enhanceHead(
   head: AnyElement,
   sort: SortState,
-  onSort: (column: number) => void
+  onSort: (column: number) => void,
+  locale: Locale
 ): AnyElement {
   const rows = flatten(head.props.children);
   const lastRowIndex = rows.reduce<number>(
@@ -207,7 +216,12 @@ function enhanceHead(
     if (!isElement(cell)) return cell;
     const current = column;
     column += Number(cell.props.colSpan ?? 1) || 1;
-    if (!isSortableHeader(cell)) return cell;
+    const label = translateHeaderChildren(cell.props.children, locale);
+    if (!isSortableHeader(cell)) {
+      return label === cell.props.children
+        ? cell
+        : cloneElement(cell, undefined, label);
+    }
 
     const active = sort?.column === current ? sort.direction : null;
     const Icon = active === "asc" ? ArrowUp : active === "desc" ? ArrowDown : ArrowUpDown;
@@ -219,13 +233,13 @@ function enhanceHead(
       <button
         type="button"
         onClick={() => onSort(current)}
-        title="Ordenar"
+        title={chromeLabel(locale, "Ordenar")}
         className={cn(
           "group/sort inline-flex items-center gap-1 rounded text-inherit transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00BFFF]",
           active ? "text-foreground" : ""
         )}
       >
-        <span>{cell.props.children}</span>
+        <span>{label}</span>
         <Icon
           aria-hidden
           className={cn(
@@ -250,6 +264,7 @@ function enhanceHead(
  * override its value, or `data-sort="off"` on a `<th>`/`<tr>` to exclude it.
  */
 export function SortableTable({ children, ...props }: ComponentPropsWithoutRef<"table">) {
+  const { locale } = useLocale();
   const [sort, setSort] = useState<SortState>(null);
 
   function handleSort(column: number) {
@@ -261,7 +276,7 @@ export function SortableTable({ children, ...props }: ComponentPropsWithoutRef<"
   }
 
   const content = flatten(children).map((child) => {
-    if (isElement(child, "thead")) return enhanceHead(child, sort, handleSort);
+    if (isElement(child, "thead")) return enhanceHead(child, sort, handleSort, locale);
     if (isElement(child, "tbody")) return sortBody(child, sort);
     return child;
   });

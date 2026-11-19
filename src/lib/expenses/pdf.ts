@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { drawBrandedFooter, drawBrandedHeader } from "@/lib/brand/pdf";
+import { getStoredLocale, translate } from "@/lib/i18n/messages";
 import { deliverPdf, type PdfIntent } from "@/lib/print/open-pdf";
 import {
   categoryGroupTotals,
@@ -463,13 +464,17 @@ function categoryBreakdown(bucket: SpendBucket) {
 
 /** Comprobación de un registro: datos generales, gastos, resumen por categoría y saldo. */
 export async function buildExpenseReportPdf(report: ExpenseReport) {
+  const locale = getStoredLocale();
+  const tr = (key: string, fallback: string) => translate(locale, key, fallback);
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const meta = expenseKindMeta(report.kind);
   const balance = reportBalance(report);
   let y = await drawBrandedHeader(doc, {
-    title: `Comprobación de gastos · ${meta.label}`,
+    title: `${tr("report.expenseCheck", "Comprobación de gastos")} · ${meta.label}`,
     folio: report.folio,
-    rightLines: [`Estatus: ${statusMeta(report.status).label}`],
+    rightLines: [
+      `${tr("report.status", "Estatus")}: ${statusMeta(report.status).label}`,
+    ],
   });
 
   doc.setFont("helvetica", "bold");
@@ -633,12 +638,17 @@ export async function exportExpenseSummaryPdf(options: SummaryPdfOptions) {
 
 /** Resumen general de gastos: totales por tipo, categoría, colaborador y registro. */
 export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
+  const locale = getStoredLocale();
+  const tr = (key: string, fallback: string) => translate(locale, key, fallback);
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const summary = summarize(options.entries);
   const insights = spendInsights(options.entries, options.from ?? "", options.to ?? "");
   let y = await drawBrandedHeader(doc, {
-    title: "Resumen de gastos",
-    rightLines: [options.periodLabel, `Generado ${formatDate(todayIso())}`],
+    title: tr("report.expenseSummary", "Resumen de gastos"),
+    rightLines: [
+      options.periodLabel,
+      `${tr("ui.generated", "Generado")} ${formatDate(todayIso())}`,
+    ],
   });
 
   if (options.filterLines.length) {
@@ -653,11 +663,17 @@ export async function buildExpenseSummaryPdf(options: SummaryPdfOptions) {
   }
 
   y = drawKpis(doc, y, [
-    ["Total de gastos", formatMoney(summary.total)],
-    ["Registros", String(summary.reports)],
-    ["Comprobantes", String(summary.count)],
-    ["Con factura", formatMoney(summary.invoiced)],
-    ["Sin factura", formatMoney(summary.withoutInvoice)],
+    [tr("report.totalExpenses", "Total de gastos"), formatMoney(summary.total)],
+    [tr("report.records", "Registros"), String(summary.reports)],
+    [tr("report.receipts", "Comprobantes"), String(summary.count)],
+    [
+      locale === "en" ? "With invoice" : "Con factura",
+      formatMoney(summary.invoiced),
+    ],
+    [
+      locale === "en" ? "Without invoice" : "Sin factura",
+      formatMoney(summary.withoutInvoice),
+    ],
   ]);
   y = drawKpis(doc, y, [
     ["Promedio diario", formatMoney(insights.dailyAverage)],

@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useState } from "react";
 import { Printer, QrCode, X } from "lucide-react";
@@ -137,9 +138,7 @@ export function ToolQrDialog({ tool, onClose, freshlyCreated }: ToolQrDialogProp
         <Notice tone="error">{error}</Notice>
 
         <div className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="outline" className="h-10 px-3" onClick={onClose}>
-            Cerrar
-          </Button>
+          <Button type="button" variant="outline" className="h-10 px-3" onClick={onClose}><Ui>Cerrar</Ui></Button>
           <Button
             type="button"
             disabled={printing || !tool.code}

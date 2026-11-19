@@ -1,4 +1,6 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
+import { Th } from "@/components/ui/th";
 
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, ShoppingCart, Trash2, X } from "lucide-react";
@@ -251,9 +253,7 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
       }
       footer={
         <div className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="outline" onClick={props.onClose}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={props.onClose}><Ui>Cancelar</Ui></Button>
           <Button
             type="button"
             className={primaryButtonClass}
@@ -320,18 +320,18 @@ export function PurchaseRequestForm(props: PurchaseRequestFormProps) {
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
                 {fromRequisition ? <th className="w-10 px-3 py-2" /> : null}
-                {fromRequisition && jobs.length > 1 ? <th className="px-3 py-2">Folio</th> : null}
+                {fromRequisition && jobs.length > 1 ? <Th className="px-3 py-2">Folio</Th> : null}
                 <th className="px-3 py-2">Material</th>
                 {fromRequisition ? (
                   <>
-                    <th className="px-3 py-2 text-center">Pendiente</th>
-                    <th className="px-3 py-2 text-center">Disponible</th>
+                    <Th className="px-3 py-2 text-center">Pendiente</Th>
+                    <Th className="px-3 py-2 text-center">Disponible</Th>
                     <th className="px-3 py-2 text-center">En compra</th>
                   </>
                 ) : (
-                  <th className="px-3 py-2 text-center">Stock</th>
+                  <Th className="px-3 py-2 text-center">Stock</Th>
                 )}
-                <th className="px-3 py-2">Unidad</th>
+                <Th className="px-3 py-2">Unidad</Th>
                 <th className="px-3 py-2">Comprar</th>
                 {!fromRequisition ? <th className="w-10 px-3 py-2" /> : null}
               </tr>

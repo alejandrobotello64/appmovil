@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1091,7 +1092,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 />
               </label>
               <label className="space-y-1.5 sm:min-w-[240px]">
-                <span className="text-sm font-medium">Ficha</span>
+                <span className="text-sm font-medium"><Ui>Ficha</Ui></span>
                 <select
                   value={editingId}
                   onChange={(event) => openFicha(event.target.value)}
@@ -1133,7 +1134,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   size="lg"
                 />
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Foto del colaborador</p>
+                  <p className="text-sm font-medium"><Ui>Foto del colaborador</Ui></p>
                   <div className="flex flex-wrap gap-2">
                     <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium hover:bg-muted">
                       <Camera className="size-3.5" />
@@ -1181,7 +1182,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 </div>
               </div>
               <label className="space-y-1.5 sm:col-span-2">
-                <span className="text-sm font-medium">Nombre completo *</span>
+                <span className="text-sm font-medium"><Ui>Nombre completo *</Ui></span>
                 <input
                   required
                   disabled={!canWrite}
@@ -1245,7 +1246,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 </select>
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Teléfono</span>
+                <span className="text-sm font-medium"><Ui>Teléfono</Ui></span>
                 <input
                   type="tel"
                   disabled={!canWrite}
@@ -1265,7 +1266,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 />
               </label>
               <label className="space-y-1.5 sm:col-span-2">
-                <span className="text-sm font-medium">Dirección</span>
+                <span className="text-sm font-medium"><Ui>Dirección</Ui></span>
                 <input
                   disabled={!canWrite}
                   value={alta.address}
@@ -1280,7 +1281,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 Contacto de emergencia
               </h3>
               <label className="space-y-1.5 sm:col-span-2">
-                <span className="text-sm font-medium">Nombre completo *</span>
+                <span className="text-sm font-medium"><Ui>Nombre completo *</Ui></span>
                 <input
                   required
                   disabled={!canWrite}
@@ -1334,7 +1335,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 />
               </div>
               <div className="space-y-1.5">
-                <span className="text-sm font-medium">Puesto</span>
+                <span className="text-sm font-medium"><Ui>Puesto</Ui></span>
                 <PositionSelect
                   key={`alta-position-${editingId || "new"}`}
                   disabled={!canWrite}
@@ -1363,7 +1364,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Rol</span>
+                <span className="text-sm font-medium"><Ui>Rol</Ui></span>
                 <select
                   disabled={!canWrite}
                   value={alta.role}
@@ -1442,7 +1443,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                 />
               </label>
               <label className="space-y-1.5 sm:col-span-2">
-                <span className="text-sm font-medium">Notas</span>
+                <span className="text-sm font-medium"><Ui>Notas</Ui></span>
                 <textarea
                   disabled={!canWrite}
                   value={alta.notes}
@@ -1475,7 +1476,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
               el acceso de forma temporal. Un usuario deshabilitado no puede
               iniciar sesión; su ficha y permisos se conservan para reactivarlo
               cuando quieras. El botón{" "}
-              <strong className="text-foreground">Eliminar</strong> borra la ficha
+              <strong className="text-foreground"><Ui>Eliminar</Ui></strong> borra la ficha
               de forma permanente.
             </p>
 
@@ -1536,9 +1537,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
                           onClick={() => void handleDeleteUser(user)}
                         >
-                          <Trash2 className="size-3.5" />
-                          Eliminar
-                        </button>
+                          <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                       ) : null}
                     </div>
                   ) : undefined,
@@ -1618,9 +1617,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                                     className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
                                     onClick={() => void handleDeleteUser(user)}
                                   >
-                                    <Trash2 className="size-3.5" />
-                                    Eliminar
-                                  </button>
+                                    <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                                 ) : null}
                               </div>
                             ) : (
@@ -1684,9 +1681,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs font-medium text-destructive"
                           onClick={() => void handleDeleteUser(user)}
                         >
-                          <Trash2 className="size-3.5" />
-                          Eliminar
-                        </button>
+                          <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                       ) : null}
                     </div>
                   ) : undefined,
@@ -1766,9 +1761,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                                     className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/30 px-2.5 text-xs font-medium text-destructive hover:bg-destructive/5"
                                     onClick={() => void handleDeleteUser(user)}
                                   >
-                                    <Trash2 className="size-3.5" />
-                                    Eliminar
-                                  </button>
+                                    <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                                 ) : null}
                               </div>
                             ) : (
@@ -1884,7 +1877,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                   </div>
 
                   <label className="space-y-1.5">
-                    <span className="text-sm font-medium">Nombre completo</span>
+                    <span className="text-sm font-medium"><Ui>Nombre completo</Ui></span>
                     <input
                       disabled={!canEdit || !selectedUser.is_active}
                       value={permissionName}
@@ -1895,7 +1888,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="space-y-1.5">
-                      <span className="text-sm font-medium">Correo</span>
+                      <span className="text-sm font-medium"><Ui>Correo</Ui></span>
                       <input
                         type="email"
                         disabled={!canEdit || !selectedUser.is_active}
@@ -1905,7 +1898,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       />
                     </label>
                     <label className="space-y-1.5">
-                      <span className="text-sm font-medium">Teléfono</span>
+                      <span className="text-sm font-medium"><Ui>Teléfono</Ui></span>
                       <input
                         type="tel"
                         disabled={!canEdit || !selectedUser.is_active}
@@ -1915,7 +1908,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       />
                     </label>
                     <div className="space-y-1.5">
-                      <span className="text-sm font-medium">Área</span>
+                      <span className="text-sm font-medium"><Ui>Área</Ui></span>
                       <AreaSelect
                         key={`perm-area-${selectedUser.id}`}
                         disabled={!canEdit || !selectedUser.is_active}
@@ -1924,7 +1917,7 @@ export function UsersPanel({ activeTab, editUserId = null }: UsersPanelProps) {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <span className="text-sm font-medium">Puesto</span>
+                      <span className="text-sm font-medium"><Ui>Puesto</Ui></span>
                       <PositionSelect
                         key={`perm-position-${selectedUser.id}`}
                         disabled={!canEdit || !selectedUser.is_active}

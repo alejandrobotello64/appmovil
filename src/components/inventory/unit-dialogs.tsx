@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useState, type ReactNode } from "react";
 import { Loader2, Lock, Save } from "lucide-react";
@@ -88,9 +89,7 @@ function DialogFooter({
   if (!canEdit) return null;
   return (
     <div className="flex justify-end gap-2 border-t border-border pt-4">
-      <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-        Cancelar
-      </Button>
+      <Button type="button" variant="outline" onClick={onCancel} disabled={saving}><Ui>Cancelar</Ui></Button>
       <Button
         type="button"
         onClick={onSave}
@@ -165,9 +164,7 @@ export function SerialUnitDialog({
       description={`${productName}${serial.location ? ` · ${serial.location}` : ""}`}
       className="max-w-2xl"
       headerAction={
-        <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-          Cerrar
-        </Button>
+        <Button type="button" variant="outline" onClick={onClose} disabled={saving}><Ui>Cerrar</Ui></Button>
       }
     >
       <div className="space-y-5">
@@ -342,9 +339,7 @@ export function LotUnitDialog({
       }`}
       className="max-w-2xl"
       headerAction={
-        <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-          Cerrar
-        </Button>
+        <Button type="button" variant="outline" onClick={onClose} disabled={saving}><Ui>Cerrar</Ui></Button>
       }
     >
       <div className="space-y-5">

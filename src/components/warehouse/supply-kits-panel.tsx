@@ -1,4 +1,6 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
+import { Th } from "@/components/ui/th";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -337,7 +339,7 @@ export function SupplyKitsPanel() {
       {showCreate && canWrite ? (
         <div className="grid gap-3 rounded-2xl border border-dashed border-teal-300 bg-teal-50/40 p-4 dark:border-teal-800 dark:bg-teal-950/10 sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Nombre</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Nombre</Ui></span>
             <input
               className={fieldClass}
               placeholder="Ej. Preventivo mensual · anestesia"
@@ -487,9 +489,7 @@ export function SupplyKitsPanel() {
                   <div className="space-y-3 border-t border-border px-4 py-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <label className="block text-sm sm:col-span-2">
-                        <span className="mb-1 block text-muted-foreground">
-                          Nombre
-                        </span>
+                        <span className="mb-1 block text-muted-foreground"><Ui>Nombre</Ui></span>
                         <input
                           className={fieldClass}
                           value={draftName}
@@ -536,9 +536,7 @@ export function SupplyKitsPanel() {
                         </select>
                       </label>
                       <label className="block text-sm sm:col-span-2">
-                        <span className="mb-1 block text-muted-foreground">
-                          Descripción
-                        </span>
+                        <span className="mb-1 block text-muted-foreground"><Ui>Descripción</Ui></span>
                         <textarea
                           className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                           value={draftDescription}
@@ -561,10 +559,10 @@ export function SupplyKitsPanel() {
                       <table className="min-w-full text-sm">
                         <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                           <tr>
-                            <th className="px-3 py-2">SKU</th>
-                            <th className="px-3 py-2">Insumo</th>
-                            <th className="px-3 py-2">Cant</th>
-                            <th className="px-3 py-2">Notas</th>
+                            <Th className="px-3 py-2">SKU</Th>
+                            <Th className="px-3 py-2">Insumo</Th>
+                            <Th className="px-3 py-2">Cant</Th>
+                            <Th className="px-3 py-2">Notas</Th>
                             <th className="px-3 py-2" />
                           </tr>
                         </thead>
@@ -653,7 +651,7 @@ export function SupplyKitsPanel() {
 
                     {canWrite ? (
                       <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
-                        <p className="text-sm font-medium">Agregar insumo del catálogo</p>
+                        <p className="text-sm font-medium"><Ui>Agregar insumo del catálogo</Ui></p>
                         <SearchInput
                           value={productQuery}
                           onChange={setProductQuery}
@@ -727,8 +725,7 @@ export function SupplyKitsPanel() {
                           disabled={saving}
                           onClick={() => void removeKit(kit.id)}
                         >
-                          <Trash2 className="size-3.5" /> Eliminar
-                        </Button>
+                          <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></Button>
                       ) : null}
                     </div>
                   </div>

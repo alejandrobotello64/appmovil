@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
@@ -489,7 +490,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Tipo</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Tipo</Ui></span>
             <select
               className={fieldClass}
               value={vehicleForm.vehicleType}
@@ -508,7 +509,7 @@ export function FleetPanel() {
             </select>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Marca</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Marca</Ui></span>
             <input
               className={fieldClass}
               value={vehicleForm.brand ?? ""}
@@ -518,7 +519,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Modelo</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Modelo</Ui></span>
             <input
               className={fieldClass}
               value={vehicleForm.model ?? ""}
@@ -528,7 +529,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Año</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Año</Ui></span>
             <input
               type="number"
               className={fieldClass}
@@ -542,7 +543,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Color</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Color</Ui></span>
             <input
               className={fieldClass}
               value={vehicleForm.color ?? ""}
@@ -597,7 +598,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Estatus</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Estatus</Ui></span>
             <select
               className={fieldClass}
               value={vehicleForm.status}
@@ -686,7 +687,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Notas</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Notas</Ui></span>
             <textarea
               className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               value={vehicleForm.notes ?? ""}
@@ -706,9 +707,7 @@ export function FleetPanel() {
             <Button
               type="submit"
               className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-            >
-              Guardar
-            </Button>
+            ><Ui>Guardar</Ui></Button>
           </div>
         </form>
       ) : null}
@@ -745,7 +744,7 @@ export function FleetPanel() {
             </select>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Tipo</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Tipo</Ui></span>
             <select
               className={fieldClass}
               value={serviceForm.serviceType}
@@ -764,7 +763,7 @@ export function FleetPanel() {
             </select>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Estatus</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Estatus</Ui></span>
             <select
               className={fieldClass}
               value={serviceForm.status}
@@ -783,7 +782,7 @@ export function FleetPanel() {
             </select>
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Título</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Título</Ui></span>
             <input
               className={fieldClass}
               value={serviceForm.title ?? ""}
@@ -794,7 +793,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Descripción</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Descripción</Ui></span>
             <textarea
               className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               value={serviceForm.description ?? ""}
@@ -814,7 +813,7 @@ export function FleetPanel() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Técnico</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Técnico</Ui></span>
             <input
               className={fieldClass}
               value={serviceForm.technician ?? ""}
@@ -1027,7 +1026,7 @@ export function FleetPanel() {
           </div>
 
           <label className="block text-sm sm:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Notas</span>
+            <span className="mb-1 block text-muted-foreground"><Ui>Notas</Ui></span>
             <textarea
               className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               value={serviceForm.notes ?? ""}
@@ -1088,7 +1087,7 @@ export function FleetPanel() {
               Alertas de mantenimiento
             </h3>
             {loading ? (
-              <p className="text-sm text-muted-foreground">Cargando…</p>
+              <p className="text-sm text-muted-foreground"><Ui>Cargando…</Ui></p>
             ) : alerts.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Sin alertas pendientes. La flotilla está al día.
@@ -1398,7 +1397,7 @@ export function FleetPanel() {
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Folio</p>
+                    <p className="text-xs text-muted-foreground"><Ui>Folio</Ui></p>
                     <p className="font-semibold">{selectedService.folio}</p>
                     <p className="text-sm text-muted-foreground">
                       {selectedService.vehiclePlate} · {selectedService.vehicleLabel}
@@ -1426,9 +1425,7 @@ export function FleetPanel() {
                   </p>
                   {canWrite ? (
                     <label className="block text-sm">
-                      <span className="mb-1 block text-muted-foreground">
-                        Cambiar estatus
-                      </span>
+                      <span className="mb-1 block text-muted-foreground"><Ui>Cambiar estatus</Ui></span>
                       <select
                         className={fieldClass}
                         value={selectedService.status}

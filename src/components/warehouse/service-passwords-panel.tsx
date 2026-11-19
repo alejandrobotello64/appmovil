@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import {
   useCallback,
@@ -718,7 +719,7 @@ function UnlockCard({
 
       <form onSubmit={onSubmit} className="space-y-3">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium">Usuario</span>
+          <span className="mb-1 block text-sm font-medium"><Ui>Usuario</Ui></span>
           <input
             value={effectiveLogin}
             onChange={(e) => setLogin(e.target.value)}
@@ -944,7 +945,7 @@ function PasswordRow({
       <dl className="space-y-1.5 text-sm">
         {item.accessUser ? (
           <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
-            <dt className="w-20 shrink-0 text-xs text-muted-foreground">Usuario</dt>
+            <dt className="w-20 shrink-0 text-xs text-muted-foreground"><Ui>Usuario</Ui></dt>
             <dd className="min-w-0 flex-1 truncate font-mono text-[13px]">{item.accessUser}</dd>
             <IconAction
               label={userCopied ? "Copiado" : "Copiar usuario"}
@@ -1201,8 +1202,7 @@ function PasswordForm({
         {equipmentGroups.length ? (
           <label className="block rounded-xl border border-border bg-muted/30 p-3">
             <span className="mb-1 flex items-center gap-1.5 text-sm font-medium">
-              <MonitorCog className="size-4 text-[#3B46A5]" /> Equipo
-            </span>
+              <MonitorCog className="size-4 text-[#3B46A5]" /> <Ui>Equipo</Ui></span>
             <select
               value={matchedGroup ? matchedGroup.key : ""}
               onChange={(e) => pickGroup(e.target.value)}
@@ -1250,7 +1250,7 @@ function PasswordForm({
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Marca</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Marca</Ui></span>
             <input
               value={form.brand}
               onChange={(e) => update("brand", e.target.value)}
@@ -1265,7 +1265,7 @@ function PasswordForm({
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Modelo</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Modelo</Ui></span>
             <input
               value={form.model}
               onChange={(e) => update("model", e.target.value)}
@@ -1341,9 +1341,7 @@ function PasswordForm({
         ) : null}
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}><Ui>Cancelar</Ui></Button>
           <Button
             type="submit"
             disabled={submitting}
@@ -1445,7 +1443,7 @@ function EquipmentForm({
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Marca</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Marca</Ui></span>
             <input
               value={values.brand}
               onChange={(e) => update("brand", e.target.value)}
@@ -1459,7 +1457,7 @@ function EquipmentForm({
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Modelo</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Modelo</Ui></span>
             <input
               value={values.model}
               onChange={(e) => update("model", e.target.value)}
@@ -1484,9 +1482,7 @@ function EquipmentForm({
         ) : null}
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}><Ui>Cancelar</Ui></Button>
           <Button
             type="submit"
             disabled={submitting}
@@ -1552,7 +1548,7 @@ function AccessLogModal({
       }
     >
       {entries === null ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <p className="text-sm text-muted-foreground"><Ui>Cargando…</Ui></p>
       ) : entries.length === 0 ? (
         <p className="text-sm text-muted-foreground">Sin movimientos registrados.</p>
       ) : (

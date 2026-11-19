@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
@@ -406,7 +407,7 @@ export function QuotesPanel() {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Cotizaciones</h2>
+            <h2 className="text-lg font-semibold"><Ui>Cotizaciones</Ui></h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Arma partidas, da seguimiento y descarga PDF listo para enviar al
               cliente.
@@ -457,7 +458,7 @@ export function QuotesPanel() {
             className={cn(fieldClass, "sm:w-48")}
           >
             <option value="abiertas">Abiertas</option>
-            <option value="todos">Todas</option>
+            <option value="todos"><Ui>Todas</Ui></option>
             {QUOTE_STATUSES.map((status) => (
               <option key={status.id} value={status.id}>
                 {status.label}
@@ -488,7 +489,7 @@ export function QuotesPanel() {
           </h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Título</span>
+              <span className="text-sm font-medium"><Ui>Título</Ui></span>
               <input
                 value={form.title}
                 onChange={(e) =>
@@ -499,7 +500,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Cliente del catálogo</span>
+              <span className="text-sm font-medium"><Ui>Cliente del catálogo</Ui></span>
               <select
                 value={form.clientId ?? ""}
                 onChange={(e) => applyClient(e.target.value)}
@@ -514,7 +515,7 @@ export function QuotesPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Cliente *</span>
+              <span className="text-sm font-medium"><Ui>Cliente *</Ui></span>
               <input
                 required
                 value={form.clientName}
@@ -529,7 +530,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Contacto</span>
+              <span className="text-sm font-medium"><Ui>Contacto</Ui></span>
               <input
                 value={form.contactName}
                 onChange={(e) =>
@@ -539,7 +540,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Correo</span>
+              <span className="text-sm font-medium"><Ui>Correo</Ui></span>
               <input
                 type="email"
                 value={form.contactEmail}
@@ -550,7 +551,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Teléfono</span>
+              <span className="text-sm font-medium"><Ui>Teléfono</Ui></span>
               <input
                 value={form.contactPhone}
                 onChange={(e) =>
@@ -560,7 +561,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Estado</span>
+              <span className="text-sm font-medium"><Ui>Estado</Ui></span>
               <select
                 value={form.state}
                 onChange={(e) =>
@@ -577,7 +578,7 @@ export function QuotesPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Ciudad</span>
+              <span className="text-sm font-medium"><Ui>Ciudad</Ui></span>
               <input
                 value={form.city}
                 onChange={(e) =>
@@ -587,7 +588,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Fecha</span>
+              <span className="text-sm font-medium"><Ui>Fecha</Ui></span>
               <input
                 type="date"
                 value={form.quoteDate}
@@ -598,7 +599,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Vigencia</span>
+              <span className="text-sm font-medium"><Ui>Vigencia</Ui></span>
               <input
                 type="date"
                 value={form.validUntil}
@@ -609,7 +610,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Próximo seguimiento</span>
+              <span className="text-sm font-medium"><Ui>Próximo seguimiento</Ui></span>
               <input
                 type="date"
                 value={form.nextFollowUp}
@@ -623,7 +624,7 @@ export function QuotesPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Vendedor</span>
+              <span className="text-sm font-medium"><Ui>Vendedor</Ui></span>
               <input
                 value={form.salesperson}
                 onChange={(e) =>
@@ -709,7 +710,7 @@ export function QuotesPanel() {
               ) : null}
             </div>
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Notas / condiciones</span>
+              <span className="text-sm font-medium"><Ui>Notas / condiciones</Ui></span>
               <textarea
                 rows={2}
                 value={form.notes}
@@ -985,7 +986,7 @@ export function QuotesPanel() {
 
               {canWrite ? (
                 <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
-                  <p className="text-sm font-medium">Registrar seguimiento</p>
+                  <p className="text-sm font-medium"><Ui>Registrar seguimiento</Ui></p>
                   <textarea
                     rows={2}
                     value={followUpText}

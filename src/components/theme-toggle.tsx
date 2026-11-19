@@ -1,6 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { useLocale } from "@/components/locale-provider";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
@@ -10,28 +11,31 @@ type ThemeToggleProps = {
 };
 
 export function ThemeToggle({ className, showLabel = true }: ThemeToggleProps) {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { mode, toggleTheme } = useTheme();
+  const { t } = useLocale();
+  const isDark = mode === "dark";
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+      aria-label={
+        isDark ? t("account.nightOff") : t("account.nightOn")
+      }
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-border bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] px-3 py-1.5 text-xs font-medium text-white transition-all hover:opacity-90",
+        "inline-flex items-center gap-1.5 rounded-full border border-border brand-gradient px-3 py-1.5 text-xs font-medium text-[var(--brand-on)] transition-all hover:opacity-90",
         className
       )}
     >
       {isDark ? (
         <>
           <Moon className="size-3.5" />
-          {showLabel ? "Oscuro" : null}
+          {showLabel ? t("account.nightOn") : null}
         </>
       ) : (
         <>
           <Sun className="size-3.5" />
-          {showLabel ? "Claro" : null}
+          {showLabel ? t("account.nightOff") : null}
         </>
       )}
     </button>

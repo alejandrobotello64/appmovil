@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useLocale } from "@/components/locale-provider";
 import { InventoryPanel } from "@/components/inventory/inventory-panel";
 import { WarehouseDashboard } from "@/components/warehouse/warehouse-dashboard";
 import { StockMovementPanel } from "@/components/warehouse/stock-movement-panel";
@@ -30,6 +31,7 @@ import {
 } from "@/lib/inventory/types";
 
 export function WarehousePage() {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -79,16 +81,18 @@ export function WarehousePage() {
 
   return (
     <AppShell
-      title={activeTabMeta?.label ?? "Almacén"}
-      subtitle="MAS · Almacén"
+      title={t(
+        `tab.warehouse.${activeTab}`,
+        activeTabMeta?.label ?? t("page.warehouse")
+      )}
+      subtitle={t("page.warehouseSubtitle")}
     >
       <div className="space-y-4 sm:space-y-6">
         {!allowed ? (
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">Sin acceso a este módulo</h2>
+            <h2 className="text-lg font-semibold">{t("page.noAccess")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tu rol no puede abrir {activeTabMeta?.label ?? "esta sección"}.
-              Elige otra opción del menú de almacén.
+              {t("page.noAccessHint")}
             </p>
           </section>
         ) : (

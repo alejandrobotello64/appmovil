@@ -18,6 +18,7 @@ import type {
   HomeAlert,
   MonthPoint,
 } from "@/lib/analytics/home-metrics";
+import { useLocale } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 import { SortableTable } from "@/components/ui/sortable-table";
 
@@ -75,14 +76,17 @@ export function Panel({
   children: ReactNode;
   className?: string;
 }) {
+  const { c } = useLocale();
   return (
     <section className={cn("rounded-2xl border border-border bg-card p-5 shadow-sm", className)}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2">
           {Icon ? <Icon className="mt-0.5 size-5 shrink-0 text-[#3B46A5] dark:text-sky-300" /> : null}
           <div className="min-w-0">
-            <h3 className="font-semibold text-foreground">{title}</h3>
-            {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
+            <h3 className="font-semibold text-foreground">{c(title)}</h3>
+            {description ? (
+              <p className="text-xs text-muted-foreground">{c(description)}</p>
+            ) : null}
           </div>
         </div>
         {action}
@@ -93,12 +97,13 @@ export function Panel({
 }
 
 export function PanelLink({ href, label = "Ver detalle" }: { href: string; label?: string }) {
+  const { c } = useLocale();
   return (
     <Link
       href={href}
       className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-[#3B46A5] hover:underline dark:text-sky-300"
     >
-      {label} <ArrowRight className="size-3.5" />
+      {c(label)} <ArrowRight className="size-3.5" />
     </Link>
   );
 }

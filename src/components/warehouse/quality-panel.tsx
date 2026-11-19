@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
@@ -576,7 +577,7 @@ export function QualityPanel() {
         >
           <form className="space-y-4" onSubmit={handleCreate}>
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Cliente</span>
+              <span className="text-sm font-medium"><Ui>Cliente</Ui></span>
               <select
                 className={inputClass}
                 value={clientId}
@@ -716,7 +717,7 @@ export function QualityPanel() {
           <div className="space-y-4">
             <dl className="grid gap-3 sm:grid-cols-2 text-sm">
               <div>
-                <dt className="text-muted-foreground">Contacto</dt>
+                <dt className="text-muted-foreground"><Ui>Contacto</Ui></dt>
                 <dd className="font-medium">{detail.contactName || "—"}</dd>
               </div>
               <div>
@@ -885,9 +886,7 @@ function SurveyActions({
         type="button"
         onClick={onOpen}
         className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
-      >
-        Ver
-      </button>
+      ><Ui>Ver</Ui></button>
       {canSend ? (
         <button
           type="button"
@@ -911,9 +910,7 @@ function SurveyActions({
           type="button"
           onClick={onCancel}
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium"
-        >
-          Cancelar
-        </button>
+        ><Ui>Cancelar</Ui></button>
       ) : null}
       {canDelete ? (
         <button

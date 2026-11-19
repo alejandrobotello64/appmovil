@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -857,7 +858,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Contacto</span>
+            <span className="text-sm font-medium"><Ui>Contacto</Ui></span>
             <input
               value={clientForm.contactName}
               onChange={(e) =>
@@ -880,7 +881,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Teléfono</span>
+            <span className="text-sm font-medium"><Ui>Teléfono</Ui></span>
             <input
               value={clientForm.phone}
               onChange={(e) =>
@@ -890,7 +891,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Correo</span>
+            <span className="text-sm font-medium"><Ui>Correo</Ui></span>
             <input
               type="email"
               value={clientForm.email}
@@ -901,7 +902,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Estado</span>
+            <span className="text-sm font-medium"><Ui>Estado</Ui></span>
             <select
               value={clientForm.state}
               onChange={(e) =>
@@ -918,7 +919,7 @@ export function ClientsPanel() {
             </select>
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Ciudad</span>
+            <span className="text-sm font-medium"><Ui>Ciudad</Ui></span>
             <input
               value={clientForm.city}
               onChange={(e) =>
@@ -928,7 +929,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Dirección</span>
+            <span className="text-sm font-medium"><Ui>Dirección</Ui></span>
             <input
               value={clientForm.address}
               onChange={(e) =>
@@ -938,7 +939,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Notas</span>
+            <span className="text-sm font-medium"><Ui>Notas</Ui></span>
             <textarea
               rows={2}
               value={clientForm.notes}
@@ -994,7 +995,7 @@ export function ClientsPanel() {
               : "Equipo para levantamiento"}
           </h3>
           <label className="space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Cliente *</span>
+            <span className="text-sm font-medium"><Ui>Cliente *</Ui></span>
             <select
               required
               value={equipmentForm.clientId}
@@ -1026,7 +1027,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Marca</span>
+            <span className="text-sm font-medium"><Ui>Marca</Ui></span>
             <input
               value={equipmentForm.brand}
               onChange={(e) =>
@@ -1036,7 +1037,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Modelo</span>
+            <span className="text-sm font-medium"><Ui>Modelo</Ui></span>
             <input
               value={equipmentForm.model}
               onChange={(e) =>
@@ -1072,7 +1073,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Estado</span>
+            <span className="text-sm font-medium"><Ui>Estado</Ui></span>
             <select
               value={equipmentForm.status}
               onChange={(e) =>
@@ -1126,7 +1127,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Notas</span>
+            <span className="text-sm font-medium"><Ui>Notas</Ui></span>
             <textarea
               rows={2}
               value={equipmentForm.notes}
@@ -1167,7 +1168,7 @@ export function ClientsPanel() {
             Registrar servicio / levantamiento
           </h3>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Cliente *</span>
+            <span className="text-sm font-medium"><Ui>Cliente *</Ui></span>
             <select
               required
               value={serviceForm.clientId}
@@ -1255,7 +1256,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Técnico</span>
+            <span className="text-sm font-medium"><Ui>Técnico</Ui></span>
             <input
               value={serviceForm.technician}
               onChange={(e) =>
@@ -1268,7 +1269,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Folio</span>
+            <span className="text-sm font-medium"><Ui>Folio</Ui></span>
             <input
               value={serviceForm.folio}
               onChange={(e) =>
@@ -1278,7 +1279,7 @@ export function ClientsPanel() {
             />
           </label>
           <label className="space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Descripción</span>
+            <span className="text-sm font-medium"><Ui>Descripción</Ui></span>
             <textarea
               rows={3}
               value={serviceForm.description}
@@ -1327,8 +1328,7 @@ export function ClientsPanel() {
             <div className="flex flex-wrap gap-2">
               {canWrite ? (
                 <Button type="button" size="sm" onClick={openNewContact}>
-                  <Plus className="size-4" /> Contacto
-                </Button>
+                  <Plus className="size-4" /> <Ui>Contacto</Ui></Button>
               ) : null}
               <Button
                 type="button"
@@ -1350,11 +1350,11 @@ export function ClientsPanel() {
               <p>{fichaClient.phone || "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Correo</p>
+              <p className="text-xs text-muted-foreground"><Ui>Correo</Ui></p>
               <p className="break-all">{fichaClient.email || "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Dirección</p>
+              <p className="text-xs text-muted-foreground"><Ui>Dirección</Ui></p>
               <p>{fichaClient.address || "—"}</p>
             </div>
           </div>
@@ -1412,7 +1412,7 @@ export function ClientsPanel() {
                   />
                 </label>
                 <label className="block text-sm">
-                  <span className="mb-1 block text-muted-foreground">Teléfono</span>
+                  <span className="mb-1 block text-muted-foreground"><Ui>Teléfono</Ui></span>
                   <input
                     className={fieldClass}
                     value={contactForm.phone}
@@ -1432,7 +1432,7 @@ export function ClientsPanel() {
                   />
                 </label>
                 <label className="block text-sm sm:col-span-2">
-                  <span className="mb-1 block text-muted-foreground">Correo</span>
+                  <span className="mb-1 block text-muted-foreground"><Ui>Correo</Ui></span>
                   <input
                     type="email"
                     className={fieldClass}
@@ -1443,7 +1443,7 @@ export function ClientsPanel() {
                   />
                 </label>
                 <label className="block text-sm sm:col-span-2">
-                  <span className="mb-1 block text-muted-foreground">Notas</span>
+                  <span className="mb-1 block text-muted-foreground"><Ui>Notas</Ui></span>
                   <textarea
                     className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                     value={contactForm.notes}
@@ -1508,9 +1508,7 @@ export function ClientsPanel() {
                         </p>
                       </div>
                       {contact.isPrimary ? (
-                        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium text-sky-800 dark:text-sky-200">
-                          Principal
-                        </span>
+                        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium text-sky-800 dark:text-sky-200"><Ui>Principal</Ui></span>
                       ) : null}
                     </div>
                     <div className="mt-3 space-y-1 text-sm">
@@ -1530,16 +1528,14 @@ export function ClientsPanel() {
                           className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2 text-xs"
                           onClick={() => openEditContact(contact)}
                         >
-                          <Pencil className="size-3.5" /> Editar
-                        </button>
+                          <Pencil className="size-3.5" /> <Ui>Editar</Ui></button>
                         {canDelete ? (
                           <button
                             type="button"
                             className="inline-flex h-8 items-center gap-1 rounded-lg border border-destructive/30 px-2 text-xs text-destructive"
                             onClick={() => void handleDeleteContact(contact)}
                           >
-                            <Trash2 className="size-3.5" /> Eliminar
-                          </button>
+                            <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                         ) : null}
                       </div>
                     ) : null}
@@ -1599,7 +1595,7 @@ export function ClientsPanel() {
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         {loading ? (
-          <p className="text-sm text-muted-foreground">Cargando...</p>
+          <p className="text-sm text-muted-foreground"><Ui>Cargando...</Ui></p>
         ) : null}
 
         {!loading && view === "clientes" ? (
@@ -1650,9 +1646,7 @@ export function ClientsPanel() {
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
                       onClick={() => openFicha(client)}
                     >
-                      <BookUser className="size-3.5" />
-                      Ficha
-                    </button>
+                      <BookUser className="size-3.5" /> <Ui>Ficha</Ui></button>
                     {canWrite ? (
                       <>
                         <button
@@ -1663,18 +1657,14 @@ export function ClientsPanel() {
                             setClientFormOpen(true);
                           }}
                         >
-                          <Pencil className="size-3.5" />
-                          Editar
-                        </button>
+                          <Pencil className="size-3.5" /> <Ui>Editar</Ui></button>
                         {canDelete ? (
                           <button
                             type="button"
                             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
                             onClick={() => void handleDeleteClient(client)}
                           >
-                            <Trash2 className="size-3.5" />
-                            Eliminar
-                          </button>
+                            <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                         ) : null}
                       </>
                     ) : null}
@@ -1819,18 +1809,14 @@ export function ClientsPanel() {
                             setEquipmentFormOpen(true);
                           }}
                         >
-                          <Pencil className="size-3.5" />
-                          Editar
-                        </button>
+                          <Pencil className="size-3.5" /> <Ui>Editar</Ui></button>
                         {canDelete ? (
                           <button
                             type="button"
                             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
                             onClick={() => void handleDeleteEquipment(item)}
                           >
-                            <Trash2 className="size-3.5" />
-                            Eliminar
-                          </button>
+                            <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                         ) : null}
                       </>
                     ) : null}
@@ -2024,9 +2010,7 @@ export function ClientsPanel() {
                         className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/30 px-3 text-xs text-destructive"
                         onClick={() => void handleDeleteService(item.service!)}
                       >
-                        <Trash2 className="size-3.5" />
-                        Eliminar
-                      </button>
+                        <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></button>
                     ) : null
                   ) : undefined,
               }))}

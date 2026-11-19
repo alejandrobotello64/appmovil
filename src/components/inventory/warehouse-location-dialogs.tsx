@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, MapPin, Plus, Trash2, Warehouse as WarehouseIcon } from "lucide-react";
@@ -52,9 +53,7 @@ function Dialog({
             <h3 className="text-lg font-semibold text-foreground">{title}</h3>
             {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
           </div>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cerrar
-          </Button>
+          <Button type="button" variant="outline" onClick={onClose}><Ui>Cerrar</Ui></Button>
         </div>
         {children}
       </div>
@@ -174,7 +173,7 @@ export function RelocateStockModal({
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1.5">
-          <span className="text-sm font-medium">Almacén</span>
+          <span className="text-sm font-medium"><Ui>Almacén</Ui></span>
           <select
             value={warehouseId}
             onChange={(event) => {
@@ -202,7 +201,7 @@ export function RelocateStockModal({
             onChange={(event) => setLocationId(event.target.value)}
             className={inputClass}
           >
-            {loadingLocations ? <option value="">Cargando…</option> : null}
+            {loadingLocations ? <option value=""><Ui>Cargando…</Ui></option> : null}
             {physical.length > 0 ? (
               <optgroup label="Ubicaciones físicas">
                 {physical.map((loc) => (
@@ -238,7 +237,7 @@ export function RelocateStockModal({
         ) : null}
 
         <label className="space-y-1.5 sm:col-span-2">
-          <span className="text-sm font-medium">Nota (opcional)</span>
+          <span className="text-sm font-medium"><Ui>Nota (opcional)</Ui></span>
           <input
             value={note}
             onChange={(event) => setNote(event.target.value)}
@@ -284,9 +283,7 @@ export function RelocateStockModal({
       ) : null}
 
       <div className="mt-4 flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-          Cancelar
-        </Button>
+        <Button type="button" variant="outline" onClick={onClose} disabled={saving}><Ui>Cancelar</Ui></Button>
         <Button
           type="button"
           onClick={() => void handleSubmit()}
@@ -544,8 +541,7 @@ export function WarehouseManagerModal({
                     disabled={busy || !newLocation.trim()}
                     onClick={() => void handleAddLocation()}
                   >
-                    <Plus className="size-4" /> Agregar
-                  </Button>
+                    <Plus className="size-4" /> <Ui>Agregar</Ui></Button>
                 </div>
               ) : null}
               <p className="mt-3 text-xs text-muted-foreground">

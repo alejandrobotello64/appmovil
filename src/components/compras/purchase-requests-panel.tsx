@@ -1,4 +1,6 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
+import { Th } from "@/components/ui/th";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -239,7 +241,7 @@ export function PurchaseRequestsPanel({
             }
           >
             <option value="abiertas">Abiertas</option>
-            <option value="todas">Todas</option>
+            <option value="todas"><Ui>Todas</Ui></option>
             {PURCHASE_REQUEST_STATUSES.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.label}
@@ -247,8 +249,7 @@ export function PurchaseRequestsPanel({
             ))}
           </select>
           <Button type="button" variant="outline" onClick={() => void reload()}>
-            <RefreshCw className="size-4" /> Actualizar
-          </Button>
+            <RefreshCw className="size-4" /> <Ui>Actualizar</Ui></Button>
           {mode === "warehouse" && canCreate ? (
             <Button
               type="button"
@@ -280,12 +281,12 @@ export function PurchaseRequestsPanel({
           <table className="min-w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
-                <th className="px-3 py-3">Folio</th>
-                <th className="px-3 py-3">Origen</th>
-                <th className="px-3 py-3">Estatus</th>
-                <th className="px-3 py-3">Pedido</th>
+                <Th className="px-3 py-3">Folio</Th>
+                <Th className="px-3 py-3">Origen</Th>
+                <Th className="px-3 py-3">Estatus</Th>
+                <Th className="px-3 py-3">Pedido</Th>
                 <th className="px-3 py-3">Surtimiento</th>
-                <th className="px-3 py-3">Solicitó</th>
+                <Th className="px-3 py-3">Solicitó</Th>
               </tr>
             </thead>
             <tbody>
@@ -466,8 +467,7 @@ export function PurchaseRequestsPanel({
                     variant="outline"
                     onClick={() => void onCancelRequest()}
                   >
-                    <XCircle className="size-4" /> Cancelar
-                  </Button>
+                    <XCircle className="size-4" /> <Ui>Cancelar</Ui></Button>
                 ) : null}
                 {selected.status === "recibida" ? (
                   <span className="inline-flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-300">

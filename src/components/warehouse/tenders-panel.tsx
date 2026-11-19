@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
@@ -516,7 +517,7 @@ export function TendersPanel() {
             className={cn(fieldClass, "sm:w-48")}
           >
             <option value="abiertas">Abiertas</option>
-            <option value="todos">Todos</option>
+            <option value="todos"><Ui>Todos</Ui></option>
             {TENDER_STATUSES.map((status) => (
               <option key={status.id} value={status.id}>
                 {status.label}
@@ -609,7 +610,7 @@ export function TendersPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Cliente del catálogo</span>
+              <span className="text-sm font-medium"><Ui>Cliente del catálogo</Ui></span>
               <select
                 value={form.clientId ?? ""}
                 onChange={(e) => applyClient(e.target.value)}
@@ -624,7 +625,7 @@ export function TendersPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Convocante</span>
+              <span className="text-sm font-medium"><Ui>Convocante</Ui></span>
               <input
                 value={form.convocante}
                 onChange={(e) =>
@@ -634,7 +635,7 @@ export function TendersPanel() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Estado</span>
+              <span className="text-sm font-medium"><Ui>Estado</Ui></span>
               <select
                 value={form.state}
                 onChange={(e) =>
@@ -651,7 +652,7 @@ export function TendersPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Ciudad</span>
+              <span className="text-sm font-medium"><Ui>Ciudad</Ui></span>
               <input
                 value={form.city}
                 onChange={(e) =>
@@ -699,7 +700,7 @@ export function TendersPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Estatus</span>
+              <span className="text-sm font-medium"><Ui>Estatus</Ui></span>
               <select
                 value={form.status}
                 onChange={(e) =>
@@ -718,7 +719,7 @@ export function TendersPanel() {
               </select>
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Responsable</span>
+              <span className="text-sm font-medium"><Ui>Responsable</Ui></span>
               <input
                 value={form.responsableNombre}
                 onChange={(e) =>
@@ -785,7 +786,7 @@ export function TendersPanel() {
               />
             </label>
             <label className="space-y-1.5 sm:col-span-2">
-              <span className="text-sm font-medium">Notas</span>
+              <span className="text-sm font-medium"><Ui>Notas</Ui></span>
               <textarea
                 rows={2}
                 value={form.notes}
@@ -799,7 +800,7 @@ export function TendersPanel() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold">Partidas</h4>
+              <h4 className="text-sm font-semibold"><Ui>Partidas</Ui></h4>
               <Button
                 type="button"
                 variant="outline"
@@ -873,7 +874,7 @@ export function TendersPanel() {
                     }}
                     className={fieldClass}
                   >
-                    <option value="all">Todos</option>
+                    <option value="all"><Ui>Todos</Ui></option>
                     {INVENTORY_CATEGORIES.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.label}
@@ -918,7 +919,7 @@ export function TendersPanel() {
                   </select>
                 </label>
                 <label className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Cant.</span>
+                  <span className="text-xs text-muted-foreground"><Ui>Cant.</Ui></span>
                   <input
                     type="number"
                     min={0.01}
@@ -937,7 +938,7 @@ export function TendersPanel() {
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-xs text-muted-foreground">P. unit.</span>
+                  <span className="text-xs text-muted-foreground"><Ui>P. unit.</Ui></span>
                   <input
                     type="number"
                     min={0}
@@ -1222,9 +1223,7 @@ export function TendersPanel() {
                       className="h-9 text-destructive"
                       onClick={() => void handleDelete(selected)}
                     >
-                      <Trash2 className="size-3.5" />
-                      Eliminar
-                    </Button>
+                      <Trash2 className="size-3.5" /> <Ui>Eliminar</Ui></Button>
                   ) : null}
                 </>
               ) : null}
@@ -1275,7 +1274,7 @@ export function TendersPanel() {
           </div>
 
           <div>
-            <h4 className="font-semibold">Partidas</h4>
+            <h4 className="font-semibold"><Ui>Partidas</Ui></h4>
             <ul className="mt-2 space-y-2">
               {selected.lines.length === 0 ? (
                 <li className="text-sm text-muted-foreground">
@@ -1410,9 +1409,7 @@ export function TendersPanel() {
                     className="h-9"
                     onClick={() => void handleUpload(selected)}
                   >
-                    <FileUp className="size-3.5" />
-                    Subir
-                  </Button>
+                    <FileUp className="size-3.5" /> <Ui>Subir</Ui></Button>
                 </div>
               ) : null}
             </div>

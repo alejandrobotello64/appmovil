@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useMemo, useState } from "react";
 import { Calculator, Plus, ShieldCheck, SlidersHorizontal, Trash2 } from "lucide-react";
@@ -472,7 +473,7 @@ export function ServicePricingSummary({
               ) : null}
             </div>
             <div className="flex items-baseline justify-between gap-3 pt-2">
-              <span className="text-sm font-semibold">Total</span>
+              <span className="text-sm font-semibold"><Ui>Total</Ui></span>
               <span className="text-xl font-bold tabular-nums">{money(totals.total)}</span>
             </div>
           </div>

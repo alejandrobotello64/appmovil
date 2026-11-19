@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from "react";
 import {
@@ -1352,7 +1353,7 @@ function EquipmentForm({
         ) : null}
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Marca</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Marca</Ui></span>
             <input
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
@@ -1366,11 +1367,11 @@ function EquipmentForm({
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Modelo</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Modelo</Ui></span>
             <input value={model} onChange={(e) => setModel(e.target.value)} className={fieldClass} />
           </label>
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-sm font-medium">Línea / categoría</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Línea / categoría</Ui></span>
             <input
               value={productLine}
               onChange={(e) => setProductLine(e.target.value)}
@@ -1384,9 +1385,7 @@ function EquipmentForm({
           </p>
         ) : null}
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}><Ui>Cancelar</Ui></Button>
           <Button
             type="submit"
             disabled={submitting}
@@ -1785,7 +1784,7 @@ function CatalogDocumentForm({
             )}
           >
             <Upload className="mx-auto mb-2 size-7 text-[#3B46A5]" />
-            <p className="text-sm font-medium">Arrastra los archivos aquí</p>
+            <p className="text-sm font-medium"><Ui>Arrastra los archivos aquí</Ui></p>
             <p className="mb-3 text-xs text-muted-foreground">o</p>
             <div className="flex flex-wrap justify-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
@@ -1845,7 +1844,7 @@ function CatalogDocumentForm({
           </label>
           {equipmentOptions.length ? (
             <label className="block sm:col-span-2">
-              <span className="mb-1 block text-sm font-medium">Equipo</span>
+              <span className="mb-1 block text-sm font-medium"><Ui>Equipo</Ui></span>
               <select
                 value={selectedEquipment}
                 onChange={(e) => selectEquipment(e.target.value)}
@@ -1871,7 +1870,7 @@ function CatalogDocumentForm({
             </label>
           ) : null}
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Tipo de documento</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Tipo de documento</Ui></span>
             <select
               value={form.docType}
               onChange={(e) => update("docType", e.target.value as CatalogDocType)}
@@ -1885,7 +1884,7 @@ function CatalogDocumentForm({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Marca</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Marca</Ui></span>
             <input
               value={form.brand}
               onChange={(e) => update("brand", e.target.value)}
@@ -1900,7 +1899,7 @@ function CatalogDocumentForm({
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Modelo</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Modelo</Ui></span>
             <input
               value={form.model}
               onChange={(e) => update("model", e.target.value)}
@@ -1915,7 +1914,7 @@ function CatalogDocumentForm({
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Línea / categoría</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Línea / categoría</Ui></span>
             <input
               value={form.productLine}
               onChange={(e) => update("productLine", e.target.value)}
@@ -1934,7 +1933,7 @@ function CatalogDocumentForm({
           </label>
           {showValidity ? (
             <label className="block">
-              <span className="mb-1 block text-sm font-medium">Vigente hasta</span>
+              <span className="mb-1 block text-sm font-medium"><Ui>Vigente hasta</Ui></span>
               <input
                 type="date"
                 value={form.validUntil}
@@ -1944,7 +1943,7 @@ function CatalogDocumentForm({
             </label>
           ) : null}
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-sm font-medium">Etiquetas</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Etiquetas</Ui></span>
             <input
               value={form.tags}
               onChange={(e) => update("tags", e.target.value)}
@@ -1953,7 +1952,7 @@ function CatalogDocumentForm({
             />
           </label>
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-sm font-medium">Descripción</span>
+            <span className="mb-1 block text-sm font-medium"><Ui>Descripción</Ui></span>
             <textarea
               value={form.description}
               onChange={(e) => update("description", e.target.value)}
@@ -1972,9 +1971,7 @@ function CatalogDocumentForm({
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
           {progress ? <p className="mr-auto text-xs text-muted-foreground">{progress}</p> : null}
-          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}><Ui>Cancelar</Ui></Button>
           <Button
             type="submit"
             disabled={submitting}

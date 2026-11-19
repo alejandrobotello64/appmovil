@@ -1,4 +1,6 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
+import { Th } from "@/components/ui/th";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -180,9 +182,7 @@ export function ClientQuoteHistory({
           onClick={() => setReloadKey((value) => value + 1)}
           disabled={loading}
         >
-          <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
-          Actualizar
-        </button>
+          <RefreshCw className={cn("size-3.5", loading && "animate-spin")} /> <Ui>Actualizar</Ui></button>
       </div>
 
       {state?.error && !loading ? (
@@ -208,7 +208,7 @@ export function ClientQuoteHistory({
         <div className="space-y-3">
           <div className="grid gap-3 rounded-xl border border-border bg-muted/30 p-3 text-sm sm:grid-cols-4">
             <div>
-              <p className="text-xs text-muted-foreground">Cotizaciones</p>
+              <p className="text-xs text-muted-foreground"><Ui>Cotizaciones</Ui></p>
               <p className="font-semibold">{stats.total}</p>
               <p className="text-xs text-muted-foreground">
                 Última: {formatDate(stats.lastQuoteDate)}
@@ -355,9 +355,9 @@ export function ClientQuoteHistory({
                               <thead className="bg-muted/50 text-left text-muted-foreground">
                                 <tr>
                                   <th className="px-3 py-2 font-medium">Partida</th>
-                                  <th className="px-3 py-2 text-right font-medium">Cant.</th>
-                                  <th className="px-3 py-2 text-right font-medium">P. unit.</th>
-                                  <th className="px-3 py-2 text-right font-medium">Importe</th>
+                                  <Th className="px-3 py-2 text-right font-medium">Cant.</Th>
+                                  <Th className="px-3 py-2 text-right font-medium">P. unit.</Th>
+                                  <Th className="px-3 py-2 text-right font-medium">Importe</Th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border">

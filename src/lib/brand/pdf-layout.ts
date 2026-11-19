@@ -10,7 +10,11 @@ export const PDF_MUTED: Rgb = [110, 110, 110];
 export const PDF_DANGER: Rgb = [200, 60, 40];
 export const PDF_SUCCESS: Rgb = [20, 130, 80];
 
-export function formatPdfDate(value: string, withTime = false) {
+export function formatPdfDate(
+  value: string,
+  withTime = false,
+  localeTag = "es-MX"
+) {
   if (!value) return "—";
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     const [y, m, d] = value.split("-");
@@ -18,7 +22,7 @@ export function formatPdfDate(value: string, withTime = false) {
   }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-MX", {
+  return date.toLocaleString(localeTag, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

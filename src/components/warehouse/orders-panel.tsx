@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CalendarClock, Loader2, Plus, Printer, Trash2 } from "lucide-react";
@@ -402,7 +403,7 @@ export function OrdersPanel() {
 
   function invoiceCell(order: PurchaseOrder) {
     if (!order.invoices.length) {
-      return <span className="text-muted-foreground">Sin factura</span>;
+      return <span className="text-muted-foreground"><Ui>Sin factura</Ui></span>;
     }
     const pending = purchaseOrderTotal(order) - invoicedTotal(order);
     return (
@@ -648,7 +649,7 @@ export function OrdersPanel() {
                   </select>
                 </label>
                 <label className="space-y-1.5">
-                  <span className="text-sm font-medium">Ubicación</span>
+                  <span className="text-sm font-medium"><Ui>Ubicación</Ui></span>
                   <select
                     value={locationId}
                     onChange={(event) => setLocationId(event.target.value)}
@@ -733,7 +734,7 @@ export function OrdersPanel() {
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="text-xs text-muted-foreground">Lote</span>
+                                <span className="text-xs text-muted-foreground"><Ui>Lote</Ui></span>
                                 <input
                                   value={draft.lotNumber}
                                   onChange={(event) =>
@@ -758,7 +759,7 @@ export function OrdersPanel() {
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="text-xs text-muted-foreground">Caducidad</span>
+                                <span className="text-xs text-muted-foreground"><Ui>Caducidad</Ui></span>
                                 <input
                                   type="date"
                                   value={draft.expiryDate}
@@ -771,7 +772,7 @@ export function OrdersPanel() {
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="text-xs text-muted-foreground">Serie</span>
+                                <span className="text-xs text-muted-foreground"><Ui>Serie</Ui></span>
                                 <input
                                   value={draft.serialNumber}
                                   onChange={(event) =>

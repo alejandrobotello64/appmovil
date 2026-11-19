@@ -1,7 +1,9 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useLocale } from "@/components/locale-provider";
 import { BiomedicalInstrumentsPanel } from "@/components/warehouse/biomedical-instruments-panel";
 import { ChecklistTemplatesPanel } from "@/components/warehouse/checklist-templates-panel";
 import { SupplyKitsPanel } from "@/components/warehouse/supply-kits-panel";
@@ -19,6 +21,7 @@ import {
 } from "@/lib/service-orders/tabs";
 
 export function ServiceOrdersPage() {
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const activeTab = normalizeServiceOrderTab(searchParams.get("tab"));
   const access = useSessionAccess();
@@ -30,16 +33,15 @@ export function ServiceOrdersPage() {
 
   return (
     <AppShell
-      title={activeMeta?.label ?? "Biomédica"}
-      subtitle={activeMeta?.description ?? "MAS · Servicio técnico"}
+      title={t(`tab.service.${activeTab}`, activeMeta?.label ?? t("page.biomedical"))}
+      subtitle={t("page.biomedicalSubtitle")}
     >
       <div className="space-y-4 sm:space-y-6">
         {allowed === false ? (
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">Sin acceso a este módulo</h2>
+            <h2 className="text-lg font-semibold">{t("page.noAccess")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tus permisos no incluyen {activeMeta?.label ?? "esta sección"}.
-              Elige otra opción del menú de biomédica.
+              {t("page.noAccessHint")}
             </p>
           </section>
         ) : allowed ? (
@@ -69,7 +71,7 @@ export function ServiceOrdersPage() {
             {activeTab === "contrasenas" ? <ServicePasswordsPanel /> : null}
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">Cargando...</p>
+          <p className="text-sm text-muted-foreground"><Ui>Cargando...</Ui></p>
         )}
       </div>
     </AppShell>

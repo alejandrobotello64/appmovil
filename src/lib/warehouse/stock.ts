@@ -411,6 +411,8 @@ export async function applyStockMovement(input: {
   serialNumber?: string | null;
   supplierName?: string;
   purchaseOrderId?: string | null;
+  /** Si se envía, todas las partidas de la misma entrada/salida comparten folio. */
+  folio?: string | null;
 }): Promise<StockMovementResult> {
   const { data, error } = await supabase.rpc("apply_stock_movement", {
     p_product_id: input.productId,
@@ -426,6 +428,7 @@ export async function applyStockMovement(input: {
     p_serial_number: input.serialNumber ?? null,
     p_supplier_name: input.supplierName ?? "",
     p_purchase_order_id: input.purchaseOrderId ?? null,
+    p_folio: input.folio?.trim() || null,
   });
 
   if (error) throw new Error(error.message);

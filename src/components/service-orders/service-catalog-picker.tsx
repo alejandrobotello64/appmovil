@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useCallback, useMemo, useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
@@ -251,8 +252,7 @@ export function ServiceCatalogPicker({
                     disabled={disabled}
                     onClick={() => add(item)}
                   >
-                    <Plus className="size-3.5" /> Agregar
-                  </Button>
+                    <Plus className="size-3.5" /> <Ui>Agregar</Ui></Button>
                 </div>
                 {open ? (
                   <div className="border-t border-border/70 bg-muted/20 px-3 py-2">

@@ -1,4 +1,5 @@
 "use client";
+import { Ui } from "@/components/ui/ui-text";
 
 import { useState } from "react";
 import { ImagePlus, Loader2, Star, Trash2, ZoomIn } from "lucide-react";
@@ -161,9 +162,7 @@ export function UnitPhotoGallery({
                 </span>
               </button>
               {image.primary ? (
-                <span className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
-                  Principal
-                </span>
+                <span className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white"><Ui>Principal</Ui></span>
               ) : null}
               {canEdit ? (
                 <div className="absolute right-1.5 top-1.5 flex gap-1 transition sm:opacity-0 sm:group-hover:opacity-100">
@@ -230,8 +229,7 @@ export function UnitPhotoGallery({
                         onClick={() => onRemove(image.path)}
                         className="inline-flex items-center gap-1.5 rounded-full bg-red-500/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50"
                       >
-                        <Trash2 className="size-3.5" /> Quitar foto
-                      </button>
+                        <Trash2 className="size-3.5" /> <Ui>Quitar foto</Ui></button>
                     </>
                   );
                 }
