@@ -553,8 +553,6 @@ export function parseScan(raw: string): ParsedScan {
   // Serie y n.º de parte embebidos (Dräger Vista / AI 240/241/93 / Hill-Rom HR…)
   add(gs1?.serial);
   add(gs1?.lot);
-  add(gs1?.ais?.["240"]);
-  add(gs1?.ais?.["241"]);
   // AI 240/93 con revisión: "MP00303-11" / "2870173-14" → también busca el REF base.
   for (const key of ["240", "241", "93"] as const) {
     const ref = gs1?.ais?.[key];
