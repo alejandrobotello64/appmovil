@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.10
+
+- Corrige lectura GS1 de etiquetas tipo MP00303: el lote ya no se traga la ref (240) ni cambia el producto.
+
 ## 1.1.9
 
 - Cámara en entradas: mejor extracción de lote, fabricación y caducidad (GS1, AI 15/11 y texto legible).

@@ -10,8 +10,8 @@ type CameraCodeReaderProps = {
 };
 
 /**
- * Reconstruye el texto GS1 desde BYTE_SEGMENTS cuando FNC1 (232) no llegó
- * como separador de grupo (ASCII 29) en getText().
+ * Solo usa BYTE_SEGMENTS si aporta más separadores GS que getText().
+ * Preferir el rebuild a ciegas corrompía lecturas (lote+ref pegados).
  */
 function textFromZxingResult(result: {
   getText: () => string;
@@ -21,7 +21,6 @@ function textFromZxingResult(result: {
   const meta = result.getResultMetadata?.();
   if (!meta) return text;
 
-  // ResultMetadataType.BYTE_SEGMENTS === 2 in @zxing/library enums
   const segments =
     (meta.get(2) as Uint8Array[] | undefined) ||
     (meta.get("BYTE_SEGMENTS") as Uint8Array[] | undefined);
@@ -37,11 +36,7 @@ function textFromZxingResult(result: {
   rebuilt = rebuilt.trim();
   if (!rebuilt) return text;
   const gsCount = (s: string) => (s.match(/\u001d/g) || []).length;
-  // Preferir el que conserve más separadores GS1 (lote/fechas).
   if (gsCount(rebuilt) > gsCount(text)) return rebuilt;
-  if (gsCount(rebuilt) === gsCount(text) && rebuilt.length >= text.length) {
-    return rebuilt;
-  }
   return text;
 }
 
@@ -64,11 +59,18 @@ export function CameraCodeReader({ onDetected }: CameraCodeReaderProps) {
         { BrowserMultiFormatReader },
         { BarcodeFormat, DecodeHintType, ResultMetadataType },
       ] = await Promise.all([import("@zxing/browser"), import("@zxing/library")]);
-      const hints = new Map();
-      hints.set(DecodeHintType.TRY_HARDER, true);
-      // Conserva FNC1/GS en DataMatrix GS1 / Code128 para no perder lote y fechas.
-      hints.set(DecodeHintType.ASSUME_GS1, true);
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+
+      const buildReader = (formats: unknown[]) => {
+        const hints = new Map();
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        hints.set(DecodeHintType.ASSUME_GS1, true);
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+        return new BrowserMultiFormatReader(hints);
+      };
+
+      // Primero solo DataMatrix (etiquetas médicas GS1); luego 1D/QR.
+      const dataMatrixReader = buildReader([BarcodeFormat.DATA_MATRIX]);
+      const fallbackReader = buildReader([
         BarcodeFormat.DATA_MATRIX,
         BarcodeFormat.QR_CODE,
         BarcodeFormat.CODE_128,
@@ -78,14 +80,12 @@ export function CameraCodeReader({ onDetected }: CameraCodeReaderProps) {
         BarcodeFormat.UPC_E,
         BarcodeFormat.CODE_39,
       ]);
-      const reader = new BrowserMultiFormatReader(hints);
 
       const extractText = (result: {
         getText: () => string;
         getResultMetadata?: () => Map<unknown, unknown> | null | undefined;
       }) => {
         const meta = result.getResultMetadata?.();
-        // Prefer BYTE_SEGMENTS enum when available.
         if (meta && ResultMetadataType?.BYTE_SEGMENTS != null) {
           const segments = meta.get(ResultMetadataType.BYTE_SEGMENTS) as
             | Uint8Array[]
@@ -101,11 +101,10 @@ export function CameraCodeReader({ onDetected }: CameraCodeReaderProps) {
               }
             }
             rebuilt = rebuilt.trim();
-            if (rebuilt) {
-              const gsCount = (s: string) => (s.match(/\u001d/g) || []).length;
-              const plain = (result.getText() ?? "").trim();
-              if (gsCount(rebuilt) >= gsCount(plain)) return rebuilt;
-            }
+            const plain = (result.getText() ?? "").trim();
+            const gsCount = (s: string) => (s.match(/\u001d/g) || []).length;
+            // Solo si el rebuild tiene MÁS GS (FNC1 recuperados).
+            if (rebuilt && gsCount(rebuilt) > gsCount(plain)) return rebuilt;
           }
         }
         return textFromZxingResult(result);
@@ -115,17 +114,13 @@ export function CameraCodeReader({ onDetected }: CameraCodeReaderProps) {
         if (cancelled) return;
         const video = videoRef.current;
         if (video && video.videoWidth) {
-          // Resolución más alta ayuda a DataMatrix pequeños de etiqueta médica.
-          const scale = Math.min(1.5, 1600 / video.videoWidth);
+          const scale = Math.min(1.25, 1440 / video.videoWidth);
           canvas.width = Math.round(video.videoWidth * scale);
           canvas.height = Math.round(video.videoHeight * scale);
           const ctx = canvas.getContext("2d");
           ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-          const attempts: Array<() => ReturnType<typeof reader.decodeFromCanvas>> = [
-            () => reader.decodeFromCanvas(canvas),
-          ];
-          // Recorte al recuadro central (donde el usuario alinea el código).
+          const canvases: HTMLCanvasElement[] = [canvas];
           if (ctx && canvas.width > 80 && canvas.height > 80) {
             const crop = document.createElement("canvas");
             const cx = Math.round(canvas.width * 0.15);
@@ -135,23 +130,25 @@ export function CameraCodeReader({ onDetected }: CameraCodeReaderProps) {
             crop.width = cw;
             crop.height = ch;
             crop.getContext("2d")?.drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
-            attempts.push(() => reader.decodeFromCanvas(crop));
+            canvases.push(crop);
           }
 
-          for (const attempt of attempts) {
-            try {
-              const result = attempt();
-              const text = extractText(result);
-              if (text) {
-                onDetectedRef.current(text);
-                return;
+          for (const target of canvases) {
+            for (const reader of [dataMatrixReader, fallbackReader]) {
+              try {
+                const result = reader.decodeFromCanvas(target);
+                const text = extractText(result);
+                if (text) {
+                  onDetectedRef.current(text);
+                  return;
+                }
+              } catch {
+                /* sin código en este intento */
               }
-            } catch {
-              /* sin código en este intento */
             }
           }
         }
-        timer = window.setTimeout(tick, 200);
+        timer = window.setTimeout(tick, 220);
       };
       tick();
     })();
@@ -180,8 +177,7 @@ export function CameraCodeReader({ onDetected }: CameraCodeReaderProps) {
       </div>
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
-          Acerca el DataMatrix o código al recuadro; se leen lote, fabricación y caducidad
-          automáticamente.
+          Centra el DataMatrix en el recuadro (lote, fab. y caducidad del código GS1).
         </p>
         <Button
           type="button"

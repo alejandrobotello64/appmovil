@@ -298,7 +298,8 @@ function looksLikeAiAfterDate(data: string, after: number) {
 /**
  * Sin FNC1, los AI de longitud variable se comen a los siguientes.
  * - 240/241: se comen 11/17/10
- * - 10 (lote): se come 11/17 si el lote va antes de la fecha en la etiqueta
+ * - 10 (lote): se come 11/17 y también 240/241/93 (p. ej. etiqueta
+ *   (01)(11)(17)(10)250418(240)MP00303-11 → sin GS el lote tragaba la ref)
  * - 21 (serie): puede ir seguido de lote/fecha/ref
  * Etiqueta Dräger típica: (01)(10)lote-con-guion(11)fab(93)ref-rev
  */
@@ -326,7 +327,9 @@ function nextAiBoundary(data: string, start: number, max: number, currentAi: str
     "98",
     "99",
   ].includes(currentAi);
+  // Incluye "10": el lote numérico (p. ej. 250418) no debe tragarse (240)MP00303-11.
   const splitOnLotSerialRef = [
+    "10",
     "21",
     "22",
     "240",
@@ -359,14 +362,19 @@ function nextAiBoundary(data: string, start: number, max: number, currentAi: str
       }
     }
     if (!splitOnLotSerialRef) continue;
-    if (two === "10" && /^[A-Za-z0-9]/.test(data[i + 2] ?? "")) return i;
+    // No cortar un AI 10 contra otro "10" espurio dentro del mismo lote.
+    if (currentAi !== "10" && two === "10" && /^[A-Za-z0-9]/.test(data[i + 2] ?? "")) {
+      return i;
+    }
     if (two === "21" && data.length - (i + 2) >= 4) return i;
     if (/^9\d$/.test(two) && data.length - (i + 2) >= 3) return i;
     if (
       (three === "240" || three === "241" || three === "250" || three === "400") &&
       data.length - (i + 3) >= 3
     ) {
-      return i;
+      // Tras 240/241 la ref suele empezar con letra o dígito (MP00303-11, 2870173…).
+      const refStart = data[i + 3] ?? "";
+      if (/[A-Za-z0-9]/.test(refStart)) return i;
     }
   }
   return hardEnd;
@@ -547,10 +555,12 @@ export function parseScan(raw: string): ParsedScan {
   add(gs1?.lot);
   add(gs1?.ais?.["240"]);
   add(gs1?.ais?.["241"]);
-  // AI 93 interno Dräger: "2870173-14" → también busca el REF sin revisión.
-  const ai93 = gs1?.ais?.["93"];
-  add(ai93);
-  if (ai93?.includes("-")) add(ai93.split("-")[0]);
+  // AI 240/93 con revisión: "MP00303-11" / "2870173-14" → también busca el REF base.
+  for (const key of ["240", "241", "93"] as const) {
+    const ref = gs1?.ais?.[key];
+    add(ref);
+    if (ref?.includes("-")) add(ref.split("-")[0]);
+  }
   add(code);
   if (code.startsWith("21") && code.length > 6) add(code.slice(2));
   if (/^\d{8,14}$/.test(code)) gtinVariants(code).forEach(add);
