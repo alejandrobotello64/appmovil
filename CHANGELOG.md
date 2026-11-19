@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.13
+
+- Vale PDF de entradas: muestra series y fechas de fabricación/caducidad. Lámparas Polaris consolidadas como equipo (EQUIPO-000026).
+
 ## 1.1.12
 
 - Las salidas descuentan del bin real con existencia (lote/ubicación física), sin exigir la ubicación de categoría.

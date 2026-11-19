@@ -52,6 +52,7 @@ export type MovementRecord = {
   to: MovementPlace | null;
   lotNumber: string;
   lotExpiry: string;
+  manufacturedAt: string;
   serials: string;
   reason: string;
   note: string;
@@ -88,7 +89,11 @@ function mapMovement(row: Row): MovementRecord {
   const isMove = rawType === "traspaso" || rawType === "cambio_ubicacion";
   const here = place(row.warehouse, row.location);
   const lot = (row.lot ?? {}) as Row;
+  const serial = (row.serial ?? {}) as Row;
   const product = (row.product ?? {}) as Row;
+  const lotNumberRaw = str(lot.lot_number).trim();
+  const lotNumber =
+    !lotNumberRaw || /^sn$/i.test(lotNumberRaw) ? "" : lotNumberRaw;
 
   return {
     id: str(row.id),
@@ -107,9 +112,11 @@ function mapMovement(row: Row): MovementRecord {
     resultingQty: Number(row.resulting_qty ?? 0),
     from: isMove ? place(row.from_warehouse, row.from_location) : qtyOut > 0 ? here : null,
     to: isMove ? place(row.to_warehouse, row.to_location) : qtyIn > 0 ? here : null,
-    lotNumber: str(lot.lot_number),
+    lotNumber,
     lotExpiry: str(lot.expiry_date),
-    serials: str(row.related_serial),
+    manufacturedAt:
+      str(serial.manufactured_at) || str(lot.manufactured_at) || "",
+    serials: str(row.related_serial) || str(serial.serial_number),
     reason,
     note: str(row.note),
     technician: str(row.related_technician),
@@ -126,7 +133,8 @@ const MOVEMENT_SELECT = `id, folio, occurred_at, movement_type, product_id, prod
   from_location:locations!inventory_movements_from_location_id_fkey(name),
   to_warehouse:warehouses!inventory_movements_to_warehouse_id_fkey(id, code),
   to_location:locations!inventory_movements_to_location_id_fkey(name),
-  lot:lots(lot_number, expiry_date)`;
+  lot:lots(lot_number, expiry_date, manufactured_at),
+  serial:serial_numbers!inventory_movements_serial_id_fkey(serial_number, manufactured_at)`;
 
 export async function getMovementsByFolio(folios: string[]): Promise<MovementRecord[]> {
   const list = folios.map((folio) => folio.trim()).filter(Boolean);

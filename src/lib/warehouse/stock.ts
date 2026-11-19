@@ -435,13 +435,23 @@ export async function applyStockMovement(input: {
   const row = data?.[0];
   if (!row) throw new Error("El movimiento no devolvió folio.");
 
+  const serialNumber = input.serialNumber?.trim() || "";
+  if (serialNumber) {
+    const { error: relatedSerialError } = await db
+      .from("inventory_movements")
+      .update({ related_serial: serialNumber })
+      .eq("id", row.movement_id)
+      .eq("related_serial", "");
+    if (relatedSerialError) throw new Error(relatedSerialError.message);
+  }
+
   if (input.manufacturedAt) {
-    if (input.serialNumber) {
+    if (serialNumber) {
       const { error: serialError } = await db
         .from("serial_numbers")
         .update({ manufactured_at: input.manufacturedAt })
         .eq("product_id", input.productId)
-        .eq("serial_number", input.serialNumber);
+        .eq("serial_number", serialNumber);
       if (serialError) throw new Error(serialError.message);
     } else {
       const { error: itemError } = await db

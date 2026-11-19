@@ -111,14 +111,25 @@ const KIND_DOCUMENTS: Record<MovementKind, KindDocument> = {
 };
 
 const VOUCHER_COLUMNS: PdfColumn[] = [
-  { key: "n", label: "#", width: 7, align: "center" },
-  { key: "sku", label: "SKU", width: 25 },
-  { key: "product", label: "Producto", width: 60 },
-  { key: "lot", label: "Lote", width: 22 },
-  { key: "expiry", label: "Caducidad", width: 20, align: "center" },
-  { key: "serials", label: "Números de serie", width: 30 },
-  { key: "qty", label: "Cantidad", width: 18, align: "center" },
+  { key: "n", label: "#", width: 6, align: "center" },
+  { key: "sku", label: "SKU", width: 22 },
+  { key: "product", label: "Producto", width: 50 },
+  { key: "lot", label: "Lote", width: 18 },
+  { key: "dates", label: "Fab. / Cad.", width: 28, align: "center" },
+  { key: "serials", label: "Números de serie", width: 40 },
+  { key: "qty", label: "Cantidad", width: 16, align: "center" },
 ];
+
+function voucherDateLines(record: MovementRecord): string[] {
+  const fab = record.manufacturedAt
+    ? `Fab. ${formatPdfDate(record.manufacturedAt)}`
+    : "";
+  const cad = record.lotExpiry
+    ? `Cad. ${formatPdfDate(record.lotExpiry)}`
+    : "";
+  const lines = [fab, cad].filter(Boolean);
+  return lines.length ? lines : ["—"];
+}
 
 function reportColumns(locale: "es" | "en"): PdfColumn[] {
   const en = locale === "en";
@@ -238,7 +249,7 @@ export async function downloadMovementVoucherPdf(
         sku: record.productSku || "—",
         product: `${record.productName} · ${catalogModelLabel(record.productModel)}`,
         lot: record.lotNumber || "—",
-        expiry: formatPdfDate(record.lotExpiry),
+        dates: voucherDateLines(record),
         serials: record.serials || "—",
         qty: quantityCell(record),
       },
