@@ -52,6 +52,7 @@ import {
   createWarehouseLocation,
   DEFAULT_LOCATION_CODES,
   getEntryExitHistory,
+  getAvailableSerials,
   getProductLots,
   getProductWarehouseQuantities,
   getWarehouseLocations,
@@ -59,6 +60,7 @@ import {
   findLocationByLabel,
   pickPreferredEntryWarehouse,
   suggestEntryLocation,
+  type AvailableSerial,
   type KardexRow,
   type ProductLot,
   type Warehouse,
@@ -201,6 +203,14 @@ function formatLotQty(quantity: number, unit: string) {
   return `${quantity} ${unit}`;
 }
 
+function lotBinLabel(lot: ProductLot) {
+  return (
+    [lot.warehouseCode, lot.locationCode || lot.locationName]
+      .filter(Boolean)
+      .join(" · ") || ""
+  );
+}
+
 function lotSelectLabel(lot: ProductLot, unit: string, scopedToWarehouse: boolean) {
   const here = formatLotQty(lot.warehouseQuantity, unit);
   const total = formatLotQty(lot.quantity, unit);
@@ -211,8 +221,21 @@ function lotSelectLabel(lot: ProductLot, unit: string, scopedToWarehouse: boolea
   return [
     lot.lotNumber,
     qty,
+    lotBinLabel(lot),
     lot.manufacturedAt ? `fab. ${lot.manufacturedAt}` : "",
     lot.expiryDate ? `cad. ${lot.expiryDate}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function serialSelectLabel(serial: AvailableSerial) {
+  return [
+    serial.serialNumber,
+    [serial.warehouseCode, serial.locationCode || serial.locationName]
+      .filter(Boolean)
+      .join(" · "),
+    serial.manufacturedAt ? `fab. ${serial.manufacturedAt}` : "",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -231,6 +254,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [warehouseStock, setWarehouseStock] = useState<WarehouseStock[] | null>(null);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [lots, setLots] = useState<ProductLot[]>([]);
+  const [availableSerials, setAvailableSerials] = useState<AvailableSerial[]>(
+    []
+  );
+  const [showAltLot, setShowAltLot] = useState(false);
+  const [showAltSerial, setShowAltSerial] = useState(false);
+  const [showAdvancedLocation, setShowAdvancedLocation] = useState(false);
   const [history, setHistory] = useState<KardexRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [itemId, setItemId] = useState("");
@@ -385,6 +414,28 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       : lots.filter((lot) => lot.quantity > 0);
     return withStock.length > 0 ? withStock : lots;
   }, [lots, warehouseId]);
+  const recommendedLot = useMemo(() => {
+    if (mode !== "salida" || isEquipmentCatalog) return null;
+    if (lotNumber) {
+      return (
+        salidaLots.find((lot) => lot.lotNumber === lotNumber) ??
+        lots.find((lot) => lot.lotNumber === lotNumber) ??
+        null
+      );
+    }
+    return salidaLots[0] ?? null;
+  }, [mode, isEquipmentCatalog, lotNumber, salidaLots, lots]);
+  const recommendedSerial = useMemo(() => {
+    if (mode !== "salida" || !isEquipmentCatalog) return null;
+    if (serialNumber.trim()) {
+      return (
+        availableSerials.find(
+          (row) => row.serialNumber === serialNumber.trim()
+        ) ?? null
+      );
+    }
+    return availableSerials[0] ?? null;
+  }, [mode, isEquipmentCatalog, serialNumber, availableSerials]);
   const unitLabel = selected?.unit || "pza";
 
   const [itemQuery, setItemQuery] = useState("");
@@ -979,6 +1030,30 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     }
   }, [itemId, isEquipmentCatalog, warehouseId]);
 
+  const loadAvailableSerials = useCallback(async () => {
+    if (!itemId || !isEquipmentCatalog || mode !== "salida") {
+      setAvailableSerials([]);
+      return [];
+    }
+    try {
+      const rows = await getAvailableSerials(itemId, warehouseId || null);
+      setAvailableSerials(rows);
+      return rows;
+    } catch {
+      setAvailableSerials([]);
+      return [];
+    }
+  }, [itemId, isEquipmentCatalog, mode, warehouseId]);
+
+  useEffect(() => {
+    setShowAltLot(false);
+    setShowAltSerial(false);
+    if (mode === "salida") {
+      setLocationId("");
+      setShowAdvancedLocation(false);
+    }
+  }, [itemId, mode]);
+
   useEffect(() => {
     void loadLots().then((rows) => {
       if (mode !== "salida") return;
@@ -997,19 +1072,44 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         setLotNumber(matched.lotNumber);
         setExpiryDate(matched.expiryDate);
         setManufacturedAt(matched.manufacturedAt);
+        setShowAltLot(false);
         return;
       }
       if (preferred) {
         // Lote leído en el código: se conserva para que el usuario lo vea o cambie.
         setLotNumber(preferred);
+        setShowAltLot(true);
         return;
       }
       const pick = pool[0];
       setLotNumber(pick?.lotNumber ?? "");
       setExpiryDate(pick?.expiryDate ?? "");
       setManufacturedAt(pick?.manufacturedAt ?? "");
+      setShowAltLot(false);
     });
   }, [loadLots, mode, warehouseId]);
+
+  useEffect(() => {
+    void loadAvailableSerials().then((rows) => {
+      if (mode !== "salida" || !isEquipmentCatalog) return;
+      const current = serialNumber.trim();
+      if (current && rows.some((row) => row.serialNumber === current)) {
+        setShowAltSerial(false);
+        return;
+      }
+      if (current && rows.length > 0) {
+        setShowAltSerial(true);
+        return;
+      }
+      const pick = rows[0];
+      if (pick) {
+        setSerialNumber(pick.serialNumber);
+        setManufacturedAt(pick.manufacturedAt);
+        if (pick.warehouseId) setWarehouseId(pick.warehouseId);
+        setShowAltSerial(false);
+      }
+    });
+  }, [loadAvailableSerials, mode, isEquipmentCatalog]);
 
   useEffect(() => {
     if (mode !== "entrada") return;
@@ -1023,7 +1123,6 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       setQuantity(1);
       setLotNumber("");
       setExpiryDate("");
-      setManufacturedAt("");
     }
   }, [isEquipmentCatalog, mode]);
 
@@ -1513,7 +1612,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   </p>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div
+                  className={cn(
+                    "grid gap-3",
+                    mode === "entrada" ? "sm:grid-cols-2" : "sm:grid-cols-1"
+                  )}
+                >
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium"><Ui>Almacén</Ui></span>
                     <select
@@ -1559,62 +1663,110 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       </span>
                     ) : (
                       <span className="block text-xs text-muted-foreground">
-                        La salida descuenta del lote/ubicación donde hay stock.
+                        Se elige solo. El lote/serie recomendado indica de dónde
+                        sale; no hace falta la ubicación.
                       </span>
                     )}
                   </label>
-                  <label className="space-y-1.5">
-                    <span className="text-sm font-medium">
-                      {mode === "salida"
-                        ? "Ubicación (opcional)"
-                        : "Ubicación por defecto"}
-                    </span>
-                    <select
-                      value={locationId}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        setLocationId(value);
-                        if (value !== NEW_LOCATION) setNewLocationName("");
-                      }}
-                      disabled={!canWrite || !warehouseId}
-                      className={fieldClass}
-                    >
-                      {!warehouseId ? (
-                        <option value="">Elige un almacén primero</option>
-                      ) : locations.length === 0 ? (
-                        <option value="">Sin ubicaciones — crea una</option>
-                      ) : (
-                        <>
-                          <option value="">Elegir ubicación…</option>
-                          {physicalLocations.length > 0 ? (
-                            <optgroup label="Ubicaciones físicas">
-                              {physicalLocations.map((location) => (
-                                <option key={location.id} value={location.id}>
-                                  {location.code} — {location.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ) : null}
-                          {genericLocations.length > 0 ? (
-                            <optgroup label="Genéricas por categoría">
-                              {genericLocations.map((location) => (
-                                <option key={location.id} value={location.id}>
-                                  {location.code} — {location.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ) : null}
-                        </>
-                      )}
-                      {warehouseId ? (
-                        <option value={NEW_LOCATION}>+ Nueva ubicación…</option>
+                  {mode === "entrada" ? (
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">
+                        Ubicación por defecto
+                      </span>
+                      <select
+                        value={locationId}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setLocationId(value);
+                          if (value !== NEW_LOCATION) setNewLocationName("");
+                        }}
+                        disabled={!canWrite || !warehouseId}
+                        className={fieldClass}
+                      >
+                        {!warehouseId ? (
+                          <option value="">Elige un almacén primero</option>
+                        ) : locations.length === 0 ? (
+                          <option value="">Sin ubicaciones — crea una</option>
+                        ) : (
+                          <>
+                            <option value="">Elegir ubicación…</option>
+                            {physicalLocations.length > 0 ? (
+                              <optgroup label="Ubicaciones físicas">
+                                {physicalLocations.map((location) => (
+                                  <option key={location.id} value={location.id}>
+                                    {location.code} — {location.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ) : null}
+                            {genericLocations.length > 0 ? (
+                              <optgroup label="Genéricas por categoría">
+                                {genericLocations.map((location) => (
+                                  <option key={location.id} value={location.id}>
+                                    {location.code} — {location.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ) : null}
+                          </>
+                        )}
+                        {warehouseId ? (
+                          <option value={NEW_LOCATION}>+ Nueva ubicación…</option>
+                        ) : null}
+                      </select>
+                      <span className="block text-xs text-muted-foreground">
+                        Al escanear se pone la ubicación que el producto ya
+                        tiene. Si no tiene, escríbela en la línea.
+                      </span>
+                    </label>
+                  ) : (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-[#3B46A5] hover:underline"
+                        onClick={() =>
+                          setShowAdvancedLocation((current) => !current)
+                        }
+                      >
+                        {showAdvancedLocation
+                          ? "Ocultar ubicación avanzada"
+                          : "Forzar ubicación (opcional)"}
+                      </button>
+                      {showAdvancedLocation ? (
+                        <label className="block space-y-1.5">
+                          <span className="text-sm font-medium">
+                            Ubicación (opcional)
+                          </span>
+                          <select
+                            value={locationId}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              setLocationId(value);
+                              if (value !== NEW_LOCATION) setNewLocationName("");
+                            }}
+                            disabled={!canWrite || !warehouseId}
+                            className={fieldClass}
+                          >
+                            <option value="">Automática (recomendado)</option>
+                            {physicalLocations.map((location) => (
+                              <option key={location.id} value={location.id}>
+                                {location.code} — {location.name}
+                              </option>
+                            ))}
+                            {genericLocations.map((location) => (
+                              <option key={location.id} value={location.id}>
+                                {location.code} — {location.name}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="block text-xs text-muted-foreground">
+                            Déjala en automática: el sistema descuenta del bin
+                            donde sí hay existencia.
+                          </span>
+                        </label>
                       ) : null}
-                    </select>
-                    <span className="block text-xs text-muted-foreground">
-                      Al escanear se pone la ubicación que el producto ya
-                      tiene. Si no tiene, escríbela en la línea.
-                    </span>
-                  </label>
+                    </div>
+                  )}
                 </div>
 
                 {mode === "entrada" && locationId === NEW_LOCATION ? (
@@ -1949,48 +2101,124 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
 
                 {!isEquipmentCatalog ? (
                   mode === "salida" ? (
-                    <label className="space-y-1.5">
-                      <span className="text-sm font-medium">
-                        Lote existente
-                      </span>
-                      <select
-                        ref={lotSelectRef}
-                        value={lotNumber}
-                        disabled={!canWrite}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          const lot = lots.find(
-                            (item) => item.lotNumber === value
-                          );
-                          preferredLotRef.current = value;
-                          setLotNumber(value);
-                          setExpiryDate(lot?.expiryDate ?? "");
-                          setManufacturedAt(lot?.manufacturedAt ?? "");
-                        }}
-                        className={fieldClass}
-                      >
-                        <option value="">Elegir lote…</option>
-                        {lotNumber &&
-                        !salidaLots.some((lot) => lot.lotNumber === lotNumber) ? (
-                          <option value={lotNumber}>
-                            {lotNumber} (leído / sin stock en lista)
-                          </option>
+                    <div className="space-y-3 rounded-xl border border-[#3B46A5]/25 bg-[#3B46A5]/5 p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Lote recomendado
+                          </p>
+                          {recommendedLot ? (
+                            <>
+                              <p className="text-base font-semibold text-foreground">
+                                {recommendedLot.lotNumber}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {[
+                                  lotBinLabel(recommendedLot) || "Ubicación automática",
+                                  formatLotQty(
+                                    warehouseId
+                                      ? recommendedLot.warehouseQuantity
+                                      : recommendedLot.quantity,
+                                    unitLabel
+                                  ),
+                                  recommendedLot.expiryDate
+                                    ? `cad. ${recommendedLot.expiryDate}`
+                                    : "",
+                                  recommendedLot.manufacturedAt
+                                    ? `fab. ${recommendedLot.manufacturedAt}`
+                                    : "",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              Sin lotes con existencia en este almacén.
+                            </p>
+                          )}
+                        </div>
+                        {salidaLots.length > 1 ||
+                        (lotNumber &&
+                          !salidaLots.some(
+                            (lot) => lot.lotNumber === lotNumber
+                          )) ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={!canWrite}
+                            onClick={() => {
+                              if (showAltLot) {
+                                const pick = salidaLots[0];
+                                if (pick) {
+                                  preferredLotRef.current = pick.lotNumber;
+                                  setLotNumber(pick.lotNumber);
+                                  setExpiryDate(pick.expiryDate);
+                                  setManufacturedAt(pick.manufacturedAt);
+                                }
+                                setShowAltLot(false);
+                              } else {
+                                setShowAltLot(true);
+                              }
+                            }}
+                          >
+                            {showAltLot ? "Usar recomendado" : "Cambiar lote"}
+                          </Button>
                         ) : null}
-                        {salidaLots.map((lot) => (
-                          <option key={lot.id} value={lot.lotNumber}>
-                            {lotSelectLabel(
-                              lot,
-                              unitLabel,
-                              Boolean(warehouseId)
-                            )}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="block text-xs text-muted-foreground">
-                        Al escanear se selecciona el producto; aquí puedes cambiar
-                        el lote entre los que tienen existencia.
-                      </span>
-                    </label>
+                      </div>
+                      {showAltLot ? (
+                        <label className="block space-y-1.5">
+                          <span className="text-sm font-medium">
+                            Elegir otro lote
+                          </span>
+                          <select
+                            ref={lotSelectRef}
+                            value={lotNumber}
+                            disabled={!canWrite}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              const lot = lots.find(
+                                (item) => item.lotNumber === value
+                              );
+                              preferredLotRef.current = value;
+                              setLotNumber(value);
+                              setExpiryDate(lot?.expiryDate ?? "");
+                              setManufacturedAt(lot?.manufacturedAt ?? "");
+                            }}
+                            className={fieldClass}
+                          >
+                            <option value="">Elegir lote…</option>
+                            {lotNumber &&
+                            !salidaLots.some(
+                              (lot) => lot.lotNumber === lotNumber
+                            ) ? (
+                              <option value={lotNumber}>
+                                {lotNumber} (leído / sin stock en lista)
+                              </option>
+                            ) : null}
+                            {salidaLots.map((lot) => (
+                              <option key={lot.id} value={lot.lotNumber}>
+                                {lotSelectLabel(
+                                  lot,
+                                  unitLabel,
+                                  Boolean(warehouseId)
+                                )}
+                                {salidaLots[0]?.id === lot.id
+                                  ? " · recomendado"
+                                  : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : (
+                        <input type="hidden" value={lotNumber} readOnly />
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Se sugiere el lote FEFO con existencia. Cámbialo solo si
+                        necesitas sacar de otro.
+                      </p>
+                    </div>
                   ) : (
                     <div className="grid gap-4 sm:grid-cols-2">
                       {lots.length > 0 ? (
@@ -2094,41 +2322,155 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                       </span>
                     </label>
                   </div>
+                ) : isEquipmentCatalog && mode === "salida" ? (
+                  <div className="space-y-3 rounded-xl border border-[#3B46A5]/25 bg-[#3B46A5]/5 p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Serie recomendada
+                        </p>
+                        {recommendedSerial || serialNumber.trim() ? (
+                          <>
+                            <p className="text-base font-semibold text-foreground">
+                              {recommendedSerial?.serialNumber ||
+                                serialNumber.trim()}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {recommendedSerial
+                                ? [
+                                    [
+                                      recommendedSerial.warehouseCode,
+                                      recommendedSerial.locationCode ||
+                                        recommendedSerial.locationName,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(" · ") || "Ubicación automática",
+                                    recommendedSerial.manufacturedAt
+                                      ? `fab. ${recommendedSerial.manufacturedAt}`
+                                      : "",
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")
+                                : "Serie capturada / escaneada"}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            No hay series disponibles en este almacén.
+                          </p>
+                        )}
+                      </div>
+                      {availableSerials.length > 1 ||
+                      (serialNumber.trim() &&
+                        !availableSerials.some(
+                          (row) => row.serialNumber === serialNumber.trim()
+                        )) ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={!canWrite}
+                          onClick={() => {
+                            if (showAltSerial) {
+                              const pick = availableSerials[0];
+                              if (pick) {
+                                setSerialNumber(pick.serialNumber);
+                                setManufacturedAt(pick.manufacturedAt);
+                                if (pick.warehouseId) {
+                                  setWarehouseId(pick.warehouseId);
+                                }
+                              }
+                              setShowAltSerial(false);
+                            } else {
+                              setShowAltSerial(true);
+                            }
+                          }}
+                        >
+                          {showAltSerial
+                            ? "Usar recomendada"
+                            : "Cambiar serie"}
+                        </Button>
+                      ) : null}
+                    </div>
+                    {showAltSerial ? (
+                      <label className="block space-y-1.5">
+                        <span className="text-sm font-medium">
+                          Elegir otra serie
+                        </span>
+                        <select
+                          value={serialNumber}
+                          disabled={!canWrite}
+                          required={lines.length === 0}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            const match = availableSerials.find(
+                              (row) => row.serialNumber === value
+                            );
+                            setSerialNumber(value);
+                            setManufacturedAt(match?.manufacturedAt ?? "");
+                            if (match?.warehouseId) {
+                              setWarehouseId(match.warehouseId);
+                            }
+                          }}
+                          className={fieldClass}
+                        >
+                          <option value="">Elegir serie…</option>
+                          {serialNumber.trim() &&
+                          !availableSerials.some(
+                            (row) => row.serialNumber === serialNumber.trim()
+                          ) ? (
+                            <option value={serialNumber.trim()}>
+                              {serialNumber.trim()} (leída / fuera de lista)
+                            </option>
+                          ) : null}
+                          {availableSerials.map((row) => (
+                            <option
+                              key={row.serialNumber}
+                              value={row.serialNumber}
+                            >
+                              {serialSelectLabel(row)}
+                              {availableSerials[0]?.serialNumber ===
+                              row.serialNumber
+                                ? " · recomendada"
+                                : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <input
+                        ref={serialInputRef}
+                        type="hidden"
+                        value={serialNumber}
+                        required={
+                          lines.length === 0 && availableSerials.length > 0
+                        }
+                        readOnly
+                      />
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Se sugiere una serie disponible. Cámbiala si necesitas
+                      sacar otra pieza.
+                    </p>
+                  </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="space-y-1.5">
                       <span className="text-sm font-medium">
                         Número de serie
-                        {selected.tracksSerial || isEquipmentCatalog
-                          ? " (obligatorio)"
-                          : ""}
+                        {selected.tracksSerial ? " (obligatorio)" : ""}
                       </span>
                       <input
                         ref={serialInputRef}
                         value={serialNumber}
                         disabled={!canWrite}
                         required={
-                          lines.length === 0 &&
-                          Boolean(selected.tracksSerial || isEquipmentCatalog)
+                          lines.length === 0 && Boolean(selected.tracksSerial)
                         }
                         onChange={(event) => setSerialNumber(event.target.value)}
                         className={fieldClass}
                       />
                     </label>
-                    {isEquipmentCatalog ? (
-                      <label className="space-y-1.5">
-                        <span className="text-sm font-medium"><Ui>Fecha de fabricación (opcional)</Ui></span>
-                        <input
-                          type="date"
-                          value={manufacturedAt}
-                          disabled={!canWrite}
-                          onChange={(event) =>
-                            setManufacturedAt(event.target.value)
-                          }
-                          className={fieldClass}
-                        />
-                      </label>
-                    ) : null}
                   </div>
                 )}
 

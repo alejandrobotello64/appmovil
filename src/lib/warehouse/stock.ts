@@ -716,12 +716,35 @@ export type ProductLot = {
   manufacturedAt: string;
   quantity: number;
   warehouseQuantity: number;
+  /** Bin principal con existencia (para recomendar en salidas). */
+  warehouseId: string;
+  warehouseCode: string;
+  locationId: string;
+  locationCode: string;
+  locationName: string;
+};
+
+export type AvailableSerial = {
+  serialNumber: string;
+  warehouseId: string;
+  warehouseCode: string;
+  locationId: string;
+  locationCode: string;
+  locationName: string;
+  manufacturedAt: string;
 };
 
 function mapLotRow(
   row: Record<string, unknown>,
   quantity = 0,
-  warehouseQuantity = 0
+  warehouseQuantity = 0,
+  bin?: {
+    warehouseId: string;
+    warehouseCode: string;
+    locationId: string;
+    locationCode: string;
+    locationName: string;
+  }
 ): ProductLot {
   return {
     id: String(row.id),
@@ -730,8 +753,24 @@ function mapLotRow(
     manufacturedAt: String(row.manufactured_at ?? ""),
     quantity,
     warehouseQuantity,
+    warehouseId: bin?.warehouseId ?? "",
+    warehouseCode: bin?.warehouseCode ?? "",
+    locationId: bin?.locationId ?? "",
+    locationCode: bin?.locationCode ?? "",
+    locationName: bin?.locationName ?? "",
   };
 }
+
+type LotBinAgg = {
+  quantity: number;
+  warehouseQuantity: number;
+  bestQty: number;
+  warehouseId: string;
+  warehouseCode: string;
+  locationId: string;
+  locationCode: string;
+  locationName: string;
+};
 
 export async function getProductLots(
   productId: string,
@@ -745,32 +784,111 @@ export async function getProductLots(
       .order("expiry_date", { ascending: true, nullsFirst: false }),
     db
       .from("inventory_balances")
-      .select("lot_id, warehouse_id, qty_on_hand")
+      .select(
+        "lot_id, warehouse_id, location_id, qty_on_hand, warehouse:warehouses(code), location:locations(code, name)"
+      )
       .eq("product_id", productId),
   ]);
   if (lotsRes.error) throw new Error(lotsRes.error.message);
   if (balancesRes.error) throw new Error(balancesRes.error.message);
 
-  const totals = new Map<string, { quantity: number; warehouseQuantity: number }>();
+  const totals = new Map<string, LotBinAgg>();
   for (const row of (balancesRes.data ?? []) as Record<string, unknown>[]) {
     const lotId = String(row.lot_id ?? "");
     if (!lotId) continue;
     const qty = Number(row.qty_on_hand ?? 0) || 0;
-    const current = totals.get(lotId) ?? { quantity: 0, warehouseQuantity: 0 };
+    if (qty <= 0) continue;
+    const wh = (Array.isArray(row.warehouse) ? row.warehouse[0] : row.warehouse) as
+      | Record<string, unknown>
+      | null;
+    const loc = (Array.isArray(row.location) ? row.location[0] : row.location) as
+      | Record<string, unknown>
+      | null;
+    const rowWarehouseId = String(row.warehouse_id ?? "");
+    const inScope = !warehouseId || rowWarehouseId === warehouseId;
+    const current =
+      totals.get(lotId) ??
+      ({
+        quantity: 0,
+        warehouseQuantity: 0,
+        bestQty: 0,
+        warehouseId: "",
+        warehouseCode: "",
+        locationId: "",
+        locationCode: "",
+        locationName: "",
+      } satisfies LotBinAgg);
     current.quantity += qty;
-    if (warehouseId && String(row.warehouse_id ?? "") === warehouseId) {
-      current.warehouseQuantity += qty;
+    if (inScope) current.warehouseQuantity += qty;
+    const candidateScore = inScope ? qty + 100000 : qty;
+    const bestScore =
+      (current.warehouseId &&
+      (!warehouseId || current.warehouseId === warehouseId)
+        ? current.bestQty + 100000
+        : current.bestQty) || 0;
+    if (candidateScore > bestScore) {
+      current.bestQty = qty;
+      current.warehouseId = rowWarehouseId;
+      current.warehouseCode = String(wh?.code ?? "");
+      current.locationId = row.location_id ? String(row.location_id) : "";
+      current.locationCode = String(loc?.code ?? "");
+      current.locationName = String(loc?.name ?? "");
     }
     totals.set(lotId, current);
   }
 
   return ((lotsRes.data ?? []) as Record<string, unknown>[]).map((row) => {
-    const stock = totals.get(String(row.id)) ?? { quantity: 0, warehouseQuantity: 0 };
+    const stock = totals.get(String(row.id));
     return mapLotRow(
       row,
-      stock.quantity,
-      warehouseId ? stock.warehouseQuantity : stock.quantity
+      stock?.quantity ?? 0,
+      warehouseId ? (stock?.warehouseQuantity ?? 0) : (stock?.quantity ?? 0),
+      stock
+        ? {
+            warehouseId: stock.warehouseId,
+            warehouseCode: stock.warehouseCode,
+            locationId: stock.locationId,
+            locationCode: stock.locationCode,
+            locationName: stock.locationName,
+          }
+        : undefined
     );
+  });
+}
+
+/** Series disponibles para salida rápida de equipo. */
+export async function getAvailableSerials(
+  productId: string,
+  warehouseId?: string | null
+): Promise<AvailableSerial[]> {
+  let query = db
+    .from("serial_numbers")
+    .select(
+      "serial_number, warehouse_id, location_id, manufactured_at, warehouse:warehouses(code), location:locations(code, name)"
+    )
+    .eq("product_id", productId)
+    .eq("status", "disponible")
+    .order("serial_number");
+  if (warehouseId) query = query.eq("warehouse_id", warehouseId);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  return ((data ?? []) as Record<string, unknown>[]).map((row) => {
+    const wh = (Array.isArray(row.warehouse) ? row.warehouse[0] : row.warehouse) as
+      | Record<string, unknown>
+      | null;
+    const loc = (Array.isArray(row.location) ? row.location[0] : row.location) as
+      | Record<string, unknown>
+      | null;
+    return {
+      serialNumber: String(row.serial_number ?? ""),
+      warehouseId: String(row.warehouse_id ?? ""),
+      warehouseCode: String(wh?.code ?? ""),
+      locationId: row.location_id ? String(row.location_id) : "",
+      locationCode: String(loc?.code ?? ""),
+      locationName: String(loc?.name ?? ""),
+      manufacturedAt: String(row.manufactured_at ?? ""),
+    };
   });
 }
 

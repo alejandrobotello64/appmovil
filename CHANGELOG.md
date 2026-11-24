@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.15
+
+- Salidas: recomienda lote o serie con ubicación; se puede cambiar; la ubicación ya no es obligatoria.
+
 ## 1.1.14
 
 - Clientes: navegación por URL entre ficha, equipos e historial, con migas de pan y filtros por estado/equipo.
