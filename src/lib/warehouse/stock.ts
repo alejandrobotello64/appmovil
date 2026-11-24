@@ -158,6 +158,8 @@ export type EntryLocationSuggestion = {
   locationId: string;
   /** Nombre de catálogo que todavía no existe como ubicación. */
   pendingName: string;
+  /** De dónde salió la sugerencia (para el UI de entradas). */
+  source: "stock" | "catalog" | "category" | "none";
 };
 
 export function findLocationByLabel(
@@ -177,18 +179,20 @@ export function findLocationByLabel(
  * Ubicación de una entrada al escanear:
  * 1) donde el producto ya tiene existencia en ese almacén (prioriza lugares físicos)
  * 2) la ubicación escrita en la ficha, si coincide con una del almacén
- * Si no hay ninguna, no inventa una genérica: el usuario escribe la nueva.
+ * 3) ubicación genérica de la categoría (INSUMOS, EQUIPOS, …)
  */
 export async function suggestEntryLocation(input: {
   productId: string;
   warehouseId: string;
   locations: WarehouseLocation[];
   catalogLocation?: string | null;
+  category?: string | null;
+  itemKind?: string | null;
 }): Promise<EntryLocationSuggestion> {
   const { productId, warehouseId, locations } = input;
   const catalog = String(input.catalogLocation ?? "").trim();
   if (!warehouseId || locations.length === 0) {
-    return { locationId: "", pendingName: catalog };
+    return { locationId: "", pendingName: catalog, source: "none" };
   }
 
   try {
@@ -224,15 +228,34 @@ export async function suggestEntryLocation(input: {
           (a, b) =>
             Number(a.generic) - Number(b.generic) || b.qty - a.qty
         );
-      if (ranked[0]) return { locationId: ranked[0].locationId, pendingName: "" };
+      if (ranked[0]) {
+        return {
+          locationId: ranked[0].locationId,
+          pendingName: "",
+          source: "stock",
+        };
+      }
     }
   } catch {
     /* la ficha sigue pudiendo proponer un nombre */
   }
 
   const match = findLocationByLabel(locations, catalog);
-  if (match) return { locationId: match.id, pendingName: "" };
-  return { locationId: "", pendingName: catalog };
+  if (match) return { locationId: match.id, pendingName: "", source: "catalog" };
+
+  const categoryCode =
+    input.itemKind === "equipo" ||
+    String(input.category ?? "").toLowerCase() === "equipos"
+      ? "EQUIPOS"
+      : categoryLocationCode(input.category);
+  const byCategory =
+    locations.find((loc) => loc.code.toUpperCase() === categoryCode) ??
+    locations.find((loc) => loc.code.toUpperCase() === "GENERAL");
+  if (byCategory) {
+    return { locationId: byCategory.id, pendingName: "", source: "category" };
+  }
+
+  return { locationId: "", pendingName: catalog, source: "none" };
 }
 
 /** Id de la ubicación ya registrada, o vacío si el usuario debe escribir una. */
@@ -241,6 +264,7 @@ export async function resolveEntryLocationId(input: {
   warehouseId: string;
   locations: WarehouseLocation[];
   category?: string | null;
+  itemKind?: string | null;
   catalogLocation?: string | null;
 }): Promise<string> {
   const suggestion = await suggestEntryLocation(input);

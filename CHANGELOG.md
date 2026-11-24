@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.16
+
+- Entradas: sugiere ubicación (stock, ficha o categoría) y permite cambiarla; ya no obliga a elegirla en cada alta.
+
 ## 1.1.15
 
 - Salidas: recomienda lote o serie con ubicación; se puede cambiar; la ubicación ya no es obligatoria.

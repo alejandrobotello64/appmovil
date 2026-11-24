@@ -259,7 +259,11 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   );
   const [showAltLot, setShowAltLot] = useState(false);
   const [showAltSerial, setShowAltSerial] = useState(false);
+  const [showAltLocation, setShowAltLocation] = useState(false);
   const [showAdvancedLocation, setShowAdvancedLocation] = useState(false);
+  const [locationSource, setLocationSource] = useState<
+    "stock" | "catalog" | "category" | "none" | ""
+  >("");
   const [history, setHistory] = useState<KardexRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [itemId, setItemId] = useState("");
@@ -632,18 +636,27 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               warehouseId,
               locations,
               catalogLocation: local.location,
+              category: local.category,
+              itemKind: local.itemKind,
             })
-          : { locationId: "", pendingName: "" };
+          : {
+              locationId: "",
+              pendingName: "",
+              source: "none" as const,
+            };
       const registeredName = suggestion.locationId
         ? locations.find((row) => row.id === suggestion.locationId)?.name ?? ""
         : "";
       if (mode === "entrada") {
+        setLocationSource(suggestion.source);
+        setShowAltLocation(false);
         if (suggestion.locationId) {
           setLocationId(suggestion.locationId);
           setNewLocationName("");
         } else if (suggestion.pendingName) {
           setLocationId(NEW_LOCATION);
           setNewLocationName(suggestion.pendingName);
+          setShowAltLocation(true);
         } else {
           setLocationId("");
         }
@@ -922,11 +935,18 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         warehouseId,
         locations,
         catalogLocation: product.location,
+        category: product.category,
+        itemKind: product.itemKind,
       });
       return suggestion.locationId;
     },
     [warehouseId, locations]
   );
+
+  const recommendedLocation = useMemo(() => {
+    if (!locationId || locationId === NEW_LOCATION) return null;
+    return locations.find((row) => row.id === locationId) ?? null;
+  }, [locationId, locations]);
 
   useEffect(() => {
     if (mode !== "entrada" || !warehouseId || locations.length === 0) return;
@@ -941,20 +961,27 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           warehouseId,
           locations,
           catalogLocation: selected.location,
+          category: selected.category,
+          itemKind: selected.itemKind,
         });
         if (cancelled) return;
+        setLocationSource(suggestion.source);
+        setShowAltLocation(false);
         if (suggestion.locationId) {
           setLocationId(suggestion.locationId);
           setNewLocationName("");
         } else {
           setLocationId(suggestion.pendingName ? NEW_LOCATION : "");
           setNewLocationName(suggestion.pendingName);
+          if (suggestion.pendingName) setShowAltLocation(true);
         }
         return;
       }
       if (!cancelled) {
         setLocationId("");
         setNewLocationName("");
+        setLocationSource("");
+        setShowAltLocation(false);
       }
     })();
     return () => {
@@ -1293,13 +1320,39 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       return;
     }
 
-    for (const line of pending) {
-      if (mode === "entrada" && (!line.locationId || line.locationId === NEW_LOCATION)) {
-        setError(
-          `${line.sku}: elige una ubicación o crea una nueva antes de registrar la entrada.`
-        );
-        return;
+    if (mode === "entrada") {
+      const resolved: typeof pending = [];
+      for (const line of pending) {
+        if (line.locationId && line.locationId !== NEW_LOCATION) {
+          resolved.push(line);
+          continue;
+        }
+        if (line.locationId === NEW_LOCATION) {
+          setError(
+            `${line.sku}: crea la ubicación nueva o elige otra antes de registrar.`
+          );
+          return;
+        }
+        const product = items.find((item) => item.id === line.productId);
+        const suggestion = product
+          ? await suggestEntryLocation({
+              productId: line.productId,
+              warehouseId,
+              locations,
+              catalogLocation: product.location,
+              category: product.category,
+              itemKind: product.itemKind,
+            })
+          : { locationId: "", pendingName: "", source: "none" as const };
+        resolved.push({
+          ...line,
+          locationId: suggestion.locationId || "",
+        });
       }
+      pending = resolved;
+    }
+
+    for (const line of pending) {
       if (mode === "entrada" && line.tracksLot && !line.lotNumber.trim()) {
         setError(`${line.sku}: exige número de lote.`);
         return;
@@ -1669,56 +1722,125 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                     )}
                   </label>
                   {mode === "entrada" ? (
-                    <label className="space-y-1.5">
-                      <span className="text-sm font-medium">
-                        Ubicación por defecto
-                      </span>
-                      <select
-                        value={locationId}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          setLocationId(value);
-                          if (value !== NEW_LOCATION) setNewLocationName("");
-                        }}
-                        disabled={!canWrite || !warehouseId}
-                        className={fieldClass}
-                      >
-                        {!warehouseId ? (
-                          <option value="">Elige un almacén primero</option>
-                        ) : locations.length === 0 ? (
-                          <option value="">Sin ubicaciones — crea una</option>
-                        ) : (
-                          <>
-                            <option value="">Elegir ubicación…</option>
-                            {physicalLocations.length > 0 ? (
-                              <optgroup label="Ubicaciones físicas">
-                                {physicalLocations.map((location) => (
-                                  <option key={location.id} value={location.id}>
-                                    {location.code} — {location.name}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            ) : null}
-                            {genericLocations.length > 0 ? (
-                              <optgroup label="Genéricas por categoría">
-                                {genericLocations.map((location) => (
-                                  <option key={location.id} value={location.id}>
-                                    {location.code} — {location.name}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            ) : null}
-                          </>
-                        )}
-                        {warehouseId ? (
-                          <option value={NEW_LOCATION}>+ Nueva ubicación…</option>
+                    <div className="space-y-3 rounded-xl border border-[#3B46A5]/25 bg-[#3B46A5]/5 p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Ubicación recomendada
+                          </p>
+                          {recommendedLocation ? (
+                            <>
+                              <p className="text-base font-semibold text-foreground">
+                                {recommendedLocation.code} —{" "}
+                                {recommendedLocation.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {locationSource === "stock"
+                                  ? "Donde el producto ya tiene existencia"
+                                  : locationSource === "catalog"
+                                    ? "Según la ficha del producto"
+                                    : locationSource === "category"
+                                      ? "Por categoría del producto"
+                                      : "Sugerida para esta entrada"}
+                              </p>
+                            </>
+                          ) : locationId === NEW_LOCATION && newLocationName ? (
+                            <p className="text-sm text-foreground">
+                              Nueva: {newLocationName}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              {selected
+                                ? "Se usará la ubicación de categoría al registrar."
+                                : "Elige un producto para sugerir ubicación."}
+                            </p>
+                          )}
+                        </div>
+                        {warehouseId && locations.length > 0 ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={!canWrite}
+                            onClick={() => {
+                              if (showAltLocation) {
+                                setShowAltLocation(false);
+                                if (selected && warehouseId) {
+                                  void suggestEntryLocation({
+                                    productId: selected.id,
+                                    warehouseId,
+                                    locations,
+                                    catalogLocation: selected.location,
+                                    category: selected.category,
+                                    itemKind: selected.itemKind,
+                                  }).then((suggestion) => {
+                                    setLocationSource(suggestion.source);
+                                    if (suggestion.locationId) {
+                                      setLocationId(suggestion.locationId);
+                                      setNewLocationName("");
+                                    }
+                                  });
+                                }
+                              } else {
+                                setShowAltLocation(true);
+                              }
+                            }}
+                          >
+                            {showAltLocation
+                              ? "Usar recomendada"
+                              : "Cambiar ubicación"}
+                          </Button>
                         ) : null}
-                      </select>
-                      <span className="block text-xs text-muted-foreground">
-                        Al escanear se pone la ubicación que el producto ya
-                        tiene. Si no tiene, escríbela en la línea.
-                      </span>
-                    </label>
+                      </div>
+                      {showAltLocation ? (
+                        <div className="space-y-2">
+                          <label className="block space-y-1.5">
+                            <span className="text-sm font-medium">
+                              Elegir otra ubicación
+                            </span>
+                            <select
+                              value={locationId}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                setLocationId(value);
+                                setLocationSource("");
+                                if (value !== NEW_LOCATION) setNewLocationName("");
+                              }}
+                              disabled={!canWrite || !warehouseId}
+                              className={fieldClass}
+                            >
+                              <option value="">Automática (categoría)</option>
+                              {physicalLocations.length > 0 ? (
+                                <optgroup label="Ubicaciones físicas">
+                                  {physicalLocations.map((location) => (
+                                    <option key={location.id} value={location.id}>
+                                      {location.code} — {location.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              ) : null}
+                              {genericLocations.length > 0 ? (
+                                <optgroup label="Genéricas por categoría">
+                                  {genericLocations.map((location) => (
+                                    <option key={location.id} value={location.id}>
+                                      {location.code} — {location.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              ) : null}
+                              <option value={NEW_LOCATION}>
+                                + Nueva ubicación…
+                              </option>
+                            </select>
+                          </label>
+                        </div>
+                      ) : null}
+                      <p className="text-xs text-muted-foreground">
+                        No hace falta elegirla en cada alta: se reutiliza la del
+                        stock o la de la categoría. Cámbiala solo si va a otro
+                        lugar.
+                      </p>
+                    </div>
                   ) : (
                     <div className="space-y-2">
                       <button
@@ -2637,9 +2759,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                                   aria-label={`Ubicación ${line.sku}`}
                                 >
                                   <option value="">
-                                    {line.locationId
-                                      ? "Elegir…"
-                                      : "Sin ubicación registrada"}
+                                    Automática (categoría)
                                   </option>
                                   {physicalLocations.map((location) => (
                                     <option key={location.id} value={location.id}>
