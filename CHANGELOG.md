@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.17
+
+- Inventario: carga completa de lotes/caducidades (paginación >1000 filas) para que productos como Ventstar no queden sin detalle.
+
 ## 1.1.16
 
 - Entradas: sugiere ubicación (stock, ficha o categoría) y permite cambiarla; ya no obliga a elegirla en cada alta.

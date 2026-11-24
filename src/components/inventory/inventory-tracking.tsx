@@ -15,7 +15,7 @@ import { SortableTable } from "@/components/ui/sortable-table";
 export type TrackingDateMode = "expiry" | "manufacture" | "both" | "auto";
 
 const EXPIRY_WARNING_DAYS = 90;
-const SUMMARY_LOTS = 2;
+const SUMMARY_LOTS = 3;
 
 export function trackingColumnLabel(mode: TrackingDateMode) {
   if (mode === "expiry") return "Lote / caducidad";
@@ -179,6 +179,29 @@ export function TrackingSummary({ item, tracking, mode }: TrackingProps) {
     );
   }
 
+  if (item.tracksLot && (item.expiryDate || item.manufacturedAt)) {
+    return (
+      <div className="text-xs">
+        <p className="font-medium text-foreground">Lote en ficha</p>
+        <p>
+          <LotDate
+            expiryDate={item.expiryDate}
+            manufacturedAt={item.manufacturedAt}
+            mode={mode}
+          />
+        </p>
+      </div>
+    );
+  }
+
+  if (item.tracksLot && item.quantity > 0) {
+    return (
+      <span className="text-xs text-amber-700 dark:text-amber-300">
+        Con existencia · sin detalle de lote cargado
+      </span>
+    );
+  }
+
   return <span className="text-xs text-muted-foreground">—</span>;
 }
 
@@ -280,6 +303,22 @@ export function TrackingDetail({
         : "Caducidad / fabricación";
 
   if (lots.length === 0 && serials.length === 0) {
+    if (item.tracksLot && (item.expiryDate || item.manufacturedAt)) {
+      return (
+        <div className="space-y-1 text-sm">
+          <p className="text-muted-foreground">
+            No hay desglose de lotes en balances; se muestra la fecha de la ficha.
+          </p>
+          <p>
+            <LotDate
+              expiryDate={item.expiryDate}
+              manufacturedAt={item.manufacturedAt}
+              mode={mode}
+            />
+          </p>
+        </div>
+      );
+    }
     return (
       <p className="text-sm text-muted-foreground">
         {item.serialNumber

@@ -185,6 +185,25 @@ export function hasStockIn(stock: InventoryStock | undefined, warehouseId: strin
   );
 }
 
+function asRow(value: unknown): Row {
+  if (Array.isArray(value)) return (value[0] as Row) || {};
+  return (value as Row) || {};
+}
+
+/** Supabase corta en 1000 filas; paginamos para no perder lotes/series. */
+async function fetchAllRows(buildQuery: () => any): Promise<Row[]> {
+  const pageSize = 1000;
+  const rows: Row[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+    if (error) throw new Error(error.message);
+    const chunk = (data ?? []) as Row[];
+    rows.push(...chunk);
+    if (chunk.length < pageSize) break;
+  }
+  return rows;
+}
+
 /**
  * Existencias (con almacén, ubicación y lote) y números de serie vigentes de todos los
  * artículos (de una categoría, o de todo el catálogo), agrupados por producto.
@@ -193,48 +212,48 @@ export async function getInventoryStock(
   category?: InventoryCategoryId,
   productId?: string
 ): Promise<Map<string, InventoryStock>> {
-  let balancesQuery = db
-    .from("inventory_balances")
-    .select(
-      "product_id, qty_on_hand, lot:lots(id, lot_number, expiry_date, manufactured_at, notes, image_path, image_url, gallery_images), warehouse:warehouses(id, code, name), location:locations(id, code, name), item:inventory_items!inner(category)"
-    )
-    .gt("qty_on_hand", 0);
-  let serialsQuery = db
-    .from("serial_numbers")
-    .select(
-      "id, product_id, serial_number, inventory_number, status, warehouse_id, notes, manufactured_at, last_maintenance_date, next_maintenance_date, warranty_start, warranty_end, image_path, image_url, gallery_images, warehouse:warehouses(code), location:locations(name), item:inventory_items!inner(category)"
-    )
-    .neq("status", "baja")
-    .order("serial_number", { ascending: true });
-  if (category) {
-    balancesQuery = balancesQuery.eq("item.category", category);
-    serialsQuery = serialsQuery.eq("item.category", category);
-  }
-  if (productId) {
-    balancesQuery = balancesQuery.eq("product_id", productId);
-    serialsQuery = serialsQuery.eq("product_id", productId);
-  }
-  const [balancesRes, serialsRes] = await Promise.all([
-    balancesQuery,
-    serialsQuery,
+  const balanceSelect =
+    "product_id, qty_on_hand, lot:lots(id, lot_number, expiry_date, manufactured_at, notes, image_path, image_url, gallery_images), warehouse:warehouses(id, code, name), location:locations(id, code, name), item:inventory_items!inner(category)";
+  const serialSelect =
+    "id, product_id, serial_number, inventory_number, status, warehouse_id, notes, manufactured_at, last_maintenance_date, next_maintenance_date, warranty_start, warranty_end, image_path, image_url, gallery_images, warehouse:warehouses(code), location:locations(name), item:inventory_items!inner(category)";
+
+  const [balanceRows, serialRows] = await Promise.all([
+    fetchAllRows(() => {
+      let query = db
+        .from("inventory_balances")
+        .select(balanceSelect)
+        .gt("qty_on_hand", 0)
+        .order("product_id", { ascending: true });
+      if (category) query = query.eq("item.category", category);
+      if (productId) query = query.eq("product_id", productId);
+      return query;
+    }),
+    fetchAllRows(() => {
+      let query = db
+        .from("serial_numbers")
+        .select(serialSelect)
+        .neq("status", "baja")
+        .order("serial_number", { ascending: true });
+      if (category) query = query.eq("item.category", category);
+      if (productId) query = query.eq("product_id", productId);
+      return query;
+    }),
   ]);
-  if (balancesRes.error) throw new Error(balancesRes.error.message);
-  if (serialsRes.error) throw new Error(serialsRes.error.message);
 
   const stock = new Map<string, InventoryStock>();
-  const entry = (productId: string) => {
-    let current = stock.get(productId);
+  const entry = (id: string) => {
+    let current = stock.get(id);
     if (!current) {
       current = { balances: [], serials: [] };
-      stock.set(productId, current);
+      stock.set(id, current);
     }
     return current;
   };
 
-  for (const row of (balancesRes.data ?? []) as Row[]) {
-    const lot = (row.lot ?? {}) as Row;
-    const warehouse = (row.warehouse ?? {}) as Row;
-    const location = (row.location ?? {}) as Row;
+  for (const row of balanceRows) {
+    const lot = asRow(row.lot);
+    const warehouse = asRow(row.warehouse);
+    const location = asRow(row.location);
     entry(str(row.product_id)).balances.push({
       warehouseId: str(warehouse.id),
       warehouseCode: str(warehouse.code),
@@ -258,9 +277,9 @@ export async function getInventoryStock(
     });
   }
 
-  for (const row of (serialsRes.data ?? []) as Row[]) {
-    const warehouse = (row.warehouse ?? {}) as Row;
-    const location = (row.location ?? {}) as Row;
+  for (const row of serialRows) {
+    const warehouse = asRow(row.warehouse);
+    const location = asRow(row.location);
     entry(str(row.product_id)).serials.push({
       id: str(row.id),
       serialNumber: str(row.serial_number),
