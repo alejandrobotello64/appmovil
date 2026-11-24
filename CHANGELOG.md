@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.18
+
+- Órdenes de servicio: menú PDF completo (sin recorte); checklists de diagnóstico/pruebas sugieren y aplican la plantilla correcta del equipo.
+
 ## 1.1.17
 
 - Inventario: carga completa de lotes/caducidades (paginación >1000 filas) para que productos como Ventstar no queden sin detalle.

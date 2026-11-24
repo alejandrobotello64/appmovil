@@ -1,7 +1,16 @@
 "use client";
 import { Ui } from "@/components/ui/ui-text";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
+import { createPortal } from "react-dom";
 import {
   Camera,
   FileDown,
@@ -294,6 +303,10 @@ export function ServiceOrdersPanel({
   const [note, setNote] = useState("");
   const [imageStage, setImageStage] = useState<ImageStage>("recepcion");
   const [docsOpen, setDocsOpen] = useState(false);
+  const [docsMenuPos, setDocsMenuPos] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   const [linkedEqId, setLinkedEqId] = useState("");
   const [linkedRelation, setLinkedRelation] = useState<string>(
     LINKED_EQUIPMENT_RELATIONS[1]?.id ?? "Monitor asociado"
@@ -311,6 +324,8 @@ export function ServiceOrdersPanel({
   >([]);
   const [orderSurveys, setOrderSurveys] = useState<QualitySurvey[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const docsButtonRef = useRef<HTMLDivElement>(null);
+  const docsMenuRef = useRef<HTMLDivElement>(null);
   const openedFromQuery = useRef<string | null>(null);
   const session = getSession();
   const actor = session?.username ?? "usuario";
@@ -525,6 +540,75 @@ export function ServiceOrdersPanel({
           ?.id ?? null,
     };
   }
+
+  function patchEquipmentFields(
+    patch: Partial<
+      Pick<
+        ServiceOrderInput,
+        "equipmentName" | "equipmentBrand" | "equipmentModel"
+      >
+    >
+  ) {
+    setForm((f) => {
+      const next = { ...f, ...patch };
+      const tpl = templatesForEquipment(
+        next.equipmentName ?? "",
+        next.equipmentBrand ?? "",
+        next.equipmentModel ?? ""
+      );
+      return {
+        ...next,
+        checklistTemplateId: tpl.checklistTemplateId,
+        functionTestTemplateId: tpl.functionTestTemplateId,
+      };
+    });
+  }
+
+  useLayoutEffect(() => {
+    if (!docsOpen) {
+      setDocsMenuPos(null);
+      return;
+    }
+    function updateDocsMenuPosition() {
+      const button = docsButtonRef.current;
+      if (!button) return;
+      const rect = button.getBoundingClientRect();
+      setDocsMenuPos({
+        top: rect.bottom + 8,
+        right: Math.max(8, window.innerWidth - rect.right),
+      });
+    }
+    updateDocsMenuPosition();
+    window.addEventListener("resize", updateDocsMenuPosition);
+    window.addEventListener("scroll", updateDocsMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateDocsMenuPosition);
+      window.removeEventListener("scroll", updateDocsMenuPosition, true);
+    };
+  }, [docsOpen]);
+
+  useEffect(() => {
+    if (!docsOpen) return;
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (
+        docsButtonRef.current?.contains(target) ||
+        docsMenuRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setDocsOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setDocsOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [docsOpen]);
 
   function openReception(asQuote: boolean) {
     const defaults = templatesForEquipment("", "", "");
@@ -1293,7 +1377,9 @@ export function ServiceOrdersPanel({
             <input
               className={fieldClass}
               value={form.equipmentName ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, equipmentName: e.target.value }))}
+              onChange={(e) =>
+                patchEquipmentFields({ equipmentName: e.target.value })
+              }
             />
           </label>
           <label className="block text-sm">
@@ -1303,13 +1389,17 @@ export function ServiceOrdersPanel({
                 className={fieldClass}
                 placeholder="Marca"
                 value={form.equipmentBrand ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, equipmentBrand: e.target.value }))}
+                onChange={(e) =>
+                  patchEquipmentFields({ equipmentBrand: e.target.value })
+                }
               />
               <input
                 className={fieldClass}
                 placeholder="Modelo"
                 value={form.equipmentModel ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, equipmentModel: e.target.value }))}
+                onChange={(e) =>
+                  patchEquipmentFields({ equipmentModel: e.target.value })
+                }
               />
             </div>
           </label>
@@ -1478,6 +1568,27 @@ export function ServiceOrdersPanel({
       selected.checklist,
       "funcionamiento"
     );
+    const equipmentKind = inferEquipmentKind(
+      selected.equipmentName,
+      selected.equipmentBrand,
+      selected.equipmentModel
+    );
+    const suggestedVerification =
+      preferChecklistTemplate(
+        verificationTemplates,
+        equipmentKind,
+        selected.equipmentName,
+        selected.equipmentBrand,
+        selected.equipmentModel
+      ) ?? null;
+    const suggestedFunction =
+      preferChecklistTemplate(
+        functionTemplates,
+        equipmentKind,
+        selected.equipmentName,
+        selected.equipmentBrand,
+        selected.equipmentModel
+      ) ?? null;
     const tabs: { id: DetailTab; label: string }[] = [
       { id: "recepcion", label: "Recepción" },
       { id: "diagnostico", label: `Diagnóstico (${verificationItems.length})` },
@@ -1525,8 +1636,8 @@ export function ServiceOrdersPanel({
           </p>
         ) : null}
 
-        <div className="flex w-full max-w-full min-w-0 flex-wrap items-start justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
-          <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="flex w-full max-w-full min-w-0 flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
+          <div className="min-w-0 flex-1">
             <button
               type="button"
               className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -1557,57 +1668,73 @@ export function ServiceOrdersPanel({
             ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className={cn("relative", !canExport && "hidden")}>
-              <Button type="button" variant="outline" onClick={() => setDocsOpen((v) => !v)}>
+            <div ref={docsButtonRef} className={cn(!canExport && "hidden")}>
+              <Button
+                type="button"
+                variant="outline"
+                aria-expanded={docsOpen}
+                onClick={() => setDocsOpen((v) => !v)}
+              >
                 <FileDown className="size-4" /> Opciones PDF
+                <ChevronDown className="size-3.5 opacity-70" />
               </Button>
-              {docsOpen && canExport ? (
-                <div className="absolute right-0 z-20 mt-1 w-72 rounded-xl border border-border bg-card p-2 shadow-lg">
-                  <button
-                    type="button"
-                    className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-                    onClick={() => {
-                      downloadServiceQuotePdf(selected);
-                      setDocsOpen(false);
-                    }}
-                  >
-                    Cotización para cliente
-                  </button>
-                  <button
-                    type="button"
-                    className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-                    onClick={() => {
-                      downloadServiceWorkOrderPdf(selected);
-                      setDocsOpen(false);
-                    }}
-                  >
-                    Orden de trabajo / calidad
-                  </button>
-                  <button
-                    type="button"
-                    className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-                    onClick={() => {
-                      void downloadServiceHospitalPdf(selected);
-                      setDocsOpen(false);
-                    }}
-                  >
-                    <span className="block">Orden de servicio</span>
-                    <span className="block text-[11px] font-normal text-muted-foreground">
-                      Para el hospital · firmas en blanco
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-                    onClick={() => {
-                      downloadServiceDeliveryPdf(selected);
-                      setDocsOpen(false);
-                    }}
-                  >
-                    Acta de entrega
-                  </button>
-                </div>
-              ) : null}
+              {docsOpen && canExport && docsMenuPos && typeof document !== "undefined"
+                ? createPortal(
+                    <div
+                      ref={docsMenuRef}
+                      className="fixed z-[120] w-72 rounded-xl border border-border bg-card p-2 shadow-lg"
+                      style={{
+                        top: docsMenuPos.top,
+                        right: docsMenuPos.right,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          downloadServiceQuotePdf(selected);
+                          setDocsOpen(false);
+                        }}
+                      >
+                        Cotización para cliente
+                      </button>
+                      <button
+                        type="button"
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          downloadServiceWorkOrderPdf(selected);
+                          setDocsOpen(false);
+                        }}
+                      >
+                        Orden de trabajo / calidad
+                      </button>
+                      <button
+                        type="button"
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          void downloadServiceHospitalPdf(selected);
+                          setDocsOpen(false);
+                        }}
+                      >
+                        <span className="block">Orden de servicio</span>
+                        <span className="block text-[11px] font-normal text-muted-foreground">
+                          Para el hospital · firmas en blanco
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          downloadServiceDeliveryPdf(selected);
+                          setDocsOpen(false);
+                        }}
+                      >
+                        Acta de entrega
+                      </button>
+                    </div>,
+                    document.body
+                  )
+                : null}
             </div>
             {canEdit ? (
               <Button
@@ -2005,7 +2132,11 @@ export function ServiceOrdersPanel({
                     </span>
                     <select
                       className={fieldClass}
-                      value={form.checklistTemplateId ?? ""}
+                      value={
+                        form.checklistTemplateId ??
+                        suggestedVerification?.id ??
+                        ""
+                      }
                       disabled={!canEdit}
                       onChange={(e) => {
                         const id = e.target.value;
@@ -2017,6 +2148,7 @@ export function ServiceOrdersPanel({
                       {verificationTemplates.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.name}
+                          {t.points?.length ? ` (${t.points.length})` : ""}
                         </option>
                       ))}
                     </select>
@@ -2037,10 +2169,32 @@ export function ServiceOrdersPanel({
                   />
                 </label>
                 {verificationItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Aplica una plantilla de verificación para revisar el estado físico
-                    del equipo (carcasa, cables, accesorios).
-                  </p>
+                  <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900 dark:bg-amber-950/20">
+                    <p className="text-sm text-amber-950 dark:text-amber-100">
+                      Esta orden aún no tiene puntos de verificación. Aplica la
+                      plantilla del equipo para cargar el checklist completo.
+                    </p>
+                    {canEdit && suggestedVerification ? (
+                      <Button
+                        type="button"
+                        className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                        onClick={() =>
+                          void onApplyTemplate(suggestedVerification.id)
+                        }
+                      >
+                        <ClipboardCheck className="size-4" />
+                        Aplicar {suggestedVerification.name}
+                        {suggestedVerification.points?.length
+                          ? ` (${suggestedVerification.points.length} puntos)`
+                          : ""}
+                      </Button>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Elige una plantilla arriba para revisar el estado físico
+                        del equipo.
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {verificationItems.map((item) => (
@@ -2251,7 +2405,9 @@ export function ServiceOrdersPanel({
                     </span>
                     <select
                       className={fieldClass}
-                      value={form.functionTestTemplateId ?? ""}
+                      value={
+                        form.functionTestTemplateId ?? suggestedFunction?.id ?? ""
+                      }
                       disabled={!canEdit}
                       onChange={(e) => {
                         const id = e.target.value;
@@ -2266,15 +2422,32 @@ export function ServiceOrdersPanel({
                       {functionTemplates.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.name}
+                          {t.points?.length ? ` (${t.points.length})` : ""}
                         </option>
                       ))}
                     </select>
                   </label>
                 </div>
                 {functionItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Aplica una plantilla o agrega un punto con su intervalo válido.
-                  </p>
+                  <div className="space-y-3 rounded-xl border border-teal-200 bg-teal-50/70 p-4 dark:border-teal-900 dark:bg-teal-950/20">
+                    <p className="text-sm text-teal-950 dark:text-teal-100">
+                      No hay pruebas cargadas. Aplica la plantilla sugerida para
+                      este equipo.
+                    </p>
+                    {canEdit && suggestedFunction ? (
+                      <Button
+                        type="button"
+                        className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+                        onClick={() => void onApplyTemplate(suggestedFunction.id)}
+                      >
+                        <Activity className="size-4" />
+                        Aplicar {suggestedFunction.name}
+                        {suggestedFunction.points?.length
+                          ? ` (${suggestedFunction.points.length} puntos)`
+                          : ""}
+                      </Button>
+                    ) : null}
+                  </div>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
                     {functionItems.map((item) => {

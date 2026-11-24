@@ -585,13 +585,36 @@ export function inferEquipmentKind(
   if (/esfigmo|b[aá]scula|antropometr|seca\b|7670|ds44/.test(t)) {
     return "antropometria";
   }
+  if (/concentrad|everflo|ox[ií]geno\s*port/.test(t)) return "alto_flujo";
   if (/rayos|ultrason|imagen|rx\b/.test(t)) return "imagen";
   return "general";
 }
 
+const CANONICAL_CHECKLIST_CODE: Partial<Record<EquipmentKind, RegExp>> = {
+  general: /^(pruebas_funcionamiento_)?general$/,
+  monitor: /monitor_de_signos_vitales|pruebas_monitor_de_signos_vitales/,
+  fetal: /^(pruebas_)?fetal$/,
+  ventilador: /^(pruebas_)?ventilador$/,
+  anestesia: /maquina_de_anestesia|prueba_maquina_anestesia/,
+  vaporizador: /^(pruebas_)?vaporizador$/,
+  desfibrilador: /^(pruebas_)?desfibrilador$/,
+  bomba_infusion: /^(pruebas_)?bomba_infusion$/,
+  autoclave: /^(pruebas_)?autoclave$/,
+  ecg: /^(pruebas_)?ecg$/,
+  imagen: /^(pruebas_)?imagen$/,
+  cama: /cama_hospitalaria|pruebas_cama_hospitalaria/,
+  mesa_quirurgica: /^(pruebas_)?mesa_quirurgica$/,
+  lampara: /^(pruebas_)?lampara$/,
+  alto_flujo: /^(pruebas_)?alto_flujo$/,
+  calentamiento: /^(pruebas_)?calentamiento$/,
+  incubadora: /^(pruebas_)?incubadora$/,
+  antropometria: /^(pruebas_)?antropometria$/,
+  electrocirugia: /^(pruebas_)?electrocirugia$/,
+};
+
 /** Elige la plantilla más adecuada por familia y, si aplica, por modelo. */
 export function preferChecklistTemplate<
-  T extends { id: string; code: string; equipmentKind: string },
+  T extends { id: string; code: string; equipmentKind: string; name?: string },
 >(
   templates: T[],
   kind: EquipmentKind,
@@ -611,17 +634,26 @@ export function preferChecklistTemplate<
     if (hit) return hit;
   }
   if (/p8040|8040/.test(search)) {
-    const hit = pool.find((tpl) => /8040|camilla_8040|pruebas_camilla_8040/.test(tpl.code));
+    const hit = pool.find((tpl) =>
+      /8040|camilla_8040|pruebas_camilla_8040/.test(tpl.code)
+    );
     if (hit) return hit;
   }
-  if (kind === "cama") {
-    const generic = pool.find((tpl) =>
-      /cama_hospitalaria|pruebas_cama_hospitalaria/.test(tpl.code)
-    );
-    if (generic) return generic;
+  if (/dr[aäâ]ger|evita|babylog/.test(search)) {
+    const hit = pool.find((tpl) => /drager/.test(`${tpl.code} ${tpl.name ?? ""}`));
+    if (hit) return hit;
   }
 
-  return pool[0] ?? templates[0];
+  const canonical = CANONICAL_CHECKLIST_CODE[kind];
+  if (canonical) {
+    const hit = pool.find((tpl) => canonical.test(tpl.code));
+    if (hit) return hit;
+  }
+
+  const withoutBrandVariant = pool.find(
+    (tpl) => !/drager|affinity|8040|camilla_8040/.test(tpl.code)
+  );
+  return withoutBrandVariant ?? pool[0] ?? templates[0];
 }
 
 export function parseOptionalNumber(value: string): number | null {
