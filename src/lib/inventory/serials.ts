@@ -100,3 +100,17 @@ export async function updateSerialUnit(serialId: string, input: SerialUnitInput)
     if (movementsError) throw new Error(movementsError.message);
   }
 }
+
+/**
+ * Elimina una serie de la ficha. Rechaza estados de movimiento (reservado /
+ * tránsito / instalado). Si está disponible con stock, registra ajuste_faltante.
+ */
+export async function deleteSerialUnit(serialId: string, createdBy: string) {
+  const actor = createdBy.trim();
+  if (!actor) throw new Error("Se requiere un usuario responsable.");
+  const { error } = await db.rpc("delete_inventory_serial", {
+    p_serial_id: serialId,
+    p_created_by: actor,
+  });
+  if (error) throw new Error(error.message);
+}

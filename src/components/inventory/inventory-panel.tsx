@@ -1931,6 +1931,7 @@ export function InventoryPanel({
           productName={viewingItem.name}
           serial={openSerial}
           canEdit={itemCan(viewingItem, "edit")}
+          actor={session?.username ?? "sistema"}
           onClose={() => setOpenSerial(null)}
           onChanged={() => void refreshItems()}
         />
@@ -1943,6 +1944,7 @@ export function InventoryPanel({
           lot={openLot}
           unit={viewingItem.unit}
           canEdit={itemCan(viewingItem, "edit")}
+          actor={session?.username ?? "sistema"}
           onClose={() => setOpenLot(null)}
           onChanged={() => void refreshItems()}
         />

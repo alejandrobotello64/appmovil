@@ -49,3 +49,17 @@ export async function updateLotUnit(lotId: string, input: LotUnitInput) {
     .eq("id", lotId);
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Elimina un lote de la ficha. Si aún hay existencia, registra ajuste_faltante
+ * y luego borra balances y la fila del lote.
+ */
+export async function deleteLotUnit(lotId: string, createdBy: string) {
+  const actor = createdBy.trim();
+  if (!actor) throw new Error("Se requiere un usuario responsable.");
+  const { error } = await db.rpc("delete_inventory_lot", {
+    p_lot_id: lotId,
+    p_created_by: actor,
+  });
+  if (error) throw new Error(error.message);
+}

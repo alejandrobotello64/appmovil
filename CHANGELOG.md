@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.20
+
+- Inventario: desde la ficha se puede eliminar un lote o una serie (con ajuste de faltante si aún hay existencia).
+
 ## 1.1.19
 
 - Órdenes de servicio: los checklists ya no se cortan en 9/14 (paginación >1000 filas al cargar puntos de revisión).

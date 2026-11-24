@@ -2,13 +2,14 @@
 import { Ui } from "@/components/ui/ui-text";
 
 import { useState, type ReactNode } from "react";
-import { Loader2, Lock, Save } from "lucide-react";
+import { Loader2, Lock, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { UnitPhotoGallery, useUnitImages } from "@/components/inventory/unit-photo-gallery";
-import { updateLotUnit, type LotUnitInput } from "@/lib/inventory/lots";
+import { deleteLotUnit, updateLotUnit, type LotUnitInput } from "@/lib/inventory/lots";
 import {
   EDITABLE_SERIAL_STATUSES,
+  deleteSerialUnit,
   isEditableSerialStatus,
   updateSerialUnit,
   type SerialUnitInput,
@@ -79,26 +80,48 @@ function DialogFooter({
   disabled,
   onCancel,
   onSave,
+  onDelete,
+  deleteLabel = "Eliminar",
 }: {
   canEdit: boolean;
   saving: boolean;
   disabled: boolean;
   onCancel: () => void;
   onSave: () => void;
+  onDelete?: () => void;
+  deleteLabel?: string;
 }) {
   if (!canEdit) return null;
   return (
-    <div className="flex justify-end gap-2 border-t border-border pt-4">
-      <Button type="button" variant="outline" onClick={onCancel} disabled={saving}><Ui>Cancelar</Ui></Button>
-      <Button
-        type="button"
-        onClick={onSave}
-        disabled={disabled}
-        className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
-      >
-        {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-        Guardar cambios
-      </Button>
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+      {onDelete ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="border-destructive/40 text-destructive hover:bg-destructive/10"
+          onClick={onDelete}
+          disabled={disabled}
+        >
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+          {deleteLabel}
+        </Button>
+      ) : (
+        <span />
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
+          <Ui>Cancelar</Ui>
+        </Button>
+        <Button
+          type="button"
+          onClick={onSave}
+          disabled={disabled}
+          className="bg-[linear-gradient(135deg,#00BFFF,#3B46A5)] text-white"
+        >
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          Guardar cambios
+        </Button>
+      </div>
     </div>
   );
 }
@@ -106,6 +129,7 @@ function DialogFooter({
 type UnitDialogBaseProps = {
   productName: string;
   canEdit: boolean;
+  actor: string;
   onClose: () => void;
   /** Se llama tras cualquier cambio guardado para recargar existencias. */
   onChanged: () => void;
@@ -115,6 +139,7 @@ export function SerialUnitDialog({
   productName,
   serial,
   canEdit,
+  actor,
   onClose,
   onChanged,
 }: UnitDialogBaseProps & { serial: InventorySerial }) {
@@ -140,6 +165,9 @@ export function SerialUnitDialog({
   const [error, setError] = useState("");
   const busy = saving || photos.busy;
   const locked = !canEdit || busy;
+  const canDelete =
+    canEdit &&
+    !["reservado", "en_transito", "instalado"].includes(serial.status);
 
   const set = <K extends keyof SerialUnitInput>(key: K, value: SerialUnitInput[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -153,6 +181,27 @@ export function SerialUnitDialog({
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar la pieza.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (
+      !confirm(
+        `¿Eliminar la serie ${serial.serialNumber}? Si tiene existencia, se registrará un ajuste de faltante.`
+      )
+    ) {
+      return;
+    }
+    try {
+      setError("");
+      setSaving(true);
+      await deleteSerialUnit(serial.id, actor);
+      onChanged();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar la serie.");
     } finally {
       setSaving(false);
     }
@@ -276,6 +325,8 @@ export function SerialUnitDialog({
           disabled={busy}
           onCancel={onClose}
           onSave={() => void handleSave()}
+          onDelete={canDelete ? () => void handleDelete() : undefined}
+          deleteLabel="Eliminar serie"
         />
       </div>
     </ModalShell>
@@ -287,6 +338,7 @@ export function LotUnitDialog({
   lot,
   unit,
   canEdit,
+  actor,
   onClose,
   onChanged,
 }: UnitDialogBaseProps & { lot: InventoryLotStock; unit: string }) {
@@ -326,6 +378,26 @@ export function LotUnitDialog({
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar el lote.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!details) return;
+    const stockNote =
+      lot.quantity > 0
+        ? ` Tiene ${lot.quantity} ${unit} en existencia; se registrará un ajuste de faltante.`
+        : "";
+    if (!confirm(`¿Eliminar el lote ${lot.lotNumber}?${stockNote}`)) return;
+    try {
+      setError("");
+      setSaving(true);
+      await deleteLotUnit(details.id, actor);
+      onChanged();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el lote.");
     } finally {
       setSaving(false);
     }
@@ -400,6 +472,8 @@ export function LotUnitDialog({
           disabled={busy}
           onCancel={onClose}
           onSave={() => void handleSave()}
+          onDelete={editable ? () => void handleDelete() : undefined}
+          deleteLabel="Eliminar lote"
         />
       </div>
     </ModalShell>
