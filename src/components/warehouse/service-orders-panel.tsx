@@ -411,12 +411,35 @@ export function ServiceOrdersPanel({
       setOrderSurveys([]);
       return;
     }
+    let active = true;
+    void getServiceOrder(selectedId)
+      .then((fresh) => {
+        if (!active || !fresh) return;
+        setOrders((rows) => {
+          const exists = rows.some((row) => row.id === fresh.id);
+          return exists
+            ? rows.map((row) => (row.id === fresh.id ? fresh : row))
+            : [fresh, ...rows];
+        });
+      })
+      .catch(() => {});
     void getServiceOrderRequisitions({ serviceOrderId: selectedId })
-      .then(setOrderRequisitions)
-      .catch(() => setOrderRequisitions([]));
+      .then((rows) => {
+        if (active) setOrderRequisitions(rows);
+      })
+      .catch(() => {
+        if (active) setOrderRequisitions([]);
+      });
     void getQualitySurveysForOrder(selectedId)
-      .then(setOrderSurveys)
-      .catch(() => setOrderSurveys([]));
+      .then((rows) => {
+        if (active) setOrderSurveys(rows);
+      })
+      .catch(() => {
+        if (active) setOrderSurveys([]);
+      });
+    return () => {
+      active = false;
+    };
   }, [selectedId, selected?.updatedAt]);
 
   useEffect(() => {

@@ -49,6 +49,23 @@ const db = supabase as any;
 
 const MEDIA_BUCKET = "service-order-media";
 
+/** Supabase corta en 1000 filas; paginamos relaciones de órdenes. */
+async function fetchAllRows(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  buildQuery: () => any
+): Promise<Record<string, unknown>[]> {
+  const pageSize = 1000;
+  const rows: Record<string, unknown>[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+    if (error) throw new Error(error.message);
+    const chunk = (data ?? []) as Record<string, unknown>[];
+    rows.push(...chunk);
+    if (chunk.length < pageSize) break;
+  }
+  return rows;
+}
+
 const ORDER_LOCKED_MESSAGE =
   "Esta orden está cerrado y ya no se puede modificar.";
 const TEMPLATE_LOCKED_MESSAGE =
@@ -984,69 +1001,80 @@ async function hydrateOrders(
   if (!orderRows.length) return [];
   const ids = orderRows.map((row) => row.id);
 
-  const [linesRes, checkRes, imagesRes, eventsRes, docsRes, linkedRes, instRes] =
+  const [linesData, checkData, imagesData, eventsData, docsData, linkedData, instData] =
     await Promise.all([
-    db
-      .from("service_order_lines")
-      .select("*, product:inventory_items(sku, name, model)")
-      .in("service_order_id", ids)
-      .order("sort_order", { ascending: true }),
-    db
-      .from("service_order_checklist")
-      .select("*")
-      .in("service_order_id", ids)
-      .order("sort_order", { ascending: true }),
-    db
-      .from("service_order_images")
-      .select("*")
-      .in("service_order_id", ids)
-      .order("created_at", { ascending: false }),
-    db
-      .from("service_order_events")
-      .select("*")
-      .in("service_order_id", ids)
-      .order("created_at", { ascending: false }),
-    db
-      .from("service_order_documents")
-      .select("*")
-      .in("service_order_id", ids)
-      .order("created_at", { ascending: false }),
-    db
-      .from("service_order_linked_equipment")
-      .select("*")
-      .in("service_order_id", ids)
-      .order("sort_order", { ascending: true }),
-    db
-      .from("service_order_instruments")
-      .select("*")
-      .in("service_order_id", ids)
-      .order("sort_order", { ascending: true }),
-  ]);
-
-  if (linesRes.error) throw new Error(linesRes.error.message);
-  if (checkRes.error) throw new Error(checkRes.error.message);
-  if (imagesRes.error) throw new Error(imagesRes.error.message);
-  if (eventsRes.error) throw new Error(eventsRes.error.message);
-  if (docsRes.error) throw new Error(docsRes.error.message);
-  if (linkedRes.error) throw new Error(linkedRes.error.message);
-  if (instRes.error) throw new Error(instRes.error.message);
+      fetchAllRows(() =>
+        db
+          .from("service_order_lines")
+          .select("*, product:inventory_items(sku, name, model)")
+          .in("service_order_id", ids)
+          .order("sort_order", { ascending: true })
+      ),
+      fetchAllRows(() =>
+        db
+          .from("service_order_checklist")
+          .select("*")
+          .in("service_order_id", ids)
+          .order("sort_order", { ascending: true })
+          .order("id", { ascending: true })
+      ),
+      fetchAllRows(() =>
+        db
+          .from("service_order_images")
+          .select("*")
+          .in("service_order_id", ids)
+          .order("created_at", { ascending: false })
+      ),
+      fetchAllRows(() =>
+        db
+          .from("service_order_events")
+          .select("*")
+          .in("service_order_id", ids)
+          .order("created_at", { ascending: false })
+      ),
+      fetchAllRows(() =>
+        db
+          .from("service_order_documents")
+          .select("*")
+          .in("service_order_id", ids)
+          .order("created_at", { ascending: false })
+      ),
+      fetchAllRows(() =>
+        db
+          .from("service_order_linked_equipment")
+          .select("*")
+          .in("service_order_id", ids)
+          .order("sort_order", { ascending: true })
+      ),
+      fetchAllRows(() =>
+        db
+          .from("service_order_instruments")
+          .select("*")
+          .in("service_order_id", ids)
+          .order("sort_order", { ascending: true })
+      ),
+    ]);
 
   const linesBy = new Map<string, ServiceOrderLine[]>();
-  for (const row of linesRes.data ?? []) {
+  for (const row of linesData) {
     const oid = String(row.service_order_id);
     const list = linesBy.get(oid) ?? [];
+    const product = row.product as
+      | { sku?: string; name?: string; model?: string }
+      | null
+      | undefined;
     list.push(
       mapLine(row, {
-        sku: row.product?.sku,
-        name: row.product?.name,
-        model: row.product?.model,
+        sku: product?.sku,
+        name: product?.name,
+        model: product?.model,
       })
     );
     linesBy.set(oid, list);
   }
 
   const checkBy = new Map<string, ServiceOrderChecklistItem[]>();
-  for (const row of checkRes.data ?? []) {
+  for (const row of checkData) {
     const oid = String(row.service_order_id);
     const list = checkBy.get(oid) ?? [];
     list.push(mapChecklist(row));
@@ -1054,7 +1082,7 @@ async function hydrateOrders(
   }
 
   const imagesBy = new Map<string, ServiceOrderImage[]>();
-  for (const row of imagesRes.data ?? []) {
+  for (const row of imagesData) {
     const oid = String(row.service_order_id);
     const list = imagesBy.get(oid) ?? [];
     list.push(mapImage(row));
@@ -1062,7 +1090,7 @@ async function hydrateOrders(
   }
 
   const eventsBy = new Map<string, ServiceOrderEvent[]>();
-  for (const row of eventsRes.data ?? []) {
+  for (const row of eventsData) {
     const oid = String(row.service_order_id);
     const list = eventsBy.get(oid) ?? [];
     list.push(mapEvent(row));
@@ -1070,7 +1098,7 @@ async function hydrateOrders(
   }
 
   const docsBy = new Map<string, ServiceOrderDocument[]>();
-  for (const row of docsRes.data ?? []) {
+  for (const row of docsData) {
     const oid = String(row.service_order_id);
     const list = docsBy.get(oid) ?? [];
     list.push(mapDocument(row));
@@ -1078,7 +1106,7 @@ async function hydrateOrders(
   }
 
   const linkedBy = new Map<string, ServiceOrderLinkedEquipment[]>();
-  for (const row of linkedRes.data ?? []) {
+  for (const row of linkedData) {
     const oid = String(row.service_order_id);
     const list = linkedBy.get(oid) ?? [];
     list.push(mapLinkedEquipment(row));
@@ -1086,7 +1114,7 @@ async function hydrateOrders(
   }
 
   const instrumentsBy = new Map<string, ServiceOrderInstrument[]>();
-  for (const row of instRes.data ?? []) {
+  for (const row of instData) {
     const oid = String(row.service_order_id);
     const list = instrumentsBy.get(oid) ?? [];
     list.push(mapOrderInstrument(row));

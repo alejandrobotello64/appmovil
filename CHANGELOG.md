@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.19
+
+- Órdenes de servicio: los checklists ya no se cortan en 9/14 (paginación >1000 filas al cargar puntos de revisión).
+
 ## 1.1.18
 
 - Órdenes de servicio: menú PDF completo (sin recorte); checklists de diagnóstico/pruebas sugieren y aplican la plantilla correcta del equipo.
