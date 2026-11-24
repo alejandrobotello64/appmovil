@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.14
+
+- Clientes: navegación por URL entre ficha, equipos e historial, con migas de pan y filtros por estado/equipo.
+
 ## 1.1.13
 
 - Vale PDF de entradas: muestra series y fechas de fabricación/caducidad. Lámparas Polaris consolidadas como equipo (EQUIPO-000026).

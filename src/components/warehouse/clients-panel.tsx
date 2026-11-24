@@ -2,7 +2,7 @@
 import { Ui } from "@/components/ui/ui-text";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BookUser,
   Building2,
@@ -16,6 +16,12 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import {
+  buildClientsHref,
+  normalizeClientView,
+  type ClientViewId,
+  type ClientsNavState,
+} from "@/lib/clients/nav";
 import { ClientQuoteHistory } from "@/components/clients/client-quote-history";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,8 +77,6 @@ import {
 } from "@/lib/service-orders/types";
 import { cn } from "@/lib/utils";
 import { SortableTable } from "@/components/ui/sortable-table";
-
-type ViewId = "clientes" | "equipos" | "historial";
 
 const EMPTY_CLIENT: ClientInput = {
   name: "",
@@ -131,7 +135,14 @@ const fieldClass =
 export function ClientsPanel() {
   const { canWrite, canDelete } = usePermissions("clientes");
   const router = useRouter();
-  const [view, setView] = useState<ViewId>("clientes");
+  const searchParams = useSearchParams();
+
+  const view = normalizeClientView(searchParams.get("view"));
+  const filterClientId = searchParams.get("client") ?? "";
+  const filterEquipmentId = searchParams.get("equipment") ?? "";
+  const fichaId = searchParams.get("ficha") ?? "";
+  const filterStatus = searchParams.get("status") ?? "";
+
   const [clients, setClients] = useState<Client[]>([]);
   const [contacts, setContacts] = useState<ClientContact[]>([]);
   const [equipment, setEquipment] = useState<ClientEquipment[]>([]);
@@ -141,8 +152,6 @@ export function ClientsPanel() {
     []
   );
   const [search, setSearch] = useState("");
-  const [filterClientId, setFilterClientId] = useState("");
-  const [filterEquipmentId, setFilterEquipmentId] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -152,7 +161,6 @@ export function ClientsPanel() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [clientForm, setClientForm] = useState<ClientInput>(EMPTY_CLIENT);
 
-  const [fichaClient, setFichaClient] = useState<Client | null>(null);
   const [contactFormOpen, setContactFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<ClientContact | null>(null);
   const [contactForm, setContactForm] =
@@ -166,6 +174,27 @@ export function ClientsPanel() {
 
   const [serviceFormOpen, setServiceFormOpen] = useState(false);
   const [serviceForm, setServiceForm] = useState(EMPTY_SERVICE);
+
+  function setNav(patch: Partial<ClientsNavState>) {
+    const nextView = patch.view ?? view;
+    const next: ClientsNavState = {
+      view: nextView,
+      client: patch.client !== undefined ? patch.client : filterClientId,
+      equipment:
+        patch.equipment !== undefined ? patch.equipment : filterEquipmentId,
+      ficha: patch.ficha !== undefined ? patch.ficha : fichaId,
+      status: patch.status !== undefined ? patch.status : filterStatus,
+    };
+    if (nextView !== "historial") next.equipment = "";
+    if (nextView !== "clientes") next.ficha = "";
+    if (nextView !== "equipos") next.status = "";
+    router.replace(buildClientsHref(next), { scroll: false });
+  }
+
+  const fichaClient = useMemo(
+    () => (fichaId ? clients.find((client) => client.id === fichaId) ?? null : null),
+    [clients, fichaId]
+  );
 
   async function refresh() {
     setLoading(true);
@@ -186,11 +215,6 @@ export function ClientsPanel() {
       setContracts(contractRows);
       setServices(serviceRows);
       setOrderSummaries(orderRows);
-      setFichaClient((current) =>
-        current
-          ? clientRows.find((c) => c.id === current.id) ?? null
-          : null
-      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo cargar clientes."
@@ -284,6 +308,9 @@ export function ClientsPanel() {
 
   const filteredEquipment = useMemo(() => {
     let rows = equipmentByClient;
+    if (filterStatus) {
+      rows = rows.filter((item) => item.status === filterStatus);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter((item) =>
@@ -304,7 +331,7 @@ export function ClientsPanel() {
       );
     }
     return rows;
-  }, [equipmentByClient, search, clientNameById, contractById]);
+  }, [equipmentByClient, filterStatus, search, clientNameById, contractById]);
 
   const filteredServices = useMemo(() => {
     let rows = services;
@@ -579,32 +606,57 @@ export function ClientsPanel() {
     return map;
   }, [contacts]);
 
-  function openFicha(client: Client) {
-    setFichaClient(client);
-    setContactFormOpen(false);
-    setEditingContact(null);
-    setContactForm(EMPTY_CONTACT);
-    setClientFormOpen(false);
-    setEquipmentFormOpen(false);
-    setServiceFormOpen(false);
-  }
-
-  function openEquipmentHistory(item: ClientEquipment) {
-    setFichaClient(null);
+  function closeForms() {
     setContactFormOpen(false);
     setClientFormOpen(false);
     setEquipmentFormOpen(false);
     setServiceFormOpen(false);
     setEditingEquipment(null);
-    setFilterClientId(item.clientId);
-    setFilterEquipmentId(item.id);
+    setEditingContact(null);
+    setContactForm(EMPTY_CONTACT);
+  }
+
+  function openFicha(client: Client) {
+    closeForms();
+    setSearch("");
+    setNav({
+      view: "clientes",
+      client: client.id,
+      ficha: client.id,
+      equipment: "",
+    });
+  }
+
+  function openClientEquipment(clientId: string) {
+    closeForms();
+    setSearch("");
+    setNav({
+      view: "equipos",
+      client: clientId,
+      ficha: "",
+      equipment: "",
+      status: "",
+    });
+  }
+
+  function openClientHistory(clientId: string, equipmentId = "") {
+    closeForms();
     setSearch("");
     setServiceForm({
       ...EMPTY_SERVICE,
-      clientId: item.clientId,
-      equipmentId: item.id,
+      clientId,
+      equipmentId: equipmentId || null,
     });
-    setView("historial");
+    setNav({
+      view: "historial",
+      client: clientId,
+      equipment: equipmentId,
+      ficha: "",
+    });
+  }
+
+  function openEquipmentHistory(item: ClientEquipment) {
+    openClientHistory(item.clientId, item.id);
   }
 
   function openNewContact() {
@@ -751,9 +803,9 @@ export function ClientsPanel() {
         <div className="mt-4 flex flex-wrap gap-1 rounded-xl border border-border bg-muted/40 p-1">
           {(
             [
-              { id: "clientes", label: "Clientes", icon: Building2 },
-              { id: "equipos", label: "Equipos", icon: Wrench },
-              { id: "historial", label: "Historial", icon: History },
+              { id: "clientes" as ClientViewId, label: "Clientes", icon: Building2 },
+              { id: "equipos" as ClientViewId, label: "Equipos", icon: Wrench },
+              { id: "historial" as ClientViewId, label: "Historial", icon: History },
             ] as const
           ).map((item) => {
             const Icon = item.icon;
@@ -762,12 +814,14 @@ export function ClientsPanel() {
                 key={item.id}
                 type="button"
                 onClick={() => {
-                  setView(item.id);
+                  closeForms();
                   setSearch("");
-                  setClientFormOpen(false);
-                  setEquipmentFormOpen(false);
-                  setServiceFormOpen(false);
-                  if (item.id !== "historial") setFilterEquipmentId("");
+                  setNav({
+                    view: item.id,
+                    equipment: item.id === "historial" ? filterEquipmentId : "",
+                    ficha: item.id === "clientes" ? fichaId : "",
+                    status: item.id === "equipos" ? filterStatus : "",
+                  });
                 }}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
@@ -783,7 +837,75 @@ export function ClientsPanel() {
           })}
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+        {(filterClientId || filterEquipmentId || fichaId) && (
+          <nav
+            aria-label="Ruta de navegación"
+            className="mt-3 flex flex-wrap items-center gap-1 text-sm text-muted-foreground"
+          >
+            <button
+              type="button"
+              className="rounded-md px-1.5 py-0.5 hover:bg-muted hover:text-foreground"
+              onClick={() => {
+                closeForms();
+                setSearch("");
+                setNav({
+                  view: "clientes",
+                  client: "",
+                  equipment: "",
+                  ficha: "",
+                  status: "",
+                });
+              }}
+            >
+              Clientes
+            </button>
+            {filterClientId || fichaId ? (
+              <>
+                <ChevronRight className="size-3.5 shrink-0" />
+                <button
+                  type="button"
+                  className="rounded-md px-1.5 py-0.5 font-medium text-foreground hover:bg-muted"
+                  onClick={() => {
+                    const id = fichaId || filterClientId;
+                    const client = clients.find((row) => row.id === id);
+                    if (client) openFicha(client);
+                  }}
+                >
+                  {clientNameById.get(fichaId || filterClientId) ?? "Cliente"}
+                </button>
+              </>
+            ) : null}
+            {view === "equipos" && filterClientId ? (
+              <>
+                <ChevronRight className="size-3.5 shrink-0" />
+                <span className="px-1.5 py-0.5 text-foreground">Equipos</span>
+              </>
+            ) : null}
+            {view === "historial" ? (
+              <>
+                <ChevronRight className="size-3.5 shrink-0" />
+                {selectedEquipment ? (
+                  <span className="px-1.5 py-0.5 text-foreground">
+                    {selectedEquipment.name}
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 text-foreground">Historial</span>
+                )}
+              </>
+            ) : null}
+          </nav>
+        )}
+
+        <div
+          className={cn(
+            "mt-4 grid gap-3",
+            view === "clientes"
+              ? "sm:grid-cols-1"
+              : view === "equipos"
+                ? "sm:grid-cols-[1fr_minmax(11rem,14rem)_minmax(10rem,12rem)]"
+                : "sm:grid-cols-[1fr_minmax(11rem,14rem)_minmax(11rem,14rem)]"
+          )}
+        >
           <label className="relative block">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -804,15 +926,18 @@ export function ClientsPanel() {
               value={filterClientId}
               onChange={(event) => {
                 const next = event.target.value;
-                setFilterClientId(next);
-                if (filterEquipmentId) {
-                  const current = equipment.find(
-                    (item) => item.id === filterEquipmentId
-                  );
-                  if (next && current && current.clientId !== next) {
-                    setFilterEquipmentId("");
-                  }
-                }
+                const current = equipment.find(
+                  (item) => item.id === filterEquipmentId
+                );
+                const keepEquipment =
+                  next && current && current.clientId === next
+                    ? filterEquipmentId
+                    : "";
+                setNav({
+                  client: next,
+                  equipment: keepEquipment,
+                  ficha: "",
+                });
               }}
               className={fieldClass}
             >
@@ -820,6 +945,37 @@ export function ClientsPanel() {
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {view === "equipos" ? (
+            <select
+              value={filterStatus}
+              onChange={(event) => setNav({ status: event.target.value })}
+              className={fieldClass}
+            >
+              <option value="">Todos los estados</option>
+              {CLIENT_EQUIPMENT_STATUSES.map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {view === "historial" && filterClientId ? (
+            <select
+              value={filterEquipmentId}
+              onChange={(event) =>
+                setNav({ equipment: event.target.value, ficha: "" })
+              }
+              className={fieldClass}
+            >
+              <option value="">Todos los equipos</option>
+              {equipmentByClient.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                  {item.serialNumber ? ` · ${item.serialNumber}` : ""}
                 </option>
               ))}
             </select>
@@ -1326,6 +1482,22 @@ export function ClientsPanel() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => openClientEquipment(fichaClient.id)}
+              >
+                <Wrench className="size-4" /> Ver equipos
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => openClientHistory(fichaClient.id)}
+              >
+                <History className="size-4" /> Historial
+              </Button>
               {canWrite ? (
                 <Button type="button" size="sm" onClick={openNewContact}>
                   <Plus className="size-4" /> <Ui>Contacto</Ui></Button>
@@ -1335,8 +1507,8 @@ export function ClientsPanel() {
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  setFichaClient(null);
                   setContactFormOpen(false);
+                  setNav({ ficha: "", view: "clientes" });
                 }}
               >
                 <X className="size-4" /> Cerrar ficha
@@ -1546,10 +1718,22 @@ export function ClientsPanel() {
           </div>
 
           <div>
-            <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <Monitor className="size-4" />
-              Equipos dados de alta ({fichaEquipment.length})
-            </h4>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h4 className="flex items-center gap-2 text-sm font-semibold">
+                <Monitor className="size-4" />
+                Equipos dados de alta ({fichaEquipment.length})
+              </h4>
+              {fichaEquipment.length > 0 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openClientEquipment(fichaClient.id)}
+                >
+                  Ver todos en Equipos
+                </Button>
+              ) : null}
+            </div>
             {fichaEquipment.length === 0 ? (
               <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                 Este cliente aún no tiene equipos dados de alta.
@@ -1557,11 +1741,9 @@ export function ClientsPanel() {
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {fichaEquipment.map((item) => (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
-                    onClick={() => openEquipmentHistory(item)}
-                    className="rounded-xl border border-border bg-background p-4 text-left transition hover:border-[#3B46A5]/40 hover:bg-muted/40"
+                    className="rounded-xl border border-border bg-background p-4"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -1579,11 +1761,17 @@ export function ClientsPanel() {
                       <p>Serie: {item.serialNumber || "—"}</p>
                       <p>Ubicación: {item.location || "—"}</p>
                     </div>
-                    <p className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#3B46A5]">
-                      Ver historial de servicio
-                      <ChevronRight className="size-3.5" />
-                    </p>
-                  </button>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEquipmentHistory(item)}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[#3B46A5] hover:underline"
+                      >
+                        Historial
+                        <ChevronRight className="size-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -1647,6 +1835,20 @@ export function ClientsPanel() {
                       onClick={() => openFicha(client)}
                     >
                       <BookUser className="size-3.5" /> <Ui>Ficha</Ui></button>
+                    <button
+                      type="button"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
+                      onClick={() => openClientEquipment(client.id)}
+                    >
+                      <Wrench className="size-3.5" /> Equipos
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
+                      onClick={() => openClientHistory(client.id)}
+                    >
+                      <History className="size-3.5" /> Historial
+                    </button>
                     {canWrite ? (
                       <>
                         <button
@@ -1720,6 +1922,22 @@ export function ClientsPanel() {
                             >
                               Ficha
                             </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-8"
+                              onClick={() => openClientEquipment(client.id)}
+                            >
+                              Equipos
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-8"
+                              onClick={() => openClientHistory(client.id)}
+                            >
+                              Historial
+                            </Button>
                             {canWrite ? (
                               <>
                                 <Button
@@ -1791,6 +2009,17 @@ export function ClientsPanel() {
                 onSelect: () => openEquipmentHistory(item),
                 actions: (
                   <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
+                      onClick={() => {
+                        const client = clients.find((row) => row.id === item.clientId);
+                        if (client) openFicha(client);
+                      }}
+                    >
+                      <BookUser className="size-3.5" />
+                      Cliente
+                    </button>
                     <button
                       type="button"
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs"
@@ -1881,6 +2110,19 @@ export function ClientsPanel() {
                               type="button"
                               variant="outline"
                               className="h-8"
+                              onClick={() => {
+                                const client = clients.find(
+                                  (row) => row.id === item.clientId
+                                );
+                                if (client) openFicha(client);
+                              }}
+                            >
+                              Cliente
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-8"
                               onClick={() => openEquipmentHistory(item)}
                             >
                               Historial
@@ -1923,35 +2165,83 @@ export function ClientsPanel() {
 
         {!loading && view === "historial" ? (
           <>
-            {selectedEquipment ? (
+            {selectedEquipment || filterClientId ? (
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-xl border border-[#3B46A5]/20 bg-[#3B46A5]/5 px-4 py-3">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Historial de servicio
                   </p>
                   <p className="font-medium text-foreground">
-                    {selectedEquipment.name}
+                    {selectedEquipment
+                      ? selectedEquipment.name
+                      : clientNameById.get(filterClientId) || "Cliente"}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {[
-                      clientNameById.get(selectedEquipment.clientId),
-                      selectedEquipment.serialNumber
-                        ? `Serie ${selectedEquipment.serialNumber}`
-                        : null,
-                      selectedEquipment.location,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    {selectedEquipment
+                      ? [
+                          clientNameById.get(selectedEquipment.clientId),
+                          selectedEquipment.serialNumber
+                            ? `Serie ${selectedEquipment.serialNumber}`
+                            : null,
+                          selectedEquipment.location,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : "Todos los equipos del cliente"}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setFilterEquipmentId("")}
-                >
-                  Ver todos
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  {filterClientId ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const client = clients.find(
+                          (row) => row.id === filterClientId
+                        );
+                        if (client) openFicha(client);
+                      }}
+                    >
+                      Ficha
+                    </Button>
+                  ) : null}
+                  {filterClientId ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openClientEquipment(filterClientId)}
+                    >
+                      Equipos
+                    </Button>
+                  ) : null}
+                  {filterEquipmentId ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setNav({ equipment: "" })}
+                    >
+                      Ver todos
+                    </Button>
+                  ) : filterClientId ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setNav({
+                          client: "",
+                          equipment: "",
+                          view: "historial",
+                        })
+                      }
+                    >
+                      Quitar filtro
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             ) : null}
             <ResponsiveDataList

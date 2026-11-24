@@ -453,7 +453,7 @@ function HomeContent({
             title="Estado de equipos instalados"
             description="Parque instalado en clientes (sin bajas)"
             icon={MonitorCog}
-            action={<PanelLink href="/dashboard/clientes" />}
+            action={<PanelLink href="/dashboard/clientes?view=equipos" label="Ver equipos" />}
           >
             <HorizontalBars
               data={clients.equipmentStatus}
@@ -469,7 +469,11 @@ function HomeContent({
           title="Clientes con más actividad"
           description="Acumulado del periodo en servicio, ventas, equipos instalados y calidad"
           icon={Users}
-          action={has("clientes") ? <PanelLink href="/dashboard/clientes" label="Ir a clientes" /> : undefined}
+          action={
+            has("clientes") ? (
+              <PanelLink href="/dashboard/clientes?view=historial" label="Ir a historial" />
+            ) : undefined
+          }
         >
           <ClientActivityTable
             rows={metrics.clientActivity}
