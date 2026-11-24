@@ -357,7 +357,7 @@ function HomeContent({
             value={formatNumber(clients.equipment)}
             compareLabel={compare}
             footnote={`${formatPercent(clients.operativeRate)} operativos · ${clients.active} clientes activos`}
-            href="/dashboard/clientes"
+            href="/dashboard/clientes?view=equipos"
           />
         ) : null}
       </div>
