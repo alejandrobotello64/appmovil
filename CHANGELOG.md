@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.21
+
+- Escáner: la cámara ya no se abre sola; solo al pulsar «Usar cámara».
+
 ## 1.1.20
 
 - Inventario: desde la ficha se puede eliminar un lote o una serie (con ajuste de faltante si aún hay existencia).

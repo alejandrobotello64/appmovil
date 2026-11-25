@@ -13,7 +13,6 @@ import {
 import { usePathname } from "next/navigation";
 import { ScanBarcode } from "lucide-react";
 import { ScanDialog, type ScanRequest } from "@/components/scan/scan-dialog";
-import { prefersCameraScan } from "@/lib/scan/prefer-camera";
 import { useSessionAccess } from "@/lib/auth/use-permissions";
 import { CATALOG_MODULES } from "@/lib/auth/permissions";
 import { SCAN_TARGET_EVENT, useBarcodeScanner } from "@/lib/scan/use-barcode-scanner";
@@ -34,7 +33,7 @@ import { cn } from "@/lib/utils";
 
 export type OpenScannerOptions = {
   code?: string;
-  /** Abrir ya con la cámara del celular (por defecto en pantallas táctiles). */
+  /** Solo true si el usuario pidió cámara (botón «Usar cámara» / ScanCameraButton). */
   camera?: boolean;
 };
 
@@ -73,7 +72,8 @@ export function ScanProvider({ children }: { children: ReactNode }) {
     const opts: OpenScannerOptions =
       typeof input === "string" ? { code: input } : (input ?? {});
     const code = opts.code?.trim() || undefined;
-    const preferCamera = opts.camera ?? (!code && prefersCameraScan());
+    // La cámara no se enciende sola: solo si alguien la pide explícitamente.
+    const preferCamera = opts.camera === true;
     setRequest((current) => ({
       code,
       preferCamera,
@@ -166,7 +166,7 @@ export function ScanButton() {
   return (
     <button
       type="button"
-      onClick={() => scanner.openScanner({ camera: prefersCameraScan() })}
+      onClick={() => scanner.openScanner()}
       className="touch-target relative inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted"
       aria-label="Escanear código de producto"
       title={connected ? "Lector conectado · Escanear código" : "Escanear código (lector o cámara)"}

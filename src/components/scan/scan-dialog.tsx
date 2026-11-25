@@ -26,7 +26,7 @@ import { SERIAL_BAUD_RATES } from "@/lib/scan/serial-scanner";
 export type ScanRequest = {
   code?: string;
   nonce: number;
-  /** Abrir el diálogo con la cámara lista (móvil / botón cámara). */
+  /** Abrir el diálogo ya con la cámara (solo si el usuario la pidió). */
   preferCamera?: boolean;
 };
 
