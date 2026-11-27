@@ -295,6 +295,12 @@ export async function receivePurchaseOrderLines(
       .eq("id", line.id);
   }
 
+  return syncPurchaseOrderStatus(order);
+}
+
+/** Recalcula el estado del pedido según lo recibido en sus partidas. */
+async function syncPurchaseOrderStatus(order: PurchaseOrder): Promise<PurchaseOrder> {
+  const orderId = order.id;
   const refreshedItems = await supabase
     .from("purchase_order_items")
     .select("*")
@@ -321,6 +327,72 @@ export async function receivePurchaseOrderLines(
 
   if (updateError) throw new Error(updateError.message);
   return mapOrder(updated, mapped, order.invoices);
+}
+
+/** Estados en los que el pedido todavía espera mercancía. */
+export const OPEN_PURCHASE_ORDER_STATUSES: PurchaseOrderStatus[] = [
+  "borrador",
+  "enviado",
+  "parcial",
+];
+
+export function purchaseOrderLinePending(
+  line: Pick<PurchaseOrderItem, "quantity" | "receivedQuantity">
+) {
+  return Math.max(line.quantity - line.receivedQuantity, 0);
+}
+
+/** Pedidos por recibir, para ligar una entrada de almacén a su orden de compra. */
+export async function getOpenPurchaseOrders(): Promise<PurchaseOrder[]> {
+  const { data, error } = await supabase
+    .from("purchase_orders")
+    .select("id")
+    .in("status", OPEN_PURCHASE_ORDER_STATUSES);
+  if (error) throw new Error(error.message);
+  return getPurchaseOrders((data ?? []).map((row) => row.id));
+}
+
+/**
+ * Suma a las partidas del pedido lo que ya entró a inventario desde Entradas
+ * (los movimientos se registran aparte) y recalcula el estado del pedido.
+ */
+export async function registerPurchaseOrderReceipt(
+  orderId: string,
+  receipts: Array<{ itemId: string; quantity: number }>
+): Promise<PurchaseOrder> {
+  const [order] = await getPurchaseOrders([orderId]);
+  if (!order) throw new Error("Pedido no encontrado.");
+  if (order.status === "cancelado") {
+    throw new Error("El pedido está cancelado.");
+  }
+
+  const totals = new Map<string, number>();
+  for (const receipt of receipts) {
+    if (!(receipt.quantity > 0)) continue;
+    totals.set(receipt.itemId, (totals.get(receipt.itemId) ?? 0) + receipt.quantity);
+  }
+
+  for (const [itemId, total] of totals) {
+    const orderLines = order.items.filter((line) => line.itemId === itemId);
+    let remaining = total;
+    for (const [index, line] of orderLines.entries()) {
+      if (remaining <= 0) break;
+      // El excedente (sobre-recibo) se carga a la última partida del producto.
+      const isLast = index === orderLines.length - 1;
+      const take = isLast
+        ? remaining
+        : Math.min(remaining, purchaseOrderLinePending(line));
+      if (take <= 0) continue;
+      const { error } = await supabase
+        .from("purchase_order_items")
+        .update({ received_quantity: line.receivedQuantity + take })
+        .eq("id", line.id);
+      if (error) throw new Error(error.message);
+      remaining -= take;
+    }
+  }
+
+  return syncPurchaseOrderStatus(order);
 }
 
 export async function receivePurchaseOrder(

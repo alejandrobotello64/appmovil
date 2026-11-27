@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.32
+
+- Entradas: con «Recepción de orden de compra» se muestran las órdenes por recibir; al elegir una, los escaneos se asignan a sus partidas y la orden se actualiza al registrar.
+
 ## 1.1.31
 
 - Entradas: la serie de equipos (y productos con control por serie) se puede editar en las partidas ya agregadas; avisa si queda vacía o repetida.

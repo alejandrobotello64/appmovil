@@ -81,6 +81,14 @@ import {
   mergeMovementLine,
   type StockMovementLine,
 } from "@/components/warehouse/stock-movement-line";
+import { PurchaseOrderReceivePicker } from "@/components/warehouse/purchase-order-receive-picker";
+import {
+  getOpenPurchaseOrders,
+  purchaseOrderLinePending,
+  registerPurchaseOrderReceipt,
+  type PurchaseOrder,
+  type PurchaseOrderItem,
+} from "@/lib/warehouse/orders";
 
 type MovementMode = "entrada" | "salida";
 
@@ -457,6 +465,50 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   const [lines, setLines] = useState<StockMovementLine[]>([]);
   /** Historial oculto por defecto para dejar espacio al formulario. */
   const [showHistory, setShowHistory] = useState(false);
+
+  /** Recepción de orden de compra: pedidos por recibir y el que se está recibiendo. */
+  const receivingOrderMode = mode === "entrada" && reason === "recepcion_oc";
+  const [openOrders, setOpenOrders] = useState<PurchaseOrder[]>([]);
+  const [openOrdersLoading, setOpenOrdersLoading] = useState(false);
+  const [openOrdersError, setOpenOrdersError] = useState("");
+  const [purchaseOrderId, setPurchaseOrderId] = useState("");
+  const loadOpenOrders = useCallback(async () => {
+    setOpenOrdersLoading(true);
+    setOpenOrdersError("");
+    try {
+      const rows = await getOpenPurchaseOrders();
+      setOpenOrders(rows);
+      setPurchaseOrderId((current) =>
+        rows.some((order) => order.id === current) ? current : ""
+      );
+    } catch (err) {
+      setOpenOrdersError(
+        err instanceof Error
+          ? err.message
+          : "No se pudieron cargar las órdenes de compra."
+      );
+    } finally {
+      setOpenOrdersLoading(false);
+    }
+  }, []);
+  const activeOrder = useMemo(
+    () =>
+      receivingOrderMode
+        ? openOrders.find((order) => order.id === purchaseOrderId) ?? null
+        : null,
+    [receivingOrderMode, openOrders, purchaseOrderId]
+  );
+  /** Piezas ya en la lista por producto (cada equipo cuenta 1). */
+  const listQtyByProduct = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const line of lines) {
+      map.set(
+        line.productId,
+        (map.get(line.productId) ?? 0) + (line.isEquipment ? 1 : line.quantity)
+      );
+    }
+    return map;
+  }, [lines]);
   const quantityRef = useRef<HTMLInputElement>(null);
   const lotRef = useRef<HTMLInputElement>(null);
   const lotSelectRef = useRef<HTMLSelectElement>(null);
@@ -580,14 +632,36 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
   }, [itemOptions, catalogSort]);
 
   const applyScanMatch = useCallback(
-    async ({ match, result }: { match: ScanMatch | null; result: ScanResult }) => {
+    async ({
+      match: firstMatch,
+      result,
+    }: {
+      match: ScanMatch | null;
+      result: ScanResult;
+    }) => {
       if (equipmentFormOpen) return;
-      if (!match) {
+      if (!firstMatch) {
         setScanHint(
           "Código leído sin producto vinculado. Vincula el código en la ficha del escáner o elige el modelo y captura la serie."
         );
         return;
       }
+      // Con una orden de compra elegida, el escaneo se dirige a sus partidas:
+      // entre varias coincidencias gana la que está en la orden (pendiente primero).
+      const orderLineFor = (productId: string) =>
+        activeOrder?.items.find((line) => line.itemId === productId) ?? null;
+      const orderMatches = activeOrder
+        ? result.matches.filter((row) => orderLineFor(row.item.id))
+        : [];
+      const match =
+        orderMatches.find((row) => {
+          const line = orderLineFor(row.item.id);
+          return line ? purchaseOrderLinePending(line) > 0 : false;
+        }) ??
+        orderMatches[0] ??
+        firstMatch;
+      const chosenByOrder = orderMatches.length > 0 && match !== firstMatch;
+      const outsideOrder = Boolean(activeOrder) && orderMatches.length === 0;
       const { scan } = result;
       const local = items.find((item) => item.id === match.item.id) ?? match.item;
       // Priorizar GS1 del escaneo actual para no heredar lote/caducidad de otro match.
@@ -619,16 +693,27 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           (row.item.partNumber || "").trim() &&
           (row.item.partNumber || "").trim() === (local.partNumber || "").trim()
       );
-      const needsModelConfirm = samePartModels.length > 1;
+      // Si la orden deja un solo candidato, no hace falta confirmar el modelo.
+      const needsModelConfirm =
+        samePartModels.length > 1 && orderMatches.length !== 1;
+      const orderNote = activeOrder
+        ? outsideOrder
+          ? ` · No está en la orden ${activeOrder.orderNumber}: agrégalo solo si llegó de más.`
+          : ` · Partida de la orden ${activeOrder.orderNumber}.`
+        : "";
       const ambiguous =
-        result.matches.length > 1
+        (result.matches.length > 1
           ? needsModelConfirm
             ? ` · Hay ${samePartModels.length} modelos con la misma ref. (${samePartModels
                 .map((row) => row.item.model || row.item.name)
                 .slice(0, 3)
                 .join(", ")}). Confirma el correcto.`
-            : ` · ${result.matches.length} coincidencias (se eligió la más probable)`
-          : "";
+            : chosenByOrder || orderMatches.length === 1
+              ? ` · ${result.matches.length} coincidencias (se eligió la de la orden)`
+              : ` · ${result.matches.length} coincidencias (se eligió la más probable)`
+          : "") + orderNote;
+      // Fuera de la orden no se agrega solo: queda en el formulario para decidir.
+      const autoAdd = autoAddOnScan && !outsideOrder;
       const suggestion =
         mode === "entrada" && warehouseId
           ? await suggestEntryLocation({
@@ -710,7 +795,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
         return;
       }
 
-      if (autoAddOnScan) {
+      if (autoAdd) {
         const isEquip = isEquipmentItem(local);
         if ((isEquip || local.tracksSerial) && !serial.trim() && mode === "entrada") {
           setItemId(local.id);
@@ -822,6 +907,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       clearDraft,
       warehouseId,
       locations,
+      activeOrder,
     ]
   );
   useScanResolved(applyScanMatch, { enabled: !equipmentFormOpen });
@@ -1240,6 +1326,47 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     setError("");
   }
 
+  /** Lleva una partida de la orden de compra al formulario, con lo que falta por recibir. */
+  function pickOrderLine(line: PurchaseOrderItem) {
+    if (!canWrite || !line.itemId) return;
+    const product = items.find((item) => item.id === line.itemId);
+    if (!product) {
+      setError(`${line.itemSku}: el producto de la orden ya no está en el catálogo.`);
+      return;
+    }
+    const isEquip = isEquipmentItem(product);
+    const remaining = Math.max(
+      purchaseOrderLinePending(line) - (listQtyByProduct.get(product.id) ?? 0),
+      0
+    );
+    clearDraft();
+    setItemId(product.id);
+    setItemQuery(product.sku);
+    setQuantity(isEquip ? 1 : Math.max(remaining, 1));
+    setError("");
+    setMessage("");
+    const needs = isEquip || product.tracksSerial
+      ? "captura la serie"
+      : product.tracksLot
+        ? "captura el lote"
+        : "revisa la cantidad";
+    setScanHint(
+      `${product.sku}: faltan ${remaining} por recibir de la orden. ${needs[0].toUpperCase()}${needs.slice(1)} y pulsa «Agregar a la lista».`
+    );
+    window.setTimeout(() => {
+      if (isEquip || product.tracksSerial) {
+        (serialAreaRef.current ?? serialInputRef.current)?.focus();
+        return;
+      }
+      if (product.tracksLot) {
+        lotRef.current?.focus();
+        return;
+      }
+      quantityRef.current?.focus();
+      quantityRef.current?.select();
+    }, 80);
+  }
+
   async function addDraftToLines() {
     if (!canWrite || !selected) {
       setError("Elige un artículo para agregarlo a la lista.");
@@ -1394,6 +1521,57 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       }
     }
 
+    // Recepción ligada a una orden: avisar de excedentes y de productos ajenos a ella.
+    const receivingOrder = activeOrder;
+    if (receivingOrder) {
+      const qtyByOrderProduct = new Map<string, { sku: string; quantity: number }>();
+      for (const line of pending) {
+        const entry = qtyByOrderProduct.get(line.productId) ?? {
+          sku: line.sku,
+          quantity: 0,
+        };
+        entry.quantity += line.isEquipment ? 1 : line.quantity;
+        qtyByOrderProduct.set(line.productId, entry);
+      }
+      const warnings: string[] = [];
+      for (const [productId, entry] of qtyByOrderProduct) {
+        const orderLines = receivingOrder.items.filter(
+          (line) => line.itemId === productId
+        );
+        if (orderLines.length === 0) {
+          warnings.push(
+            `${entry.sku}: no está en la orden (entra al inventario sin descontarse de ella).`
+          );
+          continue;
+        }
+        const pendingQty = orderLines.reduce(
+          (sum, line) => sum + purchaseOrderLinePending(line),
+          0
+        );
+        if (entry.quantity > pendingQty) {
+          warnings.push(
+            `${entry.sku}: recibes ${entry.quantity} y faltaban ${pendingQty} (sobre-recibo).`
+          );
+        }
+      }
+      if (
+        warnings.length > 0 &&
+        !window.confirm(
+          `Orden ${receivingOrder.orderNumber}:\n\n${warnings.join("\n")}\n\n¿Registrar la entrada de todos modos?`
+        )
+      ) {
+        return;
+      }
+    }
+    // Lo que ya entró a inventario y debe sumarse a las partidas de la orden.
+    const orderReceipts: Array<{ itemId: string; quantity: number }> = [];
+    let orderSynced = false;
+    const syncOrderReceipts = async () => {
+      if (!receivingOrder || orderSynced || orderReceipts.length === 0) return null;
+      orderSynced = true;
+      return registerPurchaseOrderReceipt(receivingOrder.id, orderReceipts);
+    };
+
     setSubmitting(true);
     setError("");
     setMessage("");
@@ -1408,6 +1586,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           ? ENTRY_REASONS.find((item) => item.id === reason)?.label ?? reason
           : ISSUE_REASONS.find((item) => item.id === reason)?.label ?? reason;
       const extraNote = [
+        receivingOrder ? `Recepción ${receivingOrder.orderNumber}` : "",
         note,
         technician ? `Técnico: ${technician}` : "",
         relatedSerial ? `Serie relacionada: ${relatedSerial}` : "",
@@ -1444,6 +1623,8 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           quantity: line.isEquipment ? 1 : line.quantity,
           serialNumber: line.serialNumber.trim() || null,
           folio: sharedFolio,
+          purchaseOrderId: receivingOrder?.id ?? null,
+          supplierName: receivingOrder?.supplierName ?? "",
         });
         if (!sharedFolio) sharedFolio = movement.folio;
         results.push({
@@ -1451,6 +1632,32 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           productId: line.productId,
           unit: line.unit,
         });
+        if (receivingOrder?.items.some((item) => item.itemId === line.productId)) {
+          orderReceipts.push({
+            itemId: line.productId,
+            quantity: line.isEquipment ? 1 : line.quantity,
+          });
+        }
+      }
+
+      let orderNote = "";
+      if (receivingOrder) {
+        try {
+          const updatedOrder = await syncOrderReceipts();
+          if (updatedOrder) {
+            orderNote =
+              updatedOrder.status === "recibido"
+                ? ` Orden ${receivingOrder.orderNumber} recibida completa.`
+                : ` Orden ${receivingOrder.orderNumber} actualizada: quedan partidas pendientes.`;
+          }
+        } catch (orderError) {
+          setError(
+            `Se registró la entrada, pero no se pudo actualizar la orden ${receivingOrder.orderNumber}: ${
+              orderError instanceof Error ? orderError.message : "error desconocido"
+            }`
+          );
+        }
+        void loadOpenOrders();
       }
 
       const batchFolio = sharedFolio || results[0]?.folio || "";
@@ -1493,7 +1700,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
           : pending.length > 1
             ? `Salida ${batchFolio} · ${pending.length} productos.`
             : `Salida ${batchFolio}.`;
-      setMessage(`${label}${evidenceNote}`);
+      setMessage(`${label}${orderNote}${evidenceNote}`);
       setLastFolios(uniqueFolios);
       setLines([]);
       clearDraft();
@@ -1527,6 +1734,15 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       setError(
         err instanceof Error ? err.message : "No se pudo registrar el movimiento."
       );
+      // Si falló a medias, la orden debe reflejar lo que sí entró a inventario.
+      if (receivingOrder && !orderSynced && orderReceipts.length > 0) {
+        try {
+          await syncOrderReceipts();
+        } catch (orderError) {
+          console.error(orderError);
+        }
+        void loadOpenOrders();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -1666,7 +1882,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
               <select
                 value={reason}
                 disabled={!canWrite}
-                onChange={(event) => setReason(event.target.value)}
+                onChange={(event) => {
+                  setReason(event.target.value);
+                  setPurchaseOrderId("");
+                  // Las órdenes por recibir se cargan al elegir este tipo de entrada.
+                  if (mode === "entrada" && event.target.value === "recepcion_oc") {
+                    void loadOpenOrders();
+                  }
+                }}
                 className={cn(
                   fieldClass,
                   "border-[#3B46A5]/35 bg-background font-medium"
@@ -1679,6 +1902,28 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                 ))}
               </select>
             </label>
+
+            {receivingOrderMode ? (
+              <PurchaseOrderReceivePicker
+                orders={openOrders}
+                loading={openOrdersLoading}
+                error={openOrdersError}
+                selectedOrderId={activeOrder?.id ?? ""}
+                listQtyByProduct={listQtyByProduct}
+                disabled={!canWrite || submitting}
+                onSelect={(orderId) => {
+                  setPurchaseOrderId(orderId);
+                  const order = openOrders.find((row) => row.id === orderId);
+                  setScanHint(
+                    order
+                      ? `Orden ${order.orderNumber}: escanea los productos o pulsa «Capturar» en cada partida.`
+                      : ""
+                  );
+                }}
+                onPickLine={pickOrderLine}
+                onRefresh={() => void loadOpenOrders()}
+              />
+            ) : null}
 
             <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
               {/* Izquierda: buscador + indicadores de almacén */}
