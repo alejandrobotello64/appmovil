@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.22
+
+- Inventario: paginación 10/20/50/100 productos por página; el catálogo se muestra sin esperar todo el stock.
+
 ## 1.1.21
 
 - Escáner: la cámara ya no se abre sola; solo al pulsar «Usar cámara».

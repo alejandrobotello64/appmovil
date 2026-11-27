@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   BellOff,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   ImagePlus,
   Loader2,
@@ -118,6 +120,18 @@ const STATUS_STYLES: Record<StockStatus, string> = {
   bajo_stock: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
   agotado: "bg-destructive/10 text-destructive",
 };
+
+const INVENTORY_PAGE_SIZES = [10, 20, 50, 100] as const;
+type InventoryPageSize = (typeof INVENTORY_PAGE_SIZES)[number];
+const PAGE_SIZE_STORAGE_KEY = "mas-inventory-page-size";
+
+function readInventoryPageSize(): InventoryPageSize {
+  if (typeof window === "undefined") return 20;
+  const raw = Number(window.localStorage.getItem(PAGE_SIZE_STORAGE_KEY));
+  return (INVENTORY_PAGE_SIZES as readonly number[]).includes(raw)
+    ? (raw as InventoryPageSize)
+    : 20;
+}
 
 type ItemImage = { path: string; url: string; primary: boolean };
 
@@ -281,7 +295,12 @@ export function InventoryPanel({
   const [openLot, setOpenLot] = useState<InventoryLotStock | null>(null);
   const [imageBusy, setImageBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [stockLoading, setStockLoading] = useState(false);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<InventoryPageSize>(() =>
+    readInventoryPageSize()
+  );
 
   const formItemKind: ItemKind = isEquipment
     ? "equipo"
@@ -443,6 +462,45 @@ export function InventoryPanel({
     colorFilter,
   ]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const currentPage = Math.min(page, totalPages - 1);
+  const pageItems = useMemo(() => {
+    const start = currentPage * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, currentPage, pageSize]);
+  const pageFrom =
+    filteredItems.length === 0 ? 0 : currentPage * pageSize + 1;
+  const pageTo = Math.min(filteredItems.length, (currentPage + 1) * pageSize);
+
+  useEffect(() => {
+    setPage(0);
+  }, [
+    search,
+    statusFilter,
+    categoryFilter,
+    warehouseFilter,
+    brandFilter,
+    colorFilter,
+    pageSize,
+    panelMode,
+    isEquipment,
+    isCatalog,
+    supplyCategory,
+  ]);
+
+  useEffect(() => {
+    if (page > totalPages - 1) setPage(Math.max(0, totalPages - 1));
+  }, [page, totalPages]);
+
+  function changePageSize(next: InventoryPageSize) {
+    setPageSize(next);
+    try {
+      window.localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(next));
+    } catch {
+      /* ignore */
+    }
+  }
+
   const hasActiveFilters =
     search.trim().length > 0 ||
     (isCatalog && categoryFilter !== "all") ||
@@ -584,8 +642,7 @@ export function InventoryPanel({
     try {
       setLoading(true);
       setError("");
-      let trackingError = "";
-      const [data, reservedMap, stockMap, warehouseRows] = await Promise.all([
+      const [data, reservedMap, warehouseRows] = await Promise.all([
         isCatalog
           ? getSupplyItems()
           : isEquipment
@@ -594,16 +651,6 @@ export function InventoryPanel({
         isEquipment && !isCatalog
           ? Promise.resolve(new Map<string, number>())
           : getReservedQuantities(),
-        getInventoryStock(
-          isCatalog
-            ? undefined
-            : isEquipment
-              ? "equipos"
-              : (supplyCategory ?? "insumos")
-        ).catch((err: unknown) => {
-          trackingError = err instanceof Error ? err.message : String(err);
-          return new Map<string, InventoryStock>();
-        }),
         getWarehouses().catch(() => [] as Warehouse[]),
       ]);
       const visible = isCatalog
@@ -617,10 +664,29 @@ export function InventoryPanel({
         : data;
       setItems(visible);
       setReservedByProduct(reservedMap);
-      setStockByProduct(stockMap);
       setWarehouses(warehouseRows);
-      if (trackingError) {
-        setError(`No se pudieron cargar existencias por almacén, lotes y series: ${trackingError}`);
+      setLoading(false);
+
+      // Stock en segundo plano: la lista ya se puede paginar sin esperar lotes/series.
+      setStockLoading(true);
+      try {
+        const stockMap = await getInventoryStock(
+          isCatalog
+            ? undefined
+            : isEquipment
+              ? "equipos"
+              : (supplyCategory ?? "insumos")
+        );
+        setStockByProduct(stockMap);
+      } catch (err: unknown) {
+        const trackingError =
+          err instanceof Error ? err.message : String(err);
+        setStockByProduct(new Map());
+        setError(
+          `No se pudieron cargar existencias por almacén, lotes y series: ${trackingError}`
+        );
+      } finally {
+        setStockLoading(false);
       }
     } catch (err) {
       setError(
@@ -628,8 +694,8 @@ export function InventoryPanel({
           ? err.message
           : "No se pudo cargar el inventario desde Supabase."
       );
-    } finally {
       setLoading(false);
+      setStockLoading(false);
     }
   }
 
@@ -1070,22 +1136,51 @@ export function InventoryPanel({
               <p className="text-xs text-muted-foreground">
                 {loading
                   ? t("inv.loadingCatalog")
-                  : filteredItems.length === items.length
-                    ? t("inv.articlesCount").replace("{n}", String(items.length))
-                    : t("inv.articlesFiltered")
-                        .replace("{shown}", String(filteredItems.length))
-                        .replace("{total}", String(items.length))}
+                  : [
+                      filteredItems.length === 0
+                        ? t("inv.articlesCount").replace("{n}", "0")
+                        : t("inv.showingRange")
+                            .replace("{from}", String(pageFrom))
+                            .replace("{to}", String(pageTo))
+                            .replace("{total}", String(filteredItems.length)),
+                      filteredItems.length !== items.length
+                        ? t("inv.articlesFiltered")
+                            .replace("{shown}", String(filteredItems.length))
+                            .replace("{total}", String(items.length))
+                        : null,
+                      stockLoading ? t("inv.loadingStock") : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
               </p>
-              {hasActiveFilters ? (
-                <button
-                  type="button"
-                  onClick={clearInventoryFilters}
-                  className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-                >
-                  <X className="size-3" />
-                  {t("ui.clearFilters")}
-                </button>
-              ) : null}
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="sr-only sm:not-sr-only">{t("inv.perPageLabel")}</span>
+                  <select
+                    value={pageSize}
+                    onChange={(event) =>
+                      changePageSize(Number(event.target.value) as InventoryPageSize)
+                    }
+                    className="h-8 rounded-lg border border-input bg-background px-2 text-xs outline-none"
+                  >
+                    {INVENTORY_PAGE_SIZES.map((size) => (
+                      <option key={size} value={size}>
+                        {t("inv.perPage").replace("{n}", String(size))}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {hasActiveFilters ? (
+                  <button
+                    type="button"
+                    onClick={clearInventoryFilters}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="size-3" />
+                    {t("ui.clearFilters")}
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
 
@@ -1099,7 +1194,7 @@ export function InventoryPanel({
                     ? t("inv.emptyEquipment")
                     : `No hay ${supplyMeta?.label.toLowerCase() ?? "artículos"} registrados.`
             }
-            items={filteredItems.map((item) => {
+            items={pageItems.map((item) => {
               const status = getStockStatus(item.quantity, item.minStock);
               return {
                 key: item.id,
@@ -1309,7 +1404,7 @@ export function InventoryPanel({
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.length === 0 ? (
+                {pageItems.length === 0 ? (
                   <tr>
                     <td
                       colSpan={isEquipment ? 12 : 13}
@@ -1325,7 +1420,7 @@ export function InventoryPanel({
                     </td>
                   </tr>
                 ) : (
-                  filteredItems.map((item) => {
+                  pageItems.map((item) => {
                     const status = getStockStatus(item.quantity, item.minStock);
                     const colorId = resolveProductColor(item.colorTag, item.brand);
                     const color = productColorMeta(colorId);
@@ -1523,6 +1618,42 @@ export function InventoryPanel({
               </tbody>
             </SortableTable>
           </DesktopTable>
+
+          {filteredItems.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 sm:px-4">
+              <p className="text-xs text-muted-foreground">
+                {t("inv.pageOf")
+                  .replace("{page}", String(currentPage + 1))
+                  .replace("{pages}", String(totalPages))}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                  disabled={currentPage <= 0}
+                  onClick={() => setPage((value) => Math.max(0, value - 1))}
+                >
+                  <ChevronLeft className="size-4" />
+                  <span className="hidden sm:inline">{t("inv.prevPage")}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                  disabled={currentPage >= totalPages - 1}
+                  onClick={() =>
+                    setPage((value) => Math.min(totalPages - 1, value + 1))
+                  }
+                >
+                  <span className="hidden sm:inline">{t("inv.nextPage")}</span>
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </section>
       </div>
 
