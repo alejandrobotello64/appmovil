@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.25
+
+- Inventario: 11 registros que estaban como equipos pasan a su categoría real (accesorios, refacciones o insumos), conservando existencias, series y lotes.
+
 ## 1.1.24
 
 - Entradas: lote, fecha de fabricación y caducidad se pueden editar en las partidas ya agregadas a la lista.
