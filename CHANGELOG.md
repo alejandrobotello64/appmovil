@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.24
+
+- Entradas: lote, fecha de fabricación y caducidad se pueden editar en las partidas ya agregadas a la lista.
+
 ## 1.1.23
 
 - Inventario: SKUs cortos sin ceros de relleno (p. ej. ACCESORIOS-000012 → ACC-12, EQUIPO-000026 → EQ-26).

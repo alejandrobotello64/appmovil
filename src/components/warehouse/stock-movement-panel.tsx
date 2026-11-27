@@ -1224,6 +1224,19 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     ];
   }
 
+  /** Edita lote / fabricación / caducidad de una partida ya agregada. */
+  function updateLineDetail(
+    key: string,
+    patch: Partial<
+      Pick<StockMovementLine, "lotNumber" | "expiryDate" | "manufacturedAt">
+    >
+  ) {
+    setLines((current) =>
+      current.map((row) => (row.key === key ? { ...row, ...patch } : row))
+    );
+    setError("");
+  }
+
   async function addDraftToLines() {
     if (!canWrite || !selected) {
       setError("Elige un artículo para agregarlo a la lista.");
@@ -1411,7 +1424,7 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
             mode === "salida"
               ? line.locationId || null
               : line.locationId || locationId || null,
-          lotNumber: line.isEquipment ? null : line.lotNumber || null,
+          lotNumber: line.isEquipment ? null : line.lotNumber.trim() || null,
           expiryDate: line.isEquipment ? null : line.expiryDate || null,
           manufacturedAt: line.manufacturedAt || null,
           quantity: line.isEquipment ? 1 : line.quantity,
@@ -2656,7 +2669,12 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                   </div>
                 ) : (
                   <div className="max-h-[36rem] overflow-auto rounded-lg border border-border bg-background">
-                    <SortableTable className="w-full min-w-[32rem] border-collapse text-sm">
+                    <SortableTable
+                      className={cn(
+                        "w-full border-collapse text-sm",
+                        mode === "entrada" ? "min-w-[44rem]" : "min-w-[32rem]"
+                      )}
+                    >
                       <thead className="sticky top-0 z-10">
                         <tr className="border-b border-border bg-muted/60 text-left text-xs text-muted-foreground">
                           <th className="px-3 py-2 font-medium">Referencia</th>
@@ -2722,20 +2740,101 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                               className="px-3 py-2 align-middle text-xs text-muted-foreground"
                               data-sort={detailSort || "—"}
                             >
-                              {[
-                                line.lotNumber ? `Lote ${line.lotNumber}` : "",
-                                line.serialNumber
-                                  ? `Serie ${line.serialNumber}`
-                                  : "",
-                                line.manufacturedAt
-                                  ? `Fab. ${line.manufacturedAt}`
-                                  : "",
-                                line.expiryDate
-                                  ? `Cad. ${line.expiryDate}`
-                                  : "",
-                              ]
-                                .filter(Boolean)
-                                .join(" · ") || "—"}
+                              {mode === "entrada" ? (
+                                <div className="grid min-w-[12.5rem] gap-1">
+                                  {line.serialNumber ? (
+                                    <span className="font-medium text-foreground">
+                                      Serie {line.serialNumber}
+                                    </span>
+                                  ) : null}
+                                  {!line.isEquipment ? (
+                                    <label className="flex items-center gap-1.5">
+                                      <span className="w-8 shrink-0">Lote</span>
+                                      <input
+                                        value={line.lotNumber}
+                                        disabled={!canWrite || submitting}
+                                        onChange={(event) =>
+                                          updateLineDetail(line.key, {
+                                            lotNumber: event.target.value,
+                                          })
+                                        }
+                                        onKeyDown={(event) => {
+                                          if (event.key === "Enter") {
+                                            event.preventDefault();
+                                          }
+                                        }}
+                                        placeholder={
+                                          line.tracksLot ? "Obligatorio" : "Sin lote"
+                                        }
+                                        className={cn(
+                                          "h-8 min-w-0 flex-1 rounded-md border bg-background px-2 text-xs text-foreground",
+                                          line.tracksLot && !line.lotNumber.trim()
+                                            ? "border-destructive"
+                                            : "border-input"
+                                        )}
+                                        aria-label={`Lote ${line.sku}`}
+                                      />
+                                    </label>
+                                  ) : null}
+                                  <label className="flex items-center gap-1.5">
+                                    <span className="w-8 shrink-0">Fab.</span>
+                                    <input
+                                      type="date"
+                                      value={line.manufacturedAt.slice(0, 10)}
+                                      disabled={!canWrite || submitting}
+                                      onChange={(event) =>
+                                        updateLineDetail(line.key, {
+                                          manufacturedAt: event.target.value,
+                                        })
+                                      }
+                                      onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                          event.preventDefault();
+                                        }
+                                      }}
+                                      className="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                      aria-label={`Fecha de fabricación ${line.sku}`}
+                                    />
+                                  </label>
+                                  {!line.isEquipment ? (
+                                    <label className="flex items-center gap-1.5">
+                                      <span className="w-8 shrink-0">Cad.</span>
+                                      <input
+                                        type="date"
+                                        value={line.expiryDate.slice(0, 10)}
+                                        disabled={!canWrite || submitting}
+                                        onChange={(event) =>
+                                          updateLineDetail(line.key, {
+                                            expiryDate: event.target.value,
+                                          })
+                                        }
+                                        onKeyDown={(event) => {
+                                          if (event.key === "Enter") {
+                                            event.preventDefault();
+                                          }
+                                        }}
+                                        className="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                                        aria-label={`Caducidad ${line.sku}`}
+                                      />
+                                    </label>
+                                  ) : null}
+                                </div>
+                              ) : (
+                                [
+                                  line.lotNumber ? `Lote ${line.lotNumber}` : "",
+                                  line.serialNumber
+                                    ? `Serie ${line.serialNumber}`
+                                    : "",
+                                  line.manufacturedAt
+                                    ? `Fab. ${line.manufacturedAt}`
+                                    : "",
+                                  line.expiryDate
+                                    ? `Cad. ${line.expiryDate}`
+                                    : "",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ") || "—"
+                              )}
                             </td>
                             <td
                               className="px-3 py-2 align-middle"
