@@ -1224,11 +1224,14 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
     ];
   }
 
-  /** Edita lote / fabricación / caducidad de una partida ya agregada. */
+  /** Edita serie / lote / fabricación / caducidad de una partida ya agregada. */
   function updateLineDetail(
     key: string,
     patch: Partial<
-      Pick<StockMovementLine, "lotNumber" | "expiryDate" | "manufacturedAt">
+      Pick<
+        StockMovementLine,
+        "serialNumber" | "lotNumber" | "expiryDate" | "manufacturedAt"
+      >
     >
   ) {
     setLines((current) =>
@@ -1372,6 +1375,17 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
       }
       if (line.tracksSerial && !line.serialNumber.trim()) {
         setError(`${line.sku}: exige número de serie.`);
+        return;
+      }
+      const serial = line.serialNumber.trim();
+      if (
+        serial &&
+        line.tracksSerial &&
+        pending.some(
+          (other) => other.key !== line.key && other.serialNumber.trim() === serial
+        )
+      ) {
+        setError(`La serie ${serial} está repetida en la lista.`);
         return;
       }
       if (!line.isEquipment && line.quantity < 1) {
@@ -2700,6 +2714,15 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                           ]
                             .filter(Boolean)
                             .join(" ");
+                          const lineSerial = line.serialNumber.trim();
+                          const duplicateSerial =
+                            lineSerial !== "" &&
+                            line.tracksSerial &&
+                            lines.some(
+                              (other) =>
+                                other.key !== line.key &&
+                                other.serialNumber.trim() === lineSerial
+                            );
                           return (
                           <tr
                             key={line.key}
@@ -2742,7 +2765,38 @@ export function StockMovementPanel({ mode }: StockMovementPanelProps) {
                             >
                               {mode === "entrada" ? (
                                 <div className="grid min-w-[12.5rem] gap-1">
-                                  {line.serialNumber ? (
+                                  {line.tracksSerial ? (
+                                    <label className="flex items-center gap-1.5">
+                                      <span className="w-8 shrink-0">Serie</span>
+                                      <input
+                                        value={line.serialNumber}
+                                        disabled={!canWrite || submitting}
+                                        onChange={(event) =>
+                                          updateLineDetail(line.key, {
+                                            serialNumber: event.target.value,
+                                          })
+                                        }
+                                        onKeyDown={(event) => {
+                                          if (event.key === "Enter") {
+                                            event.preventDefault();
+                                          }
+                                        }}
+                                        placeholder="Obligatoria"
+                                        title={
+                                          duplicateSerial
+                                            ? "Serie repetida en la lista"
+                                            : undefined
+                                        }
+                                        className={cn(
+                                          "h-8 min-w-0 flex-1 rounded-md border bg-background px-2 text-xs font-medium text-foreground",
+                                          !line.serialNumber.trim() || duplicateSerial
+                                            ? "border-destructive"
+                                            : "border-input"
+                                        )}
+                                        aria-label={`Serie ${line.sku}`}
+                                      />
+                                    </label>
+                                  ) : line.serialNumber ? (
                                     <span className="font-medium text-foreground">
                                       Serie {line.serialNumber}
                                     </span>

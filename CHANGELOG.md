@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.31
+
+- Entradas: la serie de equipos (y productos con control por serie) se puede editar en las partidas ya agregadas; avisa si queda vacía o repetida.
+
 ## 1.1.30
 
 - Inventario: existencias de accesorios en 0 (queda solo el catálogo); respaldo previo guardado en la base de datos.
