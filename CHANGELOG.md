@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.27
+
+- Inventario: EQ-24 (Paletas water resistant Philips) deja de ser equipo y pasa a refacciones, conservando existencias, serie y lote.
+
 ## 1.1.26
 
 - Inventario: ACC-2364 (Kit Pronto Masimo) deja de ser equipo y pasa a accesorios, conservando existencias y series.
