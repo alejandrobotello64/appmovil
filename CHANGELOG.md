@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.23
+
+- Inventario: SKUs cortos sin ceros de relleno (p. ej. ACCESORIOS-000012 → ACC-12, EQUIPO-000026 → EQ-26).
+
 ## 1.1.22
 
 - Inventario: paginación 10/20/50/100 productos por página; el catálogo se muestra sin esperar todo el stock.

@@ -231,28 +231,77 @@ export type InventoryFilters = {
   status: StockStatus | "all";
 };
 
+/** Prefijos cortos del catálogo (ACC-12, INS-3, EQ-26…). */
 export const SKU_PREFIX_BY_CATEGORY: Record<InventoryCategoryId, string> = {
-  insumos: "INSUMOS",
-  medicamentos: "MEDICAMENTOS",
-  refacciones: "REFACCIONES",
-  accesorios: "ACCESORIOS",
-  reactivos: "REACTIVOS",
-  equipos: "EQUIPO",
-  otros: "OTROS",
+  insumos: "INS",
+  medicamentos: "MED",
+  refacciones: "REF",
+  accesorios: "ACC",
+  reactivos: "REA",
+  equipos: "EQ",
+  otros: "OTR",
 };
+
+/** Prefijos largos históricos (ACCESORIOS-000001…); se siguen reconociendo. */
+export const LEGACY_SKU_PREFIX_BY_CATEGORY: Record<InventoryCategoryId, string> =
+  {
+    insumos: "INSUMOS",
+    medicamentos: "MEDICAMENTOS",
+    refacciones: "REFACCIONES",
+    accesorios: "ACCESORIOS",
+    reactivos: "REACTIVOS",
+    equipos: "EQUIPO",
+    otros: "OTROS",
+  };
 
 export function skuPrefixForCategory(category: InventoryCategoryId) {
   return SKU_PREFIX_BY_CATEGORY[category] ?? "ITEM";
 }
 
+export function legacySkuPrefixForCategory(category: InventoryCategoryId) {
+  return LEGACY_SKU_PREFIX_BY_CATEGORY[category] ?? "ITEM";
+}
+
+const ALL_SKU_PREFIXES = Array.from(
+  new Set([
+    ...Object.values(SKU_PREFIX_BY_CATEGORY),
+    ...Object.values(LEGACY_SKU_PREFIX_BY_CATEGORY),
+  ])
+);
+
 const SEQUENTIAL_SKU_RE = new RegExp(
-  `^(${Object.values(SKU_PREFIX_BY_CATEGORY).join("|")})-\\d{4,}$`,
+  `^(${ALL_SKU_PREFIXES.join("|")})-\\d+$`,
   "i"
 );
 
-/** SKU interno del catálogo: EQUIPO-000001, INSUMOS-000001, ACCESORIOS-000001… */
+/** SKU interno del catálogo: EQ-26, INS-12, ACC-2464 (también formatos largos legacy). */
 export function isSequentialCatalogSku(sku: string | null | undefined) {
   return SEQUENTIAL_SKU_RE.test(String(sku ?? "").trim());
+}
+
+/** Arma el SKU corto sin ceros a la izquierda: ACC-12. */
+export function formatCatalogSku(category: InventoryCategoryId, sequence: number) {
+  const seq = Math.max(1, Math.floor(sequence));
+  return `${skuPrefixForCategory(category)}-${seq}`;
+}
+
+/** Extrae el número secuencial de un SKU corto o legacy; null si no aplica. */
+export function catalogSkuSequence(
+  sku: string | null | undefined,
+  category?: InventoryCategoryId
+): number | null {
+  const value = String(sku ?? "").trim();
+  if (!value) return null;
+  const prefixes = category
+    ? [skuPrefixForCategory(category), legacySkuPrefixForCategory(category)]
+    : ALL_SKU_PREFIXES;
+  for (const prefix of prefixes) {
+    const head = `${prefix}-`;
+    if (!value.toUpperCase().startsWith(head.toUpperCase())) continue;
+    const seq = Number(value.slice(head.length));
+    if (Number.isFinite(seq) && seq > 0) return seq;
+  }
+  return null;
 }
 
 export function isProductCategory(

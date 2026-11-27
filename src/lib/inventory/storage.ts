@@ -11,7 +11,10 @@ import type {
   SupplyCategoryId,
 } from "./types";
 import {
+  catalogSkuSequence,
+  formatCatalogSku,
   isSequentialCatalogSku,
+  legacySkuPrefixForCategory,
   skuPrefixForCategory,
   SUPPLY_CATEGORY_IDS,
 } from "./types";
@@ -362,27 +365,35 @@ function inventoryWriteMessage(error: { message?: string; code?: string }) {
   return message || "No se pudo guardar el producto en Supabase.";
 }
 
-/** Asigna SKU secuencial: EQUIPO-000001, ACCESORIOS-000001, etc. */
+/** Asigna SKU corto secuencial: EQ-26, ACC-2465, INS-12… (sin ceros de relleno). */
 export async function nextInventorySku(
   category: InventoryCategoryId
 ): Promise<string> {
-  const prefix = `${skuPrefixForCategory(category)}-`;
-  const { data, error } = await supabase
-    .from("inventory_items")
-    .select("sku")
-    .ilike("sku", `${prefix}%`)
-    .order("sku", { ascending: false })
-    .limit(50);
-  if (error) throw new Error(error.message);
-
+  const prefixes = [
+    `${skuPrefixForCategory(category)}-`,
+    `${legacySkuPrefixForCategory(category)}-`,
+  ];
   let maxSeq = 0;
-  for (const row of data ?? []) {
-    const sku = String(row.sku ?? "");
-    if (!sku.startsWith(prefix)) continue;
-    const seq = Number(sku.slice(prefix.length));
-    if (Number.isFinite(seq) && seq > maxSeq) maxSeq = seq;
+  const pageSize = 1000;
+
+  for (const prefix of prefixes) {
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabase
+        .from("inventory_items")
+        .select("sku")
+        .ilike("sku", `${prefix}%`)
+        .range(from, from + pageSize - 1);
+      if (error) throw new Error(error.message);
+      const rows = data ?? [];
+      for (const row of rows) {
+        const seq = catalogSkuSequence(String(row.sku ?? ""), category);
+        if (seq != null && seq > maxSeq) maxSeq = seq;
+      }
+      if (rows.length < pageSize) break;
+    }
   }
-  return `${prefix}${String(maxSeq + 1).padStart(6, "0")}`;
+
+  return formatCatalogSku(category, maxSeq + 1);
 }
 
 async function fetchInventoryRows(options?: {

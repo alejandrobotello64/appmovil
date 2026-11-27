@@ -297,8 +297,8 @@ export function InventoryForm({
               item
                 ? undefined
                 : isEquipment
-                  ? "Se genera EQUIPO-000001…"
-                  : "Se genera INSUMOS-000001, ACCESORIOS-000001…"
+                  ? "Se genera EQ-1, EQ-2…"
+                  : "Se genera INS-1, ACC-12…"
             }
             onChange={(event) => handleChange("sku", event.target.value)}
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none"
