@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.30
+
+- Inventario: existencias de accesorios en 0 (queda solo el catálogo); respaldo previo guardado en la base de datos.
+
 ## 1.1.29
 
 - Inventario: existencias de insumos, refacciones y medicamentos en 0 (queda solo el catálogo); respaldo previo guardado en la base de datos.
