@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.26
+
+- Inventario: ACC-2364 (Kit Pronto Masimo) deja de ser equipo y pasa a accesorios, conservando existencias y series.
+
 ## 1.1.25
 
 - Inventario: 11 registros que estaban como equipos pasan a su categoría real (accesorios, refacciones o insumos), conservando existencias, series y lotes.
