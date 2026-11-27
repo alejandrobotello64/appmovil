@@ -1,5 +1,9 @@
 # Versiones
 
+## 1.1.28
+
+- Inventario: el equipo ACC-1758 (Co-Oximeter Rainbow Pronto Neonatal) cambia su SKU a EQ-63; historial y series conservados.
+
 ## 1.1.27
 
 - Inventario: EQ-24 (Paletas water resistant Philips) deja de ser equipo y pasa a refacciones, conservando existencias, serie y lote.
